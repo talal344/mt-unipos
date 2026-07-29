@@ -1,0 +1,125 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-black: #000000;
+  --color-brand-sky: #0EA5E9;
+  --color-brand-sky-light: #38BDF8;
+  --color-brand-dark-surface: #0A0A0B;
+  --color-brand-dark-card: #121214;
+  --color-brand-dark-border: #1F2937;
+  
+  --animate-glow: glow 2s ease-in-out infinite alternate;
+  --animate-fade-in-up: fadeInUp 0.4s ease-out forwards;
+}
+
+@keyframes glow {
+  from {
+    text-shadow: 0 0 4px rgba(14, 165, 233, 0.2), 0 0 10px rgba(14, 165, 233, 0.2);
+  }
+  to {
+    text-shadow: 0 0 8px rgba(14, 165, 233, 0.6), 0 0 20px rgba(14, 165, 233, 0.4);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Custom Styles */
+:root {
+  --background: #000000;
+  --foreground: #F3F4F6;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  overflow-x: hidden;
+}
+
+/* Glassmorphism scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #000000;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1F2937;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #0EA5E9;
+}
+
+/* Premium utility classes */
+.glass-panel {
+  background: rgba(10, 10, 11, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.sky-glow {
+  box-shadow: 0 0 25px -5px rgba(14, 165, 233, 0.2), 0 0 15px -5px rgba(14, 165, 233, 0.1);
+}
+
+.sky-glow-border {
+  border: 1px solid rgba(14, 165, 233, 0.25);
+  box-shadow: 0 0 15px -3px rgba(14, 165, 233, 0.15);
+}
+
+.sky-glow-border:focus-within {
+  border-color: #0EA5E9;
+  box-shadow: 0 0 20px -3px rgba(14, 165, 233, 0.35);
+}
+
+.sky-gradient-text {
+  background: linear-gradient(135deg, #FFFFFF 30%, #38BDF8 70%, #0EA5E9 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.sky-neon-text {
+  color: #38BDF8;
+  text-shadow: 0 0 8px rgba(56, 189, 248, 0.5);
+}
+
+/* Hide POS receipt overrides */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #pos-receipt, #pos-receipt * {
+    visibility: visible;
+  }
+  #pos-receipt {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 80mm;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+/* Hide scrollbar utility class */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}

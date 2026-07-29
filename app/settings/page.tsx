@@ -1,0 +1,541 @@
+"use client";
+
+import React, { useState } from "react";
+import { useGlobalContext } from "@/context/global-context";
+import ClientSidebar from "@/components/client-sidebar";
+import {
+  Settings, Building, DollarSign, Award, CreditCard, Save, Check,
+  Sliders, ShieldAlert, RotateCcw, AlertTriangle, FileText, Image, HelpCircle, HardDrive
+} from "lucide-react";
+
+export default function SettingsPage() {
+  const {
+    currentUser,
+    businessSettings, updateBusinessSettings,
+    currencySymbol, setCurrencySymbol,
+    salesTaxRate, setSalesTaxRate
+  } = useGlobalContext();
+
+  const [form, setForm] = useState({
+    businessName: businessSettings.businessName || "Al-Fatah Superstore",
+    ownerName: businessSettings.ownerName || "Mian Talal",
+    phone: businessSettings.phone || "+92 321 5550100",
+    email: businessSettings.email || "talal@alfatah.com",
+    address: businessSettings.address || "Gulberg III, Main Boulevard",
+    city: businessSettings.city || "Lahore",
+    country: businessSettings.country || "Pakistan",
+    taxNumber: businessSettings.taxNumber || "NTN-1234567-8",
+    receiptHeader: businessSettings.receiptHeader || "MT UniPOS ERP",
+    receiptFooter: businessSettings.receiptFooter || "Thank you for shopping! Powered by MT UniPOS.",
+    defaultTaxRate: businessSettings.defaultTaxRate !== undefined ? businessSettings.defaultTaxRate.toString() : "17",
+    defaultCurrency: businessSettings.defaultCurrency || "PKR",
+    lowStockAlert: businessSettings.lowStockAlert !== undefined ? businessSettings.lowStockAlert.toString() : "10",
+    allowCreditSales: businessSettings.allowCreditSales !== undefined ? businessSettings.allowCreditSales : true,
+    loyaltyPointsPerAmount: businessSettings.loyaltyPointsPerAmount !== undefined ? businessSettings.loyaltyPointsPerAmount.toString() : "50",
+    loyaltyRedeemThreshold: businessSettings.loyaltyRedeemThreshold !== undefined ? businessSettings.loyaltyRedeemThreshold.toString() : "1000",
+    loyaltyRedeemValue: businessSettings.loyaltyRedeemValue !== undefined ? businessSettings.loyaltyRedeemValue.toString() : "100",
+    logoUrl: businessSettings.logoUrl || "",
+  });
+
+  const [toast, setToast] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"general" | "pos" | "loyalty" | "system">("general");
+
+  const triggerToast = (msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  const handleSave = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const payload = {
+      businessName: form.businessName,
+      ownerName: form.ownerName,
+      phone: form.phone,
+      email: form.email,
+      address: form.address,
+      city: form.city,
+      country: form.country,
+      taxNumber: form.taxNumber,
+      receiptHeader: form.receiptHeader,
+      receiptFooter: form.receiptFooter,
+      defaultTaxRate: parseFloat(form.defaultTaxRate) || 0,
+      defaultCurrency: form.defaultCurrency,
+      lowStockAlert: parseInt(form.lowStockAlert) || 0,
+      allowCreditSales: form.allowCreditSales,
+      loyaltyPointsPerAmount: parseInt(form.loyaltyPointsPerAmount) || 50,
+      loyaltyRedeemThreshold: parseInt(form.loyaltyRedeemThreshold) || 1000,
+      loyaltyRedeemValue: parseInt(form.loyaltyRedeemValue) || 100,
+      logoUrl: form.logoUrl,
+    };
+
+    // Update business settings inside context
+    updateBusinessSettings(payload);
+
+    // Sync direct context configurations
+    setCurrencySymbol(form.defaultCurrency);
+    setSalesTaxRate(parseFloat(form.defaultTaxRate) || 0);
+
+    triggerToast("Business settings saved and synced successfully!");
+  };
+
+  const handleResetDatabase = () => {
+    if (confirm("WARNING: This will reset your store's transaction logs, sales history, payroll records, and custom customers. This will NOT affect other stores. Proceed?")) {
+      const tid = currentUser?.tenantId;
+      if (tid) {
+        const keysToClear = [
+          "unipos_products", "unipos_customers", "unipos_suppliers", 
+          "unipos_pos", "unipos_sales", "unipos_expenses", 
+          "unipos_employees", "unipos_tables", "unipos_kitchen", 
+          "unipos_accounts", "unipos_settings"
+        ];
+        keysToClear.forEach(k => localStorage.setItem(`${k}_${tid}`, "[]"));
+      }
+      triggerToast("Store database cleared! Reloading...");
+      setTimeout(() => window.location.reload(), 1500);
+    }
+  };
+
+  const handleBackup = () => {
+    const tid = currentUser?.tenantId;
+    if (!tid) return;
+    const keysToBackup = [
+      "unipos_products", "unipos_customers", "unipos_suppliers", 
+      "unipos_pos", "unipos_sales", "unipos_expenses", 
+      "unipos_employees", "unipos_tables", "unipos_kitchen", 
+      "unipos_accounts", "unipos_settings"
+    ];
+    
+    const backupData: Record<string, any> = {};
+    keysToBackup.forEach(k => {
+      const data = localStorage.getItem(`${k}_${tid}`);
+      if (data) {
+        try {
+          backupData[k] = JSON.parse(data);
+        } catch(e) {}
+      }
+    });
+
+    const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `unipos-backup-${form.businessName.replace(/\\s+/g, '-').toLowerCase()}-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    triggerToast("Backup downloaded successfully!");
+  };
+
+  const handleRestore = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const tid = currentUser?.tenantId;
+    if (!tid) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const data = JSON.parse(event.target?.result as string);
+        if (confirm("WARNING: Restoring from backup will overwrite all current store data. Are you sure you want to proceed?")) {
+          Object.keys(data).forEach(k => {
+            if (k.startsWith("unipos_")) {
+              localStorage.setItem(`${k}_${tid}`, JSON.stringify(data[k]));
+            }
+          });
+          triggerToast("Backup restored successfully! Reloading...");
+          setTimeout(() => window.location.reload(), 1500);
+        }
+      } catch (error) {
+        alert("Invalid backup file. Could not parse JSON.");
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+  };
+
+  return (
+    <div className="flex min-h-screen bg-black text-gray-100 font-sans">
+      <ClientSidebar />
+
+      {toast && (
+        <div className="fixed top-4 right-4 bg-emerald-500/95 text-white font-bold text-xs py-3 px-5 rounded-xl shadow-2xl z-50 flex items-center gap-2 animate-bounce">
+          <Check size={14} /> {toast}
+        </div>
+      )}
+
+      <main className="flex-grow p-6 sm:p-8 space-y-6 overflow-y-auto max-h-screen">
+        
+        {/* Header section */}
+        <div className="flex justify-between items-center border-b border-brand-dark-border/60 pb-4">
+          <div>
+            <h1 className="text-xl font-black text-white flex items-center gap-2">
+              <Settings size={22} className="text-brand-sky" />
+              Settings Panel
+            </h1>
+            <p className="text-[10px] text-gray-500 mt-0.5">
+              Configure your MT UniPOS business environment, tax rates, receipt thermal configurations, and loyalty programs.
+            </p>
+          </div>
+        </div>
+
+        {/* Outer form and sidebar grid */}
+        <form onSubmit={handleSave} className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          
+          {/* Tabs Sidebar navigation (3 columns) */}
+          <div className="lg:col-span-3 bg-brand-dark-surface/40 border border-brand-dark-border rounded-2xl p-4 space-y-1">
+            {[
+              { id: "general", label: "General Business", icon: Building },
+              { id: "pos", label: "POS & Taxation", icon: Sliders },
+              { id: "loyalty", label: "Loyalty Programs", icon: Award },
+              { id: "system", label: "System Maintenance", icon: HardDrive },
+            ].map(t => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => setActiveTab(t.id as any)}
+                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left text-xs font-bold transition ${
+                  activeTab === t.id
+                    ? "bg-brand-sky text-black font-black"
+                    : "text-gray-400 hover:bg-brand-dark-surface hover:text-white"
+                }`}
+              >
+                <t.icon size={14} />
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Form Content body (9 columns) */}
+          <div className="lg:col-span-9 space-y-6">
+            
+            {/* GENERAL BUSINESS TAB */}
+            {activeTab === "general" && (
+              <div className="bg-brand-dark-surface/20 border border-brand-dark-border rounded-2xl p-6 space-y-5 animate-fade-in-up">
+                <h3 className="text-xs font-black text-white uppercase tracking-wider border-b border-brand-dark-border/40 pb-2 flex items-center gap-2">
+                  <Building size={14} className="text-brand-sky" />
+                  General Business Identity
+                </h3>
+
+                <div className="grid grid-cols-2 gap-4 text-xs">
+                  <div>
+                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Registered Business Name *</label>
+                    <input
+                      type="text" required
+                      value={form.businessName}
+                      onChange={e => setForm({ ...form, businessName: e.target.value })}
+                      className="w-full bg-black border border-brand-dark-border p-2.5 rounded-lg text-white font-semibold"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Business Owner Name *</label>
+                    <input
+                      type="text" required
+                      value={form.ownerName}
+                      onChange={e => setForm({ ...form, ownerName: e.target.value })}
+                      className="w-full bg-black border border-brand-dark-border p-2.5 rounded-lg text-white"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 text-xs">
+                  <div>
+                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Official Mobile Contact *</label>
+                    <input
+                      type="text" required
+                      value={form.phone}
+                      onChange={e => setForm({ ...form, phone: e.target.value })}
+                      className="w-full bg-black border border-brand-dark-border p-2.5 rounded-lg text-white font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Business Email Address *</label>
+                    <input
+                      type="email" required
+                      value={form.email}
+                      onChange={e => setForm({ ...form, email: e.target.value })}
+                      className="w-full bg-black border border-brand-dark-border p-2.5 rounded-lg text-white"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 text-xs">
+                  <div>
+                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">State Tax Registration Number (NTN / GST)</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. GST-1234567-8"
+                      value={form.taxNumber}
+                      onChange={e => setForm({ ...form, taxNumber: e.target.value })}
+                      className="w-full bg-black border border-brand-dark-border p-2.5 rounded-lg text-white font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Corporate Brand Logo URL</label>
+                    <div className="relative">
+                      <Image size={13} className="absolute left-3 top-3.5 text-gray-500" />
+                      <input
+                        type="text"
+                        placeholder="https://yourstore.com/logo.png"
+                        value={form.logoUrl}
+                        onChange={e => setForm({ ...form, logoUrl: e.target.value })}
+                        className="w-full bg-black border border-brand-dark-border pl-9 p-2.5 rounded-lg text-white"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-4 text-xs">
+                  <div className="col-span-2">
+                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Street Address</label>
+                    <input
+                      type="text"
+                      value={form.address}
+                      onChange={e => setForm({ ...form, address: e.target.value })}
+                      className="w-full bg-black border border-brand-dark-border p-2.5 rounded-lg text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">City / State</label>
+                    <input
+                      type="text"
+                      value={form.city}
+                      onChange={e => setForm({ ...form, city: e.target.value })}
+                      className="w-full bg-black border border-brand-dark-border p-2.5 rounded-lg text-white"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* POS & TAXATION TAB */}
+            {activeTab === "pos" && (
+              <div className="bg-brand-dark-surface/20 border border-brand-dark-border rounded-2xl p-6 space-y-5 animate-fade-in-up">
+                <h3 className="text-xs font-black text-white uppercase tracking-wider border-b border-brand-dark-border/40 pb-2 flex items-center gap-2">
+                  <Sliders size={14} className="text-brand-sky" />
+                  POS Checkout &amp; Billing Rules
+                </h3>
+
+                <div className="grid grid-cols-3 gap-4 text-xs">
+                  <div>
+                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Default Sales Tax Rate (%)</label>
+                    <input
+                      type="number" min="0" max="100"
+                      value={form.defaultTaxRate}
+                      onChange={e => setForm({ ...form, defaultTaxRate: e.target.value })}
+                      className="w-full bg-black border border-brand-dark-border p-2.5 rounded-lg text-white font-mono font-bold"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Base Currency Symbol</label>
+                    <select
+                      value={form.defaultCurrency}
+                      onChange={e => setForm({ ...form, defaultCurrency: e.target.value })}
+                      className="w-full bg-black border border-brand-dark-border p-2.5 rounded-lg text-white font-bold"
+                    >
+                      <option value="PKR">PKR (Rs.)</option>
+                      <option value="USD">USD ($)</option>
+                      <option value="SAR">SAR (SR)</option>
+                      <option value="AED">AED (Dh)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Low Stock Alert Threshold</label>
+                    <input
+                      type="number" min="0"
+                      value={form.lowStockAlert}
+                      onChange={e => setForm({ ...form, lowStockAlert: e.target.value })}
+                      className="w-full bg-black border border-brand-dark-border p-2.5 rounded-lg text-white font-mono font-bold"
+                    />
+                  </div>
+                </div>
+
+                <div className="bg-brand-dark-surface/40 p-4 border border-brand-dark-border/80 rounded-xl space-y-3">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h4 className="text-xs font-bold text-white uppercase">Enable Credit Sales (On Credit)</h4>
+                      <p className="text-[9px] text-gray-500">Allow customers to buy goods on due account (Accounts Receivable balance)</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setForm({ ...form, allowCreditSales: !form.allowCreditSales })}
+                      className={`w-12 h-6 rounded-full p-1 transition-all ${
+                        form.allowCreditSales ? "bg-brand-sky" : "bg-brand-dark-border"
+                      }`}
+                    >
+                      <div className={`h-4 w-4 bg-black rounded-full transition-all ${
+                        form.allowCreditSales ? "translate-x-6" : "translate-x-0"
+                      }`} />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-3 text-xs">
+                  <h4 className="text-[10px] uppercase font-bold text-gray-400">Thermal Receipt Thermal Header / Footer Customizer</h4>
+                  <div>
+                    <label className="block text-[9px] text-gray-500 mb-1">Receipt Top Header Text</label>
+                    <input
+                      type="text"
+                      value={form.receiptHeader}
+                      onChange={e => setForm({ ...form, receiptHeader: e.target.value })}
+                      className="w-full bg-black border border-brand-dark-border p-2.5 rounded-lg text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[9px] text-gray-500 mb-1">Receipt Bottom Footer Message</label>
+                    <textarea
+                      rows={2}
+                      value={form.receiptFooter}
+                      onChange={e => setForm({ ...form, receiptFooter: e.target.value })}
+                      className="w-full bg-black border border-brand-dark-border p-2.5 rounded-lg text-white text-[11px] resize-none focus:outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* LOYALTY PROGRAMS TAB */}
+            {activeTab === "loyalty" && (
+              <div className="bg-brand-dark-surface/20 border border-brand-dark-border rounded-2xl p-6 space-y-5 animate-fade-in-up">
+                <h3 className="text-xs font-black text-white uppercase tracking-wider border-b border-brand-dark-border/40 pb-2 flex items-center gap-2">
+                  <Award size={14} className="text-brand-sky" />
+                  CRM Loyalty Rewards Calculator
+                </h3>
+
+                <div className="bg-yellow-500/10 border border-yellow-500/20 p-3.5 rounded-xl text-[10px] text-gray-400 flex gap-2">
+                  <AlertTriangle className="text-yellow-400 shrink-0 mt-0.5" size={13} />
+                  <span>
+                    Loyalty points program triggers automatically during sales checkouts inside the POS cashier terminal. Adjust parameters below to recalculate member points.
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-3 gap-4 text-xs font-mono">
+                  <div>
+                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1 font-sans">Points Per Amount ({currencySymbol})</label>
+                    <div className="relative">
+                      <DollarSign size={12} className="absolute left-3 top-3 text-gray-500" />
+                      <input
+                        type="number" min="1"
+                        value={form.loyaltyPointsPerAmount}
+                        onChange={e => setForm({ ...form, loyaltyPointsPerAmount: e.target.value })}
+                        className="w-full bg-black border border-brand-dark-border pl-8 p-2.5 rounded-lg text-white font-bold"
+                      />
+                    </div>
+                    <span className="text-[8px] text-gray-500 mt-1 block font-sans">Customer gets 1 point per this PKR amount.</span>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1 font-sans">Redeem Threshold (pts)</label>
+                    <input
+                      type="number" min="1"
+                      value={form.loyaltyRedeemThreshold}
+                      onChange={e => setForm({ ...form, loyaltyRedeemThreshold: e.target.value })}
+                      className="w-full bg-black border border-brand-dark-border p-2.5 rounded-lg text-white font-bold"
+                    />
+                    <span className="text-[8px] text-gray-500 mt-1 block font-sans">Minimum points needed to qualify for discount voucher.</span>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1 font-sans">Discount Value ({currencySymbol})</label>
+                    <input
+                      type="number" min="1"
+                      value={form.loyaltyRedeemValue}
+                      onChange={e => setForm({ ...form, loyaltyRedeemValue: e.target.value })}
+                      className="w-full bg-black border border-brand-dark-border p-2.5 rounded-lg text-white font-bold"
+                    />
+                    <span className="text-[8px] text-gray-500 mt-1 block font-sans">Discount voucher value rewarded per threshold redeem.</span>
+                  </div>
+                </div>
+
+                <div className="border-t border-brand-dark-border/40 pt-4">
+                  <h4 className="text-[10px] uppercase font-bold text-gray-400 mb-2">Simulated Reward Program Formula</h4>
+                  <div className="bg-black/60 border border-brand-dark-border p-4 rounded-xl font-mono text-[10px] leading-relaxed space-y-1">
+                    <div>1. Purchase Bill of <span className="text-brand-sky font-bold">PKR 5,000</span> will earn:</div>
+                    <div className="text-yellow-400 font-bold ml-4">
+                      = 5,000 / {form.loyaltyPointsPerAmount || "50"} = {Math.round(5000 / (parseInt(form.loyaltyPointsPerAmount) || 50))} points.
+                    </div>
+                    <div className="mt-2">2. When member balance crosses <span className="text-yellow-400 font-bold">{form.loyaltyRedeemThreshold || "1000"} pts</span>:</div>
+                    <div className="text-emerald-400 font-bold ml-4">
+                      = Customer receives flat discount of <span className="underline">PKR {form.loyaltyRedeemValue || "100"}</span> on next POS ticket.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* SYSTEM MAINTENANCE TAB */}
+            {activeTab === "system" && (
+              <div className="bg-brand-dark-surface/20 border border-brand-dark-border rounded-2xl p-6 space-y-5 animate-fade-in-up">
+                <h3 className="text-xs font-black text-white uppercase tracking-wider border-b border-brand-dark-border/40 pb-2 flex items-center gap-2">
+                  <ShieldAlert size={14} className="text-red-400" />
+                  System Database Maintenance
+                </h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex flex-col justify-between p-4 bg-brand-dark-surface/50 border border-brand-dark-border rounded-xl">
+                    <div>
+                      <h4 className="text-xs font-bold text-white flex items-center gap-1.5"><Save size={13} className="text-brand-sky" /> Backup Store Data</h4>
+                      <p className="text-[9px] text-gray-500 mt-1">Download a full JSON backup of your products, sales, and settings.</p>
+                    </div>
+                    <button type="button" onClick={handleBackup} className="mt-4 flex items-center justify-center gap-1.5 px-3 py-2 bg-brand-sky hover:bg-brand-sky-light text-black font-black text-[10px] uppercase rounded-lg shadow transition">
+                      <Save size={12} /> Download Backup
+                    </button>
+                  </div>
+
+                  <div className="flex flex-col justify-between p-4 bg-brand-dark-surface/50 border border-brand-dark-border rounded-xl">
+                    <div>
+                      <h4 className="text-xs font-bold text-white flex items-center gap-1.5"><RotateCcw size={13} className="text-brand-sky" /> Restore Store Data</h4>
+                      <p className="text-[9px] text-gray-500 mt-1">Upload a previous JSON backup to restore your store.</p>
+                    </div>
+                    <div className="mt-4 relative">
+                      <input type="file" accept=".json" onChange={handleRestore} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                      <button type="button" className="w-full flex items-center justify-center gap-1.5 px-3 py-2 bg-brand-dark-surface hover:bg-gray-800 border border-brand-dark-border text-white font-black text-[10px] uppercase rounded-lg shadow transition pointer-events-none">
+                        <FileText size={12} /> Select Backup File
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-xl text-[10px] text-gray-400 space-y-2 mt-4">
+                  <p className="font-bold text-white flex items-center gap-1.5"><AlertTriangle className="text-red-400" size={13} /> DANGER ZONE</p>
+                  <p>
+                    Clearing system database will erase local inventory updates, sales transactions, salary payroll logs, double entry ledger files, and all sharded tenant credentials.
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between p-4 bg-brand-dark-surface/50 border border-brand-dark-border rounded-xl">
+                  <div>
+                    <h4 className="text-xs font-bold text-white">Reset Local Database Cache</h4>
+                    <p className="text-[9px] text-gray-500 mt-0.5">Flush sharded local storage tables and reload pristine demo catalog.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleResetDatabase}
+                    className="flex items-center gap-1.5 px-3 py-2 bg-red-500 hover:bg-red-600 text-white font-black text-[10px] uppercase rounded-lg shadow transition"
+                  >
+                    <RotateCcw size={12} /> Clear Cache
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Action buttons footer */}
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                type="submit"
+                className="flex items-center gap-1.5 bg-brand-sky hover:bg-brand-sky-light text-black font-black text-xs px-5 py-3 rounded-lg shadow-lg transition"
+              >
+                <Save size={14} /> Save Business Settings
+              </button>
+            </div>
+
+          </div>
+
+        </form>
+
+      </main>
+    </div>
+  );
+}
