@@ -285,19 +285,19 @@ export default function ThermalSlipModal({
             if (error) {
               console.error("Supabase Storage Error:", error);
               // Queue for later if upload fails despite being online
-              await queueOfflineReceipt(sale.id, blob, cloudFileName);
+              await queueOfflineReceipt(sale.id || sale.receiptNumber, blob, cloudFileName);
               cloudSuccess = true; // Count as success since it's queued
             } else {
               cloudSuccess = true;
             }
           } catch (err) {
             console.error("Supabase upload exception:", err);
-            await queueOfflineReceipt(sale.id, blob, cloudFileName);
+            await queueOfflineReceipt(sale.id || sale.receiptNumber, blob, cloudFileName);
             cloudSuccess = true; 
           }
         } else {
           // Explicitly offline, queue immediately
-          await queueOfflineReceipt(sale.id, blob, cloudFileName);
+          await queueOfflineReceipt(sale.id || sale.receiptNumber, blob, cloudFileName);
           cloudSuccess = true;
         }
         
