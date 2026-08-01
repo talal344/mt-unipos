@@ -1,0 +1,21 @@
+{
+  "name": "MT UniPOS",
+  "short_name": "MT UniPOS",
+  "description": "Unified POS & Enterprise ERP System",
+  "start_url": "/pos",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#0ea5e9",
+  "icons": [
+    {
+      "src": "/logo.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "/logo.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}

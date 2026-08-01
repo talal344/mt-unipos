@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import { queueSyncKey, getQueuedItems, dequeueItem, STORE_SYNC_KEYS, STORE_RECEIPTS } from "@/lib/offline-sync";
 
 // Types
 export interface DemoMessage {
@@ -430,11 +431,25 @@ interface GlobalContextType {
   setCurrencySymbol: (curr: string) => void;
   salesTaxRate: number;
   setSalesTaxRate: (rate: number) => void;
+  isOffline: boolean;
 }
 
 const GlobalContext = createContext<GlobalContextType | undefined>(undefined);
 
 export function GlobalProvider({ children }: { children: React.ReactNode }) {
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
+
   // --- Supabase Offline-First Sync Injection ---
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -459,6 +474,11 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
           parsedData = value; // Fallback
         }
         
+        if (!navigator.onLine) {
+          queueSyncKey(key);
+          return;
+        }
+
         if (possibleTenantId.startsWith('T-') || possibleTenantId.startsWith('AFS-') || possibleTenantId.startsWith('DEMO-')) {
           const collection = key.replace('_' + possibleTenantId, '');
           supabase.from('unipos_collections').upsert({
@@ -466,16 +486,16 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
             collection: collection,
             item_id: 'all',
             data: parsedData
-          }).then(({error}) => { if (error) console.warn("Supabase sync error:", error) });
+          }).then(({error}) => { if (error) queueSyncKey(key); });
         } else {
           supabase.from('unipos_global').upsert({
             key: key,
             value: parsedData
-          }).then(({error}) => { if (error) console.warn("Supabase sync error:", error) });
+          }).then(({error}) => { if (error) queueSyncKey(key); });
         }
       } catch (e) {
-        // Silently ignore to prevent app crashes during sync
-
+        // Queue key if sync failed entirely
+        queueSyncKey(key);
       }
     };
     
@@ -483,9 +503,36 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     const syncFromSupabase = async () => {
       let changed = false;
       try {
+        // 0. Process queued receipt images
+        const pendingReceipts = await getQueuedItems(STORE_RECEIPTS);
+        for (const receipt of pendingReceipts) {
+          const { error } = await supabase.storage.from('receipts').upload(receipt.filePath, receipt.blob, {
+            contentType: 'image/jpeg',
+            upsert: true
+          });
+          if (!error) {
+            await dequeueItem(STORE_RECEIPTS, receipt.id);
+          }
+        }
+
+        // 1. Process local offline queue first
+        const pendingSyncs = await getQueuedItems(STORE_SYNC_KEYS);
+        const pendingKeySet = new Set(pendingSyncs.map(i => i.key));
+        
+        for (const item of pendingSyncs) {
+          const val = window.localStorage.getItem(item.key);
+          if (val) {
+            // Trigger the patched setItem to push to Supabase
+            window.localStorage.setItem(item.key, val);
+          }
+          await dequeueItem(STORE_SYNC_KEYS, item.key);
+        }
+
+        // 2. Pull down global data
         const { data: globalData } = await supabase.from('unipos_global').select('*');
         if (globalData) {
           globalData.forEach(row => {
+            if (pendingKeySet.has(row.key)) return; // Skip if we just pushed it
             const current = window.localStorage.getItem(row.key);
             const incoming = JSON.stringify(row.value);
             if (current !== incoming) {
@@ -498,15 +545,16 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         const savedUser = window.localStorage.getItem("unipos_current_user");
         if (savedUser) {
           const user = JSON.parse(savedUser);
-          if (user.tenantId) {
+          if (user?.tenantId) {
             const { data: tenantData } = await supabase.from('unipos_collections').select('*').eq('tenant_id', user.tenantId);
             if (tenantData) {
               tenantData.forEach(row => {
-                const key = `${row.collection}_${row.tenant_id}`;
-                const current = window.localStorage.getItem(key);
+                const localKey = `${row.collection}_${row.tenant_id}`;
+                if (pendingKeySet.has(localKey)) return; // Skip if we just pushed it
+                const current = window.localStorage.getItem(localKey);
                 const incoming = JSON.stringify(row.data);
                 if (current !== incoming) {
-                  originalSetItem.call(window.localStorage, key, incoming);
+                  originalSetItem.call(window.localStorage, localKey, incoming);
                   changed = true;
                 }
               });
@@ -525,8 +573,12 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     
     syncFromSupabase();
 
+    // Also sync whenever the internet comes back online
+    window.addEventListener('online', syncFromSupabase);
+
     return () => {
       window.localStorage.setItem = originalSetItem;
+      window.removeEventListener('online', syncFromSupabase);
     };
   }, []);
   // SaaS Admin States
@@ -2246,7 +2298,8 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         currencySymbol,
         setCurrencySymbol,
         salesTaxRate,
-        setSalesTaxRate
+        setSalesTaxRate,
+        isOffline,
       }}
     >
       {children}

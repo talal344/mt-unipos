@@ -9,7 +9,7 @@ import {
   Tag, DollarSign, Notebook, CreditCard, CheckCircle2, Printer,
   Landmark, Wallet, PlusCircle, Star, Check, X, Scale, Hash,
   Banknote, Calculator, ChevronDown, RotateCcw, AlertTriangle, Package,
-  Clock, Timer, LogOut, Download
+  Clock, Timer, LogOut, Download, WifiOff
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -44,7 +44,7 @@ export default function PosPage() {
   const {
     products, customers, addCustomer, addSale, updateProduct, sales,
     currencySymbol, currentBranch, currentUser, businessSettings,
-    localReceiptsDirHandle, setLocalReceiptsDirHandle
+    localReceiptsDirHandle, setLocalReceiptsDirHandle, isOffline
   } = useGlobalContext();
 
   // ── Cart & Search
@@ -628,6 +628,12 @@ export default function PosPage() {
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                 <span className="text-[10px] font-black text-emerald-400 uppercase">Shift Open</span>
               </div>
+              {isOffline && (
+                <div className="flex items-center gap-1.5 bg-red-500/20 px-2 py-1 rounded">
+                  <WifiOff size={10} className="text-red-400 animate-pulse" />
+                  <span className="text-[10px] font-black text-red-400 uppercase">Offline Mode (Syncing Paused)</span>
+                </div>
+              )}
               <div className="flex items-center gap-1 text-[10px] text-gray-400 font-mono">
                 <Clock size={10} className="text-gray-500" />
                 Started: {new Date(shiftStartTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

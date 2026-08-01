@@ -4,6 +4,7 @@ import React, { useRef, useState, useEffect } from "react";
 import { Printer, Download, X, ArrowLeft, Loader2 } from "lucide-react";
 import { BusinessSettings, useGlobalContext } from "@/context/global-context";
 import { supabase } from "@/lib/supabase";
+import { queueOfflineReceipt } from "@/lib/offline-sync";
 
 import Barcode from "react-barcode";
 
@@ -274,19 +275,30 @@ export default function ThermalSlipModal({
         let cloudSuccess = false;
         let localSuccess = false;
 
-        // 1. Online Storage (Supabase)
-        try {
-          const { error } = await supabase.storage.from('receipts').upload(cloudFileName, blob, {
-            contentType: 'image/jpeg',
-            upsert: true
-          });
-          if (error) {
-            console.error("Supabase Storage Error:", error);
-          } else {
-            cloudSuccess = true;
+        // 1. Online Storage (Supabase) or Offline Queue
+        if (navigator.onLine) {
+          try {
+            const { error } = await supabase.storage.from('receipts').upload(cloudFileName, blob, {
+              contentType: 'image/jpeg',
+              upsert: true
+            });
+            if (error) {
+              console.error("Supabase Storage Error:", error);
+              // Queue for later if upload fails despite being online
+              await queueOfflineReceipt(sale.id, blob, cloudFileName);
+              cloudSuccess = true; // Count as success since it's queued
+            } else {
+              cloudSuccess = true;
+            }
+          } catch (err) {
+            console.error("Supabase upload exception:", err);
+            await queueOfflineReceipt(sale.id, blob, cloudFileName);
+            cloudSuccess = true; 
           }
-        } catch (err) {
-          console.error("Supabase upload exception:", err);
+        } else {
+          // Explicitly offline, queue immediately
+          await queueOfflineReceipt(sale.id, blob, cloudFileName);
+          cloudSuccess = true;
         }
         
         // 2. Offline Storage (Local Directory)
