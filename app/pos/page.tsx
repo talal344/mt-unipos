@@ -9,7 +9,7 @@ import {
   Tag, DollarSign, Notebook, CreditCard, CheckCircle2, Printer,
   Landmark, Wallet, PlusCircle, Star, Check, X, Scale, Hash,
   Banknote, Calculator, ChevronDown, RotateCcw, AlertTriangle, Package,
-  Clock, Timer, LogOut
+  Clock, Timer, LogOut, Download
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -43,7 +43,8 @@ const QUICK_FRACS  = [0.25, 0.5, 0.75, 1, 1.5, 2];
 export default function PosPage() {
   const {
     products, customers, addCustomer, addSale, updateProduct, sales,
-    currencySymbol, currentBranch, currentUser
+    currencySymbol, currentBranch, currentUser, businessSettings,
+    localReceiptsDirHandle, setLocalReceiptsDirHandle
   } = useGlobalContext();
 
   // ── Cart & Search
@@ -473,6 +474,9 @@ export default function PosPage() {
         }
       }
 
+      const paid = paymentMethod === "Cash" ? parseFloat(amountPaid) : cartGrandTotal;
+      const change = paymentMethod === "Cash" ? Math.max(0, paid - cartGrandTotal) : 0;
+
       const finalSale = addSale({
         branch: currentBranch,
         cashierName: currentUser?.name || "Cashier",
@@ -483,6 +487,8 @@ export default function PosPage() {
         tax: cartTax,
         total: cartGrandTotal,
         paymentMethod,
+        receivedAmount: paymentMethod === "Cash" ? paid : undefined,
+        changeReturned: paymentMethod === "Cash" ? change : undefined,
         status: "Completed" as const,
         notes: checkoutNotes,
         redeemLoyalty
@@ -551,7 +557,10 @@ export default function PosPage() {
               <div className="w-14 h-14 rounded-2xl bg-brand-sky/15 border border-brand-sky/30 flex items-center justify-center mx-auto mb-4">
                 <DollarSign size={26} className="text-brand-sky" />
               </div>
-              <h2 className="font-black text-white text-lg tracking-tight">MT UniPOS</h2>
+              <div className="flex items-center gap-2 justify-center">
+                <img src="/logo.jpg" alt="MT UniPOS Logo" className="w-6 h-6 rounded border border-brand-dark-border/50" />
+                <h2 className="font-black text-white text-lg tracking-tight">MT UniPOS</h2>
+              </div>
               <p className="text-[10px] text-brand-sky uppercase tracking-widest font-bold mt-0.5">Point of Sale — Shift Control</p>
             </div>
 
@@ -631,6 +640,19 @@ export default function PosPage() {
                 <DollarSign size={10} className="text-brand-sky" />
                 Cash: <span className="text-brand-sky font-black ml-0.5">{currencySymbol} {shiftCashSales.toFixed(0)}</span>
               </div>
+              <button onClick={async () => {
+                try {
+                  const handle = await (window as any).showDirectoryPicker();
+                  setLocalReceiptsDirHandle(handle);
+                  triggerToast("Local folder selected for auto-saving receipts!");
+                } catch(err) { 
+                  // Silently ignore abort errors to prevent Next.js overlay
+                }
+              }}
+              className={`flex items-center gap-1.5 text-[9px] font-black uppercase px-2 py-1 rounded transition ${localReceiptsDirHandle ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-gray-800 text-gray-400 border border-gray-700 hover:bg-gray-700'}`}>
+                <Download size={10} />
+                {localReceiptsDirHandle ? "Auto-Save Active" : "Set Save Folder"}
+              </button>
             </div>
             <button
               onClick={() => setShowCloseShiftModal(true)}
@@ -1359,13 +1381,15 @@ export default function PosPage() {
       {/* ══════════════════════════════════════════════════════════════════════
           THERMAL SLIP PREVIEW MODAL
       ══════════════════════════════════════════════════════════════════════ */}
-      {showThermalModal && successReceipt && (
+      {successReceipt && (
         <ThermalSlipModal
           sale={successReceipt}
           currencySymbol={currencySymbol}
           branch={currentBranch}
+          businessSettings={businessSettings}
           onClose={() => { setShowThermalModal(false); setSuccessReceipt(null); }}
           onBack={() => setShowThermalModal(false)}
+          isHidden={!showThermalModal}
         />
       )}
 

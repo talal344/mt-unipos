@@ -22,14 +22,14 @@ export default function SuperAdminLoginPage() {
   const [loading, setLoading]   = useState(false);
 
   const handleApplyPreset = () => {
-    setEmail("admin@unipos.com");
-    setPassword("admin123");
+    setEmail("talal344");
+    setPassword("talal344");
     setErrorMessage("");
   };
 
   const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (email === "admin@unipos.com" && password === "admin123") {
+    if (email === "talal344" && password === "talal344") {
       setErrorMessage("");
       setLoading(true);
       setTimeout(() => { setLoading(false); setStep("otp"); }, 700);
@@ -54,7 +54,7 @@ export default function SuperAdminLoginPage() {
     setTimeout(() => {
       setOtpSuccess(true);
       setErrorMessage("");
-      const adminUser = { name: "Mian Talal (SaaS Admin)", role: "SuperAdmin", email: "admin@unipos.com" };
+      const adminUser = { name: "Mian Talal (SaaS Admin)", role: "SuperAdmin", email: "talal344" };
       setTimeout(() => {
         localStorage.setItem("unipos_current_user", JSON.stringify(adminUser));
         setCurrentUser(adminUser);
@@ -115,9 +115,9 @@ export default function SuperAdminLoginPage() {
         {step === "login" && (
           <form onSubmit={handleLoginSubmit} className="space-y-4 text-xs">
             <div>
-              <label className="block text-[10px] uppercase font-bold text-gray-400 tracking-wider mb-1.5">Super Admin Email</label>
-              <input type="email" required value={email} onChange={e => setEmail(e.target.value)}
-                placeholder="admin@unipos.com"
+              <label className="block text-[10px] uppercase font-bold text-gray-400 tracking-wider mb-1.5">Super Admin Username</label>
+              <input type="text" required value={email} onChange={e => setEmail(e.target.value)}
+                placeholder="talal344"
                 className="w-full bg-black border border-brand-dark-border p-3 rounded-xl text-white focus:outline-none focus:border-purple-500 transition" />
             </div>
 

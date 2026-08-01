@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
 
 // Types
 export interface DemoMessage {
@@ -201,6 +202,8 @@ export interface SaleTransaction {
   loyaltyPointsEarned?: number;
   loyaltyPointsBalance?: number;
   splitPayments?: Record<string, number>;
+  receivedAmount?: number;
+  changeReturned?: number;
 }
 
 export interface Expense {
@@ -352,6 +355,8 @@ interface GlobalContextType {
     tenantId?: string;
   } | null;
   setCurrentUser: React.Dispatch<React.SetStateAction<any>>;
+  localReceiptsDirHandle: any;
+  setLocalReceiptsDirHandle: React.Dispatch<React.SetStateAction<any>>;
   logout: () => void;
 
   // Active Client Tenant Databases
@@ -430,6 +435,100 @@ interface GlobalContextType {
 const GlobalContext = createContext<GlobalContextType | undefined>(undefined);
 
 export function GlobalProvider({ children }: { children: React.ReactNode }) {
+  // --- Supabase Offline-First Sync Injection ---
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const originalSetItem = window.localStorage.setItem;
+    
+    window.localStorage.setItem = function(key: string, value: string) {
+      originalSetItem.apply(this, arguments as any);
+      
+      // Do not sync non-unipos keys or local session states
+      if (!key.startsWith("unipos_")) return;
+      if (key === "unipos_current_user") return;
+
+      try {
+        const parts = key.split('_');
+        const possibleTenantId = parts[parts.length - 1];
+        
+        let parsedData;
+        try {
+          parsedData = JSON.parse(value);
+        } catch {
+          parsedData = value; // Fallback
+        }
+        
+        if (possibleTenantId.startsWith('T-') || possibleTenantId.startsWith('AFS-') || possibleTenantId.startsWith('DEMO-')) {
+          const collection = key.replace('_' + possibleTenantId, '');
+          supabase.from('unipos_collections').upsert({
+            tenant_id: possibleTenantId,
+            collection: collection,
+            item_id: 'all',
+            data: parsedData
+          }).then(({error}) => { if (error) console.warn("Supabase sync error:", error) });
+        } else {
+          supabase.from('unipos_global').upsert({
+            key: key,
+            value: parsedData
+          }).then(({error}) => { if (error) console.warn("Supabase sync error:", error) });
+        }
+      } catch (e) {
+        // Silently ignore to prevent app crashes during sync
+
+      }
+    };
+    
+    // Initial fetch to sync from Supabase
+    const syncFromSupabase = async () => {
+      let changed = false;
+      try {
+        const { data: globalData } = await supabase.from('unipos_global').select('*');
+        if (globalData) {
+          globalData.forEach(row => {
+            const current = window.localStorage.getItem(row.key);
+            const incoming = JSON.stringify(row.value);
+            if (current !== incoming) {
+              originalSetItem.call(window.localStorage, row.key, incoming);
+              changed = true;
+            }
+          });
+        }
+        
+        const savedUser = window.localStorage.getItem("unipos_current_user");
+        if (savedUser) {
+          const user = JSON.parse(savedUser);
+          if (user.tenantId) {
+            const { data: tenantData } = await supabase.from('unipos_collections').select('*').eq('tenant_id', user.tenantId);
+            if (tenantData) {
+              tenantData.forEach(row => {
+                const key = `${row.collection}_${row.tenant_id}`;
+                const current = window.localStorage.getItem(key);
+                const incoming = JSON.stringify(row.data);
+                if (current !== incoming) {
+                  originalSetItem.call(window.localStorage, key, incoming);
+                  changed = true;
+                }
+              });
+            }
+          }
+        }
+        
+        if (changed) {
+          console.log("Supabase downloaded new data. Reloading state...");
+          window.location.reload();
+        }
+      } catch (e) {
+        console.error("Failed to fetch from Supabase:", e);
+      }
+    };
+    
+    syncFromSupabase();
+
+    return () => {
+      window.localStorage.setItem = originalSetItem;
+    };
+  }, []);
   // SaaS Admin States
   const [demoRequests, setDemoRequests] = useState<DemoRequest[]>([]);
   const [tenants, setTenants] = useState<Tenant[]>([]);
@@ -438,6 +537,8 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
   
   // Authenticated State
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [localReceiptsDirHandle, setLocalReceiptsDirHandle] = useState<any>(null);
+
   const saveTenantData = (key: string, data: any) => {
     if (currentUser?.tenantId) {
       localStorage.setItem(`${key}_${currentUser.tenantId}`, JSON.stringify(data));
@@ -1546,8 +1647,8 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
 
   // Client Tenant CRM Actions
   const addCustomer = (cust: Omit<Customer, "id" | "loyaltyPoints" | "creditBalance" | "dueRecoveryHistory">) => {
-    let customerNo = "N/A";
-    if (cust.name !== "Walk-in Customer") {
+    let customerNo = cust.customerNo;
+    if (!customerNo && cust.name !== "Walk-in Customer") {
       const seenNos = new Set(customers.map(c => c.customerNo).filter(Boolean) as string[]);
       customerNo = `CUST-${Math.floor(1000 + Math.random() * 9000)}`;
       while (seenNos.has(customerNo)) {
@@ -1556,8 +1657,8 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     }
     const newCust: Customer = {
       ...cust,
-      id: `C-${Math.floor(200 + Math.random() * 800)}`,
-      customerNo,
+      customerNo: customerNo || "N/A",
+      id: `C-${Math.floor(5000 + Math.random() * 5000)}`,
       loyaltyPoints: 0,
       creditBalance: 0,
       dueRecoveryHistory: []
@@ -2085,6 +2186,8 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         
         currentUser,
         setCurrentUser,
+        localReceiptsDirHandle,
+        setLocalReceiptsDirHandle,
         logout,
 
         currentBranch,

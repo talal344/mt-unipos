@@ -1,7 +1,11 @@
 "use client";
 
-import React, { useRef } from "react";
-import { Printer, Download, X, ArrowLeft } from "lucide-react";
+import React, { useRef, useState, useEffect } from "react";
+import { Printer, Download, X, ArrowLeft, Loader2 } from "lucide-react";
+import { BusinessSettings, useGlobalContext } from "@/context/global-context";
+import { supabase } from "@/lib/supabase";
+
+import Barcode from "react-barcode";
 
 interface SaleItem {
   productName: string;
@@ -23,146 +27,301 @@ interface Sale {
   tax: number;
   total: number;
   paymentMethod?: string;
+  receivedAmount?: number;
+  changeReturned?: number;
   loyaltyPointsEarned?: number;
   loyaltyPointsBalance?: number;
   redeemLoyalty?: boolean;
   isCredit?: boolean;
   notes?: string;
+  status?: string;
 }
 
 interface Props {
   sale: Sale;
   currencySymbol: string;
   branch?: string;
+  businessSettings?: BusinessSettings;
   onClose: () => void;
   onBack?: () => void;
+  isHidden?: boolean;
 }
 
 // ─── Inline Thermal Slip HTML builder ─────────────────────────────────────────
-// ─── Inline Thermal Slip HTML builder ─────────────────────────────────────────
-function buildSlipHTML(sale: Sale, currencySymbol: string, branch: string): string {
-  const date = new Date(sale.date).toLocaleString("en-PK", {
-    day: "2-digit", month: "short", year: "numeric",
-    hour: "2-digit", minute: "2-digit"
-  });
-  const itemRows = sale.items.map(item => {
+function buildSlipHTML(
+  sale: Sale,
+  currencySymbol: string,
+  branch: string,
+  biz: BusinessSettings | undefined
+): string {
+  const dateObj = new Date(sale.date);
+  const dateStr = dateObj.toLocaleDateString("en-PK", { day: "2-digit", month: "2-digit", year: "numeric" });
+  const timeStr = dateObj.toLocaleTimeString("en-PK", { hour: "2-digit", minute: "2-digit", hour12: true });
+
+  const businessName = biz?.businessName || "TALAL MART";
+  const city = biz?.city || "Lahore";
+  const phone = biz?.phone || "";
+  const ntn = biz?.taxNumber || "";
+  const receiptFooter = biz?.receiptFooter || "Thank You! Exchange Within 7 Days. No Return Without Original Invoice.";
+
+  const totalItems = sale.items.length;
+  const totalQty = sale.items.reduce((a, i) => a + i.qty, 0);
+
+  // Determine receipt type label
+  const statusLabel = sale.status === "Returned" || sale.status === "Refunded"
+    ? "RETURN RECEIPT"
+    : "CASH SALE RECEIPT";
+
+  const itemRows = sale.items.map((item, idx) => {
+    const rate = item.price ?? (item.subtotal / item.qty);
     const qtyStr = typeof item.qty === "number" && item.qty % 1 !== 0
       ? item.qty.toFixed(3)
-      : item.qty;
+      : String(item.qty);
     return `
       <tr>
-        <td style="padding:2px 0;word-break:break-word">${item.productName}</td>
-        <td style="padding:2px 4px;text-align:center;white-space:nowrap">${qtyStr}</td>
-        <td style="padding:2px 0;text-align:right;white-space:nowrap">${currencySymbol} ${item.subtotal.toFixed(2)}</td>
+        <td style="padding:3px 2px;font-size:10px;text-align:center;border-bottom:1px dotted #ccc">${idx + 1}</td>
+        <td style="padding:3px 4px;font-size:10px;word-break:break-word;border-bottom:1px dotted #ccc">${item.productName}</td>
+        <td style="padding:3px 2px;font-size:10px;text-align:center;white-space:nowrap;border-bottom:1px dotted #ccc">${qtyStr}</td>
+        <td style="padding:3px 2px;font-size:10px;text-align:right;white-space:nowrap;border-bottom:1px dotted #ccc">${Math.round(rate)}</td>
+        <td style="padding:3px 2px;font-size:10px;text-align:right;white-space:nowrap;font-weight:700;border-bottom:1px dotted #ccc">${Math.round(item.subtotal)}</td>
       </tr>`;
   }).join("");
 
+  const receivedAmt = sale.receivedAmount ?? (sale.paymentMethod === "Cash" ? sale.total : undefined);
+  const changeAmt = sale.changeReturned ?? (receivedAmt !== undefined ? Math.max(0, receivedAmt - sale.total) : 0);
+
   const loyaltySection = (sale.loyaltyPointsEarned !== undefined && sale.customerName !== "Walk-in Customer")
-    ? `<div style="border-top:1px dashed #000;padding-top:6px;margin-top:6px;font-size:9px;text-align:right;">
-        <div>Points Earned: +${sale.loyaltyPointsEarned} pts</div>
-        <div>Balance: ${sale.loyaltyPointsBalance ?? 0} pts</div>
-        ${sale.redeemLoyalty ? '<div style="font-weight:700;text-transform:uppercase">Points Redeemed: -1000 pts</div>' : ""}
-       </div>`
+    ? `
+    <div style="border:1px solid #ddd;border-radius:4px;margin:8px 0;overflow:hidden">
+      <div style="background:#000;color:#fff;font-weight:900;text-align:center;padding:4px 6px;font-size:10px;letter-spacing:1px">LOYALTY POINTS LEDGER</div>
+      <div style="padding:6px 8px;font-size:10px">
+        <div style="display:flex;justify-content:space-between;padding:2px 0">
+          <span>Points Earned Today:</span><span style="font-weight:700">+${sale.loyaltyPointsEarned}</span>
+        </div>
+        ${sale.redeemLoyalty ? `<div style="display:flex;justify-content:space-between;padding:2px 0"><span>Points Redeemed:</span><span style="font-weight:700;color:#b00">-1000 pts</span></div>` : ""}
+        <div style="display:flex;justify-content:space-between;padding:2px 0;font-weight:900;font-size:11px">
+          <span>Total Points Balance:</span><span>${sale.loyaltyPointsBalance ?? 0} pts</span>
+        </div>
+      </div>
+    </div>`
     : "";
 
   return `<!DOCTYPE html>
 <html>
 <head>
 <meta charset="utf-8" />
-<title>Receipt ${sale.receiptNumber}</title>
+<title>${statusLabel} ${sale.receiptNumber}</title>
 <style>
-  @page {
-    size: 80mm auto;
-    margin: 0;
-  }
-  html, body {
-    width: 80mm;
-    margin: 0;
-    padding: 0;
-    background: #fff;
-    color: #000;
-  }
-  @media print {
-    html, body {
-      width: 80mm !important;
-      margin: 0 !important;
-      padding: 4px 8px !important;
-    }
-  }
+  @page { size: 80mm auto; margin: 0; }
+  html, body { width: 80mm; margin: 0; padding: 0; background: #fff; color: #000; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: 'Courier New', Courier, monospace;
-    font-size: 11px;
-    padding: 8px 10px 16px;
-    line-height: 1.5;
-  }
-  .center { text-align: center; }
-  .bold { font-weight: 700; }
-  .divider { border-top: 1px solid #000; margin: 6px 0; }
-  .divider-dash { border-top: 1px dashed #000; margin: 6px 0; }
-  table { width: 100%; border-collapse: collapse; }
-  th { font-weight: 700; border-bottom: 1px solid #000; padding-bottom: 4px; }
-  .right { text-align: right; }
-  .footer { font-size: 9px; text-align: center; margin-top: 10px; }
+  body { font-family: Arial, Helvetica, sans-serif; font-size: 10px; padding: 8px 8px 20px; line-height: 1.4; }
+  @media print { html, body { width: 80mm !important; margin: 0 !important; } }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
 </head>
 <body>
-  <div class="center" style="margin-bottom:10px">
-    <div style="font-size:14px;font-weight:900;font-family:Arial,sans-serif;letter-spacing:1px">MT UNIPOS</div>
-    <div style="font-size:8px;text-transform:uppercase;letter-spacing:2px;color:#555">Mian Talal UniPOS ERP</div>
-    <div style="font-size:9px">${branch}</div>
+
+  <!-- Header -->
+  <div style="text-align:center;margin-bottom:8px">
+    <div style="font-size:13px;font-weight:900;letter-spacing:1px">🛒 MT UniPOS</div>
+    <div style="font-size:8px;color:#555">Smart POS for Smart Business</div>
+    <div style="font-size:13px;font-weight:900;letter-spacing:1px;margin-top:4px;text-transform:uppercase">${businessName}</div>
+    ${city ? `<div style="font-size:9px">${city}</div>` : ""}
+    ${phone ? `<div style="font-size:9px">Ph: ${phone}</div>` : ""}
+    ${ntn ? `<div style="font-size:9px">NTN: ${ntn}</div>` : ""}
   </div>
-  <div class="divider"></div>
-  <div style="margin-bottom:6px;font-size:10px">
-    <div>Receipt: <span class="bold">${sale.receiptNumber}</span></div>
-    <div>Date: ${date}</div>
-    ${sale.cashierName ? `<div>Cashier: ${sale.cashierName}</div>` : ""}
-    <div>Customer: <span class="bold">${sale.customerName}</span></div>
-    ${sale.customerNo && sale.customerNo !== "N/A" ? `<div>Customer No: <span class="bold">${sale.customerNo}</span></div>` : ""}
-    ${sale.paymentMethod ? `<div>Payment: ${sale.paymentMethod}${sale.isCredit ? " (On Credit)" : ""}</div>` : ""}
+
+  <!-- Section Title -->
+  <div style="background:#000;color:#fff;text-align:center;font-weight:900;font-size:10px;letter-spacing:2px;padding:5px 4px;margin-bottom:8px">
+    ${statusLabel}
   </div>
-  <div class="divider"></div>
-  <table style="margin-bottom:6px">
+
+  <!-- Invoice Info -->
+  <div style="border-bottom:1px dashed #aaa;padding-bottom:6px;margin-bottom:6px;font-size:10px">
+    <div style="display:flex;justify-content:space-between"><span>Invoice No:</span><span style="font-weight:900">${sale.receiptNumber}</span></div>
+    <div style="display:flex;justify-content:space-between"><span>Date:</span><span>${dateStr}</span></div>
+    <div style="display:flex;justify-content:space-between"><span>Time:</span><span>${timeStr}</span></div>
+    ${sale.cashierName ? `<div style="display:flex;justify-content:space-between"><span>Cashier:</span><span>${sale.cashierName}</span></div>` : ""}
+    <div style="margin-top:2px">
+      <div style="font-weight:700">${sale.customerName}</div>
+      ${sale.customerNo && sale.customerNo !== "N/A" ? `<div style="color:#555;font-size:9px">ID: ${sale.customerNo}</div>` : ""}
+    </div>
+  </div>
+
+  <!-- Items Table -->
+  <table style="width:100%;border-collapse:collapse;margin-bottom:0">
     <thead>
-      <tr>
-        <th style="text-align:left">Item</th>
-        <th style="text-align:center">Qty</th>
-        <th style="text-align:right">Total</th>
+      <tr style="background:#000;color:#fff">
+        <th style="padding:4px 2px;font-size:9px;text-align:center;width:14px">#</th>
+        <th style="padding:4px 4px;font-size:9px;text-align:left">Item</th>
+        <th style="padding:4px 2px;font-size:9px;text-align:center">Qty</th>
+        <th style="padding:4px 2px;font-size:9px;text-align:right">Rate</th>
+        <th style="padding:4px 2px;font-size:9px;text-align:right">Amt</th>
       </tr>
     </thead>
     <tbody>${itemRows}</tbody>
   </table>
-  <div class="divider"></div>
-  <div style="text-align:right;font-size:10px;margin-bottom:4px">
-    <div>Subtotal: ${currencySymbol} ${sale.subtotal.toFixed(2)}</div>
-    ${sale.tax > 0 ? `<div>Tax: ${currencySymbol} ${sale.tax.toFixed(2)}</div>` : ""}
-    ${sale.discount > 0 ? `<div>Discount: -${currencySymbol} ${sale.discount.toFixed(2)}</div>` : ""}
+
+  <!-- Totals -->
+  <div style="border-top:1px dashed #aaa;border-bottom:1px dashed #aaa;padding:5px 0;margin:4px 0;font-size:10px">
+    <div style="display:flex;justify-content:space-between"><span>Total Items:</span><span style="font-weight:700">${totalItems}</span></div>
+    <div style="display:flex;justify-content:space-between"><span>Total Quantity:</span><span style="font-weight:700">${totalQty}</span></div>
+    ${sale.discount > 0 ? `<div style="display:flex;justify-content:space-between"><span>Discount:</span><span style="font-weight:700">-${currencySymbol} ${Math.round(sale.discount)}</span></div>` : ""}
+    ${sale.tax > 0 ? `<div style="display:flex;justify-content:space-between"><span>Tax:</span><span style="font-weight:700">${currencySymbol} ${Math.round(sale.tax)}</span></div>` : ""}
+    <div style="display:flex;justify-content:space-between"><span>Sub Total:</span><span style="font-weight:700">${currencySymbol} ${Math.round(sale.subtotal)}</span></div>
   </div>
-  <div class="divider-dash"></div>
-  <div style="text-align:right;font-size:14px;font-weight:900;margin-bottom:6px">
-    TOTAL: ${currencySymbol} ${sale.total.toFixed(2)}
+
+  <!-- Grand Total -->
+  <div style="background:#000;color:#fff;display:flex;justify-content:space-between;align-items:center;padding:7px 6px;margin:4px 0;font-weight:900;font-size:13px">
+    <span>GRAND TOTAL:</span>
+    <span>${currencySymbol} ${Math.round(sale.total)}</span>
   </div>
+
+  <!-- Payment Details -->
+  <div style="border:1px solid #ddd;border-radius:4px;margin:8px 0;overflow:hidden">
+    <div style="background:#f5f5f5;font-weight:900;font-size:10px;padding:4px 8px;letter-spacing:1px;border-bottom:1px solid #ddd">PAYMENT DETAILS</div>
+    <div style="padding:6px 8px;font-size:10px">
+      <div style="display:flex;justify-content:space-between;padding:2px 0"><span>Payment Method:</span><span style="font-weight:700">${sale.paymentMethod || "Cash"}</span></div>
+      ${receivedAmt !== undefined ? `<div style="display:flex;justify-content:space-between;padding:2px 0"><span>Received Amount:</span><span style="font-weight:700">${currencySymbol} ${Math.round(receivedAmt)}</span></div>` : ""}
+      ${changeAmt > 0 ? `<div style="display:flex;justify-content:space-between;padding:2px 0"><span>Change Returned:</span><span style="font-weight:700;color:#007700">${currencySymbol} ${Math.round(changeAmt)}</span></div>` : ""}
+    </div>
+  </div>
+
   ${loyaltySection}
-  ${sale.notes ? `<div style="font-size:9px;margin-top:6px;border-top:1px dashed #000;padding-top:4px">Note: ${sale.notes}</div>` : ""}
-  <div class="footer">
-    ─────────────────<br/>
-    Thank you for shopping!<br/>
-    Powered by MT UniPOS SaaS ERP<br/>
-    ─────────────────
+
+  <!-- Thank You -->
+  <div style="text-align:center;margin-top:10px;font-size:9px">
+    <div style="font-weight:900;font-size:12px">THANK YOU!</div>
+    <div style="margin-top:3px;color:#333;white-space:pre-line">${receiptFooter.replace(/\./g, ".\n")}</div>
   </div>
+
+  <!-- Barcode -->
+  <div style="text-align:center;margin:10px 0 4px">
+    <svg id="barcode"></svg>
+    <div style="font-size:9px;font-weight:700;letter-spacing:1px;margin-top:2px">${sale.receiptNumber}</div>
+  </div>
+
+  <!-- Footer -->
+  <div style="text-align:center;font-size:8px;color:#555;margin-top:8px;border-top:1px dashed #aaa;padding-top:5px">
+    Powered By: MT UniPOS | Developed By: MT Softwares
+  </div>
+
+  <script>
+    try {
+      JsBarcode("#barcode", "${sale.receiptNumber}", {
+        format: "CODE128",
+        width: 1.5,
+        height: 40,
+        displayValue: false,
+        margin: 0
+      });
+    } catch(e) {
+      console.error(e);
+    }
+  </script>
 </body>
 </html>`;
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
-export default function ThermalSlipModal({ sale, currencySymbol, branch = "Store", onClose, onBack }: Props) {
-  const iframeRef = useRef<HTMLIFrameElement>(null);
+export default function ThermalSlipModal({
+  sale,
+  currencySymbol,
+  branch = "Store",
+  businessSettings,
+  onClose,
+  onBack,
+  isHidden = false
+}: Props) {
   const slipRef = useRef<HTMLDivElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const { localReceiptsDirHandle, currentUser } = useGlobalContext();
+  const [isAutoSaving, setIsAutoSaving] = useState(false);
+  const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saving" | "success" | "error">("idle");
+  const hasAutoSaved = useRef(false);
 
-  const slipHTML = buildSlipHTML(sale, currencySymbol, branch);
+  const slipHTML = buildSlipHTML(sale, currencySymbol, branch, businessSettings);
+
+  // Auto-save logic
+  useEffect(() => {
+    if (hasAutoSaved.current || !slipRef.current) return;
+    hasAutoSaved.current = true;
+    
+    const performAutoSave = async () => {
+      try {
+        setIsAutoSaving(true);
+        setAutoSaveStatus("saving");
+        
+        await new Promise(r => setTimeout(r, 800));
+        
+        if (!slipRef.current) throw new Error("Slip DOM element not found");
+
+        const { toBlob } = await import("html-to-image");
+        const blob = await toBlob(slipRef.current, {
+          backgroundColor: "#ffffff",
+          pixelRatio: 2, // Equivalent to scale: 2
+        });
+
+        if (!blob) {
+          throw new Error("Failed to generate image blob");
+        }
+
+        const safeTenantId = currentUser?.tenantId || "UnknownTenant";
+        const cloudFileName = `${safeTenantId}/${sale.receiptNumber}.jpg`;
+        const localFileName = `${sale.receiptNumber}.jpg`;
+        
+        let cloudSuccess = false;
+        let localSuccess = false;
+
+        // 1. Online Storage (Supabase)
+        try {
+          const { error } = await supabase.storage.from('receipts').upload(cloudFileName, blob, {
+            contentType: 'image/jpeg',
+            upsert: true
+          });
+          if (error) {
+            console.error("Supabase Storage Error:", error);
+          } else {
+            cloudSuccess = true;
+          }
+        } catch (err) {
+          console.error("Supabase upload exception:", err);
+        }
+        
+        // 2. Offline Storage (Local Directory)
+        if (localReceiptsDirHandle) {
+          try {
+            const fileHandle = await localReceiptsDirHandle.getFileHandle(localFileName, { create: true });
+            const writable = await fileHandle.createWritable();
+            await writable.write(blob);
+            await writable.close();
+            localSuccess = true;
+          } catch (err) {
+            console.error("Local Save Error:", err);
+          }
+        } else {
+          console.log("No local folder selected, skipping local save.");
+        }
+        
+        if (cloudSuccess || localSuccess) {
+          setAutoSaveStatus("success");
+        } else {
+          setAutoSaveStatus("error");
+        }
+      } catch (err: any) {
+        console.error("Auto-save general error:", err);
+        setAutoSaveStatus("error");
+      } finally {
+        setIsAutoSaving(false);
+      }
+    };
+
+    performAutoSave();
+  }, [sale.receiptNumber, localReceiptsDirHandle]);
 
   const handlePrint = () => {
-    const win = window.open("", "_blank", "width=400,height=700");
+    const win = window.open("", "_blank", "width=420,height=800");
     if (!win) return;
     win.document.write(slipHTML);
     win.document.close();
@@ -176,7 +335,7 @@ export default function ThermalSlipModal({ sale, currencySymbol, branch = "Store
       const html2canvas = (await import("html2canvas-pro")).default;
       const canvas = await html2canvas(slipRef.current, {
         backgroundColor: "#ffffff",
-        scale: 2,
+        scale: 3,
         logging: false,
         useCORS: true
       });
@@ -190,16 +349,31 @@ export default function ThermalSlipModal({ sale, currencySymbol, branch = "Store
     }
   };
 
-  const date = new Date(sale.date).toLocaleString("en-PK", {
-    day: "2-digit", month: "short", year: "numeric",
-    hour: "2-digit", minute: "2-digit"
-  });
+  const dateObj = new Date(sale.date);
+  const dateStr = dateObj.toLocaleDateString("en-PK", { day: "2-digit", month: "2-digit", year: "numeric" });
+  const timeStr = dateObj.toLocaleTimeString("en-PK", { hour: "2-digit", minute: "2-digit", hour12: true });
+
+  const businessName = businessSettings?.businessName || "TALAL MART";
+  const city = businessSettings?.city || "Lahore";
+  const phone = businessSettings?.phone || "";
+  const ntn = businessSettings?.taxNumber || "";
+  const receiptFooter = businessSettings?.receiptFooter || "Thank You! Exchange Within 7 Days.\nNo Return Without Original Invoice";
+
+  const totalItems = sale.items.length;
+  const totalQty = sale.items.reduce((a, i) => a + i.qty, 0);
+
+  const statusLabel = sale.status === "Returned" || sale.status === "Refunded"
+    ? "RETURN RECEIPT"
+    : "CASH SALE RECEIPT";
+
+  const receivedAmt = sale.receivedAmount ?? (sale.paymentMethod === "Cash" ? sale.total : undefined);
+  const changeAmt = sale.changeReturned ?? (receivedAmt !== undefined ? Math.max(0, receivedAmt - sale.total) : 0);
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 font-sans">
+    <div className={isHidden ? "fixed -left-[9999px] top-0 opacity-0 pointer-events-none z-[-1]" : "fixed inset-0 z-[200] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 font-sans"}>
       <div className="bg-[#0d0d0d] border border-brand-dark-border rounded-2xl w-full max-w-sm shadow-2xl flex flex-col max-h-[96vh]">
 
-        {/* Header */}
+        {/* Modal Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-brand-dark-border shrink-0">
           <div className="flex items-center gap-2">
             {onBack && (
@@ -208,7 +382,12 @@ export default function ThermalSlipModal({ sale, currencySymbol, branch = "Store
               </button>
             )}
             <div>
-              <h3 className="font-black text-white text-sm">Thermal Slip Preview</h3>
+              <h3 className="font-black text-white text-sm flex items-center gap-2">
+                Thermal Slip
+                {autoSaveStatus === "saving" && <Loader2 size={12} className="animate-spin text-brand-sky" />}
+                {autoSaveStatus === "success" && <span className="text-[9px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-500/30">Auto-saved</span>}
+                {autoSaveStatus === "error" && <span className="text-[9px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded border border-red-500/30" title="Check console for errors">Save Failed</span>}
+              </h3>
               <p className="text-[9px] text-gray-500 font-mono">{sale.receiptNumber}</p>
             </div>
           </div>
@@ -217,99 +396,188 @@ export default function ThermalSlipModal({ sale, currencySymbol, branch = "Store
           </button>
         </div>
 
-        {/* Slip preview — 80mm width */}
+        {/* Slip Preview */}
         <div className="flex-grow overflow-y-auto p-4 flex justify-center items-start bg-gray-900/40">
           <div
             ref={slipRef}
-            className="bg-white text-black font-mono text-[11px] leading-relaxed shadow-2xl"
-            style={{ width: "80mm", minWidth: "80mm", padding: "8px 10px 20px" }}
+            className="bg-white text-black shadow-2xl"
+            style={{
+              width: "302px",
+              minWidth: "302px",
+              fontFamily: "Arial, Helvetica, sans-serif",
+              fontSize: "10px",
+              padding: "10px 10px 20px",
+              lineHeight: 1.4
+            }}
           >
-            {/* Store Header */}
-            <div className="text-center mb-3 space-y-0.5">
-              <div className="font-sans font-black text-sm tracking-tight">MT UNIPOS</div>
-              <div className="text-[8px] uppercase tracking-widest text-gray-500">Mian Talal UniPOS ERP</div>
-              <div className="text-[9px] text-gray-700">{branch}</div>
+            {/* ── Store Header ── */}
+            <div style={{ textAlign: "center", marginBottom: "8px" }}>
+              <div style={{ fontSize: "14px", fontWeight: 900, letterSpacing: "0.5px" }}>🛒 MT UniPOS</div>
+              <div style={{ fontSize: "8px", color: "#555" }}>Smart POS for Smart Business</div>
+              <div style={{ fontSize: "14px", fontWeight: 900, letterSpacing: "0.5px", marginTop: "4px", textTransform: "uppercase" }}>{businessName}</div>
+              {city && <div style={{ fontSize: "9px" }}>{city}</div>}
+              {phone && <div style={{ fontSize: "9px" }}>Ph: {phone}</div>}
+              {ntn && <div style={{ fontSize: "9px" }}>NTN: {ntn}</div>}
             </div>
 
-            <div className="border-t border-black" />
-
-            {/* Meta */}
-            <div className="py-1.5 space-y-0.5 text-[10px]">
-              <div>Receipt: <span className="font-bold">{sale.receiptNumber}</span></div>
-              <div>Date: {date}</div>
-              {sale.cashierName && <div>Cashier: {sale.cashierName}</div>}
-              <div>Customer: <span className="font-bold">{sale.customerName}</span></div>
-              {sale.customerNo && sale.customerNo !== "N/A" && (
-                <div>Customer No: <span className="font-bold">{sale.customerNo}</span></div>
-              )}
-              {sale.paymentMethod && (
-                <div>Payment: {sale.paymentMethod}{sale.isCredit ? " (On Credit)" : ""}</div>
-              )}
+            {/* ── Receipt Type Header ── */}
+            <div style={{ background: "#000", color: "#fff", textAlign: "center", fontWeight: 900, fontSize: "10px", letterSpacing: "2px", padding: "5px 4px", marginBottom: "8px" }}>
+              {statusLabel}
             </div>
 
-            <div className="border-t border-black" />
+            {/* ── Invoice Info ── */}
+            <div style={{ borderBottom: "1px dashed #aaa", paddingBottom: "6px", marginBottom: "6px", fontSize: "10px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span>Invoice No:</span><span style={{ fontWeight: 900 }}>{sale.receiptNumber}</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span>Date:</span><span>{dateStr}</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span>Time:</span><span>{timeStr}</span>
+              </div>
+              {sale.cashierName && (
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <span>Cashier:</span><span>{sale.cashierName}</span>
+                </div>
+              )}
+              <div style={{ marginTop: "3px" }}>
+                <div style={{ fontWeight: 700 }}>{sale.customerName}</div>
+                {sale.customerNo && sale.customerNo !== "N/A" && (
+                  <div style={{ color: "#555", fontSize: "9px" }}>ID: {sale.customerNo}</div>
+                )}
+              </div>
+            </div>
 
-            {/* Items */}
-            <table className="w-full text-[10px] my-1.5">
+            {/* ── Items Table ── */}
+            <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "0" }}>
               <thead>
-                <tr className="border-b border-black">
-                  <th className="text-left pb-1 font-bold">Item</th>
-                  <th className="text-center pb-1 font-bold">Qty</th>
-                  <th className="text-right pb-1 font-bold">Total</th>
+                <tr style={{ background: "#000", color: "#fff" }}>
+                  <th style={{ padding: "4px 2px", fontSize: "9px", textAlign: "center", width: "16px" }}>#</th>
+                  <th style={{ padding: "4px 4px", fontSize: "9px", textAlign: "left" }}>Item</th>
+                  <th style={{ padding: "4px 2px", fontSize: "9px", textAlign: "center" }}>Qty</th>
+                  <th style={{ padding: "4px 2px", fontSize: "9px", textAlign: "right" }}>Rate</th>
+                  <th style={{ padding: "4px 2px", fontSize: "9px", textAlign: "right" }}>Amt</th>
                 </tr>
               </thead>
               <tbody>
-                {sale.items.map((item, i) => (
-                  <tr key={i} className="border-b border-gray-200">
-                    <td className="py-0.5 pr-1 break-words">{item.productName}</td>
-                    <td className="py-0.5 text-center whitespace-nowrap px-1">
-                      {typeof item.qty === "number" && item.qty % 1 !== 0 ? item.qty.toFixed(3) : item.qty}
-                    </td>
-                    <td className="py-0.5 text-right whitespace-nowrap">
-                      {currencySymbol} {item.subtotal.toFixed(2)}
-                    </td>
-                  </tr>
-                ))}
+                {sale.items.map((item, idx) => {
+                  const rate = item.price ?? (item.subtotal / item.qty);
+                  const qtyStr = typeof item.qty === "number" && item.qty % 1 !== 0
+                    ? item.qty.toFixed(3)
+                    : String(item.qty);
+                  return (
+                    <tr key={idx}>
+                      <td style={{ padding: "3px 2px", fontSize: "10px", textAlign: "center", borderBottom: "1px dotted #ccc" }}>{idx + 1}</td>
+                      <td style={{ padding: "3px 4px", fontSize: "10px", wordBreak: "break-word", borderBottom: "1px dotted #ccc" }}>{item.productName}</td>
+                      <td style={{ padding: "3px 2px", fontSize: "10px", textAlign: "center", whiteSpace: "nowrap", borderBottom: "1px dotted #ccc" }}>{qtyStr}</td>
+                      <td style={{ padding: "3px 2px", fontSize: "10px", textAlign: "right", whiteSpace: "nowrap", borderBottom: "1px dotted #ccc" }}>{Math.round(rate)}</td>
+                      <td style={{ padding: "3px 2px", fontSize: "10px", textAlign: "right", whiteSpace: "nowrap", fontWeight: 700, borderBottom: "1px dotted #ccc" }}>{Math.round(item.subtotal)}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
 
-            <div className="border-t border-black" />
-
-            {/* Totals */}
-            <div className="text-right text-[10px] py-1.5 space-y-0.5">
-              <div>Subtotal: {currencySymbol} {sale.subtotal.toFixed(2)}</div>
-              {sale.tax > 0 && <div>Tax: {currencySymbol} {sale.tax.toFixed(2)}</div>}
-              {sale.discount > 0 && <div>Discount: -{currencySymbol} {sale.discount.toFixed(2)}</div>}
+            {/* ── Subtotals ── */}
+            <div style={{ borderTop: "1px dashed #aaa", borderBottom: "1px dashed #aaa", padding: "5px 0", margin: "4px 0", fontSize: "10px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span>Total Items:</span><span style={{ fontWeight: 700 }}>{totalItems}</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span>Total Quantity:</span><span style={{ fontWeight: 700 }}>{totalQty}</span>
+              </div>
+              {sale.discount > 0 && (
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <span>Discount:</span><span style={{ fontWeight: 700 }}>-{currencySymbol} {Math.round(sale.discount)}</span>
+                </div>
+              )}
+              {sale.tax > 0 && (
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <span>Tax:</span><span style={{ fontWeight: 700 }}>{currencySymbol} {Math.round(sale.tax)}</span>
+                </div>
+              )}
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span>Sub Total:</span><span style={{ fontWeight: 700 }}>{currencySymbol} {Math.round(sale.subtotal)}</span>
+              </div>
             </div>
 
-            <div className="border-t border-dashed border-black" />
-
-            <div className="text-right font-bold text-sm py-1.5">
-              TOTAL: {currencySymbol} {sale.total.toFixed(2)}
+            {/* ── Grand Total Bar ── */}
+            <div style={{ background: "#000", color: "#fff", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "7px 6px", margin: "4px 0", fontWeight: 900, fontSize: "13px" }}>
+              <span>GRAND TOTAL:</span>
+              <span>{currencySymbol} {Math.round(sale.total)}</span>
             </div>
 
-            {/* Loyalty */}
+            {/* ── Payment Details ── */}
+            <div style={{ border: "1px solid #ddd", borderRadius: "4px", margin: "8px 0", overflow: "hidden" }}>
+              <div style={{ background: "#f5f5f5", fontWeight: 900, fontSize: "10px", padding: "4px 8px", letterSpacing: "1px", borderBottom: "1px solid #ddd" }}>
+                PAYMENT DETAILS
+              </div>
+              <div style={{ padding: "6px 8px", fontSize: "10px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", padding: "2px 0" }}>
+                  <span>Payment Method:</span><span style={{ fontWeight: 700 }}>{sale.paymentMethod || "Cash"}</span>
+                </div>
+                {receivedAmt !== undefined && (
+                  <div style={{ display: "flex", justifyContent: "space-between", padding: "2px 0" }}>
+                    <span>Received Amount:</span><span style={{ fontWeight: 700 }}>{currencySymbol} {Math.round(receivedAmt)}</span>
+                  </div>
+                )}
+                {changeAmt > 0 && (
+                  <div style={{ display: "flex", justifyContent: "space-between", padding: "2px 0" }}>
+                    <span>Change Returned:</span><span style={{ fontWeight: 700, color: "#007700" }}>{currencySymbol} {Math.round(changeAmt)}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* ── Loyalty Points ── */}
             {sale.loyaltyPointsEarned !== undefined && sale.customerName !== "Walk-in Customer" && (
-              <div className="border-t border-dashed border-black pt-1.5 text-right space-y-0.5 text-[9px]">
-                <div>Points Earned: +{sale.loyaltyPointsEarned} pts</div>
-                <div>Balance: {sale.loyaltyPointsBalance ?? 0} pts</div>
-                {sale.redeemLoyalty && <div className="font-bold uppercase">Points Redeemed: -1000 pts</div>}
+              <div style={{ border: "1px solid #ddd", borderRadius: "4px", margin: "8px 0", overflow: "hidden" }}>
+                <div style={{ background: "#000", color: "#fff", fontWeight: 900, textAlign: "center", padding: "4px 6px", fontSize: "10px", letterSpacing: "1px" }}>
+                  LOYALTY POINTS LEDGER
+                </div>
+                <div style={{ padding: "6px 8px", fontSize: "10px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", padding: "2px 0" }}>
+                    <span>Points Earned Today:</span><span style={{ fontWeight: 700 }}>+{sale.loyaltyPointsEarned}</span>
+                  </div>
+                  {sale.redeemLoyalty && (
+                    <div style={{ display: "flex", justifyContent: "space-between", padding: "2px 0" }}>
+                      <span>Points Redeemed:</span><span style={{ fontWeight: 700, color: "#b00000" }}>-1000 pts</span>
+                    </div>
+                  )}
+                  <div style={{ display: "flex", justifyContent: "space-between", padding: "2px 0", fontWeight: 900, fontSize: "11px", borderTop: "1px solid #eee", marginTop: "2px", paddingTop: "4px" }}>
+                    <span>Total Points Balance:</span><span>{sale.loyaltyPointsBalance ?? 0} pts</span>
+                  </div>
+                </div>
               </div>
             )}
 
-            {/* Notes */}
+            {/* ── Notes ── */}
             {sale.notes && (
-              <div className="border-t border-dashed border-black pt-1.5 text-[9px] mt-1.5">
+              <div style={{ fontSize: "9px", marginTop: "6px", borderTop: "1px dashed #aaa", paddingTop: "4px" }}>
                 Note: {sale.notes}
               </div>
             )}
 
-            {/* Footer */}
-            <div className="text-center text-[8px] mt-3 pt-2 border-t border-black space-y-0.5">
-              <div>─────────────────</div>
-              <div>Thank you for shopping!</div>
-              <div>Powered by MT UniPOS SaaS ERP</div>
-              <div>─────────────────</div>
+            {/* ── Thank You ── */}
+            <div style={{ textAlign: "center", marginTop: "10px", fontSize: "9px" }}>
+              <div style={{ fontWeight: 900, fontSize: "13px" }}>THANK YOU!</div>
+              <div style={{ marginTop: "4px", color: "#333", fontSize: "9px", lineHeight: 1.6 }}>
+                We Appreciate Your Business<br/>
+                Exchange Within 7 Days<br/>
+                No Return Without Original Invoice
+              </div>
+            </div>
+
+            {/* ── Barcode ── */}
+            <div style={{ textAlign: "center", margin: "10px auto 4px", display: "flex", flexDirection: "column", alignItems: "center" }}>
+              <Barcode value={sale.receiptNumber} width={1.5} height={40} displayValue={false} margin={0} />
+              <div style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "1px", marginTop: "2px" }}>{sale.receiptNumber}</div>
+            </div>
+
+            {/* ── Footer ── */}
+            <div style={{ textAlign: "center", fontSize: "8px", color: "#555", marginTop: "8px", borderTop: "1px dashed #aaa", paddingTop: "5px" }}>
+              Powered By: MT UniPOS | Developed By: MT Softwares
             </div>
           </div>
         </div>

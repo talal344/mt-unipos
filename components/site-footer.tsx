@@ -18,8 +18,8 @@ export default function SiteFooter() {
   ];
 
   return (
-    <footer className="bg-brand-black border-t border-brand-dark-border text-gray-400 py-12 px-4 sm:px-6 lg:px-8 mt-auto font-sans">
-      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
+    <footer className="bg-brand-dark-surface border-t border-brand-dark-border pt-16 pb-8 px-6 lg:px-16 xl:px-24">
+      <div suppressHydrationWarning className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
         
         {/* Branding & Contact */}
         <div className="space-y-4">

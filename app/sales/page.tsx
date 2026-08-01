@@ -262,7 +262,7 @@ function StaffCard({ staffName, sales, currencySymbol, onViewSales, onPrintRepor
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function SalesPage() {
-  const { sales, currencySymbol, currentBranch } = useGlobalContext();
+  const { sales, currencySymbol, currentBranch, businessSettings } = useGlobalContext();
 
   // ── View & Filters ─────────────────────────────────────────────────────────
   const [viewMode, setViewMode]       = useState<ViewMode>("table");
@@ -447,6 +447,7 @@ export default function SalesPage() {
           sale={slipSale}
           currencySymbol={currencySymbol}
           branch={currentBranch}
+          businessSettings={businessSettings}
           onClose={() => setSlipSale(null)}
         />
       )}
