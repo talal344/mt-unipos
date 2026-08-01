@@ -26,7 +26,6 @@ export default function AdminSettingsPage() {
   const [founderCredit, setFounderCredit] = useState("Mian Talal");
   const [baseCurrency, setBaseCurrency] = useState("PKR");
   const [neonIntensity, setNeonIntensity] = useState("Medium");
-  const [devToolbarActive, setDevToolbarActive] = useState(true);
 
   // Sharding thresholds
   const [starterProducts, setStarterProducts] = useState(500);
@@ -149,19 +148,6 @@ export default function AdminSettingsPage() {
                   </select>
                 </div>
               </div>
-
-              <div className="flex items-center gap-4 pt-2">
-                <label className="flex items-center gap-2 text-xs text-gray-400 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={devToolbarActive}
-                    onChange={(e) => setDevToolbarActive(e.target.checked)}
-                    className="rounded border-brand-dark-border text-purple-600 focus:ring-0"
-                  />
-                  Enable floating developer helper toolbar on client endpoints
-                </label>
-              </div>
-
               <button
                 type="submit"
                 className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl shadow-lg transition"
