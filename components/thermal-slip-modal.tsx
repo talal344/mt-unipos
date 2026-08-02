@@ -296,8 +296,14 @@ export default function ThermalSlipModal({
           throw new Error("Failed to generate image blob");
         }
 
+        const folderName = sale.status === "Dues_Recovery"
+          ? "Dues_Clear"
+          : (sale.status === "Returned" || sale.status === "Refunded")
+            ? "Return_Receipts"
+            : "Sales_Receipts";
+
         const safeTenantId = currentUser?.tenantId || "UnknownTenant";
-        const cloudFileName = `${safeTenantId}/${sale.receiptNumber}.jpg`;
+        const cloudFileName = `${safeTenantId}/${folderName}/${sale.receiptNumber}.jpg`;
         const localFileName = `${sale.receiptNumber}.jpg`;
         
         let cloudSuccess = false;
