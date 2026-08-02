@@ -517,25 +517,29 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
           parsedData = value; // Fallback
         }
         
-        if (!navigator.onLine) {
-          queueSyncKey(key);
-          return;
-        }
+        // Immediately queue it to prevent data loss if page reloads before upsert finishes
+        queueSyncKey(key).then(() => {
+          if (!navigator.onLine) return;
 
-        if (possibleTenantId.startsWith('T-') || possibleTenantId.startsWith('AFS-') || possibleTenantId.startsWith('DEMO-')) {
-          const collection = key.replace('_' + possibleTenantId, '');
-          supabase.from('unipos_collections').upsert({
-            tenant_id: possibleTenantId,
-            collection: collection,
-            item_id: 'all',
-            data: parsedData
-          }).then(({error}) => { if (error) queueSyncKey(key); });
-        } else {
-          supabase.from('unipos_global').upsert({
-            key: key,
-            value: parsedData
-          }).then(({error}) => { if (error) queueSyncKey(key); });
-        }
+          if (possibleTenantId.startsWith('T-') || possibleTenantId.startsWith('AFS-') || possibleTenantId.startsWith('DEMO-')) {
+            const collection = key.replace('_' + possibleTenantId, '');
+            supabase.from('unipos_collections').upsert({
+              tenant_id: possibleTenantId,
+              collection: collection,
+              item_id: 'all',
+              data: parsedData
+            }).then(({error}) => { 
+              if (!error) dequeueItem(STORE_SYNC_KEYS, key); 
+            });
+          } else {
+            supabase.from('unipos_global').upsert({
+              key: key,
+              value: parsedData
+            }).then(({error}) => { 
+              if (!error) dequeueItem(STORE_SYNC_KEYS, key); 
+            });
+          }
+        });
       } catch (e) {
         // Queue key if sync failed entirely
         queueSyncKey(key);
@@ -578,7 +582,16 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
             if (pendingKeySet.has(row.key)) return; // Skip if we just pushed it
             const current = window.localStorage.getItem(row.key);
             const incoming = JSON.stringify(row.value);
-            if (current !== incoming) {
+            
+            // Deep compare instead of simple string equality to ignore key reordering
+            let isDifferent = current !== incoming;
+            if (isDifferent && current) {
+              try {
+                isDifferent = JSON.stringify(JSON.parse(current)) !== JSON.stringify(JSON.parse(incoming));
+              } catch(e) {}
+            }
+            
+            if (isDifferent) {
               originalSetItem.call(window.localStorage, row.key, incoming);
               changed = true;
             }
@@ -596,7 +609,16 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
                 if (pendingKeySet.has(localKey)) return; // Skip if we just pushed it
                 const current = window.localStorage.getItem(localKey);
                 const incoming = JSON.stringify(row.data);
-                if (current !== incoming) {
+                
+                // Deep compare instead of simple string equality to ignore key reordering
+                let isDifferent = current !== incoming;
+                if (isDifferent && current) {
+                  try {
+                    isDifferent = JSON.stringify(JSON.parse(current)) !== JSON.stringify(JSON.parse(incoming));
+                  } catch(e) {}
+                }
+                
+                if (isDifferent) {
                   originalSetItem.call(window.localStorage, localKey, incoming);
                   changed = true;
                 }
