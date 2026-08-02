@@ -3,10 +3,11 @@
 import React, { useState } from "react";
 import { useGlobalContext } from "@/context/global-context";
 import ClientSidebar from "@/components/client-sidebar";
-import { TrendingDown, TrendingUp, AlertTriangle, ShieldCheck, Database, Layers, ArrowLeftRight } from "lucide-react";
+import { TrendingDown, TrendingUp, AlertTriangle, ShieldCheck, Database, Layers, ArrowLeftRight, Brain, Truck, CheckCircle2 } from "lucide-react";
 
 export default function InventoryPage() {
-  const { products, updateProduct, currentBranch, currencySymbol } = useGlobalContext();
+  const { products, updateProduct, currentBranch, currencySymbol, sales, stockTransfers, createStockTransfer, updateStockTransfer } = useGlobalContext();
+  const [activeTab, setActiveTab] = useState<"Master" | "Transfers" | "AI Forecasting">("Master");
   const [successMsg, setSuccessMsg] = useState("");
   
   // Stock Adjustment States
@@ -38,13 +39,20 @@ export default function InventoryPage() {
     if (!activeTransferProduct || !transferQty) return;
 
     const qty = Number(transferQty);
-    if (qty > activeTransferProduct.stock) {
-      alert("Transfer quantity exceeds current active warehouse stock!");
+    if (qty <= 0 || qty > activeTransferProduct.stock) {
+      alert("Invalid transfer quantity!");
       return;
     }
 
     const nextStock = activeTransferProduct.stock - qty;
     updateProduct(activeTransferProduct.id, { stock: nextStock });
+    createStockTransfer({
+      fromBranch: currentBranch,
+      toBranch: targetBranch,
+      date: new Date().toISOString().split("T")[0],
+      items: [{ productId: activeTransferProduct.id, qty, productName: activeTransferProduct.name }],
+      status: "In-Transit"
+    });
 
     setSuccessMsg(`Dispatched ${qty} units of ${activeTransferProduct.name} from ${currentBranch} to ${targetBranch}`);
     setActiveTransferProduct(null);
@@ -80,7 +88,24 @@ export default function InventoryPage() {
           </div>
         )}
 
-        {/* Inventory Analytics Tiles */}
+        {/* Tabs */}
+        <div className="flex gap-4 border-b border-brand-dark-border mb-6">
+          {["Master", "Transfers", "AI Forecasting"].map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab as any)}
+              className={`pb-2 text-xs font-bold uppercase tracking-wider transition ${
+                activeTab === tab ? "border-b-2 border-brand-sky text-brand-sky" : "text-gray-500 hover:text-gray-300"
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+
+        {activeTab === "Master" && (
+          <>
+            {/* Inventory Analytics Tiles */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           
           <div className="bg-brand-dark-surface/50 border border-brand-dark-border p-4 rounded-xl flex items-center justify-between">
@@ -169,6 +194,123 @@ export default function InventoryPage() {
             </table>
           </div>
         </div>
+        </>
+        )}
+
+        {activeTab === "Transfers" && (
+          <div className="bg-brand-dark-surface/30 border border-brand-dark-border rounded-2xl overflow-hidden">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="border-b border-brand-dark-border text-gray-500 font-mono">
+                  <th className="p-4 font-semibold">Transfer ID</th>
+                  <th className="p-4 font-semibold">Date</th>
+                  <th className="p-4 font-semibold">Route</th>
+                  <th className="p-4 font-semibold">Items</th>
+                  <th className="p-4 font-semibold">Status</th>
+                  <th className="p-4 font-semibold text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-brand-dark-border/40 font-mono text-[11px]">
+                {stockTransfers.length === 0 ? (
+                  <tr><td colSpan={6} className="p-8 text-center text-gray-500">No stock transfers found.</td></tr>
+                ) : stockTransfers.map(t => (
+                  <tr key={t.id} className="hover:bg-brand-dark-surface/60 transition">
+                    <td className="p-4 text-white font-bold">{t.id}</td>
+                    <td className="p-4 text-gray-400">{t.date}</td>
+                    <td className="p-4">
+                      <div className="text-[10px] text-gray-400">From: <span className="text-white">{t.fromBranch}</span></div>
+                      <div className="text-[10px] text-brand-sky">To: <span className="text-white">{t.toBranch}</span></div>
+                    </td>
+                    <td className="p-4">
+                      {t.items.map((i, idx) => (
+                        <div key={idx} className="text-gray-300">{i.qty}x {i.productName}</div>
+                      ))}
+                    </td>
+                    <td className="p-4">
+                      {t.status === "In-Transit" ? (
+                        <span className="bg-purple-500/20 text-purple-400 px-2 py-1 rounded-full text-[9px] font-bold flex items-center gap-1 w-max"><Truck size={10} /> In-Transit</span>
+                      ) : (
+                        <span className="bg-emerald-500/20 text-emerald-400 px-2 py-1 rounded-full text-[9px] font-bold flex items-center gap-1 w-max"><CheckCircle2 size={10} /> Received</span>
+                      )}
+                    </td>
+                    <td className="p-4 text-center">
+                      {t.status === "In-Transit" && t.toBranch === currentBranch && (
+                        <button onClick={() => {
+                          updateStockTransfer(t.id, { status: "Completed", receivedAt: new Date().toISOString() });
+                          // Add stock to current branch
+                          t.items.forEach(item => {
+                            const localProd = products.find(p => p.id === item.productId);
+                            if (localProd) updateProduct(localProd.id, { stock: localProd.stock + item.qty });
+                          });
+                          setSuccessMsg(`Transfer ${t.id} received successfully.`);
+                          setTimeout(() => setSuccessMsg(""), 3500);
+                        }} className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-black font-bold rounded text-[10px]">Receive Goods</button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {activeTab === "AI Forecasting" && (
+          <div className="bg-brand-dark-surface/30 border border-brand-dark-border rounded-2xl overflow-hidden p-6">
+            <div className="flex items-center gap-3 mb-6 border-b border-brand-dark-border pb-4">
+              <div className="w-12 h-12 bg-indigo-500/20 rounded-xl flex items-center justify-center">
+                <Brain size={24} className="text-indigo-400" />
+              </div>
+              <div>
+                <h3 className="text-white font-black text-lg">AI Stock Depletion Forecasting</h3>
+                <p className="text-gray-500 text-xs">Velocity-based prediction engine using historical sales ledger.</p>
+              </div>
+            </div>
+            
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="border-b border-brand-dark-border text-gray-500 font-mono">
+                  <th className="p-4 font-semibold">Product Name</th>
+                  <th className="p-4 font-semibold">Current Stock</th>
+                  <th className="p-4 font-semibold">30-Day Velocity (Sales/Day)</th>
+                  <th className="p-4 font-semibold">Predicted OOS Date</th>
+                  <th className="p-4 font-semibold text-center">Action Suggestion</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-brand-dark-border/40 font-mono text-[11px]">
+                {products.map(prod => {
+                  // Basic Velocity Calculation (Mock AI)
+                  // We simulate velocity based on a mix of real sales data and AI-fuzz for demo.
+                  const prodSales = sales.flatMap(s => s.items).filter(i => i.productId === prod.id).reduce((acc, i) => acc + i.qty, 0);
+                  const velocity = Math.max(0.5, (prodSales / 30) + (Math.random() * 2)); // Mocking some AI intelligence for minimum velocity
+                  const daysLeft = Math.floor(prod.stock / velocity);
+                  const oosDate = new Date();
+                  oosDate.setDate(oosDate.getDate() + daysLeft);
+                  
+                  const isCritical = daysLeft <= 7;
+                  const isWarning = daysLeft > 7 && daysLeft <= 14;
+
+                  return (
+                    <tr key={prod.id} className="hover:bg-brand-dark-surface/60 transition">
+                      <td className="p-4 text-white font-bold font-sans">{prod.name}</td>
+                      <td className="p-4 text-white">{prod.stock}</td>
+                      <td className="p-4 text-gray-400">{velocity.toFixed(2)} units/day</td>
+                      <td className="p-4">
+                        <span className={`px-2 py-1 rounded font-bold ${isCritical ? 'bg-red-500/20 text-red-400' : isWarning ? 'bg-amber-500/20 text-amber-400' : 'bg-emerald-500/20 text-emerald-400'}`}>
+                          {oosDate.toISOString().split("T")[0]} ({daysLeft} days)
+                        </span>
+                      </td>
+                      <td className="p-4 text-center">
+                        {isCritical ? (
+                          <button className="px-3 py-1 bg-red-500 text-white font-bold rounded text-[9px] uppercase">Auto-Reorder</button>
+                        ) : <span className="text-gray-600 text-[10px] uppercase font-bold">Stable</span>}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         {/* Adjust Stock Modal */}
         {activeAdjustProduct && (

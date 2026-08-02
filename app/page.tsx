@@ -152,6 +152,122 @@ export default function HomePage() {
             </Link>
           </div>
 
+          {/* Animated Product Demo */}
+          <div className="relative max-w-4xl mx-auto mt-12 mb-8 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+            <div className="absolute inset-0 bg-gradient-to-r from-brand-sky/20 to-purple-500/20 blur-3xl opacity-50 rounded-[40px]"></div>
+            <div className="relative bg-[#09090b] border border-white/10 rounded-[24px] shadow-2xl overflow-hidden shadow-brand-sky/10 ring-1 ring-white/5">
+              {/* Fake Window Header */}
+              <div className="bg-[#18181b] px-4 py-3 flex items-center gap-2 border-b border-white/5">
+                <div className="flex gap-1.5">
+                  <div className="w-3 h-3 rounded-full bg-red-500/80"></div>
+                  <div className="w-3 h-3 rounded-full bg-yellow-500/80"></div>
+                  <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
+                </div>
+                <div className="mx-auto flex items-center gap-2 text-[10px] text-gray-400 font-mono bg-black/40 px-3 py-1 rounded border border-white/5">
+                  <Lock size={10} className="text-emerald-400" />
+                  mt-unipos.com/pos
+                </div>
+              </div>
+              {/* Fake POS Interface */}
+              <div className="flex h-[350px]">
+                {/* Left: Products */}
+                <div className="w-2/3 p-4 bg-[#09090b] overflow-hidden relative">
+                  <div className="grid grid-cols-3 gap-3">
+                    {/* Animated Item 1 */}
+                    <div className="bg-[#18181b] border border-white/10 p-3 rounded-xl flex flex-col items-center justify-center h-28 relative group">
+                      <div className="w-10 h-10 bg-brand-sky/20 rounded-full mb-2 flex items-center justify-center"><Package size={16} className="text-brand-sky" /></div>
+                      <div className="text-[10px] font-bold text-white">Wireless Mouse</div>
+                      <div className="text-[10px] text-gray-500">$29.99</div>
+                      {/* Scan Laser Animation */}
+                      <div className="absolute inset-0 border border-brand-sky rounded-xl opacity-0 animate-[scan_3s_ease-in-out_infinite]"></div>
+                      <div className="absolute top-0 left-0 w-full h-[2px] bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)] opacity-0 animate-[laser_3s_ease-in-out_infinite]"></div>
+                    </div>
+                    {/* Item 2 */}
+                    <div className="bg-[#18181b] border border-white/10 p-3 rounded-xl flex flex-col items-center justify-center h-28">
+                      <div className="w-10 h-10 bg-purple-500/20 rounded-full mb-2 flex items-center justify-center"><Laptop size={16} className="text-purple-400" /></div>
+                      <div className="text-[10px] font-bold text-white">Mechanical Keyboard</div>
+                      <div className="text-[10px] text-gray-500">$89.99</div>
+                    </div>
+                    {/* Item 3 */}
+                    <div className="bg-[#18181b] border border-white/10 p-3 rounded-xl flex flex-col items-center justify-center h-28">
+                      <div className="w-10 h-10 bg-emerald-500/20 rounded-full mb-2 flex items-center justify-center"><HeadphonesIcon size={16} className="text-emerald-400" /></div>
+                      <div className="text-[10px] font-bold text-white">Gaming Headset</div>
+                      <div className="text-[10px] text-gray-500">$59.99</div>
+                    </div>
+                  </div>
+                  
+                  {/* Floating Add to Cart notification */}
+                  <div className="absolute top-6 left-1/2 -translate-x-1/2 bg-emerald-500 text-black text-[10px] font-bold px-3 py-1.5 rounded-full flex items-center gap-1 opacity-0 animate-[pop-in_3s_ease-in-out_infinite]">
+                    <CheckCircle2 size={12} />
+                    Added to cart
+                  </div>
+                </div>
+
+                {/* Right: Cart */}
+                <div className="w-1/3 bg-[#18181b] border-l border-white/5 p-4 flex flex-col">
+                  <div className="text-xs font-bold text-white mb-4 flex items-center gap-2">
+                    <Receipt size={14} className="text-brand-sky" />
+                    Current Order
+                  </div>
+                  <div className="flex-1">
+                    {/* Animated Cart Item */}
+                    <div className="flex justify-between items-center bg-black/40 border border-white/5 p-2 rounded mb-2 overflow-hidden relative">
+                      <div className="absolute inset-0 bg-brand-sky/10 animate-[flash_3s_ease-in-out_infinite]"></div>
+                      <div>
+                        <div className="text-[10px] font-bold text-white relative z-10">Wireless Mouse</div>
+                        <div className="text-[9px] text-gray-500 relative z-10">1 x $29.99</div>
+                      </div>
+                      <div className="text-[10px] font-mono text-brand-sky relative z-10">$29.99</div>
+                    </div>
+                  </div>
+                  <div className="pt-3 border-t border-white/10">
+                    <div className="flex justify-between items-center text-xs text-gray-400 mb-1">
+                      <span>Subtotal</span><span>$29.99</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs text-gray-400 mb-2">
+                      <span>Tax (10%)</span><span>$3.00</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm font-bold text-white mb-4">
+                      <span>Total</span><span className="text-brand-sky">$32.99</span>
+                    </div>
+                    <button className="w-full bg-brand-sky text-black text-xs font-bold py-2 rounded-lg flex items-center justify-center gap-2 relative overflow-hidden group">
+                      <span className="relative z-10">Pay Now</span>
+                      <ArrowRight size={14} className="relative z-10" />
+                      <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform"></div>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Inline keyframes for the demo animations */}
+            <style dangerouslySetInnerHTML={{__html: `
+              @keyframes laser {
+                0%, 20% { opacity: 0; top: 0; }
+                30% { opacity: 1; top: 0; }
+                50% { opacity: 1; top: 100%; }
+                60% { opacity: 0; top: 100%; }
+                100% { opacity: 0; }
+              }
+              @keyframes scan {
+                0%, 25% { opacity: 0; }
+                30%, 55% { opacity: 1; }
+                60%, 100% { opacity: 0; }
+              }
+              @keyframes pop-in {
+                0%, 50% { opacity: 0; transform: translate(-50%, 10px) scale(0.9); }
+                55% { opacity: 1; transform: translate(-50%, 0) scale(1.1); }
+                60%, 90% { opacity: 1; transform: translate(-50%, 0) scale(1); }
+                95%, 100% { opacity: 0; transform: translate(-50%, -10px) scale(0.9); }
+              }
+              @keyframes flash {
+                0%, 50% { opacity: 0; }
+                55% { opacity: 1; }
+                65% { opacity: 0; }
+                100% { opacity: 0; }
+              }
+            `}} />
+          </div>
 
         </div>
       </section>

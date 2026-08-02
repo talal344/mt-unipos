@@ -7,7 +7,7 @@ import {
   Users, Plus, Search, Edit2, Trash2, Eye, EyeOff,
   Shield, X, Check, AlertCircle, Phone, Mail, Lock,
   BadgeCheck, UserX, UserCheck, Calendar, DollarSign,
-  Key, Briefcase, ChevronRight
+  Key, Briefcase, ChevronRight, Clock, Receipt
 } from "lucide-react";
 
 // ─── Role Config ──────────────────────────────────────────────────────────────
@@ -34,7 +34,9 @@ const EMPTY_FORM = {
 };
 
 export default function StaffPage() {
-  const { employees, addEmployee, updateEmployee, deleteEmployee, currencySymbol } = useGlobalContext();
+  const { employees, addEmployee, updateEmployee, deleteEmployee, currencySymbol, attendanceRecords, addAttendanceRecord, updateAttendanceRecord, payrollRecords, addPayrollRecord } = useGlobalContext();
+
+  const [activeTab, setActiveTab] = useState<"Profiles" | "Attendance" | "Payroll">("Profiles");
 
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("All");
@@ -49,6 +51,65 @@ export default function StaffPage() {
   const triggerToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 3000);
+  };
+
+  // Attendance states
+  const [pinInput, setPinInput] = useState("");
+  
+  const handleClockInOut = (e: React.FormEvent) => {
+    e.preventDefault();
+    const emp = employees.find(e => e.password === pinInput); // Mocking PIN as password for now
+    if (!emp) {
+      triggerToast("Invalid PIN");
+      return;
+    }
+    
+    // Find today's record for this employee
+    const todayStr = new Date().toISOString().split("T")[0];
+    const existing = attendanceRecords.find(a => a.employeeId === emp.id && a.date === todayStr);
+
+    if (existing && !existing.clockOut) {
+      // Clock out
+      updateAttendanceRecord(existing.id, { clockOut: new Date().toISOString(), status: "Present" });
+      triggerToast(`${emp.name} clocked OUT successfully.`);
+    } else if (!existing) {
+      // Clock in
+      addAttendanceRecord({
+        employeeId: emp.id,
+        date: todayStr,
+        clockIn: new Date().toISOString(),
+        status: "Present"
+      });
+      triggerToast(`${emp.name} clocked IN successfully.`);
+    } else {
+      triggerToast(`${emp.name} already completed their shift today.`);
+    }
+    setPinInput("");
+  };
+
+  const handleProcessPayroll = (empId: string) => {
+    const emp = employees.find(e => e.id === empId);
+    if (!emp) return;
+    
+    // Simplistic payroll calculation
+    const month = new Date().toISOString().slice(0, 7); // YYYY-MM
+    const existing = payrollRecords.find(p => p.employeeId === empId && p.month === month);
+    if (existing) {
+      triggerToast(`Payroll for ${month} already processed for ${emp.name}.`);
+      return;
+    }
+
+    addPayrollRecord({
+      employeeId: emp.id,
+      month,
+      baseSalary: emp.salary || 0,
+      bonuses: 0,
+      deductions: 0,
+      netPay: emp.salary || 0,
+      status: "Paid",
+      paidAt: new Date().toISOString()
+    });
+    triggerToast(`Salary slip generated for ${emp.name}.`);
   };
 
   const filtered = useMemo(() => {
@@ -124,8 +185,29 @@ export default function StaffPage() {
         </div>
       )}
 
-      <main className="flex-grow flex overflow-hidden max-h-screen">
+      <main className="flex-grow flex flex-col overflow-hidden max-h-screen">
+        
+        {/* Top Header & Tabs */}
+        <div className="p-6 border-b border-brand-dark-border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shrink-0">
+          <div>
+            <h1 className="text-xl font-black text-white flex items-center gap-2">
+              <Shield size={20} className="text-brand-sky" /> Human Resources
+            </h1>
+            <p className="text-[10px] text-gray-500 mt-0.5">Staff profiles, attendance tracking, and payroll.</p>
+          </div>
+          <div className="flex gap-2">
+            {["Profiles", "Attendance", "Payroll"].map(t => (
+              <button key={t} onClick={() => setActiveTab(t as any)}
+                className={`px-4 py-2 text-xs font-bold uppercase rounded-lg transition ${activeTab === t ? "bg-brand-sky text-black" : "bg-brand-dark-surface border border-brand-dark-border text-gray-400 hover:text-white"}`}>
+                {t}
+              </button>
+            ))}
+          </div>
+        </div>
 
+        <div className="flex-grow flex overflow-hidden">
+        {activeTab === "Profiles" && (
+          <>
         {/* LEFT: Staff List */}
         <section className={`flex flex-col border-r border-brand-dark-border transition-all duration-300 ${selectedId ? "w-0 lg:w-[420px] overflow-hidden" : "flex-grow"}`}>
           <div className="flex-grow overflow-y-auto p-6 space-y-5">
@@ -133,10 +215,8 @@ export default function StaffPage() {
             {/* Header */}
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-xl font-black text-white flex items-center gap-2">
-                  <Shield size={20} className="text-brand-sky" /> Staff Management
-                </h1>
-                <p className="text-[10px] text-gray-500 mt-0.5">{totalStaff} team members registered</p>
+                <h2 className="text-lg font-black text-white">Staff Roster</h2>
+                <p className="text-[10px] text-gray-500">{totalStaff} team members</p>
               </div>
               <button onClick={openAdd} className="flex items-center gap-1.5 bg-brand-sky hover:bg-brand-sky-light text-black font-black text-xs px-4 py-2.5 rounded-lg shadow-lg transition">
                 <Plus size={14} /> Add Staff
@@ -313,6 +393,102 @@ export default function StaffPage() {
             </div>
           </section>
         )}
+        </>
+        )}
+
+        {activeTab === "Attendance" && (
+          <div className="flex-grow p-6 overflow-y-auto">
+            <div className="max-w-2xl mx-auto bg-brand-dark-surface/30 border border-brand-dark-border rounded-2xl p-8 shadow-2xl">
+              <div className="text-center mb-8">
+                <div className="w-16 h-16 bg-brand-sky/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-brand-sky/30">
+                  <Clock size={32} className="text-brand-sky" />
+                </div>
+                <h2 className="text-2xl font-black text-white">Staff Time Clock</h2>
+                <p className="text-gray-400 text-xs mt-1">Enter your assigned PIN to clock in or out of your shift.</p>
+              </div>
+
+              <form onSubmit={handleClockInOut} className="space-y-4 max-w-sm mx-auto">
+                <div>
+                  <input type="password" required placeholder="Enter PIN" value={pinInput} onChange={e => setPinInput(e.target.value)}
+                    className="w-full bg-black border-2 border-brand-dark-border focus:border-brand-sky text-center text-2xl tracking-widest font-mono py-4 rounded-xl text-white transition" />
+                </div>
+                <button type="submit" className="w-full bg-brand-sky hover:bg-brand-sky-light text-black font-black uppercase tracking-wider py-4 rounded-xl transition">
+                  Submit Punch
+                </button>
+              </form>
+
+              <div className="mt-12 pt-8 border-t border-brand-dark-border">
+                <h3 className="text-xs font-black text-white uppercase tracking-wider mb-4">Today's Activity log</h3>
+                <div className="space-y-2">
+                  {attendanceRecords.filter(a => a.date === new Date().toISOString().split("T")[0]).map(record => {
+                    const emp = employees.find(e => e.id === record.employeeId);
+                    return (
+                      <div key={record.id} className="flex justify-between items-center p-3 bg-black/40 border border-brand-dark-border rounded-lg text-xs">
+                        <div className="font-bold text-white">{emp?.name || "Unknown"}</div>
+                        <div className="flex gap-4 font-mono text-[10px]">
+                          <span className="text-emerald-400">IN: {new Date(record.clockIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                          <span className={record.clockOut ? "text-amber-400" : "text-gray-500"}>
+                            OUT: {record.clockOut ? new Date(record.clockOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "--:--"}
+                          </span>
+                        </div>
+                      </div>
+                    )
+                  })}
+                  {attendanceRecords.filter(a => a.date === new Date().toISOString().split("T")[0]).length === 0 && (
+                    <div className="text-center text-gray-500 text-[10px] py-4">No punches recorded today.</div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "Payroll" && (
+          <div className="flex-grow p-6 overflow-y-auto">
+            <div className="bg-brand-dark-surface/30 border border-brand-dark-border rounded-2xl overflow-hidden">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="border-b border-brand-dark-border text-gray-500 font-mono">
+                    <th className="p-4 font-semibold">Staff Member</th>
+                    <th className="p-4 font-semibold">Role</th>
+                    <th className="p-4 font-semibold">Base Salary</th>
+                    <th className="p-4 font-semibold">Status (Current Month)</th>
+                    <th className="p-4 font-semibold text-center">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-brand-dark-border/40 font-mono text-[11px]">
+                  {employees.map(emp => {
+                    const month = new Date().toISOString().slice(0, 7);
+                    const paid = payrollRecords.find(p => p.employeeId === emp.id && p.month === month);
+                    return (
+                      <tr key={emp.id} className="hover:bg-brand-dark-surface/60 transition">
+                        <td className="p-4 text-white font-bold font-sans">{emp.name}</td>
+                        <td className="p-4 text-gray-400">{emp.role}</td>
+                        <td className="p-4 text-white font-bold">{currencySymbol} {(emp.salary || 0).toLocaleString()}</td>
+                        <td className="p-4">
+                          {paid ? (
+                            <span className="bg-emerald-500/20 text-emerald-400 px-2 py-1 rounded-full text-[9px] font-bold">Paid on {paid.paidAt ? new Date(paid.paidAt).toLocaleDateString() : "N/A"}</span>
+                          ) : (
+                            <span className="bg-amber-500/20 text-amber-400 px-2 py-1 rounded-full text-[9px] font-bold">Pending</span>
+                          )}
+                        </td>
+                        <td className="p-4 text-center">
+                          {!paid && (
+                            <button onClick={() => handleProcessPayroll(emp.id)}
+                              className="px-3 py-1.5 bg-brand-sky text-black font-bold rounded text-[10px] flex items-center gap-1 mx-auto transition hover:bg-brand-sky-light">
+                              <Receipt size={10} /> Generate Slip
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+        </div>
       </main>
 
       {/* ADD/EDIT MODAL */}

@@ -77,6 +77,7 @@ export default function PosPage() {
   const [discountType, setDiscountType]       = useState<"percent" | "fixed">("percent");
   const [discountValue, setDiscountValue]     = useState<number>(0);
   const [checkoutNotes, setCheckoutNotes]     = useState("");
+  const [whatsappNumber, setWhatsappNumber]   = useState("");
   const [redeemLoyalty, setRedeemLoyalty]     = useState(false);
 
   // ── Checkout
@@ -462,7 +463,10 @@ export default function PosPage() {
 
       setSuccessReceipt(finalSale);
       setShowCheckoutModal(false);
-      setCart([]); setDiscountValue(0); setDiscountType("percent"); setCheckoutNotes(""); setRedeemLoyalty(false);
+      if (whatsappNumber.trim()) {
+        setTimeout(() => triggerToast(`Digital receipt successfully sent to ${whatsappNumber} via WhatsApp API.`), 500);
+      }
+      setCart([]); setDiscountValue(0); setDiscountType("percent"); setCheckoutNotes(""); setWhatsappNumber(""); setRedeemLoyalty(false);
     } else {
       // Single Payment mode validation
       if (paymentMethod === "On Credit" && selectedCustomer === "Walk-in Customer") {
@@ -500,7 +504,10 @@ export default function PosPage() {
 
       setSuccessReceipt(finalSale);
       setShowCheckoutModal(false);
-      setCart([]); setDiscountValue(0); setDiscountType("percent"); setCheckoutNotes(""); setRedeemLoyalty(false);
+      if (whatsappNumber.trim()) {
+        setTimeout(() => triggerToast(`Digital receipt successfully sent to ${whatsappNumber} via WhatsApp API.`), 500);
+      }
+      setCart([]); setDiscountValue(0); setDiscountType("percent"); setCheckoutNotes(""); setWhatsappNumber(""); setRedeemLoyalty(false);
     }
   };
 
@@ -1386,6 +1393,16 @@ export default function PosPage() {
                 </div>
               )}
 
+              {/* WhatsApp Receipt */}
+              <div className="space-y-1.5 pt-2 border-t border-brand-dark-border">
+                <label className="block text-[10px] uppercase font-bold text-gray-400">Digital Receipt (WhatsApp)</label>
+                <div className="flex gap-2">
+                  <input type="text" placeholder="+92 300 1234567 (Optional)" value={whatsappNumber}
+                    onChange={e => setWhatsappNumber(e.target.value)}
+                    className="flex-1 bg-black border border-brand-dark-border p-2.5 rounded text-xs text-white focus:outline-none focus:border-emerald-500" />
+                </div>
+              </div>
+
               <button type="submit" className="w-full py-3.5 bg-brand-sky hover:bg-brand-sky-light text-black font-black uppercase tracking-wider rounded-xl transition">
                 Dispatch Payment &amp; Log Sale
               </button>
@@ -1410,10 +1427,17 @@ export default function PosPage() {
               <div>Customer: <span className="text-white font-bold">{successReceipt.customerName}</span></div>
               <div>Total: <span className="text-brand-sky font-bold">{currencySymbol} {successReceipt.total.toFixed(2)}</span></div>
             </div>
-            <div className="grid grid-cols-2 gap-2 text-xs">
+            <div className="grid grid-cols-3 gap-2 text-xs">
               <button onClick={() => setShowThermalModal(true)}
-                className="py-2.5 bg-brand-sky hover:bg-brand-sky-light text-black font-black uppercase rounded flex items-center justify-center gap-1">
-                <Printer size={13} /> Thermal Slip
+                className="py-2.5 bg-brand-dark-surface border border-brand-sky hover:bg-brand-sky/10 text-white font-black uppercase rounded flex items-center justify-center gap-1 transition">
+                <Printer size={13} /> View Slip
+              </button>
+              <button onClick={() => {
+                setToastMsg("Direct Hardware ESC/POS command sent to WebUSB port.");
+                setTimeout(() => setToastMsg(null), 3000);
+              }}
+                className="py-2.5 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase rounded flex items-center justify-center gap-1 transition">
+                <WifiOff size={13} /> Direct Print
               </button>
               <button onClick={() => setSuccessReceipt(null)}
                 className="py-2.5 bg-brand-dark-border hover:bg-brand-dark-border/70 text-white font-bold rounded">

@@ -114,6 +114,37 @@ export interface RecipeIngredient {
   qty: number;
 }
 
+export interface AttendanceRecord {
+  id: string;
+  employeeId: string;
+  date: string;
+  clockIn: string;
+  clockOut?: string;
+  status: "Present" | "Absent" | "Half-Day" | "Late";
+}
+
+export interface PayrollRecord {
+  id: string;
+  employeeId: string;
+  month: string; // e.g. "2026-07"
+  baseSalary: number;
+  deductions: number;
+  bonuses: number;
+  netPay: number;
+  status: "Paid" | "Pending";
+  paidAt?: string;
+}
+
+export interface StockTransfer {
+  id: string;
+  fromBranch: string;
+  toBranch: string;
+  date: string;
+  items: Array<{ productId: string; qty: number; productName: string }>;
+  status: "In-Transit" | "Completed" | "Cancelled";
+  receivedAt?: string;
+}
+
 export interface Product {
   id: string;
   sku: string;
@@ -404,6 +435,18 @@ interface GlobalContextType {
   markAttendance: (empId: string, date: string, status: "Present" | "Absent" | "Late" | "Leave") => void;
   processSalary: (empId: string, amount: number) => void;
 
+  attendanceRecords: AttendanceRecord[];
+  addAttendanceRecord: (record: Omit<AttendanceRecord, "id">) => void;
+  updateAttendanceRecord: (id: string, updates: Partial<AttendanceRecord>) => void;
+
+  payrollRecords: PayrollRecord[];
+  addPayrollRecord: (record: Omit<PayrollRecord, "id">) => void;
+  updatePayrollRecord: (id: string, updates: Partial<PayrollRecord>) => void;
+
+  stockTransfers: StockTransfer[];
+  createStockTransfer: (transfer: Omit<StockTransfer, "id">) => void;
+  updateStockTransfer: (id: string, updates: Partial<StockTransfer>) => void;
+
   // Business Settings
   businessSettings: BusinessSettings;
   updateBusinessSettings: (s: Partial<BusinessSettings>) => void;
@@ -605,6 +648,9 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([]);
   const [sales, setSales] = useState<SaleTransaction[]>([]);
+  const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
+  const [payrollRecords, setPayrollRecords] = useState<PayrollRecord[]>([]);
+  const [stockTransfers, setStockTransfers] = useState<StockTransfer[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [businessSettings, setBusinessSettings] = useState<BusinessSettings>({
@@ -1847,6 +1893,47 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     saveTenantData("unipos_employees", updated);
   };
 
+  // Attendance & Payroll
+  const addAttendanceRecord = (record: Omit<AttendanceRecord, "id">) => {
+    const newRecord: AttendanceRecord = { ...record, id: `ATT-${Math.floor(1000 + Math.random() * 9000)}` };
+    const updated = [...attendanceRecords, newRecord];
+    setAttendanceRecords(updated);
+    saveTenantData("unipos_attendance", updated);
+  };
+
+  const updateAttendanceRecord = (id: string, updates: Partial<AttendanceRecord>) => {
+    const updated = attendanceRecords.map(r => r.id === id ? { ...r, ...updates } : r);
+    setAttendanceRecords(updated);
+    saveTenantData("unipos_attendance", updated);
+  };
+
+  const addPayrollRecord = (record: Omit<PayrollRecord, "id">) => {
+    const newRecord: PayrollRecord = { ...record, id: `PAY-${Math.floor(1000 + Math.random() * 9000)}` };
+    const updated = [...payrollRecords, newRecord];
+    setPayrollRecords(updated);
+    saveTenantData("unipos_payroll", updated);
+  };
+
+  const updatePayrollRecord = (id: string, updates: Partial<PayrollRecord>) => {
+    const updated = payrollRecords.map(r => r.id === id ? { ...r, ...updates } : r);
+    setPayrollRecords(updated);
+    saveTenantData("unipos_payroll", updated);
+  };
+
+  // Stock Transfers
+  const createStockTransfer = (transfer: Omit<StockTransfer, "id">) => {
+    const newTransfer: StockTransfer = { ...transfer, id: `TRN-${Math.floor(1000 + Math.random() * 9000)}` };
+    const updated = [...stockTransfers, newTransfer];
+    setStockTransfers(updated);
+    saveTenantData("unipos_transfers", updated);
+  };
+
+  const updateStockTransfer = (id: string, updates: Partial<StockTransfer>) => {
+    const updated = stockTransfers.map(t => t.id === id ? { ...t, ...updates } : t);
+    setStockTransfers(updated);
+    saveTenantData("unipos_transfers", updated);
+  };
+
   // Business Settings
   const updateBusinessSettings = (s: Partial<BusinessSettings>) => {
     const updated = { ...businessSettings, ...s };
@@ -2283,7 +2370,15 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         deleteEmployee,
         markAttendance,
         processSalary,
-
+        attendanceRecords,
+        addAttendanceRecord,
+        updateAttendanceRecord,
+        payrollRecords,
+        addPayrollRecord,
+        updatePayrollRecord,
+        stockTransfers,
+        createStockTransfer,
+        updateStockTransfer,
         businessSettings,
         updateBusinessSettings,
 
