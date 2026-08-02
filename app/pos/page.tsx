@@ -105,7 +105,7 @@ export default function PosPage() {
 
   // ── Checkout
   const [showCheckoutModal, setShowCheckoutModal]   = useState(false);
-  const [paymentMethod, setPaymentMethod]           = useState<"Cash"|"Card"|"Bank Transfer"|"EasyPaisa"|"JazzCash"|"On Credit">("Cash");
+  const [paymentMethod, setPaymentMethod]           = useState<"Cash"|"Card"|"Bank Transfer"|"EasyPaisa"|"JazzCash"|"Store Wallet Credit"|"Store Wallet"|"On Credit">("Cash");
   const [amountPaid, setAmountPaid]                 = useState("");
   const [successReceipt, setSuccessReceipt]         = useState<any>(null);
   const [toastMsg, setToastMsg]                     = useState<string|null>(null);
