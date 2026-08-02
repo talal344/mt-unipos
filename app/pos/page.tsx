@@ -571,6 +571,9 @@ export default function PosPage() {
   const loyaltyDiscount= redeemLoyalty ? 100 : 0;
   const cartGrandTotal = Math.max(0, cartSubtotal + cartTax - discountAmount - loyaltyDiscount);
 
+  const selectedCustObj = customers.find(c => c.name === selectedCustomer);
+  const selectedCustWalletBalance = selectedCustObj?.walletBalance || 0;
+
   // ── Checkout
   const handleConfirmCheckout = (e: React.FormEvent) => {
     e.preventDefault();
@@ -597,10 +600,22 @@ export default function PosPage() {
         splits["Cash"] = cashAmt - excess;
       }
 
-      // 4. Validate customer for "On Credit"
+      // 4. Validate customer for "On Credit" and "Store Wallet Credit"
       if (splits["On Credit"] > 0 && selectedCustomer === "Walk-in Customer") {
         triggerToast("On Credit payment requires a registered customer.");
         return;
+      }
+
+      const walletSplitAmt = splits["Store Wallet Credit"] || splits["Store Wallet"] || 0;
+      if (walletSplitAmt > 0) {
+        if (selectedCustomer === "Walk-in Customer") {
+          triggerToast("Store Wallet payment requires a registered customer.");
+          return;
+        }
+        if (walletSplitAmt > selectedCustWalletBalance) {
+          triggerToast(`Entered Store Wallet amount (${currencySymbol} ${walletSplitAmt.toFixed(2)}) exceeds available wallet balance (${currencySymbol} ${selectedCustWalletBalance.toFixed(2)}).`);
+          return;
+        }
       }
 
       // Clean up splits map (only keep positive entries)
@@ -639,6 +654,18 @@ export default function PosPage() {
       if (paymentMethod === "On Credit" && selectedCustomer === "Walk-in Customer") {
         triggerToast("On Credit payment requires a registered customer.");
         return;
+      }
+
+      if ((paymentMethod === "Store Wallet Credit" || paymentMethod === "Store Wallet") && selectedCustomer === "Walk-in Customer") {
+        triggerToast("Store Wallet payment requires a registered customer.");
+        return;
+      }
+
+      if (paymentMethod === "Store Wallet Credit" || paymentMethod === "Store Wallet") {
+        if (selectedCustWalletBalance < cartGrandTotal) {
+          triggerToast(`Insufficient Store Wallet balance (${currencySymbol} ${selectedCustWalletBalance.toFixed(2)}) for Grand Total (${currencySymbol} ${cartGrandTotal.toFixed(2)}). Please use Split Payment.`);
+          return;
+        }
       }
 
       if (paymentMethod === "Cash") {
@@ -1526,26 +1553,50 @@ export default function PosPage() {
                   <label className="block text-[10px] uppercase font-bold text-gray-500 mb-2">Payment Method</label>
                   <div className="grid grid-cols-3 gap-2">
                     {[
-                      { id: "Cash", icon: DollarSign },
-                      { id: "Card", icon: CreditCard },
-                      { id: "Bank Transfer", icon: Landmark },
-                      { id: "EasyPaisa", icon: Wallet },
-                      { id: "JazzCash", icon: Wallet },
-                      { id: "On Credit", icon: CreditCard }
+                      { id: "Cash", icon: DollarSign, label: "Cash" },
+                      { id: "Card", icon: CreditCard, label: "Card" },
+                      { id: "Bank Transfer", icon: Landmark, label: "Bank" },
+                      { id: "EasyPaisa", icon: Wallet, label: "EasyPaisa" },
+                      { id: "JazzCash", icon: Wallet, label: "JazzCash" },
+                      { id: "Store Wallet Credit", icon: Wallet, label: "Store Wallet" },
+                      { id: "On Credit", icon: CreditCard, label: "On Credit" }
                     ].map(m => (
                       <button key={m.id} type="button"
                         onClick={() => { setPaymentMethod(m.id as any); if (m.id === "Cash") setAmountPaid(Math.ceil(cartGrandTotal).toString()); }}
                         className={`p-2 rounded border flex items-center gap-1.5 transition ${
                           m.id === "On Credit"
                             ? paymentMethod === m.id ? "bg-red-500/20 border-red-500 text-white" : "bg-black/60 border-red-500/30 text-red-400 hover:border-red-500/60"
-                            : paymentMethod === m.id ? "bg-brand-sky/15 border-brand-sky text-white" : "bg-black/60 border-brand-dark-border/80 text-gray-400 hover:border-brand-sky/20"
+                            : m.id === "Store Wallet Credit"
+                              ? paymentMethod === m.id ? "bg-emerald-500/20 border-emerald-500 text-white" : "bg-black/60 border-emerald-500/30 text-emerald-400 hover:border-emerald-500/60"
+                              : paymentMethod === m.id ? "bg-brand-sky/15 border-brand-sky text-white" : "bg-black/60 border-brand-dark-border/80 text-gray-400 hover:border-brand-sky/20"
                         }`}
                       >
-                        <m.icon size={11} className={paymentMethod === m.id && m.id === "On Credit" ? "text-red-400" : paymentMethod === m.id ? "text-brand-sky" : ""} />
-                        <span className="text-[9px] font-bold">{m.id}</span>
+                        <m.icon size={11} className={paymentMethod === m.id && m.id === "On Credit" ? "text-red-400" : paymentMethod === m.id && m.id === "Store Wallet Credit" ? "text-emerald-400" : paymentMethod === m.id ? "text-brand-sky" : ""} />
+                        <span className="text-[9px] font-bold">{m.label || m.id}</span>
                       </button>
                     ))}
                   </div>
+
+                  {(paymentMethod === "Store Wallet Credit" || paymentMethod === "Store Wallet") && selectedCustomer === "Walk-in Customer" && (
+                    <div className="mt-2 text-[9px] text-red-400 bg-red-500/10 border border-red-500/20 rounded px-2 py-1.5">
+                      ⚠ Store Wallet payment requires a registered customer. Select a customer first.
+                    </div>
+                  )}
+
+                  {(paymentMethod === "Store Wallet Credit" || paymentMethod === "Store Wallet") && selectedCustomer !== "Walk-in Customer" && (
+                    <div className="mt-2 text-[9px] bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded px-2.5 py-2 font-mono space-y-1">
+                      <div className="flex justify-between font-bold">
+                        <span>💳 {selectedCustomer}&apos;s Store Wallet:</span>
+                        <span>{currencySymbol} {selectedCustWalletBalance.toFixed(2)}</span>
+                      </div>
+                      {selectedCustWalletBalance < cartGrandTotal && (
+                        <div className="text-red-400 text-[9px]">
+                          ⚠️ Insufficient Wallet balance for full payment ({currencySymbol} {cartGrandTotal.toFixed(2)}). Use Split Payment to pay partial amount.
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   {paymentMethod === "On Credit" && selectedCustomer === "Walk-in Customer" && (
                     <div className="mt-2 text-[9px] text-red-400 bg-red-500/10 border border-red-500/20 rounded px-2 py-1.5">
                       ⚠ On Credit requires a registered customer. Select a customer first.
@@ -1559,7 +1610,14 @@ export default function PosPage() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  <label className="block text-[10px] uppercase font-bold text-gray-500">Split Breakdown</label>
+                  <div className="flex items-center justify-between">
+                    <label className="block text-[10px] uppercase font-bold text-gray-500">Split Breakdown</label>
+                    {selectedCustomer !== "Walk-in Customer" && (
+                      <span className="text-[9px] text-emerald-400 font-mono font-bold">
+                        💳 Wallet: {currencySymbol} {selectedCustWalletBalance.toFixed(2)}
+                      </span>
+                    )}
+                  </div>
                   <div className="grid grid-cols-2 gap-2.5 bg-black/40 p-3 rounded-xl border border-brand-dark-border/60">
                     {[
                       { id: "Cash", icon: DollarSign, color: "text-brand-sky" },
@@ -1567,14 +1625,33 @@ export default function PosPage() {
                       { id: "Bank Transfer", icon: Landmark, color: "text-purple-400" },
                       { id: "EasyPaisa", icon: Wallet, color: "text-emerald-400" },
                       { id: "JazzCash", icon: Wallet, color: "text-orange-400" },
+                      { id: "Store Wallet Credit", icon: Wallet, color: "text-emerald-400", label: "Store Wallet" },
                       { id: "On Credit", icon: CreditCard, color: "text-red-400" }
                     ].map(m => {
                       const Icon = m.icon;
+                      const isWallet = m.id === "Store Wallet Credit";
                       return (
                         <div key={m.id} className="space-y-1">
-                          <div className="flex items-center gap-1.5 text-[9px] uppercase font-bold text-gray-400">
-                            <Icon size={10} className={m.color} />
-                            <span>{m.id}</span>
+                          <div className="flex items-center justify-between text-[9px] uppercase font-bold text-gray-400">
+                            <div className="flex items-center gap-1">
+                              <Icon size={10} className={m.color} />
+                              <span>{m.label || m.id}</span>
+                            </div>
+                            {isWallet && selectedCustomer !== "Walk-in Customer" && selectedCustWalletBalance > 0 && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const applyAmt = Math.min(selectedCustWalletBalance, remainingSplit > 0 ? remainingSplit : cartGrandTotal);
+                                  setSplitAmounts(prev => ({
+                                    ...prev,
+                                    "Store Wallet Credit": applyAmt.toFixed(2)
+                                  }));
+                                }}
+                                className="text-[8px] text-emerald-400 hover:underline font-mono"
+                              >
+                                [Apply Max]
+                              </button>
+                            )}
                           </div>
                           <input
                             type="number"
@@ -1593,6 +1670,11 @@ export default function PosPage() {
                       );
                     })}
                   </div>
+                  {parsedSplits["Store Wallet Credit"] > 0 && selectedCustomer === "Walk-in Customer" && (
+                    <div className="text-[9px] text-red-400 bg-red-500/10 border border-red-500/20 rounded px-2 py-1.5">
+                      ⚠ "Store Wallet Credit" split portion requires a registered customer.
+                    </div>
+                  )}
                   {parsedSplits["On Credit"] > 0 && selectedCustomer === "Walk-in Customer" && (
                     <div className="text-[9px] text-red-400 bg-red-500/10 border border-red-500/20 rounded px-2 py-1.5">
                       ⚠ "On Credit" split portion requires a registered customer.
