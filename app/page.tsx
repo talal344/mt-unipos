@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useGlobalContext } from "@/context/global-context";
 import SiteHeader from "@/components/site-header";
 import SiteFooter from "@/components/site-footer";
+import SoftwareShowcase from "@/components/software-showcase";
 import {
   Laptop, ArrowRight, CheckCircle2, Star, TrendingUp, Zap, Check,
   Layers, Award, ShieldCheck, BarChart3, Users, Package, Receipt,
@@ -287,6 +288,11 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          REAL SOFTWARE SHOWCASE GALLERY (Interactive Screenshot Tabs)
+      ══════════════════════════════════════════════════════════════════════ */}
+      <SoftwareShowcase />
 
       {/* ══════════════════════════════════════════════════════════════════════
           INDUSTRIES

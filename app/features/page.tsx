@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import SiteHeader from "@/components/site-header";
 import SiteFooter from "@/components/site-footer";
+import SoftwareShowcase from "@/components/software-showcase";
 import { Laptop, ShoppingCart, Database, Barcode, TrendingUp, DollarSign, Users, Award, Heart, MessageSquare, Brain, Lock } from "lucide-react";
 
 export default function FeaturesPage() {
@@ -87,6 +88,9 @@ export default function FeaturesPage() {
           })}
         </div>
       </section>
+
+      {/* Real Screenshots Showcase */}
+      <SoftwareShowcase />
 
       <SiteFooter />
     </div>
