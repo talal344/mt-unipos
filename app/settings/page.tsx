@@ -5,8 +5,9 @@ import { useGlobalContext } from "@/context/global-context";
 import ClientSidebar from "@/components/client-sidebar";
 import {
   Settings, Building, DollarSign, Award, CreditCard, Save, Check,
-  Sliders, ShieldAlert, RotateCcw, AlertTriangle, FileText, Image, HelpCircle, HardDrive
+  Sliders, ShieldAlert, RotateCcw, AlertTriangle, FileText, Image, HelpCircle, HardDrive, Folder
 } from "lucide-react";
+import { selectAndInitRootFolder } from "@/lib/local-storage-folder";
 
 export default function SettingsPage() {
   const {
@@ -62,10 +63,28 @@ export default function SettingsPage() {
 
   const [toast, setToast] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"general" | "pos" | "loyalty" | "system">("general");
+  const [selectedFolderName, setSelectedFolderName] = useState<string>("");
+
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("unipos_selected_folder_name");
+      if (saved) setSelectedFolderName(saved);
+    }
+  }, []);
 
   const triggerToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 3000);
+  };
+
+  const handleSelectFolder = async () => {
+    const res = await selectAndInitRootFolder();
+    if (res.success && res.folderName) {
+      setSelectedFolderName(res.folderName);
+      triggerToast(`✅ Storage folder set to: "${res.folderName}"! Subfolders created automatically.`);
+    } else if (res.error) {
+      triggerToast(`⚠️ ${res.error}`);
+    }
   };
 
   const handleSave = (e: React.FormEvent) => {
@@ -496,28 +515,32 @@ export default function SettingsPage() {
                   System Database Maintenance
                 </h3>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex flex-col justify-between p-4 bg-brand-dark-surface/50 border border-brand-dark-border rounded-xl">
+                <div className="flex flex-col justify-between p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl space-y-3">
+                  <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="text-xs font-bold text-white flex items-center gap-1.5"><Save size={13} className="text-brand-sky" /> Backup Store Data</h4>
-                      <p className="text-[9px] text-gray-500 mt-1">Download a full JSON backup of your products, sales, and settings.</p>
+                      <h4 className="text-xs font-black text-white flex items-center gap-1.5">
+                        <Folder size={14} className="text-emerald-400" /> Auto-Save Receipts &amp; Reports Storage Folder
+                      </h4>
+                      <p className="text-[10px] text-gray-400 mt-1">
+                        Select a folder on your PC (e.g. Documents). MT UniPOS will automatically create subfolders (<span className="font-mono text-emerald-400 font-bold">Sale Receipts</span>, <span className="font-mono text-emerald-400 font-bold">Reports</span>, etc.) and save files directly into it!
+                      </p>
                     </div>
-                    <button type="button" onClick={handleBackup} className="mt-4 flex items-center justify-center gap-1.5 px-3 py-2 bg-brand-sky hover:bg-brand-sky-light text-black font-black text-[10px] uppercase rounded-lg shadow transition">
-                      <Save size={12} /> Download Backup
-                    </button>
                   </div>
 
-                  <div className="flex flex-col justify-between p-4 bg-brand-dark-surface/50 border border-brand-dark-border rounded-xl">
+                  <div className="flex items-center justify-between bg-black/40 border border-brand-dark-border p-3 rounded-lg text-xs font-mono">
                     <div>
-                      <h4 className="text-xs font-bold text-white flex items-center gap-1.5"><RotateCcw size={13} className="text-brand-sky" /> Restore Store Data</h4>
-                      <p className="text-[9px] text-gray-500 mt-1">Upload a previous JSON backup to restore your store.</p>
+                      <span className="text-gray-500 text-[10px] block">Current Storage Folder:</span>
+                      <span className="text-emerald-400 font-bold">
+                        {selectedFolderName ? `📁 ${selectedFolderName} (Subfolders created)` : "⚠️ Default System Folder (Click button to select custom folder)"}
+                      </span>
                     </div>
-                    <div className="mt-4 relative">
-                      <input type="file" accept=".json" onChange={handleRestore} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-                      <button type="button" className="w-full flex items-center justify-center gap-1.5 px-3 py-2 bg-brand-dark-surface hover:bg-gray-800 border border-brand-dark-border text-white font-black text-[10px] uppercase rounded-lg shadow transition pointer-events-none">
-                        <FileText size={12} /> Select Backup File
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={handleSelectFolder}
+                      className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-black text-[11px] uppercase rounded-lg shadow transition shrink-0 flex items-center gap-1.5"
+                    >
+                      <Folder size={13} /> {selectedFolderName ? "Change Folder" : "Select Storage Folder"}
+                    </button>
                   </div>
                 </div>
 

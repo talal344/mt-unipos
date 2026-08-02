@@ -1,9 +1,9 @@
+import { saveFileToSelectedFolder } from "@/lib/local-storage-folder";
 import { BusinessSettings } from "@/context/global-context";
 
 /**
  * Automatically captures a receipt image and saves it directly into the
- * local disk folder (Documents/MT UniPOS/Sale Receipts, etc.) via backend API.
- * No user interaction, folder picking, or manual download required.
+ * local disk folder chosen by the user (or default folder) with fail-safe fallbacks.
  */
 export async function autoSaveReceiptToDisk(
   sale: any,
@@ -130,19 +130,8 @@ export async function autoSaveReceiptToDisk(
       return { success: false, error: "Canvas capture returned empty data" };
     }
 
-    // 3. POST to /api/save-file
-    const res = await fetch("/api/save-file", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ category, fileName: localFileName, fileBase64: dataUrl }),
-    });
-
-    const json = await res.json();
-    if (json.success) {
-      return { success: true, filePath: json.filePath };
-    } else {
-      return { success: false, error: json.error };
-    }
+    // 3. Save to user selected folder / API / Download fallback
+    return await saveFileToSelectedFolder(category, localFileName, dataUrl);
   } catch (err: any) {
     console.error("autoSaveReceiptToDisk failed:", err);
     return { success: false, error: err?.message || String(err) };

@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { BrowserMultiFormatReader } from '@zxing/browser';
 import { autoSaveReceiptToDisk } from "@/lib/receipt-saver";
+import { selectAndInitRootFolder } from "@/lib/local-storage-folder";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface HeldCart {
@@ -907,25 +908,16 @@ export default function PosPage() {
                 )}
               </div>
               <button onClick={async () => {
-                try {
-                  if (!("showDirectoryPicker" in window)) {
-                    alert("Local directory auto-save requires Chrome, Edge, or a modern desktop browser.");
-                    return;
-                  }
-                  const handle = await (window as any).showDirectoryPicker({ mode: "readwrite" });
-                  const { saveDirHandleToIDB } = await import("@/lib/dir-handle-db");
-                  await saveDirHandleToIDB(handle);
-                  setLocalReceiptsDirHandle(handle);
-                  triggerToast("Local save folder connected & saved permanently!");
-                } catch(err: any) { 
-                  if (err?.name !== "AbortError") {
-                    console.error("Directory selection error:", err);
-                  }
+                const res = await selectAndInitRootFolder();
+                if (res.success && res.folderName) {
+                  triggerToast(`✅ Save Folder Connected: "${res.folderName}"! Subfolders created.`);
+                } else if (res.error && res.error !== "Folder selection cancelled") {
+                  triggerToast(`⚠️ ${res.error}`);
                 }
               }}
-              className={`flex items-center gap-1.5 text-[9px] font-black uppercase px-2 py-1 rounded transition ${localReceiptsDirHandle ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-gray-800 text-gray-400 border border-gray-700 hover:bg-gray-700'}`}>
+              className="flex items-center gap-1.5 text-[9px] font-black uppercase px-2.5 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/20 rounded transition cursor-pointer">
                 <Download size={10} />
-                {localReceiptsDirHandle ? "Auto-Save Active" : "Set Save Folder"}
+                Set Save Folder
               </button>
             </div>
             <button
