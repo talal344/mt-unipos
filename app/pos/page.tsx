@@ -1763,10 +1763,62 @@ export default function PosPage() {
                 className="py-2.5 bg-brand-dark-surface border border-brand-sky hover:bg-brand-sky/10 text-white font-black uppercase rounded flex items-center justify-center gap-1 transition">
                 <Printer size={13} /> View Slip
               </button>
-              <button onClick={() => {
-                setToastMsg("Direct Hardware ESC/POS command sent to WebUSB port.");
-                setTimeout(() => setToastMsg(null), 3000);
-              }}
+              <button onClick={async () => {
+                  // Save receipt to Documents\MT UniPOS folder + auto-print
+                  try {
+                    const { default: html2canvas } = await import("html2canvas-pro");
+                    // Build a temporary hidden slip to capture
+                    const tempDiv = document.createElement("div");
+                    tempDiv.style.cssText = "position:fixed;left:-9999px;top:0;width:302px;background:#fff;padding:10px;font-family:Arial,sans-serif;font-size:10px;z-index:-1;";
+                    tempDiv.innerHTML = `<div style="text-align:center;padding:20px;font-size:11px;font-family:Arial">
+                      <div style="font-size:14px;font-weight:900">${successReceipt.customerName}</div>
+                      <div>Receipt: ${successReceipt.receiptNumber}</div>
+                      <div>Total: ${currencySymbol} ${successReceipt.total.toFixed(2)}</div>
+                      <div>Items: ${successReceipt.items?.length || 0}</div>
+                      <div style="margin-top:8px;font-size:9px;color:#555">Powered by MT UniPOS</div>
+                    </div>`;
+                    document.body.appendChild(tempDiv);
+                    const canvas = await html2canvas(tempDiv, { backgroundColor: "#ffffff", scale: 2, logging: false });
+                    document.body.removeChild(tempDiv);
+                    const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
+
+                    // Save to Documents\MT UniPOS\Sale Receipts
+                    await fetch("/api/save-file", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        category: "sale-receipt",
+                        fileName: `${successReceipt.receiptNumber}.jpg`,
+                        fileBase64: dataUrl,
+                      }),
+                    });
+
+                    // Open print window
+                    const printWin = window.open("", "_blank", "width=420,height=600");
+                    if (printWin) {
+                      printWin.document.write(`<!DOCTYPE html><html><head><style>@page{size:80mm auto;margin:0}body{font-family:Arial;font-size:11px;padding:10px;width:80mm}</style></head><body>
+                        <div style="text-align:center">
+                          <div style="font-size:13px;font-weight:900">MT UniPOS</div>
+                          <div style="font-weight:700">${successReceipt.customerName}</div>
+                          <div>Receipt: <b>${successReceipt.receiptNumber}</b></div>
+                          <div>Total: <b>${currencySymbol} ${successReceipt.total.toFixed(2)}</b></div>
+                          <hr/>
+                          ${successReceipt.items?.map((i: any) => `<div style="display:flex;justify-content:space-between"><span>${i.productName} x${i.qty}</span><span>${currencySymbol} ${i.subtotal}</span></div>`).join("") || ""}
+                          <hr/>
+                          <div style="font-size:9px;color:#555">Powered by MT UniPOS</div>
+                        </div>
+                        <script>window.onload=function(){window.print();}<\/script>
+                      </body></html>`);
+                      printWin.document.close();
+                    }
+                    setToastMsg("✅ Receipt saved to Documents/MT UniPOS & sent to printer!");
+                    setTimeout(() => setToastMsg(null), 3000);
+                  } catch (e) {
+                    console.error("Direct print error:", e);
+                    setToastMsg("⚠️ Could not save receipt. Check if app server is running.");
+                    setTimeout(() => setToastMsg(null), 3000);
+                  }
+                }}
                 className="py-2.5 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase rounded flex items-center justify-center gap-1 transition">
                 <WifiOff size={13} /> Direct Print
               </button>

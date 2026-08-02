@@ -381,8 +381,11 @@ export default function ThermalSlipModal({
       });
       const dataUrl = canvas.toDataURL("image/jpeg", 0.95);
       const a = document.createElement("a");
+      a.href = dataUrl;  // ← was missing — this is what triggers the download
       a.download = `${sale.receiptNumber}.jpg`;
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
     } catch (err) {
       console.error("Failed to generate image:", err);
     }
