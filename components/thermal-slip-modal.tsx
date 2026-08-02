@@ -59,8 +59,8 @@ function buildSlipHTML(
   const dateStr = dateObj.toLocaleDateString("en-PK", { day: "2-digit", month: "2-digit", year: "numeric" });
   const timeStr = dateObj.toLocaleTimeString("en-PK", { hour: "2-digit", minute: "2-digit", hour12: true });
 
-  const businessName = biz?.businessName || "TALAL MART";
-  const city = biz?.city || "Lahore";
+  const businessName = biz?.businessName || "MT STORE";
+  const city = biz?.city || "";
   const phone = biz?.phone || "";
   const ntn = biz?.taxNumber || "";
   const receiptFooter = biz?.receiptFooter || "Thank You! Exchange Within 7 Days. No Return Without Original Invoice.";
@@ -365,8 +365,8 @@ export default function ThermalSlipModal({
   const dateStr = dateObj.toLocaleDateString("en-PK", { day: "2-digit", month: "2-digit", year: "numeric" });
   const timeStr = dateObj.toLocaleTimeString("en-PK", { hour: "2-digit", minute: "2-digit", hour12: true });
 
-  const businessName = businessSettings?.businessName || "TALAL MART";
-  const city = businessSettings?.city || "Lahore";
+  const businessName = businessSettings?.businessName || "MT STORE";
+  const city = businessSettings?.city || "";
   const phone = businessSettings?.phone || "";
   const ntn = businessSettings?.taxNumber || "";
   const receiptFooter = businessSettings?.receiptFooter || "Thank You! Exchange Within 7 Days.\nNo Return Without Original Invoice";

@@ -997,24 +997,49 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     // 0. Load Business Settings for Active Tenant
     const savedSettings = localStorage.getItem("unipos_settings_" + currentUser.tenantId);
     const tenantRecord = tenants.find(t => t.id === currentUser.tenantId);
+    const realBusinessName = currentUser.businessName && currentUser.businessName !== "Unknown" && currentUser.businessName !== "My Business"
+      ? currentUser.businessName
+      : (tenantRecord?.businessName || (isPrimaryDemo ? "Al-Fatah Superstore" : "MT STORE"));
 
     if (savedSettings) {
       try {
         const parsed: BusinessSettings = JSON.parse(savedSettings);
-        // Clean up any stale legacy default data if this is NOT the AFS-101 demo store
-        if (!isPrimaryDemo && parsed.businessName === "Al-Fatah Superstore" && tenantRecord && tenantRecord.businessName !== "Al-Fatah Superstore") {
-          parsed.businessName = tenantRecord.businessName;
-          if (tenantRecord.ownerName) parsed.ownerName = tenantRecord.ownerName;
-          if (tenantRecord.phone) parsed.phone = tenantRecord.phone;
-          if (tenantRecord.email) parsed.email = tenantRecord.email;
-          if (parsed.address === "Gulberg III, Main Boulevard") parsed.address = "";
-          saveTenantData("unipos_settings", parsed);
+        // Aggressively clean up any stale legacy default data if this is NOT the AFS-101 demo store
+        if (!isPrimaryDemo) {
+          let dirty = false;
+          if (parsed.businessName === "Al-Fatah Superstore" || !parsed.businessName) {
+            parsed.businessName = realBusinessName;
+            dirty = true;
+          }
+          if (parsed.ownerName === "Mian Talal") {
+            parsed.ownerName = tenantRecord?.ownerName || currentUser?.name || "Store Owner";
+            dirty = true;
+          }
+          if (parsed.phone === "+92 321 5550100") {
+            parsed.phone = tenantRecord?.phone || "";
+            dirty = true;
+          }
+          if (parsed.email === "talal@alfatah.com") {
+            parsed.email = tenantRecord?.email || currentUser?.email || "";
+            dirty = true;
+          }
+          if (parsed.address === "Gulberg III, Main Boulevard") {
+            parsed.address = "";
+            dirty = true;
+          }
+          if (parsed.taxNumber === "NTN-1234567-8") {
+            parsed.taxNumber = "";
+            dirty = true;
+          }
+          if (dirty) {
+            saveTenantData("unipos_settings", parsed);
+          }
         }
         setBusinessSettings(parsed);
       } catch (e) {}
     } else {
       const initSettings: BusinessSettings = {
-        businessName: tenantRecord?.businessName || currentUser?.businessName || (isPrimaryDemo ? "Al-Fatah Superstore" : "My Business"),
+        businessName: realBusinessName,
         ownerName: tenantRecord?.ownerName || currentUser?.name || (isPrimaryDemo ? "Mian Talal" : "Owner"),
         phone: tenantRecord?.phone || (isPrimaryDemo ? "+92 321 5550100" : ""),
         email: tenantRecord?.email || currentUser?.email || (isPrimaryDemo ? "talal@alfatah.com" : ""),
@@ -1022,7 +1047,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         city: isPrimaryDemo ? "Lahore" : "",
         country: "Pakistan",
         taxNumber: isPrimaryDemo ? "NTN-1234567-8" : "",
-        receiptHeader: tenantRecord?.businessName || currentUser?.businessName || "MT UniPOS ERP",
+        receiptHeader: realBusinessName,
         receiptFooter: "Thank you for shopping! Powered by MT UniPOS.",
         defaultTaxRate: 17,
         defaultCurrency: tenantRecord?.defaultCurrency || "PKR",
