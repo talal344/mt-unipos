@@ -85,30 +85,129 @@ export default function ReportsPage() {
     currentBranch 
   } = useGlobalContext();
 
-  const [period, setPeriod] = useState<"today" | "week" | "month" | "quarter">("month");
-  const [activeTab, setActiveTab] = useState<
-    "overview" | "sales" | "inventory" | "expenses" | "employees" | "customers" | "suppliers" | "payroll"
-  >("overview");
-  const [toast, setToast] = useState<string | null>(null);
+  const [period, setPeriod] = useState<"today" | "week" | "month" | "quarter" | "custom">("month");
+  const [customFromDate, setCustomFromDate] = useState<string>("");
+  const [customToDate, setCustomToDate] = useState<string>("");
 
+  const [activeTab, setActiveTab] = useState<
+    "overview" | "pl" | "sales" | "inventory" | "expenses" | "employees" | "customers" | "suppliers" | "payroll"
+  >("overview");
+
+  // Sales View & Filter States
+  const [salesFilterType, setSalesFilterType] = useState<"all" | "customer" | "staff">("all");
+  const [selectedCustomerFilter, setSelectedCustomerFilter] = useState<string>("ALL");
+  const [selectedStaffFilter, setSelectedStaffFilter] = useState<string>("ALL");
+
+  const [toast, setToast] = useState<string | null>(null);
   const reportContainerRef = useRef<HTMLDivElement>(null);
 
   const triggerToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(null), 3500); };
 
   const PERIOD_LABELS: Record<string, string> = {
-    today: "Today", week: "Last 7 Days", month: "This Month", quarter: "Last Quarter"
+    today: "Today", week: "Last 7 Days", month: "This Month", quarter: "Last Quarter", custom: "Custom Date Range"
   };
 
-  // ── Filter sales & expenses by period ──────────────────────────────────────────────
-  const { from, to } = getRange(period);
-  const filteredSales = useMemo(() =>
-    sales.filter(s => { const d = new Date(s.date); return d >= from && d <= to; }),
-    [sales, period]
-  );
+  // ── Filter sales & expenses by period and filters ──────────────────────────────
+  const { from, to } = useMemo(() => {
+    const now = new Date();
+    let toDate = new Date(now);
+    let fromDate = new Date(now);
+    if (period === "today") { fromDate = new Date(now.setHours(0, 0, 0, 0)); }
+    else if (period === "week") { fromDate.setDate(fromDate.getDate() - 7); }
+    else if (period === "month") { fromDate.setDate(1); fromDate.setHours(0, 0, 0, 0); }
+    else if (period === "quarter") { fromDate.setMonth(fromDate.getMonth() - 3); }
+    else if (period === "custom" && customFromDate && customToDate) {
+      fromDate = new Date(customFromDate + "T00:00:00");
+      toDate = new Date(customToDate + "T23:59:59");
+    }
+    return { from: fromDate, to: toDate };
+  }, [period, customFromDate, customToDate]);
+
+  const filteredSales = useMemo(() => {
+    let list = sales.filter(s => {
+      const d = new Date(s.date);
+      return d >= from && d <= to;
+    });
+
+    if (activeTab === "sales") {
+      if (salesFilterType === "customer" && selectedCustomerFilter !== "ALL") {
+        list = list.filter(s => 
+          (s.customerName || "").toLowerCase().trim() === selectedCustomerFilter.toLowerCase().trim() ||
+          s.customerNo === selectedCustomerFilter
+        );
+      } else if (salesFilterType === "staff" && selectedStaffFilter !== "ALL") {
+        list = list.filter(s => 
+          (s.cashierName || "").toLowerCase().trim() === selectedStaffFilter.toLowerCase().trim()
+        );
+      }
+    }
+
+    return list;
+  }, [sales, from, to, activeTab, salesFilterType, selectedCustomerFilter, selectedStaffFilter]);
+
   const filteredExpenses = useMemo(() =>
     expenses.filter(e => { const d = new Date(e.date); return d >= from && d <= to; }),
-    [expenses, period]
+    [expenses, from, to]
   );
+
+  // ── Executive P/L Financial Calculation ──────────────────────────────────
+  const plSummary = useMemo(() => {
+    let completedRevenue = 0;
+    let returnsTotal = 0;
+    let duesRecoveredTotal = 0;
+    let creditSalesIssuedTotal = 0;
+    let cogsTotal = 0;
+
+    filteredSales.forEach(s => {
+      const isReturn = s.status === "Returned" || s.status === "Refunded";
+      const isDuesRecovery = s.status === "Dues_Recovery";
+
+      if (isReturn) {
+        returnsTotal += s.total;
+      } else if (isDuesRecovery) {
+        duesRecoveredTotal += s.total;
+      } else {
+        completedRevenue += s.total;
+
+        s.items.forEach(item => {
+          const prod = products.find(p => p.id === item.productId);
+          if (prod) cogsTotal += prod.costPrice * item.qty;
+        });
+
+        if (s.paymentMethod === "On Credit") {
+          creditSalesIssuedTotal += s.total;
+        } else if (s.splitPayments?.["On Credit"]) {
+          creditSalesIssuedTotal += s.splitPayments["On Credit"];
+        }
+      }
+    });
+
+    const netSalesRevenue = completedRevenue - returnsTotal;
+    const netOperatingIncome = netSalesRevenue + duesRecoveredTotal;
+    const grossProfit = netOperatingIncome - cogsTotal;
+    const grossMargin = netOperatingIncome > 0 ? (grossProfit / netOperatingIncome) * 100 : 0;
+    const totalExpenses = filteredExpenses.reduce((sum, e) => sum + e.amount, 0);
+    const netExecutiveProfit = grossProfit - totalExpenses;
+
+    const totalOutstandingDues = customers.reduce((sum, c) => sum + (c.creditBalance || 0), 0);
+    const totalWalletBalances = customers.reduce((sum, c) => sum + (c.walletBalance || 0), 0);
+
+    return {
+      completedRevenue,
+      returnsTotal,
+      duesRecoveredTotal,
+      creditSalesIssuedTotal,
+      netSalesRevenue,
+      netOperatingIncome,
+      cogsTotal,
+      grossProfit,
+      grossMargin,
+      totalExpenses,
+      netExecutiveProfit,
+      totalOutstandingDues,
+      totalWalletBalances
+    };
+  }, [filteredSales, filteredExpenses, products, customers]);
 
   // ── KPIs ──────────────────────────────────────────────────────────────────
   const totalRevenue = filteredSales.reduce((a, s) => a + s.total, 0);
@@ -324,6 +423,30 @@ export default function ReportsPage() {
   const handleExcelExport = () => {
     const wb = XLSX.utils.book_new();
 
+    if (activeTab === "pl") {
+      const plData = [
+        { "Financial Metric": "Branch Name", "Amount / Details": currentBranch },
+        { "Financial Metric": "Date Period", "Amount / Details": PERIOD_LABELS[period] },
+        { "Financial Metric": "Completed Gross Sales", "Amount / Details": `${currencySymbol} ${plSummary.completedRevenue.toFixed(2)}` },
+        { "Financial Metric": "Sales Returns & Refunds (-)", "Amount / Details": `${currencySymbol} ${plSummary.returnsTotal.toFixed(2)}` },
+        { "Financial Metric": "Dues Recoveries Received (+)", "Amount / Details": `${currencySymbol} ${plSummary.duesRecoveredTotal.toFixed(2)}` },
+        { "Financial Metric": "Net Operating Revenue", "Amount / Details": `${currencySymbol} ${plSummary.netOperatingIncome.toFixed(2)}` },
+        { "Financial Metric": "Cost of Goods Sold (COGS) (-)", "Amount / Details": `${currencySymbol} ${plSummary.cogsTotal.toFixed(2)}` },
+        { "Financial Metric": "Gross Operating Profit", "Amount / Details": `${currencySymbol} ${plSummary.grossProfit.toFixed(2)}` },
+        { "Financial Metric": "Gross Margin %", "Amount / Details": `${plSummary.grossMargin.toFixed(1)}%` },
+        { "Financial Metric": "Total Operating Expenses (-)", "Amount / Details": `${currencySymbol} ${plSummary.totalExpenses.toFixed(2)}` },
+        { "Financial Metric": "NET EXECUTIVE PROFIT / (LOSS)", "Amount / Details": `${currencySymbol} ${plSummary.netExecutiveProfit.toFixed(2)}` },
+        { "Financial Metric": "Outstanding Accounts Receivable Dues", "Amount / Details": `${currencySymbol} ${plSummary.totalOutstandingDues.toFixed(2)}` },
+        { "Financial Metric": "Customer Store Wallet Balances Held", "Amount / Details": `${currencySymbol} ${plSummary.totalWalletBalances.toFixed(2)}` },
+      ];
+      const ws = XLSX.utils.json_to_sheet(plData);
+      ws["!cols"] = [{ wch: 38 }, { wch: 25 }];
+      XLSX.utils.book_append_sheet(wb, ws, "Profit & Loss Statement");
+      XLSX.writeFile(wb, `Reports_Excel_PL_Statement_${period}_${isoDate(new Date())}.xlsx`);
+      triggerToast("📁 P/L Excel report ready! Saved into Reports/Excel/ folder.");
+      return;
+    }
+
     if (activeTab === "overview") {
       // Sheet 1: Overview & P&L Summary
       const plData = [
@@ -395,8 +518,8 @@ export default function ReportsPage() {
       }
       XLSX.utils.book_append_sheet(wb, ws4, "Expenses Summary");
 
-      XLSX.writeFile(wb, `MT_UniPOS_Overview_Report_${period}_${isoDate(new Date())}.xlsx`);
-      triggerToast("📊 Complete Overview Excel report downloaded!");
+      XLSX.writeFile(wb, `Reports_Excel_Overview_Report_${period}_${isoDate(new Date())}.xlsx`);
+      triggerToast("📁 Complete Overview Excel report ready! Saved into Reports/Excel/ folder.");
     } else if (activeTab === "sales") {
       const salesData = filteredSales.map(s => ({
         "Receipt #": s.receiptNumber,
@@ -416,8 +539,8 @@ export default function ReportsPage() {
         ws["!cols"] = Object.keys(salesData[0]).map(() => ({ wch: 16 }));
       }
       XLSX.utils.book_append_sheet(wb, ws, "Sales Transactions");
-      XLSX.writeFile(wb, `MT_UniPOS_Sales_Report_${period}_${isoDate(new Date())}.xlsx`);
-      triggerToast("📊 Sales Excel report downloaded!");
+      XLSX.writeFile(wb, `Reports_Excel_Sales_Report_${period}_${isoDate(new Date())}.xlsx`);
+      triggerToast("📁 Sales Excel report ready! Saved into Reports/Excel/ folder.");
     } else if (activeTab === "inventory") {
       const invData = products.map(p => ({
         "SKU": p.sku,
@@ -435,8 +558,8 @@ export default function ReportsPage() {
         ws["!cols"] = Object.keys(invData[0]).map(() => ({ wch: 16 }));
       }
       XLSX.utils.book_append_sheet(wb, ws, "Inventory Status");
-      XLSX.writeFile(wb, `MT_UniPOS_Inventory_Report_${isoDate(new Date())}.xlsx`);
-      triggerToast("📊 Inventory Excel report downloaded!");
+      XLSX.writeFile(wb, `Reports_Excel_Inventory_Report_${isoDate(new Date())}.xlsx`);
+      triggerToast("📁 Inventory Excel report ready! Saved into Reports/Excel/ folder.");
     } else if (activeTab === "expenses") {
       const expData = filteredExpenses.map(e => ({
         "Voucher ID": e.id,
@@ -451,8 +574,8 @@ export default function ReportsPage() {
         ws["!cols"] = Object.keys(expData[0]).map(() => ({ wch: 16 }));
       }
       XLSX.utils.book_append_sheet(wb, ws, "Expenses Summary");
-      XLSX.writeFile(wb, `MT_UniPOS_Expenses_Report_${period}_${isoDate(new Date())}.xlsx`);
-      triggerToast("📊 Expenses Excel report downloaded!");
+      XLSX.writeFile(wb, `Reports_Excel_Expenses_Report_${period}_${isoDate(new Date())}.xlsx`);
+      triggerToast("📁 Expenses Excel report ready! Saved into Reports/Excel/ folder.");
     } else if (activeTab === "employees") {
       const empData = employeeStats.map(e => ({
         "Staff ID": e.id,
@@ -468,8 +591,8 @@ export default function ReportsPage() {
         ws["!cols"] = Object.keys(empData[0]).map(() => ({ wch: 18 }));
       }
       XLSX.utils.book_append_sheet(wb, ws, "Employees Performance");
-      XLSX.writeFile(wb, `MT_UniPOS_Employees_Report_${period}_${isoDate(new Date())}.xlsx`);
-      triggerToast("📊 Employees Performance Excel report downloaded!");
+      XLSX.writeFile(wb, `Reports_Excel_Employees_Report_${period}_${isoDate(new Date())}.xlsx`);
+      triggerToast("📁 Employees Performance Excel report ready! Saved into Reports/Excel/ folder.");
     } else if (activeTab === "customers") {
       const custData = customerStats.map(c => ({
         "Customer ID": c.id,
@@ -485,8 +608,8 @@ export default function ReportsPage() {
         ws["!cols"] = Object.keys(custData[0]).map(() => ({ wch: 18 }));
       }
       XLSX.utils.book_append_sheet(wb, ws, "Customers Ledger");
-      XLSX.writeFile(wb, `MT_UniPOS_Customers_Report_${period}_${isoDate(new Date())}.xlsx`);
-      triggerToast("📊 Customers Ledger Excel report downloaded!");
+      XLSX.writeFile(wb, `Reports_Excel_Customers_Report_${period}_${isoDate(new Date())}.xlsx`);
+      triggerToast("📁 Customers Ledger Excel report ready! Saved into Reports/Excel/ folder.");
     } else if (activeTab === "suppliers") {
       const supData = supplierStats.map(s => ({
         "Supplier ID": s.id,
@@ -503,8 +626,8 @@ export default function ReportsPage() {
         ws["!cols"] = Object.keys(supData[0]).map(() => ({ wch: 18 }));
       }
       XLSX.utils.book_append_sheet(wb, ws, "Suppliers Ledger");
-      XLSX.writeFile(wb, `MT_UniPOS_Suppliers_Report_${period}_${isoDate(new Date())}.xlsx`);
-      triggerToast("📊 Suppliers Ledger Excel report downloaded!");
+      XLSX.writeFile(wb, `Reports_Excel_Suppliers_Report_${period}_${isoDate(new Date())}.xlsx`);
+      triggerToast("📁 Suppliers Ledger Excel report ready! Saved into Reports/Excel/ folder.");
     } else if (activeTab === "payroll") {
       const payData = payrollStats.map(p => ({
         "Staff ID": p.id,
@@ -522,8 +645,8 @@ export default function ReportsPage() {
         ws["!cols"] = Object.keys(payData[0]).map(() => ({ wch: 18 }));
       }
       XLSX.utils.book_append_sheet(wb, ws, "Payroll & Attendance");
-      XLSX.writeFile(wb, `MT_UniPOS_Payroll_Report_${period}_${isoDate(new Date())}.xlsx`);
-      triggerToast("📊 Payroll & Attendance Excel report downloaded!");
+      XLSX.writeFile(wb, `Reports_Excel_Payroll_Report_${period}_${isoDate(new Date())}.xlsx`);
+      triggerToast("📁 Payroll & Attendance Excel report ready! Saved into Reports/Excel/ folder.");
     }
   };
 
@@ -540,10 +663,10 @@ export default function ReportsPage() {
       });
       const dataUrl = canvas.toDataURL("image/jpeg", 0.95);
       const link = document.createElement("a");
-      link.download = `UniPOS_${activeTab}_Report_${period}_${isoDate(new Date())}.jpg`;
+      link.download = `Reports_JPG_${activeTab.toUpperCase()}_Report_${period}_${isoDate(new Date())}.jpg`;
       link.href = dataUrl;
       link.click();
-      triggerToast("🖼️ Report image downloaded as JPG!");
+      triggerToast("📁 Report image ready! Saved into Reports/JPG/ folder.");
     } catch (err) {
       console.error("Image export failed", err);
       triggerToast("❌ Image export failed.");
@@ -552,31 +675,49 @@ export default function ReportsPage() {
 
   const handlePdfExport = () => {
     if (!reportContainerRef.current) return;
-    const printContent = reportContainerRef.current.innerHTML;
+
+    // Create a clone to remove max-height and inner scrollbar constraints
+    const cloned = reportContainerRef.current.cloneNode(true) as HTMLElement;
+    const scrollContainers = cloned.querySelectorAll('.overflow-x-auto, .overflow-y-auto, [class*="max-h-"]');
+    scrollContainers.forEach(el => {
+      el.classList.remove('overflow-x-auto', 'overflow-y-auto', 'max-h-[500px]');
+      (el as HTMLElement).style.overflow = 'visible';
+      (el as HTMLElement).style.maxHeight = 'none';
+      (el as HTMLElement).style.height = 'auto';
+    });
+
+    const printContent = cloned.innerHTML;
     const printWindow = window.open("", "_blank");
     if (!printWindow) {
       triggerToast("❌ Popup blocked! Please allow popups to export PDF.");
       return;
     }
 
-    const title = `MT UniPOS - ${activeTab.toUpperCase()} Report`;
+    const title = `MT UniPOS - ${activeTab.toUpperCase()} Report (${PERIOD_LABELS[period]})`;
 
     printWindow.document.write(`
+      <!DOCTYPE html>
       <html>
         <head>
           <title>${title}</title>
           <script src="https://cdn.tailwindcss.com"></script>
           <style>
             @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap');
+            @page {
+              size: A4 portrait;
+              margin: 10mm 12mm;
+            }
             body {
               font-family: 'Outfit', sans-serif;
               background-color: #ffffff !important;
               color: #111827 !important;
-              padding: 40px;
+              padding: 0 !important;
+              margin: 0 !important;
+              font-size: 10pt;
             }
-            .bg-brand-dark-surface, .bg-brand-dark-surface\\/30, .bg-brand-dark-surface\\/40, .bg-[#0d0d0d] {
-              background-color: #f9fafb !important;
-              background: #f9fafb !important;
+            .bg-brand-dark-surface, .bg-brand-dark-surface\\/30, .bg-brand-dark-surface\\/40, .bg-[#0d0d0d], .bg-black {
+              background-color: #ffffff !important;
+              background: #ffffff !important;
             }
             .border-brand-dark-border, .border-brand-dark-border\\/60, .border-brand-dark-border\\/40, .border-brand-dark-border\\/30 {
               border-color: #e5e7eb !important;
@@ -605,26 +746,37 @@ export default function ReportsPage() {
             .font-mono {
               font-family: 'JetBrains Mono', monospace !important;
             }
-            .no-print, button {
+            .overflow-x-auto, .overflow-y-auto, [class*="max-h-"], [class*="overflow-"] {
+              overflow: visible !important;
+              max-height: none !important;
+              height: auto !important;
+            }
+            table {
+              width: 100% !important;
+              border-collapse: collapse !important;
+              table-layout: auto !important;
+            }
+            th, td {
+              padding: 8px 10px !important;
+              border-bottom: 1px solid #e5e7eb !important;
+              word-break: break-word !important;
+              white-space: normal !important;
+            }
+            .no-print, button, input, select {
               display: none !important;
             }
-            @media print {
-              body {
-                padding: 0;
-              }
-              .page-break-avoid {
-                page-break-inside: avoid;
-              }
+            .page-break-avoid {
+              page-break-inside: avoid !important;
             }
           </style>
         </head>
         <body>
-          <div class="flex justify-between items-center border-b-2 border-gray-200 pb-5 mb-6">
+          <div class="flex justify-between items-center border-b-2 border-gray-200 pb-5 mb-6 p-4">
             <div class="flex items-center gap-3">
-              <img src="/logo.png" style="height:40px;width:auto;object-fit:contain;" alt="MT UniPOS Logo" />
+              <img src="/logo.png" style="height:44px;width:auto;object-fit:contain;" alt="MT UniPOS Logo" />
               <div>
                 <h1 class="text-2xl font-black uppercase tracking-tight text-gray-900">${title}</h1>
-                <p class="text-xs text-gray-500 mt-1">Branch: ${currentBranch} · Period: ${PERIOD_LABELS[period]}</p>
+                <p class="text-xs text-gray-500 mt-1">Branch: ${currentBranch} · Period: ${PERIOD_LABELS[period]} · Save Destination: Reports/PDF/</p>
               </div>
             </div>
             <div class="text-right text-[10px] text-gray-400 font-mono">
@@ -632,7 +784,7 @@ export default function ReportsPage() {
               MT UniPOS ERP System
             </div>
           </div>
-          <div class="print-container">
+          <div class="p-4">
             ${printContent}
           </div>
           <script>
@@ -647,6 +799,7 @@ export default function ReportsPage() {
       </html>
     `);
     printWindow.document.close();
+    triggerToast("📁 A4 PDF Report ready! Save inside Reports/PDF/ subfolder.");
   };
 
   return (
@@ -673,16 +826,40 @@ export default function ReportsPage() {
           </div>
           <div className="flex items-center gap-3 flex-wrap">
             {/* Period selector */}
-            <div className="bg-brand-dark-surface border border-brand-dark-border p-1 rounded-lg flex gap-1 text-[10px]">
-              {(["today", "week", "month", "quarter"] as const).map(p => (
-                <button key={p} onClick={() => setPeriod(p)}
-                  className={`px-3 py-1.5 rounded font-bold uppercase tracking-wide transition ${
-                    period === p ? "bg-brand-sky text-black font-black" : "text-gray-400 hover:text-white"
-                  }`}>
-                  {PERIOD_LABELS[p]}
-                </button>
-              ))}
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="bg-brand-dark-surface border border-brand-dark-border p-1 rounded-lg flex gap-1 text-[10px]">
+                {(["today", "week", "month", "quarter", "custom"] as const).map(p => (
+                  <button key={p} onClick={() => setPeriod(p)}
+                    className={`px-3 py-1.5 rounded font-bold uppercase tracking-wide transition ${
+                      period === p ? "bg-brand-sky text-black font-black" : "text-gray-400 hover:text-white"
+                    }`}>
+                    {PERIOD_LABELS[p]}
+                  </button>
+                ))}
+              </div>
+
+              {/* Custom Date Range Inputs */}
+              {period === "custom" && (
+                <div className="flex items-center gap-1.5 bg-brand-dark-surface border border-brand-dark-border p-1 rounded-lg text-xs font-mono">
+                  <input 
+                    type="date" 
+                    value={customFromDate} 
+                    onChange={e => setCustomFromDate(e.target.value)}
+                    className="bg-black text-white px-2 py-1 rounded border border-brand-dark-border focus:outline-none focus:border-brand-sky text-[10px]"
+                    style={{ colorScheme: "dark" }}
+                  />
+                  <span className="text-gray-500 text-[10px]">to</span>
+                  <input 
+                    type="date" 
+                    value={customToDate} 
+                    onChange={e => setCustomToDate(e.target.value)}
+                    className="bg-black text-white px-2 py-1 rounded border border-brand-dark-border focus:outline-none focus:border-brand-sky text-[10px]"
+                    style={{ colorScheme: "dark" }}
+                  />
+                </div>
+              )}
             </div>
+
             {/* Exports button group */}
             <div className="flex items-center gap-1.5">
               <button onClick={handleExcelExport}
@@ -695,7 +872,7 @@ export default function ReportsPage() {
               </button>
               <button onClick={handlePdfExport}
                 className="flex items-center gap-1 bg-purple-500 hover:bg-purple-400 text-white font-black text-[11px] px-3.5 py-2.5 rounded-lg shadow-lg transition">
-                <Printer size={13} /> PDF
+                <Printer size={13} /> PDF (A4)
               </button>
             </div>
           </div>
@@ -703,14 +880,14 @@ export default function ReportsPage() {
 
         {/* ── Tabs ── */}
         <div className="flex gap-1 border-b border-brand-dark-border/40 overflow-x-auto whitespace-nowrap scrollbar-none pb-0.5">
-          {(["overview", "sales", "inventory", "expenses", "employees", "customers", "suppliers", "payroll"] as const).map(tab => (
+          {(["overview", "pl", "sales", "inventory", "expenses", "employees", "customers", "suppliers", "payroll"] as const).map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)}
               className={`px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider transition border-b-2 -mb-px shrink-0 ${
                 activeTab === tab
                   ? "border-brand-sky text-brand-sky"
                   : "border-transparent text-gray-500 hover:text-gray-300"
               }`}>
-              {tab === "overview" ? "Overview" : tab === "sales" ? "Sales" : tab === "inventory" ? "Inventory" : tab === "expenses" ? "Expenses" : tab === "employees" ? "Employees" : tab === "customers" ? "Customers" : tab === "suppliers" ? "Suppliers" : "Payroll"}
+              {tab === "overview" ? "Overview" : tab === "pl" ? "📈 P/L Statement" : tab === "sales" ? "Sales" : tab === "inventory" ? "Inventory" : tab === "expenses" ? "Expenses" : tab === "employees" ? "Employees" : tab === "customers" ? "Customers" : tab === "suppliers" ? "Suppliers" : "Payroll"}
             </button>
           ))}
         </div>
@@ -913,63 +1090,276 @@ export default function ReportsPage() {
           )}
 
           {/* ══════════════════════════════════════════════════════════════════
-              SALES TAB — Full transactions table
+              PROFIT & LOSS FINANCIAL STATEMENT TAB
           ══════════════════════════════════════════════════════════════════ */}
-          {activeTab === "sales" && (
-            <div className="bg-brand-dark-surface/30 border border-brand-dark-border rounded-2xl overflow-hidden page-break-avoid">
-              <div className="p-4 border-b border-brand-dark-border flex items-center justify-between">
-                <div>
-                  <h3 className="text-xs font-black text-white uppercase tracking-wider">Sales Transactions</h3>
-                  <p className="text-[9px] text-gray-500 mt-0.5">{filteredSales.length} records in {PERIOD_LABELS[period]}</p>
+          {activeTab === "pl" && (
+            <div className="space-y-6">
+              {/* Executive P/L Headline Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-5 space-y-2">
+                  <div className="text-[10px] font-black uppercase text-emerald-400 tracking-wider">Net Operating Revenue</div>
+                  <div className="text-2xl font-black font-mono text-white">
+                    {currencySymbol} {plSummary.netOperatingIncome.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  </div>
+                  <div className="text-[9px] text-gray-400">Completed Sales + Recoveries - Returns</div>
                 </div>
-                <div className="flex items-center gap-3 font-mono text-[10px]">
-                  <span className="text-gray-500">Total: <span className="text-emerald-400 font-black">{currencySymbol} {totalRevenue.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span></span>
+
+                <div className="bg-brand-sky/10 border border-brand-sky/30 rounded-2xl p-5 space-y-2">
+                  <div className="text-[10px] font-black uppercase text-brand-sky tracking-wider">Gross Operating Profit</div>
+                  <div className="text-2xl font-black font-mono text-brand-sky">
+                    {currencySymbol} {plSummary.grossProfit.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  </div>
+                  <div className="text-[9px] text-gray-400">Margin: {plSummary.grossMargin.toFixed(1)}% (Net Income - COGS)</div>
+                </div>
+
+                <div className={`border rounded-2xl p-5 space-y-2 ${plSummary.netExecutiveProfit >= 0 ? "bg-purple-500/10 border-purple-500/30 text-purple-400" : "bg-red-500/10 border-red-500/30 text-red-400"}`}>
+                  <div className="text-[10px] font-black uppercase tracking-wider">Net Executive Profit</div>
+                  <div className="text-2xl font-black font-mono text-white">
+                    {currencySymbol} {plSummary.netExecutiveProfit.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  </div>
+                  <div className="text-[9px] text-gray-300">Bottom-line Profit after Operating Expenses</div>
                 </div>
               </div>
-              <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead className="sticky top-0 bg-[#0d0d0d]">
-                    <tr className="border-b border-brand-dark-border text-gray-500 font-mono">
-                      <th className="p-3 font-semibold">Receipt #</th>
-                      <th className="p-3 font-semibold">Date & Time</th>
-                      <th className="p-3 font-semibold">Customer</th>
-                      <th className="p-3 font-semibold">Cashier</th>
-                      <th className="p-3 font-semibold">Method</th>
-                      <th className="p-3 font-semibold text-right">Tax</th>
-                      <th className="p-3 font-semibold text-right">Discount</th>
-                      <th className="p-3 font-semibold text-right">Total</th>
-                      <th className="p-3 font-semibold text-center">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-brand-dark-border/30 font-mono text-[11px]">
-                    {filteredSales.length === 0 ? (
-                      <tr><td colSpan={9} className="p-12 text-center text-gray-600">No transactions in this period</td></tr>
-                    ) : filteredSales.map(s => (
-                      <tr key={s.id} className="hover:bg-brand-dark-surface/40 transition">
-                        <td className="p-3 text-brand-sky font-bold">{s.receiptNumber}</td>
-                        <td className="p-3 text-gray-400">{new Date(s.date).toLocaleString("en-PK", { dateStyle: "short", timeStyle: "short" })}</td>
-                        <td className="p-3 text-white font-sans">{s.customerName}</td>
-                        <td className="p-3 text-gray-400 font-sans">{s.cashierName}</td>
-                        <td className="p-3">
-                          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold"
-                            style={{ color: pmColors[s.paymentMethod] || "#9ca3af", backgroundColor: (pmColors[s.paymentMethod] || "#9ca3af") + "20" }}>
-                            {s.paymentMethod}
-                          </span>
-                        </td>
-                        <td className="p-3 text-right text-red-400">{currencySymbol} {s.tax.toFixed(0)}</td>
-                        <td className="p-3 text-right text-amber-400">{currencySymbol} {s.discount.toFixed(0)}</td>
-                        <td className="p-3 text-right text-white font-black">{currencySymbol} {s.total.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
-                        <td className="p-3 text-center">
-                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
-                            s.status === "Completed" ? "bg-emerald-500/15 text-emerald-400"
-                            : s.status === "Returned" ? "bg-amber-500/15 text-amber-400"
-                            : "bg-red-500/15 text-red-400"
-                          }`}>{s.status}</span>
-                        </td>
+
+              {/* Detailed P/L Ledger Statement Table */}
+              <div className="bg-brand-dark-surface/40 border border-brand-dark-border rounded-2xl p-6 space-y-6 page-break-avoid">
+                <div className="flex justify-between items-center border-b border-brand-dark-border/60 pb-4">
+                  <div>
+                    <h3 className="text-base font-black text-white uppercase tracking-tight flex items-center gap-2">
+                      <TrendingUp size={18} className="text-brand-sky" /> Profit & Loss Statement (P/L Ledger)
+                    </h3>
+                    <p className="text-[10px] text-gray-400 mt-1">Branch: {currentBranch} · Period: {PERIOD_LABELS[period]}</p>
+                  </div>
+                  <div className="text-right text-[10px] font-mono text-gray-500">
+                    Auto Generated Report<br />
+                    MT UniPOS Financial Engine
+                  </div>
+                </div>
+
+                <div className="space-y-6 text-xs font-mono">
+                  {/* 1. Revenue & Sales Income */}
+                  <div className="space-y-2">
+                    <div className="text-xs font-black uppercase text-emerald-400 border-b border-emerald-500/30 pb-1.5 flex justify-between">
+                      <span>1. OPERATING REVENUE & INCOME</span>
+                      <span>AMOUNT ({currencySymbol})</span>
+                    </div>
+                    <div className="flex justify-between py-1 text-gray-300">
+                      <span>Completed Gross Sales Revenue</span>
+                      <span className="font-bold">+{currencySymbol} {plSummary.completedRevenue.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between py-1 text-emerald-400">
+                      <span>Dues Recoveries Received (+)</span>
+                      <span className="font-bold">+{currencySymbol} {plSummary.duesRecoveredTotal.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between py-1 text-red-400">
+                      <span>Sales Returns & Refunds (-)</span>
+                      <span className="font-bold">-{currencySymbol} {plSummary.returnsTotal.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between py-2 border-t border-brand-dark-border font-black text-white text-xs">
+                      <span>TOTAL NET OPERATING REVENUE</span>
+                      <span className="text-emerald-400">{currencySymbol} {plSummary.netOperatingIncome.toLocaleString()}</span>
+                    </div>
+                  </div>
+
+                  {/* 2. Cost of Sales */}
+                  <div className="space-y-2">
+                    <div className="text-xs font-black uppercase text-brand-sky border-b border-brand-sky/30 pb-1.5 flex justify-between">
+                      <span>2. COST OF SALES (COGS)</span>
+                      <span>AMOUNT ({currencySymbol})</span>
+                    </div>
+                    <div className="flex justify-between py-1 text-gray-300">
+                      <span>Cost of Inventory Sold (COGS) (-)</span>
+                      <span className="font-bold text-red-400">-{currencySymbol} {plSummary.cogsTotal.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between py-2 border-t border-brand-dark-border font-black text-white text-xs">
+                      <span>GROSS OPERATING PROFIT (Margin: {plSummary.grossMargin.toFixed(1)}%)</span>
+                      <span className="text-brand-sky">{currencySymbol} {plSummary.grossProfit.toLocaleString()}</span>
+                    </div>
+                  </div>
+
+                  {/* 3. Operating Expenses */}
+                  <div className="space-y-2">
+                    <div className="text-xs font-black uppercase text-red-400 border-b border-red-500/30 pb-1.5 flex justify-between">
+                      <span>3. OPERATING EXPENSES (OPEX)</span>
+                      <span>AMOUNT ({currencySymbol})</span>
+                    </div>
+                    {expCats.length === 0 ? (
+                      <div className="py-2 text-gray-500 text-[10px]">No expenses recorded in this period</div>
+                    ) : (
+                      expCats.map(([cat, amt]) => (
+                        <div key={cat} className="flex justify-between py-1 text-gray-300">
+                          <span>{cat}</span>
+                          <span className="font-bold text-red-400">-{currencySymbol} {amt.toLocaleString()}</span>
+                        </div>
+                      ))
+                    )}
+                    <div className="flex justify-between py-2 border-t border-brand-dark-border font-black text-white text-xs">
+                      <span>TOTAL OPERATING EXPENSES</span>
+                      <span className="text-red-400">-{currencySymbol} {plSummary.totalExpenses.toLocaleString()}</span>
+                    </div>
+                  </div>
+
+                  {/* 4. Credit & Receivables Ledger */}
+                  <div className="space-y-2 bg-black/40 p-4 rounded-xl border border-brand-dark-border">
+                    <div className="text-xs font-black uppercase text-amber-400 border-b border-amber-500/30 pb-1.5 flex justify-between">
+                      <span>4. CREDIT & RECEIVABLES LEDGER POSITION</span>
+                      <span>STATUS</span>
+                    </div>
+                    <div className="flex justify-between py-1 text-gray-300">
+                      <span>On-Credit Sales Issued in Period</span>
+                      <span className="font-bold text-amber-400">{currencySymbol} {plSummary.creditSalesIssuedTotal.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between py-1 text-gray-300">
+                      <span>Total Accounts Receivable (Outstanding Customer Dues)</span>
+                      <span className="font-bold text-red-400">{currencySymbol} {plSummary.totalOutstandingDues.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between py-1 text-gray-300">
+                      <span>Customer Store Wallet Balances Held</span>
+                      <span className="font-bold text-brand-sky">{currencySymbol} {plSummary.totalWalletBalances.toLocaleString()}</span>
+                    </div>
+                  </div>
+
+                  {/* 5. Bottom Line Executive Profit */}
+                  <div className="p-5 rounded-2xl bg-gradient-to-r from-purple-900/30 via-black to-emerald-900/30 border border-purple-500/40 flex flex-col sm:flex-row justify-between items-center gap-3">
+                    <div>
+                      <div className="text-xs font-black uppercase tracking-wider text-gray-300">NET EXECUTIVE BOTTOM-LINE PROFIT / (LOSS)</div>
+                      <div className="text-[10px] text-gray-500 mt-0.5">Calculated as: Gross Operating Profit - Total Operating Expenses</div>
+                    </div>
+                    <div className="text-2xl font-black font-mono text-emerald-400">
+                      {currencySymbol} {plSummary.netExecutiveProfit.toLocaleString()}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ══════════════════════════════════════════════════════════════════
+              SALES TAB — Full transactions table with filters
+          ══════════════════════════════════════════════════════════════════ */}
+          {activeTab === "sales" && (
+            <div className="space-y-4">
+              {/* Sales Filter Bar */}
+              <div className="bg-brand-dark-surface/40 border border-brand-dark-border p-4 rounded-2xl flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center no-print">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">View Mode:</span>
+                  <div className="bg-black border border-brand-dark-border p-1 rounded-lg flex gap-1 text-[10px]">
+                    <button 
+                      onClick={() => setSalesFilterType("all")}
+                      className={`px-3 py-1.5 rounded font-bold uppercase ${salesFilterType === "all" ? "bg-brand-sky text-black font-black" : "text-gray-400 hover:text-white"}`}
+                    >
+                      All Sales
+                    </button>
+                    <button 
+                      onClick={() => setSalesFilterType("customer")}
+                      className={`px-3 py-1.5 rounded font-bold uppercase ${salesFilterType === "customer" ? "bg-brand-sky text-black font-black" : "text-gray-400 hover:text-white"}`}
+                    >
+                      Customer-wise
+                    </button>
+                    <button 
+                      onClick={() => setSalesFilterType("staff")}
+                      className={`px-3 py-1.5 rounded font-bold uppercase ${salesFilterType === "staff" ? "bg-brand-sky text-black font-black" : "text-gray-400 hover:text-white"}`}
+                    >
+                      Staff-wise
+                    </button>
+                  </div>
+                </div>
+
+                {/* Dropdown Filters */}
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  {salesFilterType === "customer" && (
+                    <div className="flex items-center gap-2">
+                      <label className="text-[10px] text-gray-400 font-bold uppercase">Customer:</label>
+                      <select 
+                        value={selectedCustomerFilter}
+                        onChange={e => setSelectedCustomerFilter(e.target.value)}
+                        className="bg-black border border-brand-sky/40 text-white text-xs p-2 rounded-lg font-mono focus:outline-none"
+                      >
+                        <option value="ALL">All Customers</option>
+                        {customers.map(c => (
+                          <option key={c.id} value={c.name}>{c.name} ({c.customerNo})</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  {salesFilterType === "staff" && (
+                    <div className="flex items-center gap-2">
+                      <label className="text-[10px] text-gray-400 font-bold uppercase">Staff / Cashier:</label>
+                      <select 
+                        value={selectedStaffFilter}
+                        onChange={e => setSelectedStaffFilter(e.target.value)}
+                        className="bg-black border border-brand-sky/40 text-white text-xs p-2 rounded-lg font-mono focus:outline-none"
+                      >
+                        <option value="ALL">All Staff</option>
+                        {employees.map(emp => (
+                          <option key={emp.id} value={emp.name}>{emp.name} ({emp.role})</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Transactions Table */}
+              <div className="bg-brand-dark-surface/30 border border-brand-dark-border rounded-2xl overflow-hidden page-break-avoid">
+                <div className="p-4 border-b border-brand-dark-border flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xs font-black text-white uppercase tracking-wider">
+                      {salesFilterType === "customer" && selectedCustomerFilter !== "ALL" ? `Customer Sales: ${selectedCustomerFilter}` : salesFilterType === "staff" && selectedStaffFilter !== "ALL" ? `Staff Sales: ${selectedStaffFilter}` : "Sales Transactions"}
+                    </h3>
+                    <p className="text-[9px] text-gray-500 mt-0.5">{filteredSales.length} records in {PERIOD_LABELS[period]}</p>
+                  </div>
+                  <div className="flex items-center gap-3 font-mono text-[10px]">
+                    <span className="text-gray-500">Total: <span className="text-emerald-400 font-black">{currencySymbol} {totalRevenue.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span></span>
+                  </div>
+                </div>
+
+                <div className="w-full">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead className="sticky top-0 bg-[#0d0d0d]">
+                      <tr className="border-b border-brand-dark-border text-gray-500 font-mono">
+                        <th className="p-3 font-semibold">Receipt #</th>
+                        <th className="p-3 font-semibold">Date & Time</th>
+                        <th className="p-3 font-semibold">Customer</th>
+                        <th className="p-3 font-semibold">Cashier</th>
+                        <th className="p-3 font-semibold">Method</th>
+                        <th className="p-3 font-semibold text-right">Tax</th>
+                        <th className="p-3 font-semibold text-right">Discount</th>
+                        <th className="p-3 font-semibold text-right">Total</th>
+                        <th className="p-3 font-semibold text-center">Status</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-brand-dark-border/30 font-mono text-[11px]">
+                      {filteredSales.length === 0 ? (
+                        <tr><td colSpan={9} className="p-12 text-center text-gray-600">No transactions match your selected filter</td></tr>
+                      ) : filteredSales.map(s => (
+                        <tr key={s.id} className="hover:bg-brand-dark-surface/40 transition">
+                          <td className="p-3 text-brand-sky font-bold">{s.receiptNumber}</td>
+                          <td className="p-3 text-gray-400">{new Date(s.date).toLocaleString("en-PK", { dateStyle: "short", timeStyle: "short" })}</td>
+                          <td className="p-3 text-white font-sans">{s.customerName}</td>
+                          <td className="p-3 text-gray-400 font-sans">{s.cashierName}</td>
+                          <td className="p-3">
+                            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold"
+                              style={{ color: pmColors[s.paymentMethod] || "#9ca3af", backgroundColor: (pmColors[s.paymentMethod] || "#9ca3af") + "20" }}>
+                              {s.paymentMethod}
+                            </span>
+                          </td>
+                          <td className="p-3 text-right text-red-400">{currencySymbol} {s.tax.toFixed(0)}</td>
+                          <td className="p-3 text-right text-amber-400">{currencySymbol} {s.discount.toFixed(0)}</td>
+                          <td className="p-3 text-right text-white font-black">{currencySymbol} {s.total.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
+                          <td className="p-3 text-center">
+                            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
+                              s.status === "Completed" ? "bg-emerald-500/15 text-emerald-400"
+                              : s.status === "Returned" ? "bg-amber-500/15 text-amber-400"
+                              : "bg-red-500/15 text-red-400"
+                            }`}>{s.status}</span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}
