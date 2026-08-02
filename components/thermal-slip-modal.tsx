@@ -36,6 +36,8 @@ interface Sale {
   isCredit?: boolean;
   notes?: string;
   status?: string;
+  previousCreditBalance?: number;
+  totalCreditBalance?: number;
 }
 
 interface Props {
@@ -93,6 +95,27 @@ function buildSlipHTML(
 
   const receivedAmt = sale.receivedAmount ?? (sale.paymentMethod === "Cash" ? sale.total : undefined);
   const changeAmt = sale.changeReturned ?? (receivedAmt !== undefined ? Math.max(0, receivedAmt - sale.total) : 0);
+
+  const prevCredit = sale.previousCreditBalance ?? 0;
+  const currentCredit = isCreditSale ? sale.total : ((sale as any).splitPayments?.["On Credit"] || 0);
+  const totalCredit = sale.totalCreditBalance ?? (prevCredit + currentCredit);
+  const showCreditStatement = (sale.previousCreditBalance !== undefined && sale.previousCreditBalance > 0) || isCreditSale || (sale.totalCreditBalance !== undefined && sale.totalCreditBalance > 0);
+
+  const creditSection = (showCreditStatement && sale.customerName !== "Walk-in Customer") ? `
+    <div style="border:1px solid #000;border-radius:4px;margin:8px 0;overflow:hidden">
+      <div style="background:#000;color:#fff;font-weight:900;text-align:center;padding:4px 6px;font-size:10px;letter-spacing:1px">CUSTOMER CREDIT STATEMENT</div>
+      <div style="padding:6px 8px;font-size:10px">
+        <div style="display:flex;justify-content:space-between;padding:2px 0">
+          <span>Previous Credit Balance:</span><span>${currencySymbol} ${Math.round(prevCredit)}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:2px 0">
+          <span>This Invoice Credit:</span><span style="font-weight:700">${currencySymbol} ${Math.round(currentCredit)}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:3px 0;font-weight:900;font-size:11px;border-top:1px dashed #aaa;margin-top:2px">
+          <span>Total Outstanding Balance:</span><span style="color:#b00">${currencySymbol} ${Math.round(totalCredit)}</span>
+        </div>
+      </div>
+    </div>` : "";
 
   const loyaltySection = (sale.loyaltyPointsEarned !== undefined && sale.customerName !== "Walk-in Customer")
     ? `
@@ -192,6 +215,7 @@ function buildSlipHTML(
   </div>
 
   ${loyaltySection}
+  ${creditSection}
 
   <!-- Thank You -->
   <div style="text-align:center;margin-top:10px;font-size:9px">
@@ -303,16 +327,20 @@ export default function ThermalSlipModal({
           cloudSuccess = true;
         }
         
-        // 2. Offline Storage (Local Directory)
+        // 2. Offline Storage (Local Directory Organized into Subfolders)
         if (localReceiptsDirHandle) {
           try {
-            const fileHandle = await localReceiptsDirHandle.getFileHandle(localFileName, { create: true });
+            const folderName = (sale.status === "Returned" || sale.status === "Refunded")
+              ? "Return_Receipts"
+              : "Sales_Receipts";
+            const targetDirHandle = await localReceiptsDirHandle.getDirectoryHandle(folderName, { create: true });
+            const fileHandle = await targetDirHandle.getFileHandle(localFileName, { create: true });
             const writable = await fileHandle.createWritable();
             await writable.write(blob);
             await writable.close();
             localSuccess = true;
           } catch (err) {
-            console.error("Local Save Error:", err);
+            console.error("Local Subfolder Save Error:", err);
             try {
               const url = URL.createObjectURL(blob);
               const a = document.createElement("a");
@@ -595,6 +623,31 @@ export default function ThermalSlipModal({
                 </div>
               </div>
             )}
+
+            {/* ── Customer Credit Statement ── */}
+            {((sale.previousCreditBalance !== undefined && sale.previousCreditBalance > 0) || isCreditSale || (sale.totalCreditBalance !== undefined && sale.totalCreditBalance > 0)) && sale.customerName !== "Walk-in Customer" && (() => {
+              const prevCredit = sale.previousCreditBalance ?? 0;
+              const currentCredit = isCreditSale ? sale.total : ((sale as any).splitPayments?.["On Credit"] || 0);
+              const totalCredit = sale.totalCreditBalance ?? (prevCredit + currentCredit);
+              return (
+                <div style={{ border: "1px solid #000", borderRadius: "4px", margin: "8px 0", overflow: "hidden" }}>
+                  <div style={{ background: "#000", color: "#fff", fontWeight: 900, textAlign: "center", padding: "4px 6px", fontSize: "10px", letterSpacing: "1px" }}>
+                    CUSTOMER CREDIT STATEMENT
+                  </div>
+                  <div style={{ padding: "6px 8px", fontSize: "10px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", padding: "2px 0" }}>
+                      <span>Previous Credit Balance:</span><span>{currencySymbol} {Math.round(prevCredit)}</span>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", padding: "2px 0" }}>
+                      <span>This Invoice Credit:</span><span style={{ fontWeight: 700 }}>{currencySymbol} {Math.round(currentCredit)}</span>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", padding: "3px 0", fontWeight: 900, fontSize: "11px", borderTop: "1px dashed #aaa", marginTop: "2px" }}>
+                      <span>Total Outstanding Credit:</span><span style={{ color: "#b00000" }}>{currencySymbol} {Math.round(totalCredit)}</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* ── Notes ── */}
             {sale.notes && (

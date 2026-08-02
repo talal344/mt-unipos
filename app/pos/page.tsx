@@ -53,8 +53,8 @@ const QUICK_FRACS  = [0.25, 0.5, 0.75, 1, 1.5, 2];
 export default function PosPage() {
   const {
     products, customers, addCustomer, addSale, updateProduct, sales,
-    currencySymbol, currentBranch, currentUser, businessSettings,
-    localReceiptsDirHandle, setLocalReceiptsDirHandle, isOffline, previewFIFO
+    currencySymbol, currentBranch, currentUser, businessSettings, recordDueRecovery,
+    localReceiptsDirHandle, setLocalReceiptsDirHandle, isOffline, previewFIFO, updateCustomerBalance
   } = useGlobalContext();
 
   // ── Held Cart State
@@ -123,8 +123,13 @@ export default function PosPage() {
   const [showReturnModal, setShowReturnModal]         = useState(false);
   const [returnReceiptSearch, setReturnReceiptSearch] = useState("");
   const [returnSale, setReturnSale]                   = useState<any>(null);
-  const [returnItems, setReturnItems]                 = useState<Record<string, boolean>>({});
+  const [returnItemQtys, setReturnItemQtys]           = useState<Record<number, number>>({});
+  const [refundMethod, setRefundMethod]               = useState<"Cash" | "Wallet">("Cash");
   const [returnDone, setReturnDone]                   = useState(false);
+
+  // ── POS Quick Credit Recovery
+  const [showPosRecoveryModal, setShowPosRecoveryModal] = useState(false);
+  const [posRecoveryAmount, setPosRecoveryAmount]       = useState("");
 
   // ── Shift Management
   const [shiftOpen, setShiftOpen] = useState<boolean>(false);
@@ -222,14 +227,15 @@ export default function PosPage() {
   // ── Return/Refund handlers ───────────────────────────────────────────────
   const handleSearchReturn = () => {
     const q = returnReceiptSearch.trim().toLowerCase();
+    if (!q) return;
     const found = sales.find(s =>
       s.receiptNumber.toLowerCase() === q || s.id.toLowerCase() === q
     );
     if (found) {
       setReturnSale(found);
-      const init: Record<string, boolean> = {};
-      found.items.forEach((_: any, i: number) => { init[i] = true; });
-      setReturnItems(init);
+      const initQtys: Record<number, number> = {};
+      found.items.forEach((item: any, i: number) => { initQtys[i] = item.qty; }); // Default full return qty
+      setReturnItemQtys(initQtys);
     } else {
       triggerToast("❌ Receipt not found.");
     }
@@ -237,15 +243,69 @@ export default function PosPage() {
 
   const handleConfirmReturn = () => {
     if (!returnSale) return;
-    const selectedItems = returnSale.items.filter((_: any, i: number) => returnItems[i]);
-    if (selectedItems.length === 0) { triggerToast("Select at least one item."); return; }
-    selectedItems.forEach((item: any) => {
+    const returningItemsList = returnSale.items
+      .map((item: any, i: number) => ({
+        ...item,
+        returnQty: returnItemQtys[i] || 0
+      }))
+      .filter((item: any) => item.returnQty > 0);
+
+    if (returningItemsList.length === 0) {
+      triggerToast("Select at least 1 unit to return.");
+      return;
+    }
+
+    // 1. Restore stock in inventory
+    returningItemsList.forEach((item: any) => {
       const prod = products.find((p: any) => p.id === item.productId);
-      if (prod) updateProduct(prod.id, { stock: prod.stock + item.qty });
+      if (prod) {
+        updateProduct(prod.id, { stock: prod.stock + item.returnQty });
+      }
     });
-    const refundTotal = selectedItems.reduce((a: number, i: any) => a + i.subtotal, 0);
-    triggerToast(`✅ Return processed! Refund: ${currencySymbol} ${refundTotal.toFixed(2)}. Stock restored.`);
-    setReturnDone(true);
+
+    const refundTotal = returningItemsList.reduce((a: number, i: any) => a + (i.returnQty * i.price), 0);
+
+    // 2. Adjust Customer Wallet / Balance if refundMethod is Wallet
+    const matchCust = customers.find(c => c.name === returnSale.customerName);
+    if (refundMethod === "Wallet" && matchCust && matchCust.id !== "C-203") {
+      updateCustomerBalance(matchCust.id, -refundTotal);
+    }
+
+    // 3. Generate Return Sale Record
+    const now = new Date();
+    const dd = String(now.getDate()).padStart(2, "0");
+    const mm = String(now.getMonth() + 1).padStart(2, "0");
+    const yy = String(now.getFullYear()).slice(-2);
+    const hh = String(now.getHours()).padStart(2, "0");
+    const min = String(now.getMinutes()).padStart(2, "0");
+
+    const returnTxn = addSale({
+      receiptNumber: `RET-TXN-${dd}${mm}${yy}${hh}${min}`,
+      branch: currentBranch,
+      cashierName: currentUser?.name || "Cashier",
+      customerName: returnSale.customerName,
+      customerNo: returnSale.customerNo,
+      items: returningItemsList.map((i: any) => ({
+        productId: i.productId,
+        productName: i.productName,
+        price: i.price,
+        qty: i.returnQty,
+        subtotal: parseFloat((i.returnQty * i.price).toFixed(2))
+      })),
+      subtotal: refundTotal,
+      discount: 0,
+      tax: 0,
+      total: refundTotal,
+      paymentMethod: refundMethod === "Wallet" ? "Store Wallet Credit" : "Cash Refund",
+      status: "Returned",
+      notes: `Return for receipt ${returnSale.receiptNumber}`
+    } as any);
+
+    // Trigger Return Receipt Modal
+    setSuccessReceipt(returnTxn);
+    setShowThermalModal(true);
+    setShowReturnModal(false);
+    triggerToast(`✅ Return processed! Refund: ${currencySymbol} ${refundTotal.toFixed(2)}. Return Receipt created!`);
   };
 
   const selectedCustObj    = customers.find(c => c.name === selectedCustomer);
@@ -1017,20 +1077,40 @@ export default function PosPage() {
               </div>
             </div>
 
-            {/* Customer Loyalty Badge */}
+            {/* Customer Loyalty & Pending Credit Badge */}
             {selectedCustObj && selectedCustomer !== "Walk-in Customer" && (
-              <div className="bg-brand-sky/10 border border-brand-sky/20 p-2.5 rounded-xl text-xs flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                  <Star size={13} className="text-yellow-400 fill-yellow-400" />
-                  <div>
-                    <span className="font-bold text-white">{selectedCustomer}</span>
-                    <p className="text-[9px] text-gray-400">{selectedCustObj.mobile}</p>
+              <div className="space-y-2">
+                <div className="bg-brand-sky/10 border border-brand-sky/20 p-2.5 rounded-xl text-xs flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <Star size={13} className="text-yellow-400 fill-yellow-400" />
+                    <div>
+                      <span className="font-bold text-white">{selectedCustomer}</span>
+                      <p className="text-[9px] text-gray-400">{selectedCustObj.mobile}</p>
+                    </div>
+                  </div>
+                  <div className="text-right font-mono">
+                    <span className="text-xs text-yellow-400 font-black">{selectedCustPoints} pts</span>
+                    <p className="text-[8px] text-gray-500">Loyalty Balance</p>
                   </div>
                 </div>
-                <div className="text-right font-mono">
-                  <span className="text-xs text-yellow-400 font-black">{selectedCustPoints} pts</span>
-                  <p className="text-[8px] text-gray-500">Loyalty Balance</p>
-                </div>
+
+                {selectedCustObj.creditBalance > 0 && (
+                  <div className="bg-red-500/10 border border-red-500/30 p-2.5 rounded-xl text-xs flex justify-between items-center animate-fade-in">
+                    <div>
+                      <div className="text-[9px] uppercase font-black text-red-400 tracking-wider">Pending Credit Due</div>
+                      <div className="font-mono font-black text-red-300 text-xs">{currencySymbol} {selectedCustObj.creditBalance.toFixed(2)}</div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setPosRecoveryAmount(String(selectedCustObj.creditBalance));
+                        setShowPosRecoveryModal(true);
+                      }}
+                      className="px-2.5 py-1 bg-red-500 hover:bg-red-400 text-black font-black text-[9px] uppercase rounded-lg transition"
+                    >
+                      Clear Due
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
@@ -1734,67 +1814,119 @@ export default function PosPage() {
                       <div className="flex justify-between"><span className="text-gray-500">Date:</span><span className="text-gray-400">{new Date(returnSale.date).toLocaleString()}</span></div>
                     </div>
 
-                    {/* Items checkboxes */}
+                    {/* Items Quantities Selector */}
                     <div>
                       <div className="flex justify-between items-center mb-2">
-                        <label className="text-[10px] uppercase font-bold text-gray-400 block">Select Items to Return</label>
+                        <label className="text-[10px] uppercase font-bold text-gray-400 block">Select Quantities to Return</label>
                         <div className="flex items-center gap-1.5 font-mono">
                           <button
                             type="button"
                             onClick={() => {
-                              const all: Record<number, boolean> = {};
-                              returnSale.items.forEach((_: any, idx: number) => {
-                                all[idx] = true;
+                              const all: Record<number, number> = {};
+                              returnSale.items.forEach((item: any, idx: number) => {
+                                all[idx] = item.qty;
                               });
-                              setReturnItems(all);
+                              setReturnItemQtys(all);
                             }}
                             className="text-[8px] font-black uppercase text-amber-400 hover:text-amber-300 transition"
                           >
-                            Select All
+                            Return All
                           </button>
                           <span className="text-gray-700 text-[8px] font-black font-sans">|</span>
                           <button
                             type="button"
                             onClick={() => {
-                              setReturnItems({});
+                              setReturnItemQtys({});
                             }}
                             className="text-[8px] font-black uppercase text-gray-500 hover:text-white transition"
                           >
-                            Unselect All
+                            Clear All
                           </button>
                         </div>
                       </div>
                       <div className="space-y-2 max-h-52 overflow-y-auto">
-                        {returnSale.items.map((item: any, i: number) => (
-                          <label key={i} className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition ${
-                            returnItems[i] ? "bg-amber-500/10 border-amber-500/30" : "bg-black/40 border-brand-dark-border hover:border-brand-dark-border/80"
-                          }`}>
-                            <input type="checkbox" checked={!!returnItems[i]}
-                              onChange={e => setReturnItems(prev => ({ ...prev, [i]: e.target.checked }))}
-                              className="accent-amber-500 w-4 h-4 shrink-0" />
-                            <div className="flex-grow min-w-0">
-                              <div className="font-bold text-white text-[11px] truncate">{item.productName}</div>
-                              <div className="text-[9px] text-gray-500 font-mono">Qty: {item.qty} × {currencySymbol} {item.price}</div>
+                        {returnSale.items.map((item: any, i: number) => {
+                          const currentQty = returnItemQtys[i] || 0;
+                          const isSelected = currentQty > 0;
+                          return (
+                            <div key={i} className={`p-3 rounded-xl border transition flex items-center justify-between gap-3 ${
+                              isSelected ? "bg-amber-500/10 border-amber-500/30" : "bg-black/40 border-brand-dark-border hover:border-brand-dark-border/80"
+                            }`}>
+                              <div className="flex-grow min-w-0">
+                                <div className="font-bold text-white text-[11px] truncate">{item.productName}</div>
+                                <div className="text-[9px] text-gray-500 font-mono">Bought: {item.qty} × {currencySymbol} {item.price}</div>
+                              </div>
+                              <div className="flex items-center gap-2 shrink-0">
+                                <div className="flex items-center bg-black border border-brand-dark-border rounded-lg overflow-hidden">
+                                  <button
+                                    type="button"
+                                    onClick={() => setReturnItemQtys(prev => ({ ...prev, [i]: Math.max(0, (prev[i] || 0) - 1) }))}
+                                    className="px-2 py-1 bg-brand-dark-border/50 text-gray-400 hover:text-white transition"
+                                  >
+                                    -
+                                  </button>
+                                  <span className="px-2 py-1 text-white font-mono font-bold text-[11px] min-w-[24px] text-center">
+                                    {currentQty}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => setReturnItemQtys(prev => ({ ...prev, [i]: Math.min(item.qty, (prev[i] || 0) + 1) }))}
+                                    className="px-2 py-1 bg-brand-dark-border/50 text-gray-400 hover:text-white transition"
+                                  >
+                                    +
+                                  </button>
+                                </div>
+                                <span className="font-black font-mono text-[11px] text-amber-400 min-w-[60px] text-right">
+                                  {currencySymbol} {(currentQty * item.price).toFixed(2)}
+                                </span>
+                              </div>
                             </div>
-                            <span className="font-black font-mono text-[11px] text-amber-400 shrink-0">{currencySymbol} {item.subtotal.toFixed(2)}</span>
-                          </label>
-                        ))}
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Refund Method Selector */}
+                    <div>
+                      <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1.5">Refund Payment Mode</label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setRefundMethod("Cash")}
+                          className={`p-2.5 rounded-xl border text-[10px] font-bold uppercase transition flex items-center justify-center gap-1.5 ${
+                            refundMethod === "Cash"
+                              ? "bg-amber-500/20 border-amber-500/50 text-amber-400"
+                              : "bg-black/40 border-brand-dark-border text-gray-400 hover:text-white"
+                          }`}
+                        >
+                          💵 Cash Refund
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setRefundMethod("Wallet")}
+                          className={`p-2.5 rounded-xl border text-[10px] font-bold uppercase transition flex items-center justify-center gap-1.5 ${
+                            refundMethod === "Wallet"
+                              ? "bg-amber-500/20 border-amber-500/50 text-amber-400"
+                              : "bg-black/40 border-brand-dark-border text-gray-400 hover:text-white"
+                          }`}
+                        >
+                          💳 Store Wallet Credit
+                        </button>
                       </div>
                     </div>
 
                     {/* Refund Preview */}
                     <div className="bg-amber-500/8 border border-amber-500/20 rounded-xl p-3 flex items-center justify-between font-mono text-[11px]">
-                      <span className="text-gray-400">Refund Amount:</span>
+                      <span className="text-gray-400">Total Refund Amount:</span>
                       <span className="font-black text-amber-400">
                         {currencySymbol} {returnSale.items
-                          .filter((_: any, i: number) => returnItems[i])
-                          .reduce((a: number, item: any) => a + item.subtotal, 0).toFixed(2)}
+                          .reduce((a: number, item: any, i: number) => a + ((returnItemQtys[i] || 0) * item.price), 0).toFixed(2)}
                       </span>
                     </div>
 
                     <button onClick={handleConfirmReturn}
                       className="w-full py-3 bg-amber-500 hover:bg-amber-400 text-black font-black uppercase rounded-xl text-xs tracking-wider transition">
-                      Confirm Return & Restore Stock
+                      Confirm Return & Issue Return Receipt
                     </button>
                   </div>
                 )}
@@ -1807,6 +1939,52 @@ export default function PosPage() {
                 )}
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* POS Quick Credit Recovery Modal */}
+      {showPosRecoveryModal && selectedCustObj && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 font-sans">
+          <div className="bg-[#0d0d0d] border border-red-500/30 p-6 rounded-2xl w-full max-w-sm shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-brand-dark-border pb-3">
+              <div className="flex items-center gap-2">
+                <Wallet className="text-red-400" size={16} />
+                <h3 className="font-black text-white text-sm">Clear Customer Credit</h3>
+              </div>
+              <button onClick={() => setShowPosRecoveryModal(false)} className="text-gray-400 hover:text-white">
+                <X size={16} />
+              </button>
+            </div>
+            
+            <div className="bg-black/60 border border-brand-dark-border p-3 rounded-xl text-xs space-y-1 font-mono">
+              <div className="flex justify-between"><span className="text-gray-400">Customer:</span><span className="text-white font-bold">{selectedCustObj.name}</span></div>
+              <div className="flex justify-between"><span className="text-gray-400">Total Pending Due:</span><span className="text-red-400 font-black">{currencySymbol} {selectedCustObj.creditBalance.toFixed(2)}</span></div>
+            </div>
+
+            <div>
+              <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Recovery Payment Amount</label>
+              <input
+                type="number"
+                value={posRecoveryAmount}
+                onChange={e => setPosRecoveryAmount(e.target.value)}
+                placeholder="Enter amount"
+                className="w-full bg-black border border-brand-dark-border p-2.5 rounded-xl text-white font-mono font-bold focus:outline-none focus:border-red-500"
+              />
+            </div>
+
+            <button
+              onClick={() => {
+                const amt = parseFloat(posRecoveryAmount);
+                if (!amt || amt <= 0) { triggerToast("Enter valid recovery amount."); return; }
+                recordDueRecovery(selectedCustObj.id, amt);
+                triggerToast(`✅ Recovered ${currencySymbol} ${amt} from ${selectedCustObj.name}! FIFO credit settled.`);
+                setShowPosRecoveryModal(false);
+              }}
+              className="w-full py-3 bg-red-500 hover:bg-red-400 text-black font-black uppercase rounded-xl text-xs tracking-wider transition"
+            >
+              Confirm FIFO Credit Settlement
+            </button>
           </div>
         </div>
       )}

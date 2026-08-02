@@ -2292,7 +2292,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     const yy = String(now.getFullYear()).slice(-2);
     const hh = String(now.getHours()).padStart(2, "0");
     const min = String(now.getMinutes()).padStart(2, "0");
-    const receiptNumber = `MT-TXN-${dd}${mm}${yy}${hh}${min}`;
+    const receiptNumber = (sale as any).receiptNumber || `MT-TXN-${dd}${mm}${yy}${hh}${min}`;
     const matchCust = customers.find(c => c.name === sale.customerName);
     const customerNo = matchCust?.customerNo || "N/A";
 
