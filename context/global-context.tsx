@@ -414,7 +414,7 @@ interface GlobalContextType {
   deleteDemoRequest: (id: string) => void;
   registerTenant: (tenant: Omit<Tenant, "id" | "signupDate" | "status" | "usersCount" | "monthlyRevenue" | "branches"> & { id?: string }) => string;
   updateTenantStatus: (id: string, status: Tenant["status"]) => void;
-  deleteTenant: (id: string) => void;
+  deleteTenant: (id: string) => Promise<void>;
   setTenantCurrency: (id: string, currency: string) => void;
   addTenantCredential: (tenantId: string, cred: Omit<TenantPreset, "id">) => void;
   updateTenantCredential: (tenantId: string, credId: string, updated: Partial<Omit<TenantPreset, "id">>) => void;
@@ -784,54 +784,23 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const getTenantDataWithFallback = (key: string, tenantId: string) => {
+  // ─── STRICT TENANT ISOLATION ───────────────────────────────────────────────
+  // ONLY reads data for the exact tenant. No cross-tenant fallback scanning.
+  // This prevents data leakage between tenants.
+  const getTenantData = (key: string, tenantId: string) => {
     if (!tenantId) return null;
-    const primaryKey = `${key}_${tenantId}`;
-    const saved = localStorage.getItem(primaryKey);
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-        if (!Array.isArray(parsed) && parsed && Object.keys(parsed).length > 0) return parsed;
-      } catch (e) {}
-    }
-
-    // Comprehensive multi-tenant fallback scanner:
-    const fallbackKeys = [
-      `${key}_AFS-101`,
-      `${key}_AFS-1234`,
-      `${key}_MT-101`,
-      `${key}_AFS-102`,
-      key, // legacy un-suffixed key
-    ];
-
-    if (typeof window !== "undefined" && window.localStorage) {
-      for (let i = 0; i < localStorage.length; i++) {
-        const k = localStorage.key(i);
-        if (k && (k.startsWith(`${key}_`) || k === key) && k !== primaryKey) {
-          fallbackKeys.push(k);
-        }
-      }
-    }
-
-    for (const fk of fallbackKeys) {
-      const val = localStorage.getItem(fk);
-      if (val) {
-        try {
-          const parsed = JSON.parse(val);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            localStorage.setItem(primaryKey, JSON.stringify(parsed));
-            return parsed;
-          } else if (!Array.isArray(parsed) && parsed && Object.keys(parsed).length > 0) {
-            localStorage.setItem(primaryKey, JSON.stringify(parsed));
-            return parsed;
-          }
-        } catch (e) {}
-      }
-    }
-
+    const saved = localStorage.getItem(`${key}_${tenantId}`);
+    if (!saved) return null;
+    try {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (!Array.isArray(parsed) && parsed && Object.keys(parsed).length > 0) return parsed;
+    } catch (e) {}
     return null;
   };
+
+  // Keep alias for any remaining references
+  const getTenantDataWithFallback = getTenantData;
 
 
   // Client Tenant States
@@ -1223,7 +1192,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     }
 
     // 5. Load Products (with SKU and Barcodes)
-    const savedProducts = getTenantDataWithFallback("unipos_products", currentUser.tenantId);
+    const savedProducts = getTenantData("unipos_products", currentUser.tenantId);
     if (savedProducts && savedProducts.length > 0) {
       const parsed: Product[] = savedProducts;
       const seenIds = new Set<string>();
@@ -1247,7 +1216,8 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       });
       setProducts(sanitized);
       saveTenantData("unipos_products", sanitized);
-    } else {
+    } else if (isPrimaryDemo) {
+      // Demo seed data ONLY for the primary demo account (AFS-101)
       const initProducts: Product[] = [
         { id: "P-1001", sku: "GROC-MILK-001", barcode: "888123456789", name: "Nestle Milkpak 1L", category: "Grocery", brand: "Nestle", costPrice: 240, salePrice: 280, wholesalePrice: 255, taxRate: 0, stock: 120, minStock: 25, unit: "Pcs", image: "" },
         { id: "P-1002", sku: "PHAR-PAN-002", barcode: "501112233445", name: "Panadol 500mg Tablet (10x10)", category: "Pharmacy", brand: "GSK", costPrice: 320, salePrice: 400, wholesalePrice: 350, taxRate: 0, stock: 85, minStock: 15, unit: "Box", expiryDate: "2027-12-15", batchNumber: "PAN-B992", image: "" },
@@ -1259,10 +1229,14 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       ];
       saveTenantData("unipos_products", initProducts);
       setProducts(initProducts);
+    } else {
+      // New tenant: fresh empty products list
+      saveTenantData("unipos_products", []);
+      setProducts([]);
     }
 
     // 6. Load Customers
-    const savedCustomers = getTenantDataWithFallback("unipos_customers", currentUser.tenantId);
+    const savedCustomers = getTenantData("unipos_customers", currentUser.tenantId);
     if (savedCustomers && savedCustomers.length > 0) {
       const parsed: Customer[] = savedCustomers;
       const seenNos = new Set<string>();
@@ -1285,7 +1259,8 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       });
       setCustomers(sanitized);
       saveTenantData("unipos_customers", sanitized);
-    } else {
+    } else if (isPrimaryDemo) {
+      // Demo seed data ONLY for the primary demo account (AFS-101)
       const initCustomers: Customer[] = [
         { id: "C-201", customerNo: "CUST-7294", name: "Talal Ahmad", mobile: "03215550100", email: "talal@example.com", address: "DHA Phase 5, Lahore", cnic: "35201-1234567-9", loyaltyPoints: 450, creditBalance: 3200, dueRecoveryHistory: [{ date: "2026-05-15", amount: 1500 }] },
         { id: "C-202", customerNo: "CUST-3829", name: "Sarah Khan", mobile: "03009876543", email: "sarah@example.com", address: "Gulberg III, Lahore", loyaltyPoints: 120, creditBalance: 0, dueRecoveryHistory: [] },
@@ -1294,24 +1269,34 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       ];
       saveTenantData("unipos_customers", initCustomers);
       setCustomers(initCustomers);
+    } else {
+      // New tenant: only walk-in customer as default, no demo data
+      const initCustomers: Customer[] = [
+        { id: "C-001", customerNo: "N/A", name: "Walk-in Customer", mobile: "00000000000", email: "walkin@unipos.com", address: "N/A", loyaltyPoints: 0, creditBalance: 0, dueRecoveryHistory: [] }
+      ];
+      saveTenantData("unipos_customers", initCustomers);
+      setCustomers(initCustomers);
     }
 
     // 7. Load Suppliers
-    const savedSuppliers = getTenantDataWithFallback("unipos_suppliers", currentUser.tenantId);
+    const savedSuppliers = getTenantData("unipos_suppliers", currentUser.tenantId);
     if (savedSuppliers && savedSuppliers.length > 0) setSuppliers(savedSuppliers);
-    else {
+    else if (isPrimaryDemo) {
       const initSuppliers: Supplier[] = [
         { id: "S-301", name: "Nestle Distribution Lahore", company: "Nestle Pakistan", mobile: "042111363636", email: "orders@nestle.com.pk", dueAmount: 45000, purchaseHistory: [{ date: "2026-05-20", orderId: "PO-991", total: 45000 }] },
         { id: "S-302", name: "GSK Pharma Allied", company: "GSK Pakistan", mobile: "02135678901", email: "order@gsk.com", dueAmount: 18200, purchaseHistory: [{ date: "2026-05-24", orderId: "PO-995", total: 18200 }] }
       ];
       saveTenantData("unipos_suppliers", initSuppliers);
       setSuppliers(initSuppliers);
+    } else {
+      saveTenantData("unipos_suppliers", []);
+      setSuppliers([]);
     }
 
     // 7.5 Load Purchase Orders
-    const savedPOs = getTenantDataWithFallback("unipos_pos", currentUser.tenantId);
+    const savedPOs = getTenantData("unipos_pos", currentUser.tenantId);
     if (savedPOs && savedPOs.length > 0) setPurchaseOrders(savedPOs);
-    else {
+    else if (isPrimaryDemo) {
       const initPOs: PurchaseOrder[] = [
         {
           id: "PO-995",
@@ -1327,17 +1312,20 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       ];
       saveTenantData("unipos_pos", initPOs);
       setPurchaseOrders(initPOs);
+    } else {
+      saveTenantData("unipos_pos", []);
+      setPurchaseOrders([]);
     }
 
     // 7b. Load FIFO Batches
-    const savedBatches = getTenantDataWithFallback("unipos_batches", currentUser.tenantId);
+    const savedBatches = getTenantData("unipos_batches", currentUser.tenantId);
     if (savedBatches && savedBatches.length > 0) setBatches(savedBatches);
     else setBatches([]);
 
     // 8. Load Sales History
-    const savedSales = getTenantDataWithFallback("unipos_sales", currentUser.tenantId);
+    const savedSales = getTenantData("unipos_sales", currentUser.tenantId);
     if (savedSales && savedSales.length > 0) setSales(savedSales);
-    else {
+    else if (isPrimaryDemo) {
       const initSales: SaleTransaction[] = [
         {
           id: "S-5001",
@@ -1377,6 +1365,9 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       ];
       saveTenantData("unipos_sales", initSales);
       setSales(initSales);
+    } else {
+      saveTenantData("unipos_sales", []);
+      setSales([]);
     }
 
     // Auto sync customer wallet balances from return sales & wallet payment history
@@ -1464,7 +1455,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     const savedTables = localStorage.getItem("unipos_tables_" + currentUser.tenantId);
     if (savedTables && JSON.parse(savedTables).length > 0) {
       setTables(JSON.parse(savedTables));
-    } else {
+    } else if (isPrimaryDemo) {
       const initTables: RestaurantTable[] = [
         { id: "T-01", number: "Table 1", capacity: 2, status: "Free", hall: "Main Hall" },
         { id: "T-02", number: "Table 2", capacity: 4, status: "Occupied", activeOrderId: "S-5003", waiterName: "Nabeel Waiter", hall: "Main Hall" },
@@ -1476,6 +1467,9 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       ];
       saveTenantData("unipos_tables", initTables);
       setTables(initTables);
+    } else {
+      saveTenantData("unipos_tables", []);
+      setTables([]);
     }
 
     // 12. Load Kitchen Tickets
@@ -1766,10 +1760,44 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem("unipos_tenants", JSON.stringify(updated));
   };
 
-  const deleteTenant = (id: string) => {
+  // ─── ALL localStorage keys that store per-tenant data ───────────────────────
+  const TENANT_DATA_KEYS = [
+    "unipos_products", "unipos_customers", "unipos_suppliers", "unipos_sales",
+    "unipos_expenses", "unipos_employees", "unipos_settings", "unipos_pos",
+    "unipos_batches", "unipos_tables", "unipos_kitchen", "unipos_accounts",
+    "unipos_journal", "unipos_attendance", "unipos_payroll", "unipos_transfers",
+    "unipos_folders_init"
+  ];
+
+  const deleteTenant = async (id: string) => {
+    // 1. Remove from tenant list
     const updated = tenants.filter(t => t.id !== id);
     setTenants(updated);
     localStorage.setItem("unipos_tenants", JSON.stringify(updated));
+
+    // 2. Remove all linked invoices
+    const updatedInvs = saasInvoices.filter(i => i.tenantId !== id);
+    setSaasInvoices(updatedInvs);
+    localStorage.setItem("unipos_invoices", JSON.stringify(updatedInvs));
+
+    // 3. Wipe ALL tenant-specific localStorage keys
+    TENANT_DATA_KEYS.forEach(key => {
+      localStorage.removeItem(`${key}_${id}`);
+    });
+    // Also sweep any remaining keys with this tenant suffix that may exist
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.endsWith(`_${id}`)) keysToRemove.push(k);
+    }
+    keysToRemove.forEach(k => localStorage.removeItem(k));
+
+    // 4. Delete from Supabase unipos_collections (all rows for this tenant)
+    try {
+      await supabase.from('unipos_collections').delete().eq('tenant_id', id);
+    } catch (e) {
+      console.warn('Supabase tenant data delete failed (will retry on next sync):', e);
+    }
   };
 
   const setTenantCurrency = (id: string, currency: string) => {

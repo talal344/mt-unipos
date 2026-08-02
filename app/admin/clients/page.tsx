@@ -37,6 +37,7 @@ import {
   Shield,
   Database,
   Download,
+  Upload,
   Cpu,
   RefreshCw,
 } from "lucide-react";
@@ -654,6 +655,9 @@ export default function AdminClientsPage() {
   const [tenantTypeFilter, setTenantTypeFilter] = useState<string>("All");
   const [shardDetailTarget, setShardDetailTarget] = useState<any | null>(null);
   const [backupLoading, setBackupLoading] = useState<Record<string, boolean>>({});
+  const [showRestoreModal, setShowRestoreModal] = useState(false);
+  const [restoreTenantId, setRestoreTenantId] = useState<string | null>(null);
+  const [restoreLoading, setRestoreLoading] = useState(false);
 
   const filteredTenants = useMemo(() => {
     return tenants.filter((t) => {
@@ -681,14 +685,93 @@ export default function AdminClientsPage() {
     });
   }, [tenants, tenantSearch, tenantPlanFilter, tenantStatusFilter, tenantTypeFilter]);
 
+  // ── All tenant-specific localStorage key prefixes (must match global-context) ──
+  const TENANT_DATA_KEYS = [
+    "unipos_products", "unipos_customers", "unipos_suppliers", "unipos_sales",
+    "unipos_expenses", "unipos_employees", "unipos_settings", "unipos_pos",
+    "unipos_batches", "unipos_tables", "unipos_kitchen", "unipos_accounts",
+    "unipos_journal", "unipos_attendance", "unipos_payroll", "unipos_transfers",
+  ];
+
   const handleBackupDb = (tenantId: string) => {
+    const tenant = tenants.find(t => t.id === tenantId);
+    if (!tenant) return;
+
     setBackupLoading(prev => ({ ...prev, [tenantId]: true }));
-    triggerToast(`Initiating schema analysis & database shard backup for ${tenantId}...`);
-    
+    triggerToast(`Generating database backup for ${tenant.businessName}...`);
+
     setTimeout(() => {
+      const backup: Record<string, any> = {
+        _meta: {
+          tenantId,
+          businessName: tenant.businessName,
+          exportedAt: new Date().toISOString(),
+          version: "unipos-v1",
+        },
+        tenantMeta: tenant,
+        data: {} as Record<string, any>,
+      };
+
+      // Collect all tenant-specific localStorage data
+      TENANT_DATA_KEYS.forEach(key => {
+        const val = localStorage.getItem(`${key}_${tenantId}`);
+        if (val) {
+          try { backup.data[key] = JSON.parse(val); } catch { backup.data[key] = val; }
+        }
+      });
+
+      const json = JSON.stringify(backup, null, 2);
+      const blob = new Blob([json], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `unipos_backup_${tenantId}_${new Date().toISOString().split("T")[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+
       setBackupLoading(prev => ({ ...prev, [tenantId]: false }));
-      triggerToast(`Database shard backup verified & saved to S3 successfully!`);
-    }, 1500);
+      triggerToast(`✅ Backup downloaded for ${tenant.businessName}!`);
+    }, 800);
+  };
+
+  const handleRestoreDb = (tenantId: string) => {
+    setRestoreTenantId(tenantId);
+    setShowRestoreModal(true);
+  };
+
+  const handleRestoreFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !restoreTenantId) return;
+
+    setRestoreLoading(true);
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const backup = JSON.parse(ev.target?.result as string);
+        if (!backup.data || !backup._meta) {
+          triggerToast("❌ Invalid backup file format!");
+          setRestoreLoading(false);
+          return;
+        }
+
+        // Restore all data under this tenant's keys
+        const targetTenantId = restoreTenantId;
+        Object.entries(backup.data as Record<string, any>).forEach(([key, value]) => {
+          localStorage.setItem(`${key}_${targetTenantId}`, JSON.stringify(value));
+        });
+
+        setRestoreLoading(false);
+        setShowRestoreModal(false);
+        setRestoreTenantId(null);
+        triggerToast(`✅ Backup restored for Tenant ${targetTenantId}! Ask them to refresh.`);
+      } catch {
+        triggerToast("❌ Failed to parse backup file. Please upload a valid JSON backup.");
+        setRestoreLoading(false);
+      }
+    };
+    reader.readAsText(file);
   };
 
   const handleExtendTrial = (tenantId: string) => {
@@ -804,14 +887,14 @@ export default function AdminClientsPage() {
     triggerToast(`Tenant status set to ${nextStatus}!`);
   };
 
-  const handleDeleteTenant = (id: string, name: string) => {
+  const handleDeleteTenant = async (id: string, name: string) => {
     if (
       confirm(
-        `Are you absolutely sure you want to permanently delete the Tenant database shard for "${name}"?\nThis action cannot be undone.`
+        `⚠️ PERMANENT DELETE\n\nAre you absolutely sure you want to permanently delete Tenant "${name}"?\n\nThis will delete:\n• All products, customers, sales\n• All expenses, employees, reports\n• All cloud database records\n• All linked invoices\n\nThis action CANNOT be undone.`
       )
     ) {
-      deleteTenant(id);
-      triggerToast(`Permanently deleted Tenant ${name} sharding registry.`);
+      await deleteTenant(id);
+      triggerToast(`✅ Permanently deleted Tenant "${name}" and all its data.`);
     }
   };
 
@@ -1308,11 +1391,30 @@ export default function AdminClientsPage() {
                                 )}
                               </button>
                               <button
+                                onClick={() => handleBackupDb(tenant.id)}
+                                disabled={backupLoading[tenant.id]}
+                                className="p-1.5 bg-sky-500/10 hover:bg-sky-500/30 text-sky-400 hover:text-white rounded transition disabled:opacity-50"
+                                title="Download Backup — Export full data as JSON"
+                              >
+                                {backupLoading[tenant.id] ? (
+                                  <RefreshCw size={12} className="animate-spin" />
+                                ) : (
+                                  <Download size={12} />
+                                )}
+                              </button>
+                              <button
+                                onClick={() => handleRestoreDb(tenant.id)}
+                                className="p-1.5 bg-amber-500/10 hover:bg-amber-500/30 text-amber-400 hover:text-white rounded transition"
+                                title="Upload Backup — Restore data from JSON file"
+                              >
+                                <Upload size={12} />
+                              </button>
+                              <button
                                 onClick={() =>
                                   handleDeleteTenant(tenant.id, tenant.businessName)
                                 }
                                 className="p-1.5 bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white rounded transition"
-                                title="Delete Shard"
+                                title="Permanently Delete Tenant & All Data"
                               >
                                 <Trash2 size={12} />
                               </button>
@@ -1328,6 +1430,70 @@ export default function AdminClientsPage() {
           </div>
         )}
       </main>
+
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      {/* RESTORE BACKUP MODAL                                                   */}
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      {showRestoreModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4">
+          <div className="bg-brand-dark-surface border border-amber-500/30 p-6 rounded-2xl w-full max-w-md shadow-2xl">
+            <div className="flex justify-between items-center border-b border-brand-dark-border pb-3 mb-4">
+              <div className="flex items-center gap-2">
+                <Upload size={15} className="text-amber-400" />
+                <h3 className="font-black text-white text-sm">Restore Tenant Backup</h3>
+              </div>
+              <button onClick={() => { setShowRestoreModal(false); setRestoreTenantId(null); }} className="text-gray-400 hover:text-white">
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 mb-4 text-xs text-amber-300">
+              <div className="font-black mb-1">⚠️ Restore Warning</div>
+              <div className="text-amber-300/80">This will overwrite the current data for Tenant <span className="font-bold text-white">{restoreTenantId}</span> with the contents of the uploaded backup file. Existing data will be replaced.</div>
+            </div>
+
+            <div className="bg-black/30 border border-brand-dark-border rounded-xl p-3 mb-4 text-xs font-mono">
+              <div className="text-gray-500 mb-1">Tenant ID</div>
+              <div className="text-purple-400 font-bold">{restoreTenantId}</div>
+            </div>
+
+            <label className="block">
+              <div className="text-[10px] uppercase font-bold text-gray-400 mb-2">Select Backup File (.json)</div>
+              <div className="flex items-center gap-3">
+                <label
+                  htmlFor="restore-file-input"
+                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed cursor-pointer transition ${
+                    restoreLoading
+                      ? "border-amber-500/30 bg-amber-500/5 text-amber-400 opacity-60 cursor-wait"
+                      : "border-brand-dark-border hover:border-amber-500/50 text-gray-400 hover:text-amber-400 bg-black/20 hover:bg-amber-500/5"
+                  } text-xs font-bold`}
+                >
+                  {restoreLoading ? (
+                    <><RefreshCw size={14} className="animate-spin" /> Restoring...</>
+                  ) : (
+                    <><Upload size={14} /> Click to Upload Backup JSON</>  
+                  )}
+                </label>
+                <input
+                  id="restore-file-input"
+                  type="file"
+                  accept=".json,application/json"
+                  className="hidden"
+                  onChange={handleRestoreFileUpload}
+                  disabled={restoreLoading}
+                />
+              </div>
+            </label>
+
+            <button
+              onClick={() => { setShowRestoreModal(false); setRestoreTenantId(null); }}
+              className="w-full mt-4 py-2 bg-brand-dark-border hover:bg-brand-dark-border/80 text-gray-300 font-bold text-xs rounded-lg transition"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ═══════════════════════════════════════════════════════════════════════ */}
       {/* DEMO MODALS                                                            */}
