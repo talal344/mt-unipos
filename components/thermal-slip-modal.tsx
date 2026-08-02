@@ -338,14 +338,31 @@ export default function ThermalSlipModal({
           cloudSuccess = true;
         }
         
-        // 2. Offline Storage (Local Directory Organized into Subfolders)
+        // 2. Local Disk Storage via Node API (Documents/MT POS/Receipts/<subfolder>/<file>)
+        try {
+          const reader = new FileReader();
+          reader.readAsDataURL(blob);
+          reader.onloadend = async () => {
+            const base64data = reader.result as string;
+            await fetch("/api/save-report", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                fileType: "Receipt",
+                subfolder: folderName,
+                fileName: localFileName,
+                fileBase64: base64data,
+              }),
+            }).catch(() => {});
+          };
+          localSuccess = true;
+        } catch (err) {
+          console.error("Local Save API error:", err);
+        }
+        
+        // 3. Optional localDirectoryHandle fallback
         if (localReceiptsDirHandle) {
           try {
-            const folderName = sale.status === "Dues_Recovery"
-              ? "Dues_Clear"
-              : (sale.status === "Returned" || sale.status === "Refunded")
-                ? "Return_Receipts"
-                : "Sales_Receipts";
             const targetDirHandle = await localReceiptsDirHandle.getDirectoryHandle(folderName, { create: true });
             const fileHandle = await targetDirHandle.getFileHandle(localFileName, { create: true });
             const writable = await fileHandle.createWritable();
@@ -353,35 +370,10 @@ export default function ThermalSlipModal({
             await writable.close();
             localSuccess = true;
           } catch (err) {
-            console.error("Local Subfolder Save Error:", err);
-            try {
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement("a");
-              a.href = url;
-              a.download = localFileName;
-              document.body.appendChild(a);
-              a.click();
-              document.body.removeChild(a);
-              setTimeout(() => URL.revokeObjectURL(url), 1000);
-              localSuccess = true;
-            } catch (dlErr) {}
-          }
-        } else {
-          try {
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = localFileName;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            setTimeout(() => URL.revokeObjectURL(url), 1000);
-            localSuccess = true;
-          } catch (err) {
-            console.error("Direct browser download error:", err);
+            console.error("Local Directory Handle Save Error:", err);
           }
         }
-        
+
         if (cloudSuccess || localSuccess) {
           setAutoSaveStatus("success");
         } else {
@@ -419,11 +411,48 @@ export default function ThermalSlipModal({
       });
       const dataUrl = canvas.toDataURL("image/jpeg", 0.95);
       const a = document.createElement("a");
-      a.href = dataUrl;
       a.download = `${sale.receiptNumber}.jpg`;
       a.click();
     } catch (err) {
       console.error("Failed to generate image:", err);
+    }
+  };
+
+  const handleSaveToDisk = async () => {
+    if (!slipRef.current) return;
+    try {
+      const html2canvas = (await import("html2canvas-pro")).default;
+      const canvas = await html2canvas(slipRef.current, {
+        backgroundColor: "#ffffff",
+        scale: 3,
+        logging: false,
+        useCORS: true
+      });
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.95);
+      const subfolder = sale.status === "Dues_Recovery"
+        ? "Dues_Clear"
+        : (sale.status === "Returned" || sale.status === "Refunded")
+          ? "Return_Receipts"
+          : "Sales_Receipts";
+
+      const res = await fetch("/api/save-report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fileType: "Receipt",
+          subfolder,
+          fileName: `${sale.receiptNumber}.jpg`,
+          fileBase64: dataUrl,
+        }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        alert(`📁 SAVED: Documents/MT POS/Receipts/${subfolder}/${sale.receiptNumber}.jpg`);
+      } else {
+        handleDownload();
+      }
+    } catch (err) {
+      handleDownload();
     }
   };
 
@@ -698,18 +727,24 @@ export default function ThermalSlipModal({
         </div>
 
         {/* Action Buttons */}
-        <div className="px-4 py-3 border-t border-brand-dark-border shrink-0 grid grid-cols-2 gap-2">
+        <div className="px-4 py-3 border-t border-brand-dark-border shrink-0 grid grid-cols-3 gap-2">
           <button
             onClick={handlePrint}
-            className="flex items-center justify-center gap-2 py-3 bg-brand-sky hover:bg-brand-sky-light text-black font-black text-xs uppercase rounded-xl transition shadow-lg shadow-brand-sky/20"
+            className="flex items-center justify-center gap-1.5 py-2.5 bg-brand-sky hover:bg-brand-sky-light text-black font-black text-xs uppercase rounded-xl transition shadow-lg shadow-brand-sky/20"
           >
-            <Printer size={14} /> Print Slip
+            <Printer size={14} /> Print
+          </button>
+          <button
+            onClick={handleSaveToDisk}
+            className="flex items-center justify-center gap-1.5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xs uppercase rounded-xl transition shadow-lg shadow-emerald-500/20"
+          >
+            <Download size={14} /> Save to Disk
           </button>
           <button
             onClick={handleDownload}
-            className="flex items-center justify-center gap-2 py-3 bg-brand-dark-border hover:bg-brand-dark-border/70 text-white font-black text-xs uppercase rounded-xl transition"
+            className="flex items-center justify-center gap-1.5 py-2.5 bg-brand-dark-border hover:bg-brand-dark-border/70 text-gray-300 font-bold text-xs uppercase rounded-xl transition"
           >
-            <Download size={14} /> Download Slip
+            <Download size={14} /> Export JPG
           </button>
         </div>
       </div>
