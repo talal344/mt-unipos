@@ -550,10 +550,10 @@ export default function ReportsPage() {
           "Customer": s.customerName,
           "Cashier / Staff": s.cashierName,
           "Payment Method": s.paymentMethod,
-          "Product Name": item.productName || item.name || "Item",
+          "Product Name": item.productName || "Item",
           "Quantity": item.qty,
-          [`Unit Price (${currencySymbol})`]: item.price || item.unitPrice || 0,
-          [`Total Amount (${currencySymbol})`]: (item.qty || 1) * (item.price || item.unitPrice || 0),
+          [`Unit Price (${currencySymbol})`]: item.price || 0,
+          [`Total Amount (${currencySymbol})`]: (item.qty || 1) * (item.price || 0),
           "Transaction Status": s.status,
         }))
       );
@@ -1408,10 +1408,10 @@ export default function ReportsPage() {
                             <tbody className="divide-y divide-brand-dark-border/20 text-[11px]">
                               {(s.items || []).map((item, idx) => (
                                 <tr key={idx} className="hover:bg-black/20">
-                                  <td className="py-2 text-white font-sans font-bold">{item.productName || item.name}</td>
-                                  <td className="py-2 text-center font-bold text-gray-300">{item.qty} {item.unit || "units"}</td>
-                                  <td className="py-2 text-right text-gray-400">{currencySymbol} {(item.price || item.unitPrice || 0).toLocaleString()}</td>
-                                  <td className="py-2 text-right font-bold text-emerald-400">{currencySymbol} {((item.qty || 1) * (item.price || item.unitPrice || 0)).toLocaleString()}</td>
+                                  <td className="py-2 text-white font-sans font-bold">{item.productName}</td>
+                                  <td className="py-2 text-center font-bold text-gray-300">{item.qty} units</td>
+                                  <td className="py-2 text-right text-gray-400">{currencySymbol} {(item.price || 0).toLocaleString()}</td>
+                                  <td className="py-2 text-right font-bold text-emerald-400">{currencySymbol} {((item.qty || 1) * (item.price || 0)).toLocaleString()}</td>
                                 </tr>
                               ))}
                             </tbody>
