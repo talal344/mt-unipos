@@ -1235,8 +1235,59 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         }
       ];
       saveTenantData("unipos_sales", initSales);
-      setSales(initSales);
     } else { saveTenantData("unipos_sales", []); setSales([]); }
+
+    // Auto sync customer wallet balances from return sales & wallet payment history
+    const allSales = savedSales ? JSON.parse(savedSales) : [];
+    const allCusts = savedCustomers ? JSON.parse(savedCustomers) : [];
+    if (allSales.length > 0 && allCusts.length > 0) {
+      let dirty = false;
+      const syncedCusts = allCusts.map((c: Customer) => {
+        if (c.id === "C-203" || c.name === "Walk-in Customer") return c;
+
+        let computedWalletFromSales = 0;
+        allSales.forEach((s: SaleTransaction) => {
+          const isMatch = (s.customerName || "").toLowerCase().trim() === c.name.toLowerCase().trim() || (c.customerNo && c.customerNo !== "N/A" && s.customerNo === c.customerNo);
+          if (!isMatch) return;
+
+          const isReturn = s.status === "Returned" || s.status === "Refunded";
+          const isWallet = s.paymentMethod === "Store Wallet Credit" || s.paymentMethod === "Wallet";
+
+          if (isWallet) {
+            if (isReturn) computedWalletFromSales += s.total;
+            else computedWalletFromSales -= s.total;
+          } else if (s.splitPayments) {
+            const splitAmt = s.splitPayments["Store Wallet Credit"] || s.splitPayments["Wallet"] || 0;
+            if (splitAmt > 0) {
+              if (isReturn) computedWalletFromSales += splitAmt;
+              else computedWalletFromSales -= splitAmt;
+            }
+          }
+        });
+
+        let finalWallet = Math.max(0, c.walletBalance || 0, computedWalletFromSales);
+        let finalCredit = c.creditBalance;
+        if (finalCredit < 0) {
+          finalWallet += Math.abs(finalCredit);
+          finalCredit = 0;
+        }
+
+        if (finalWallet !== c.walletBalance || finalCredit !== c.creditBalance) {
+          dirty = true;
+          return {
+            ...c,
+            creditBalance: finalCredit,
+            walletBalance: finalWallet
+          };
+        }
+        return c;
+      });
+
+      if (dirty) {
+        setCustomers(syncedCusts);
+        saveTenantData("unipos_customers", syncedCusts);
+      }
+    }
 
     // 9. Load Expenses
     const savedExpenses = localStorage.getItem("unipos_expenses_" + currentUser.tenantId);
@@ -2522,9 +2573,8 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     }
 
 
-    // 3. Accumulate loyalty points for customer (no points earned on return sales)
+    // 3. Accumulate loyalty points & credit/wallet balance for customer
     if (matchCust && matchCust.id !== "C-203") {
-      const isReturn = sale.status === "Returned" || sale.status === "Refunded";
       const addedPoints = isReturn ? 0 : Math.floor(sale.total / 50);
       const deductPoints = sale.redeemLoyalty ? 1000 : 0;
       
@@ -2536,13 +2586,36 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         creditChange = sale.splitPayments["On Credit"] || 0;
       }
 
+      // If return sale with "Store Wallet Credit", add (+) to walletBalance
+      // If payment method is "Store Wallet Credit", deduct (-) from walletBalance
+      let walletChange = 0;
+      const isWalletPayment = sale.paymentMethod === "Store Wallet Credit" || sale.paymentMethod === "Wallet";
+      if (isWalletPayment && sale.customerName !== "Walk-in Customer") {
+        if (isReturn) {
+          walletChange = sale.total;
+        } else {
+          walletChange = -sale.total;
+        }
+      } else if (sale.splitPayments && sale.customerName !== "Walk-in Customer") {
+        const walletAmt = sale.splitPayments["Store Wallet Credit"] || sale.splitPayments["Wallet"] || 0;
+        if (walletAmt > 0) {
+          if (isReturn) {
+            walletChange = walletAmt;
+          } else {
+            walletChange = -walletAmt;
+          }
+        }
+      }
+
       const updatedCusts = customers.map(c => {
-        if (c.id === matchCust.id) {
+        if (c.id === matchCust.id || c.name.toLowerCase().trim() === matchCust.name.toLowerCase().trim() || (c.customerNo && c.customerNo === matchCust.customerNo)) {
           const finalPoints = Math.max(0, c.loyaltyPoints + addedPoints - deductPoints);
+          const finalWallet = Math.max(0, (c.walletBalance || 0) + walletChange);
           return {
             ...c,
             loyaltyPoints: finalPoints,
-            creditBalance: c.creditBalance + creditChange
+            creditBalance: Math.max(0, c.creditBalance + creditChange),
+            walletBalance: finalWallet
           };
         }
         return c;

@@ -259,13 +259,7 @@ export default function PosPage() {
 
     const refundTotal = returningItemsList.reduce((a: number, i: any) => a + (i.returnQty * i.price), 0);
 
-    // 2. Adjust Customer Wallet Balance if refundMethod is Wallet
-    const matchCust = customers.find(c => c.name === returnSale.customerName);
-    if (refundMethod === "Wallet" && matchCust && matchCust.id !== "C-203") {
-      updateCustomerWalletBalance(matchCust.id, refundTotal);
-    }
-
-    // 3. Generate Return Sale Record
+    // 2. Generate Return Sale Record
     const now = new Date();
     const dd = String(now.getDate()).padStart(2, "0");
     const mm = String(now.getMonth() + 1).padStart(2, "0");
