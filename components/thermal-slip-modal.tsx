@@ -73,7 +73,7 @@ function buildSlipHTML(
   // Determine receipt type label
   const isCreditSale = sale.paymentMethod === "On Credit" || sale.isCredit || (sale as any).splitPayments?.["On Credit"] > 0;
   const statusLabel = sale.status === "Dues_Recovery"
-    ? "DUES RECOVERY RECEIPT"
+    ? "DUES PAYMENT RECEIPT"
     : sale.status === "Returned" || sale.status === "Refunded"
       ? "RETURN RECEIPT"
       : isCreditSale
@@ -99,7 +99,11 @@ function buildSlipHTML(
   const changeAmt = sale.changeReturned ?? (receivedAmt !== undefined ? Math.max(0, receivedAmt - sale.total) : 0);
 
   const prevCredit = sale.previousCreditBalance ?? 0;
-  const currentCredit = isCreditSale ? sale.total : ((sale as any).splitPayments?.["On Credit"] || 0);
+  const currentCredit = (sale as any).splitPayments && (sale as any).splitPayments["On Credit"] !== undefined
+    ? ((sale as any).splitPayments["On Credit"] || 0)
+    : (sale.paymentMethod === "On Credit" || sale.isCredit)
+      ? sale.total
+      : 0;
   const totalCredit = sale.totalCreditBalance ?? (prevCredit + currentCredit);
   const showCreditStatement = (sale.previousCreditBalance !== undefined && sale.previousCreditBalance > 0) || isCreditSale || (sale.totalCreditBalance !== undefined && sale.totalCreditBalance > 0);
 
@@ -438,11 +442,13 @@ export default function ThermalSlipModal({
   const totalQty = sale.items.reduce((a, i) => a + i.qty, 0);
 
   const isCreditSale = sale.paymentMethod === "On Credit" || sale.isCredit || (sale as any).splitPayments?.["On Credit"] > 0;
-  const statusLabel = sale.status === "Returned" || sale.status === "Refunded"
-    ? "RETURN RECEIPT"
-    : isCreditSale
-      ? "CREDIT SALE RECEIPT"
-      : "CASH SALE RECEIPT";
+  const statusLabel = sale.status === "Dues_Recovery"
+    ? "DUES PAYMENT RECEIPT"
+    : sale.status === "Returned" || sale.status === "Refunded"
+      ? "RETURN RECEIPT"
+      : isCreditSale
+        ? "CREDIT SALE RECEIPT"
+        : "CASH SALE RECEIPT";
 
   const receivedAmt = sale.receivedAmount ?? (sale.paymentMethod === "Cash" ? sale.total : undefined);
   const changeAmt = sale.changeReturned ?? (receivedAmt !== undefined ? Math.max(0, receivedAmt - sale.total) : 0);
@@ -637,7 +643,11 @@ export default function ThermalSlipModal({
             {/* ── Customer Credit Statement ── */}
             {((sale.previousCreditBalance !== undefined && sale.previousCreditBalance > 0) || isCreditSale || (sale.totalCreditBalance !== undefined && sale.totalCreditBalance > 0)) && sale.customerName !== "Walk-in Customer" && (() => {
               const prevCredit = sale.previousCreditBalance ?? 0;
-              const currentCredit = isCreditSale ? sale.total : ((sale as any).splitPayments?.["On Credit"] || 0);
+              const currentCredit = (sale as any).splitPayments && (sale as any).splitPayments["On Credit"] !== undefined
+                ? ((sale as any).splitPayments["On Credit"] || 0)
+                : (sale.paymentMethod === "On Credit" || sale.isCredit)
+                  ? sale.total
+                  : 0;
               const totalCredit = sale.totalCreditBalance ?? (prevCredit + currentCredit);
               return (
                 <div style={{ border: "1px solid #000", borderRadius: "4px", margin: "8px 0", overflow: "hidden" }}>
