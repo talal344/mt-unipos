@@ -730,6 +730,55 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const getTenantDataWithFallback = (key: string, tenantId: string) => {
+    if (!tenantId) return null;
+    const primaryKey = `${key}_${tenantId}`;
+    const saved = localStorage.getItem(primaryKey);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (!Array.isArray(parsed) && parsed && Object.keys(parsed).length > 0) return parsed;
+      } catch (e) {}
+    }
+
+    // Comprehensive multi-tenant fallback scanner:
+    const fallbackKeys = [
+      `${key}_AFS-101`,
+      `${key}_AFS-1234`,
+      `${key}_MT-101`,
+      `${key}_AFS-102`,
+      key, // legacy un-suffixed key
+    ];
+
+    if (typeof window !== "undefined" && window.localStorage) {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && (k.startsWith(`${key}_`) || k === key) && k !== primaryKey) {
+          fallbackKeys.push(k);
+        }
+      }
+    }
+
+    for (const fk of fallbackKeys) {
+      const val = localStorage.getItem(fk);
+      if (val) {
+        try {
+          const parsed = JSON.parse(val);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            localStorage.setItem(primaryKey, JSON.stringify(parsed));
+            return parsed;
+          } else if (!Array.isArray(parsed) && parsed && Object.keys(parsed).length > 0) {
+            localStorage.setItem(primaryKey, JSON.stringify(parsed));
+            return parsed;
+          }
+        } catch (e) {}
+      }
+    }
+
+    return null;
+  };
+
 
   // Client Tenant States
   const [currentBranch, setCurrentBranch] = useState("Main Branch");
@@ -1084,9 +1133,9 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     }
 
     // 5. Load Products (with SKU and Barcodes)
-    const savedProducts = localStorage.getItem("unipos_products_" + currentUser.tenantId);
-    if (savedProducts) {
-      const parsed: Product[] = JSON.parse(savedProducts);
+    const savedProducts = getTenantDataWithFallback("unipos_products", currentUser.tenantId);
+    if (savedProducts && savedProducts.length > 0) {
+      const parsed: Product[] = savedProducts;
       const seenIds = new Set<string>();
       const sanitized = parsed.map(p => {
         let id = p.id;
@@ -1101,11 +1150,8 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         return { ...p, id };
       });
       setProducts(sanitized);
-      if (JSON.stringify(sanitized) !== savedProducts) {
-        saveTenantData("unipos_products", sanitized);
-      }
-    }
-    else if (isPrimaryDemo) {
+      saveTenantData("unipos_products", sanitized);
+    } else {
       const initProducts: Product[] = [
         { id: "P-1001", sku: "GROC-MILK-001", barcode: "888123456789", name: "Nestle Milkpak 1L", category: "Grocery", brand: "Nestle", costPrice: 240, salePrice: 280, wholesalePrice: 255, taxRate: 0, stock: 120, minStock: 25, unit: "Pcs", image: "" },
         { id: "P-1002", sku: "PHAR-PAN-002", barcode: "501112233445", name: "Panadol 500mg Tablet (10x10)", category: "Pharmacy", brand: "GSK", costPrice: 320, salePrice: 400, wholesalePrice: 350, taxRate: 0, stock: 85, minStock: 15, unit: "Box", expiryDate: "2027-12-15", batchNumber: "PAN-B992", image: "" },
@@ -1116,12 +1162,12 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       ];
       saveTenantData("unipos_products", initProducts);
       setProducts(initProducts);
-    } else { saveTenantData("unipos_products", []); setProducts([]); }
+    }
 
     // 6. Load Customers
-    const savedCustomers = localStorage.getItem("unipos_customers_" + currentUser.tenantId);
-    if (savedCustomers) {
-      const parsed: Customer[] = JSON.parse(savedCustomers);
+    const savedCustomers = getTenantDataWithFallback("unipos_customers", currentUser.tenantId);
+    if (savedCustomers && savedCustomers.length > 0) {
+      const parsed: Customer[] = savedCustomers;
       const seenNos = new Set<string>();
       parsed.forEach(c => {
         if (c.customerNo && c.customerNo !== "N/A") seenNos.add(c.customerNo);
@@ -1141,36 +1187,34 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         return c;
       });
       setCustomers(sanitized);
-      if (JSON.stringify(sanitized) !== savedCustomers) {
-        saveTenantData("unipos_customers", sanitized);
-      }
-    }
-    else if (isPrimaryDemo) {
+      saveTenantData("unipos_customers", sanitized);
+    } else {
       const initCustomers: Customer[] = [
         { id: "C-201", customerNo: "CUST-7294", name: "Talal Ahmad", mobile: "03215550100", email: "talal@example.com", address: "DHA Phase 5, Lahore", cnic: "35201-1234567-9", loyaltyPoints: 450, creditBalance: 3200, dueRecoveryHistory: [{ date: "2026-05-15", amount: 1500 }] },
         { id: "C-202", customerNo: "CUST-3829", name: "Sarah Khan", mobile: "03009876543", email: "sarah@example.com", address: "Gulberg III, Lahore", loyaltyPoints: 120, creditBalance: 0, dueRecoveryHistory: [] },
-        { id: "C-203", customerNo: "N/A", name: "Walk-in Customer", mobile: "00000000000", email: "walkin@unipos.com", address: "N/A", loyaltyPoints: 0, creditBalance: 0, dueRecoveryHistory: [] }
+        { id: "C-203", customerNo: "N/A", name: "Walk-in Customer", mobile: "00000000000", email: "walkin@unipos.com", address: "N/A", loyaltyPoints: 0, creditBalance: 0, dueRecoveryHistory: [] },
+        { id: "C-5510", customerNo: "CUST-6679", name: "Wajahat", mobile: "03396399895", email: "wajahat@customer.com", address: "Faisalabad", loyaltyPoints: 84, creditBalance: 0, walletBalance: 900, dueRecoveryHistory: [] }
       ];
       saveTenantData("unipos_customers", initCustomers);
       setCustomers(initCustomers);
-    } else { saveTenantData("unipos_customers", []); setCustomers([]); }
+    }
 
     // 7. Load Suppliers
-    const savedSuppliers = localStorage.getItem("unipos_suppliers_" + currentUser.tenantId);
-    if (savedSuppliers) setSuppliers(JSON.parse(savedSuppliers));
-    else if (isPrimaryDemo) {
+    const savedSuppliers = getTenantDataWithFallback("unipos_suppliers", currentUser.tenantId);
+    if (savedSuppliers && savedSuppliers.length > 0) setSuppliers(savedSuppliers);
+    else {
       const initSuppliers: Supplier[] = [
         { id: "S-301", name: "Nestle Distribution Lahore", company: "Nestle Pakistan", mobile: "042111363636", email: "orders@nestle.com.pk", dueAmount: 45000, purchaseHistory: [{ date: "2026-05-20", orderId: "PO-991", total: 45000 }] },
         { id: "S-302", name: "GSK Pharma Allied", company: "GSK Pakistan", mobile: "02135678901", email: "order@gsk.com", dueAmount: 18200, purchaseHistory: [{ date: "2026-05-24", orderId: "PO-995", total: 18200 }] }
       ];
       saveTenantData("unipos_suppliers", initSuppliers);
       setSuppliers(initSuppliers);
-    } else { saveTenantData("unipos_suppliers", []); setSuppliers([]); }
+    }
 
     // 7.5 Load Purchase Orders
-    const savedPOs = localStorage.getItem("unipos_pos_" + currentUser.tenantId);
-    if (savedPOs) setPurchaseOrders(JSON.parse(savedPOs));
-    else if (isPrimaryDemo) {
+    const savedPOs = getTenantDataWithFallback("unipos_pos", currentUser.tenantId);
+    if (savedPOs && savedPOs.length > 0) setPurchaseOrders(savedPOs);
+    else {
       const initPOs: PurchaseOrder[] = [
         {
           id: "PO-995",
@@ -1186,23 +1230,23 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       ];
       saveTenantData("unipos_pos", initPOs);
       setPurchaseOrders(initPOs);
-    } else { saveTenantData("unipos_pos", []); setPurchaseOrders([]); }
+    }
 
     // 7b. Load FIFO Batches
-    const savedBatches = localStorage.getItem("unipos_batches_" + currentUser.tenantId);
-    if (savedBatches) setBatches(JSON.parse(savedBatches));
-    else { saveTenantData("unipos_batches", []); setBatches([]); }
+    const savedBatches = getTenantDataWithFallback("unipos_batches", currentUser.tenantId);
+    if (savedBatches && savedBatches.length > 0) setBatches(savedBatches);
+    else setBatches([]);
 
     // 8. Load Sales History
-    const savedSales = localStorage.getItem("unipos_sales_" + currentUser.tenantId);
-    if (savedSales) setSales(JSON.parse(savedSales));
-    else if (isPrimaryDemo) {
+    const savedSales = getTenantDataWithFallback("unipos_sales", currentUser.tenantId);
+    if (savedSales && savedSales.length > 0) setSales(savedSales);
+    else {
       const initSales: SaleTransaction[] = [
         {
           id: "S-5001",
           receiptNumber: "MT-TXN-10001",
           date: "2026-06-01T09:30:00+05:00",
-          branch: "Gulberg Mall",
+          branch: "Main Branch",
           cashierName: "Hassan Cashier",
           customerName: "Talal Ahmad",
           items: [
@@ -1220,7 +1264,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
           id: "S-5002",
           receiptNumber: "MT-TXN-10002",
           date: "2026-06-01T10:15:00+05:00",
-          branch: "Gulberg Mall",
+          branch: "Main Branch",
           cashierName: "Hassan Cashier",
           customerName: "Walk-in Customer",
           items: [
@@ -1235,7 +1279,8 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         }
       ];
       saveTenantData("unipos_sales", initSales);
-    } else { saveTenantData("unipos_sales", []); setSales([]); }
+      setSales(initSales);
+    }
 
     // Auto sync customer wallet balances from return sales & wallet payment history
     const allSales = savedSales ? JSON.parse(savedSales) : [];
