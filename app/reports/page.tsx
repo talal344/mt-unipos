@@ -759,12 +759,12 @@ export default function ReportsPage() {
                 ))}
               </div>
 
-              {/* Cash Flow Audit — Kahan Sy Aaye, Kahan Gae */}
+              {/* Cash Flow Audit */}
               <div className="bg-brand-dark-surface/40 border border-brand-sky/20 rounded-2xl p-5 space-y-4 page-break-avoid">
                 <div className="flex justify-between items-center border-b border-brand-dark-border pb-3">
                   <h3 className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-2">
                     <DollarSign size={14} className="text-emerald-400" />
-                    Daily Cash Flow Audit — (رقم کہاں سے آئی اور کہاں گئی)
+                    Daily Cash Flow Audit
                   </h3>
                   <span className="text-[10px] font-mono font-bold text-gray-400 uppercase">
                     Net Cash In Hand: <span className="text-emerald-400 font-black">{currencySymbol} {netCashInHand.toLocaleString()}</span>
@@ -772,10 +772,10 @@ export default function ReportsPage() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-mono">
-                  {/* Inflows (Kahan Sy Aaye) */}
+                  {/* Inflows */}
                   <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3.5 space-y-2">
                     <div className="text-[10px] font-black uppercase text-emerald-400 tracking-wider flex items-center justify-between">
-                      <span>📥 Total Cash Inflow (کہاں سے رقم آئی)</span>
+                      <span>📥 Total Cash Inflow</span>
                       <span>{currencySymbol} {totalInflow.toLocaleString()}</span>
                     </div>
                     <div className="space-y-1 text-[11px] pt-1 border-t border-emerald-500/20 text-gray-300">
@@ -785,10 +785,10 @@ export default function ReportsPage() {
                     </div>
                   </div>
 
-                  {/* Outflows (Kahan Gae) */}
+                  {/* Outflows */}
                   <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3.5 space-y-2">
                     <div className="text-[10px] font-black uppercase text-red-400 tracking-wider flex items-center justify-between">
-                      <span>📤 Total Outflow & Expenses (کہاں رقم گئی)</span>
+                      <span>📤 Total Outflow & Expenses</span>
                       <span>{currencySymbol} {totalOutflow.toLocaleString()}</span>
                     </div>
                     <div className="space-y-1 text-[11px] pt-1 border-t border-red-500/20 text-gray-300">

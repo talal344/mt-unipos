@@ -123,8 +123,8 @@ export default function CrmPage() {
                     <tr className="border-b border-brand-dark-border text-gray-500 font-mono">
                       <th className="p-4 font-semibold">Customer ID</th>
                       <th className="p-4 font-semibold">Contact Info</th>
-                      <th className="p-4 font-semibold text-right">Credit Dues (ادھار)</th>
-                      <th className="p-4 font-semibold text-right">Store Wallet (والٹ)</th>
+                      <th className="p-4 font-semibold text-right">Credit Dues</th>
+                      <th className="p-4 font-semibold text-right">Store Wallet</th>
                       <th className="p-4 font-semibold text-right">Loyalty Points</th>
                       <th className="p-4 font-semibold text-center">Settlements</th>
                     </tr>
