@@ -581,7 +581,13 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         queueSyncKey(key).then(() => {
           if (!navigator.onLine) return;
 
-          if (possibleTenantId.startsWith('T-') || possibleTenantId.startsWith('AFS-') || possibleTenantId.startsWith('DEMO-')) {
+          // Check if the last segment looks like a tenant ID (contains a dash and letters)
+          const isTenantKey = /^[A-Z]+-\d+$/.test(possibleTenantId) ||
+            possibleTenantId.startsWith('AFS-') ||
+            possibleTenantId.startsWith('DEMO-') ||
+            possibleTenantId.startsWith('MT-');
+
+          if (isTenantKey) {
             const collection = key.replace('_' + possibleTenantId, '');
             supabase.from('unipos_collections').upsert({
               tenant_id: possibleTenantId,
@@ -592,6 +598,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
               if (!error) dequeueItem(STORE_SYNC_KEYS, key); 
             });
           } else {
+            // Global key (e.g. unipos_tenants, unipos_demos) → save to unipos_global
             supabase.from('unipos_global').upsert({
               key: key,
               value: parsedData
@@ -635,9 +642,29 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
           await dequeueItem(STORE_SYNC_KEYS, item.key);
         }
 
-        // 2. Pull down global data
+        // 2. Pull down global data (including unipos_tenants)
         const { data: globalData } = await supabase.from('unipos_global').select('*');
         if (globalData) {
+          // ── Special case: Restore tenants from Supabase if localStorage is missing/empty ──
+          const tenantsRow = globalData.find(row => row.key === 'unipos_tenants');
+          if (tenantsRow && Array.isArray(tenantsRow.value) && tenantsRow.value.length > 0) {
+            const localTenants = window.localStorage.getItem('unipos_tenants');
+            let localParsed: any[] = [];
+            try { localParsed = localTenants ? JSON.parse(localTenants) : []; } catch { localParsed = []; }
+            
+            // Only seed tenants in local → Supabase has real data → restore!
+            const onlySeedLocal = localParsed.every(t => PERMANENT_SEED_TENANTS.some(s => s.id === t.id));
+            if (onlySeedLocal && tenantsRow.value.length > localParsed.length) {
+              // Merge: Supabase tenants + seed tenants (no duplicates)
+              const merged = [...tenantsRow.value];
+              for (const seed of PERMANENT_SEED_TENANTS) {
+                if (!merged.some((t: any) => t.id === seed.id)) merged.unshift(seed);
+              }
+              originalSetItem.call(window.localStorage, 'unipos_tenants', JSON.stringify(merged));
+              changed = true;
+              console.log('✅ Tenants restored from Supabase cloud backup:', merged.length, 'tenants');
+            }
+          }
           globalData.forEach(row => {
             if (pendingKeySet.has(row.key)) return; // Skip if we just pushed it
             const current = window.localStorage.getItem(row.key);
