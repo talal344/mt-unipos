@@ -54,7 +54,8 @@ export default function PosPage() {
   const {
     products, customers, addCustomer, addSale, updateProduct, sales,
     currencySymbol, currentBranch, currentUser, businessSettings, recordDueRecovery,
-    localReceiptsDirHandle, setLocalReceiptsDirHandle, isOffline, previewFIFO, updateCustomerBalance
+    localReceiptsDirHandle, setLocalReceiptsDirHandle, isOffline, previewFIFO, updateCustomerBalance,
+    updateCustomerWalletBalance, settleDuesWithWallet
   } = useGlobalContext();
 
   // ── Held Cart State
@@ -266,10 +267,10 @@ export default function PosPage() {
 
     const refundTotal = returningItemsList.reduce((a: number, i: any) => a + (i.returnQty * i.price), 0);
 
-    // 2. Adjust Customer Wallet / Balance if refundMethod is Wallet
+    // 2. Adjust Customer Wallet Balance if refundMethod is Wallet
     const matchCust = customers.find(c => c.name === returnSale.customerName);
     if (refundMethod === "Wallet" && matchCust && matchCust.id !== "C-203") {
-      updateCustomerBalance(matchCust.id, -refundTotal);
+      updateCustomerWalletBalance(matchCust.id, refundTotal);
     }
 
     // 3. Generate Return Sale Record
@@ -1094,6 +1095,32 @@ export default function PosPage() {
                     <p className="text-[8px] text-gray-500">Loyalty Balance</p>
                   </div>
                 </div>
+
+                {/* Store Wallet Credit Badge */}
+                {(selectedCustObj.walletBalance || 0) > 0 && (
+                  <div className="bg-emerald-500/10 border border-emerald-500/30 p-2.5 rounded-xl text-xs flex justify-between items-center animate-fade-in">
+                    <div>
+                      <div className="text-[9px] uppercase font-black text-emerald-400 tracking-wider">Store Wallet Credit</div>
+                      <div className="font-mono font-black text-emerald-300 text-xs">{currencySymbol} {(selectedCustObj.walletBalance || 0).toFixed(2)}</div>
+                    </div>
+                    {selectedCustObj.creditBalance > 0 && (
+                      <button
+                        onClick={() => {
+                          const recSale = settleDuesWithWallet(selectedCustObj.id);
+                          if (recSale) {
+                            setSuccessReceipt(recSale);
+                            setShowThermalModal(true);
+                            triggerToast(`⚡ Settled dues using Store Wallet! Receipt saved in /Dues_Clear/`);
+                          }
+                        }}
+                        className="px-2.5 py-1 bg-emerald-500 hover:bg-emerald-400 text-black font-black text-[9px] uppercase rounded-lg transition"
+                        title="Use available wallet balance to pay off credit dues"
+                      >
+                        Pay Dues via Wallet
+                      </button>
+                    )}
+                  </div>
+                )}
 
                 {selectedCustObj.creditBalance > 0 && (
                   <div className="bg-red-500/10 border border-red-500/30 p-2.5 rounded-xl text-xs flex justify-between items-center animate-fade-in">

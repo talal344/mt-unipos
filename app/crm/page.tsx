@@ -8,7 +8,7 @@ import { MessageSquare, Users, Award, ShieldCheck, Mail, Send, DollarSign } from
 import ThermalSlipModal from "@/components/thermal-slip-modal";
 
 export default function CrmPage() {
-  const { customers, suppliers, recordDueRecovery, recordSupplierPayment, currencySymbol } = useGlobalContext();
+  const { customers, suppliers, recordDueRecovery, recordSupplierPayment, settleDuesWithWallet, currencySymbol } = useGlobalContext();
   const [successMsg, setSuccessMsg] = useState("");
   
   // Navigation tabs
@@ -123,7 +123,8 @@ export default function CrmPage() {
                     <tr className="border-b border-brand-dark-border text-gray-500 font-mono">
                       <th className="p-4 font-semibold">Customer ID</th>
                       <th className="p-4 font-semibold">Contact Info</th>
-                      <th className="p-4 font-semibold text-right">Credit Balance</th>
+                      <th className="p-4 font-semibold text-right">Credit Dues (ادھار)</th>
+                      <th className="p-4 font-semibold text-right">Store Wallet (والٹ)</th>
                       <th className="p-4 font-semibold text-right">Loyalty Points</th>
                       <th className="p-4 font-semibold text-center">Settlements</th>
                     </tr>
@@ -142,21 +143,45 @@ export default function CrmPage() {
                           </span>
                         </td>
                         <td className="p-4 text-right">
+                          <span className={`font-bold ${(c.walletBalance || 0) > 0 ? "text-emerald-400 font-bold" : "text-gray-400"}`}>
+                            {currencySymbol} {(c.walletBalance || 0).toLocaleString()}
+                          </span>
+                        </td>
+                        <td className="p-4 text-right">
                           <span className="bg-brand-sky/10 border border-brand-sky/20 text-brand-sky font-bold px-2.5 py-0.5 rounded-full text-[10px]">
                             {c.loyaltyPoints} points
                           </span>
                         </td>
                         <td className="p-4 text-center">
-                          {c.creditBalance > 0 ? (
-                            <button
-                              onClick={() => setRecoveryCustomer(c)}
-                              className="px-2.5 py-1 bg-emerald-500 hover:bg-emerald-400 text-black font-black text-[10px] rounded transition"
-                            >
-                              Settle Dues
-                            </button>
-                          ) : (
-                            <span className="text-[10px] text-gray-500 italic font-sans">Clear</span>
-                          )}
+                          <div className="flex items-center justify-center gap-1.5">
+                            {c.creditBalance > 0 && (c.walletBalance || 0) > 0 && (
+                              <button
+                                onClick={() => {
+                                  const recSale = settleDuesWithWallet(c.id);
+                                  if (recSale) {
+                                    setThermalSale(recSale);
+                                    setShowThermalModal(true);
+                                    setSuccessMsg(`⚡ Settled dues using Store Wallet for ${c.name}! Receipt saved in /Dues_Clear/`);
+                                    setTimeout(() => setSuccessMsg(""), 3500);
+                                  }
+                                }}
+                                className="px-2 py-1 bg-emerald-500 hover:bg-emerald-400 text-black font-black text-[9px] uppercase rounded transition"
+                                title="Pay Dues via Wallet Balance"
+                              >
+                                ⚡ Pay via Wallet
+                              </button>
+                            )}
+                            {c.creditBalance > 0 ? (
+                              <button
+                                onClick={() => setRecoveryCustomer(c)}
+                                className="px-2.5 py-1 bg-red-500 hover:bg-red-400 text-white font-black text-[10px] rounded transition"
+                              >
+                                Settle Dues
+                              </button>
+                            ) : (
+                              <span className="text-[10px] text-gray-500 italic font-sans">Clear</span>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}

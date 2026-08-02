@@ -7,7 +7,7 @@ import {
   Users, Plus, Search, Edit2, Trash2, Eye, Star, ShoppingBag,
   Phone, Mail, MapPin, CreditCard, X, ChevronRight, Receipt,
   TrendingUp, Award, AlertCircle, Check, ChevronDown, ArrowLeft,
-  Printer, User, RefreshCw, BadgeCheck, Hash
+  Printer, User, RefreshCw, BadgeCheck, Hash, Wallet
 } from "lucide-react";
 
 import ThermalSlipModal from "@/components/thermal-slip-modal";
@@ -56,7 +56,7 @@ function getLoyaltyTier(pts: number) {
 export default function CustomersPage() {
   const {
     customers, addCustomer, updateCustomer, deleteCustomer,
-    sales, currencySymbol, recordDueRecovery
+    sales, currencySymbol, recordDueRecovery, settleDuesWithWallet
   } = useGlobalContext();
 
   // ── Thermal Slip Modal State
@@ -585,6 +585,11 @@ export default function CustomersPage() {
                           Due: {currencySymbol} {c.creditBalance.toLocaleString()}
                         </div>
                       )}
+                      {(c.walletBalance || 0) > 0 && (
+                        <div className="text-[8px] bg-emerald-500/10 border border-emerald-500/35 text-emerald-400 font-black px-1.5 py-0.5 rounded mt-1 font-mono uppercase tracking-wide">
+                          Wallet: {currencySymbol} {(c.walletBalance || 0).toLocaleString()}
+                        </div>
+                      )}
                     </div>
 
                     <ChevronRight size={14} className="text-gray-600 group-hover:text-brand-sky transition shrink-0" />
@@ -637,10 +642,25 @@ export default function CustomersPage() {
 
               {/* Action Buttons */}
               <div className="flex items-center gap-2 shrink-0">
+                {selectedCustomer.creditBalance > 0 && (selectedCustomer.walletBalance || 0) > 0 && (
+                  <button
+                    onClick={() => {
+                      const recSale = settleDuesWithWallet(selectedCustomer.id);
+                      if (recSale) {
+                        setThermalSale(recSale);
+                        setShowThermalModal(true);
+                        triggerToast(`⚡ Settled dues using Store Wallet! Receipt saved in /Dues_Clear/`);
+                      }
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-black rounded-lg text-[10px] uppercase transition shadow"
+                  >
+                    ⚡ Pay Dues via Wallet
+                  </button>
+                )}
                 {selectedCustomer.creditBalance > 0 && (
                   <button
                     onClick={() => setRecoveryCustomer(selectedCustomer)}
-                    className="flex items-center gap-1.5 px-3 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-black rounded-lg text-[10px] uppercase transition"
+                    className="flex items-center gap-1.5 px-3 py-2 bg-red-500 hover:bg-red-400 text-white font-black rounded-lg text-[10px] uppercase transition"
                   >
                     <CreditCard size={12} /> Settle Dues
                   </button>
@@ -672,8 +692,8 @@ export default function CustomersPage() {
                 {[
                   { label: "Loyalty Points", val: `${selectedCustomer.loyaltyPoints.toLocaleString()} pts`, icon: Star, color: "text-yellow-400" },
                   { label: "Total Spent", val: `${currencySymbol} ${Math.round(selectedCustomer.totalSpent).toLocaleString()}`, icon: TrendingUp, color: "text-emerald-400" },
-                  { label: "Total Purchases", val: `${selectedCustomer.totalVisits} orders`, icon: ShoppingBag, color: "text-brand-sky" },
-                  { label: "Credit Balance", val: `${currencySymbol} ${selectedCustomer.creditBalance.toLocaleString()}`, icon: CreditCard, color: selectedCustomer.creditBalance > 0 ? "text-red-400" : "text-gray-500" },
+                  { label: "Credit Dues", val: `${currencySymbol} ${selectedCustomer.creditBalance.toLocaleString()}`, icon: CreditCard, color: selectedCustomer.creditBalance > 0 ? "text-red-400" : "text-gray-500" },
+                  { label: "Store Wallet", val: `${currencySymbol} ${(selectedCustomer.walletBalance || 0).toLocaleString()}`, icon: Wallet, color: (selectedCustomer.walletBalance || 0) > 0 ? "text-emerald-400" : "text-gray-500" },
                 ].map(stat => (
                   <div key={stat.label} className="flex items-center gap-2">
                     <stat.icon size={14} className={stat.color} />

@@ -200,6 +200,7 @@ export interface Customer {
   cnic?: string;
   loyaltyPoints: number;
   creditBalance: number;
+  walletBalance?: number;
   dueRecoveryHistory: Array<{ date: string; amount: number }>;
 }
 
@@ -434,6 +435,8 @@ interface GlobalContextType {
   updateCustomer: (id: string, cust: Partial<Omit<Customer, "id" | "loyaltyPoints" | "creditBalance" | "dueRecoveryHistory">>) => void;
   deleteCustomer: (id: string) => void;
   updateCustomerBalance: (id: string, dueAmountChange: number) => void;
+  updateCustomerWalletBalance: (id: string, amountChange: number) => void;
+  settleDuesWithWallet: (id: string, amountToSettle?: number) => SaleTransaction | undefined;
   recordDueRecovery: (id: string, amount: number, paymentMethod?: string) => SaleTransaction | undefined;
 
   suppliers: Supplier[];
@@ -1999,6 +2002,49 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     saveTenantData("unipos_customers", updated);
   };
 
+  const updateCustomerWalletBalance = (id: string, amountChange: number) => {
+    const updated = customers.map(c => {
+      if (c.id === id) {
+        return {
+          ...c,
+          walletBalance: Math.max(0, (c.walletBalance || 0) + amountChange)
+        };
+      }
+      return c;
+    });
+    setCustomers(updated);
+    saveTenantData("unipos_customers", updated);
+  };
+
+  const settleDuesWithWallet = (id: string, amountToSettle?: number): SaleTransaction | undefined => {
+    const cust = customers.find(c => c.id === id);
+    if (!cust) return undefined;
+
+    const availableWallet = cust.walletBalance || 0;
+    const pendingDues = cust.creditBalance || 0;
+
+    if (availableWallet <= 0 || pendingDues <= 0) return undefined;
+
+    const settleAmount = Math.min(amountToSettle || pendingDues, availableWallet, pendingDues);
+    if (settleAmount <= 0) return undefined;
+
+    // Deduct from wallet balance
+    const updatedCusts = customers.map(c => {
+      if (c.id === id) {
+        return {
+          ...c,
+          walletBalance: Math.max(0, (c.walletBalance || 0) - settleAmount)
+        };
+      }
+      return c;
+    });
+    setCustomers(updatedCusts);
+    saveTenantData("unipos_customers", updatedCusts);
+
+    // Record due recovery via Store Wallet Balance
+    return recordDueRecovery(id, settleAmount, "Store Wallet Balance");
+  };
+
   const recordDueRecovery = (id: string, amount: number, paymentMethod?: string): SaleTransaction | undefined => {
     const cust = customers.find(c => c.id === id);
     if (!cust) return undefined;
@@ -2440,9 +2486,10 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     saveTenantData("unipos_batches", updatedBatches);
 
 
-    // 3. Accumulate loyalty points for customer
+    // 3. Accumulate loyalty points for customer (no points earned on return sales)
     if (matchCust && matchCust.id !== "C-203") {
-      const addedPoints = Math.floor(sale.total / 50); // 100 points per 5000 PKR (1 point per 50 PKR)
+      const isReturn = sale.status === "Returned" || sale.status === "Refunded";
+      const addedPoints = isReturn ? 0 : Math.floor(sale.total / 50);
       const deductPoints = sale.redeemLoyalty ? 1000 : 0;
       
       // If payment is "On Credit" or split payment contains "On Credit", add to customer creditBalance (Accounts Receivable)
@@ -2735,6 +2782,8 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         updateCustomer,
         deleteCustomer,
         updateCustomerBalance,
+        updateCustomerWalletBalance,
+        settleDuesWithWallet,
         recordDueRecovery,
         suppliers,
         addSupplier,
