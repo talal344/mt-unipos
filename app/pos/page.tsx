@@ -820,11 +820,19 @@ export default function PosPage() {
               </div>
               <button onClick={async () => {
                 try {
-                  const handle = await (window as any).showDirectoryPicker();
+                  if (!("showDirectoryPicker" in window)) {
+                    alert("Local directory auto-save requires Chrome, Edge, or a modern desktop browser.");
+                    return;
+                  }
+                  const handle = await (window as any).showDirectoryPicker({ mode: "readwrite" });
+                  const { saveDirHandleToIDB } = await import("@/lib/dir-handle-db");
+                  await saveDirHandleToIDB(handle);
                   setLocalReceiptsDirHandle(handle);
-                  triggerToast("Local folder selected for auto-saving receipts!");
-                } catch(err) { 
-                  // Silently ignore abort errors to prevent Next.js overlay
+                  triggerToast("Local save folder connected & saved permanently!");
+                } catch(err: any) { 
+                  if (err?.name !== "AbortError") {
+                    console.error("Directory selection error:", err);
+                  }
                 }
               }}
               className={`flex items-center gap-1.5 text-[9px] font-black uppercase px-2 py-1 rounded transition ${localReceiptsDirHandle ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-gray-800 text-gray-400 border border-gray-700 hover:bg-gray-700'}`}>

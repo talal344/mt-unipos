@@ -69,9 +69,12 @@ function buildSlipHTML(
   const totalQty = sale.items.reduce((a, i) => a + i.qty, 0);
 
   // Determine receipt type label
+  const isCreditSale = sale.paymentMethod === "On Credit" || sale.isCredit || (sale as any).splitPayments?.["On Credit"] > 0;
   const statusLabel = sale.status === "Returned" || sale.status === "Refunded"
     ? "RETURN RECEIPT"
-    : "CASH SALE RECEIPT";
+    : isCreditSale
+      ? "CREDIT SALE RECEIPT"
+      : "CASH SALE RECEIPT";
 
   const itemRows = sale.items.map((item, idx) => {
     const rate = item.price ?? (item.subtotal / item.qty);
@@ -144,10 +147,9 @@ function buildSlipHTML(
     <div style="display:flex;justify-content:space-between"><span>Date:</span><span>${dateStr}</span></div>
     <div style="display:flex;justify-content:space-between"><span>Time:</span><span>${timeStr}</span></div>
     ${sale.cashierName ? `<div style="display:flex;justify-content:space-between"><span>Cashier:</span><span>${sale.cashierName}</span></div>` : ""}
-    <div style="margin-top:2px">
-      <div style="font-weight:700">${sale.customerName}</div>
-      ${sale.customerNo && sale.customerNo !== "N/A" ? `<div style="color:#555;font-size:9px">ID: ${sale.customerNo}</div>` : ""}
-    </div>
+    ${sale.customerName ? `<div style="display:flex;justify-content:space-between;margin-top:2px"><span>Customer Name:</span><span style="font-weight:900">${sale.customerName}</span></div>` : ""}
+    ${sale.customerNo && sale.customerNo !== "N/A" ? `<div style="display:flex;justify-content:space-between"><span>Customer ID:</span><span style="font-weight:700">${sale.customerNo}</span></div>` : ""}
+  </div>
   </div>
 
   <!-- Items Table -->
@@ -311,9 +313,32 @@ export default function ThermalSlipModal({
             localSuccess = true;
           } catch (err) {
             console.error("Local Save Error:", err);
+            try {
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = localFileName;
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              setTimeout(() => URL.revokeObjectURL(url), 1000);
+              localSuccess = true;
+            } catch (dlErr) {}
           }
         } else {
-          console.log("No local folder selected, skipping local save.");
+          try {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = localFileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+            localSuccess = true;
+          } catch (err) {
+            console.error("Direct browser download error:", err);
+          }
         }
         
         if (cloudSuccess || localSuccess) {
@@ -374,9 +399,12 @@ export default function ThermalSlipModal({
   const totalItems = sale.items.length;
   const totalQty = sale.items.reduce((a, i) => a + i.qty, 0);
 
+  const isCreditSale = sale.paymentMethod === "On Credit" || sale.isCredit || (sale as any).splitPayments?.["On Credit"] > 0;
   const statusLabel = sale.status === "Returned" || sale.status === "Refunded"
     ? "RETURN RECEIPT"
-    : "CASH SALE RECEIPT";
+    : isCreditSale
+      ? "CREDIT SALE RECEIPT"
+      : "CASH SALE RECEIPT";
 
   const receivedAmt = sale.receivedAmount ?? (sale.paymentMethod === "Cash" ? sale.total : undefined);
   const changeAmt = sale.changeReturned ?? (receivedAmt !== undefined ? Math.max(0, receivedAmt - sale.total) : 0);
@@ -453,12 +481,16 @@ export default function ThermalSlipModal({
                   <span>Cashier:</span><span>{sale.cashierName}</span>
                 </div>
               )}
-              <div style={{ marginTop: "3px" }}>
-                <div style={{ fontWeight: 700 }}>{sale.customerName}</div>
-                {sale.customerNo && sale.customerNo !== "N/A" && (
-                  <div style={{ color: "#555", fontSize: "9px" }}>ID: {sale.customerNo}</div>
-                )}
-              </div>
+              {sale.customerName && (
+                <div style={{ display: "flex", justifyContent: "space-between", marginTop: "3px" }}>
+                  <span>Customer Name:</span><span style={{ fontWeight: 900 }}>{sale.customerName}</span>
+                </div>
+              )}
+              {sale.customerNo && sale.customerNo !== "N/A" && (
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <span>Customer ID:</span><span style={{ fontWeight: 700 }}>{sale.customerNo}</span>
+                </div>
+              )}
             </div>
 
             {/* ── Items Table ── */}

@@ -77,7 +77,7 @@ const DEMO_TEMPLATE_COLS = [
 const EMPTY_FORM = {
   name: "", sku: "", barcode: "", category: "Grocery", customCategory: "",
   brand: "", costPrice: 0, salePrice: 0, wholesalePrice: 0,
-  taxRate: 17, stock: 50, minStock: 10, unit: "Pcs", variant: "",
+  taxRate: 0, stock: 50, minStock: 10, unit: "Pcs", variant: "",
 };
 
 // ─── Parsed row preview type ──────────────────────────────────────────────────

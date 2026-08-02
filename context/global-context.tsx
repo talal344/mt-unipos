@@ -750,7 +750,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     taxNumber: "",
     receiptFooter: "Thank you for shopping! Powered by MT UniPOS.",
     receiptHeader: "MT UniPOS ERP",
-    defaultTaxRate: 17,
+    defaultTaxRate: 0,
     defaultCurrency: "PKR",
     lowStockAlert: 10,
     allowCreditSales: true,
@@ -769,7 +769,23 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
 
   // Globally dynamic configurations
   const [currencySymbol, setCurrencySymbol] = useState("PKR");
-  const [salesTaxRate, setSalesTaxRate] = useState(17);
+  const [salesTaxRate, setSalesTaxRate] = useState(0);
+
+  // Auto-restore persisted local receipts DirectoryHandle from IndexedDB across page reloads
+  useEffect(() => {
+    async function restoreDirHandle() {
+      try {
+        const { getDirHandleFromIDB } = await import("@/lib/dir-handle-db");
+        const handle = await getDirHandleFromIDB();
+        if (handle) {
+          setLocalReceiptsDirHandle(handle);
+        }
+      } catch (e) {
+        console.error("Error restoring dir handle from IDB:", e);
+      }
+    }
+    restoreDirHandle();
+  }, []);
 
   // Reactively sync active currencySymbol to logged-in tenant's configured defaultCurrency
   useEffect(() => {
@@ -1049,7 +1065,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         taxNumber: isPrimaryDemo ? "NTN-1234567-8" : "",
         receiptHeader: realBusinessName,
         receiptFooter: "Thank you for shopping! Powered by MT UniPOS.",
-        defaultTaxRate: 17,
+        defaultTaxRate: 0,
         defaultCurrency: tenantRecord?.defaultCurrency || "PKR",
         lowStockAlert: 10,
         allowCreditSales: true,
@@ -1086,11 +1102,11 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     }
     else if (isPrimaryDemo) {
       const initProducts: Product[] = [
-        { id: "P-1001", sku: "GROC-MILK-001", barcode: "888123456789", name: "Nestle Milkpak 1L", category: "Grocery", brand: "Nestle", costPrice: 240, salePrice: 280, wholesalePrice: 255, taxRate: 17, stock: 120, minStock: 25, unit: "Pcs", image: "" },
+        { id: "P-1001", sku: "GROC-MILK-001", barcode: "888123456789", name: "Nestle Milkpak 1L", category: "Grocery", brand: "Nestle", costPrice: 240, salePrice: 280, wholesalePrice: 255, taxRate: 0, stock: 120, minStock: 25, unit: "Pcs", image: "" },
         { id: "P-1002", sku: "PHAR-PAN-002", barcode: "501112233445", name: "Panadol 500mg Tablet (10x10)", category: "Pharmacy", brand: "GSK", costPrice: 320, salePrice: 400, wholesalePrice: 350, taxRate: 0, stock: 85, minStock: 15, unit: "Box", expiryDate: "2027-12-15", batchNumber: "PAN-B992", image: "" },
-        { id: "P-1003", sku: "REST-BURG-003", barcode: "400123", name: "Crispy Zinger Burger", category: "Food & Beverage", brand: "In-House", costPrice: 290, salePrice: 490, wholesalePrice: 450, taxRate: 16, stock: 999, minStock: 0, unit: "Portion", image: "" },
-        { id: "P-1004", sku: "ELEC-CHARG-004", barcode: "690123456789", name: "Anker USB-C Charger 20W", category: "Electronics", brand: "Anker", costPrice: 1800, salePrice: 2600, wholesalePrice: 2200, taxRate: 17, stock: 14, minStock: 5, unit: "Pcs", image: "" },
-        { id: "P-1005", sku: "CLOT-SHIRT-005", barcode: "740112233", name: "Classic Polo Shirt - Navy Blue", category: "Clothing", brand: "Outfitters", costPrice: 1200, salePrice: 2200, wholesalePrice: 1800, taxRate: 17, stock: 45, minStock: 10, unit: "Pcs", variant: "Medium", image: "" },
+        { id: "P-1003", sku: "REST-BURG-003", barcode: "400123", name: "Crispy Zinger Burger", category: "Food & Beverage", brand: "In-House", costPrice: 290, salePrice: 490, wholesalePrice: 450, taxRate: 0, stock: 999, minStock: 0, unit: "Portion", image: "" },
+        { id: "P-1004", sku: "ELEC-CHARG-004", barcode: "690123456789", name: "Anker USB-C Charger 20W", category: "Electronics", brand: "Anker", costPrice: 1800, salePrice: 2600, wholesalePrice: 2200, taxRate: 0, stock: 14, minStock: 5, unit: "Pcs", image: "" },
+        { id: "P-1005", sku: "CLOT-SHIRT-005", barcode: "740112233", name: "Classic Polo Shirt - Navy Blue", category: "Clothing", brand: "Outfitters", costPrice: 1200, salePrice: 2200, wholesalePrice: 1800, taxRate: 0, stock: 45, minStock: 10, unit: "Pcs", variant: "Medium", image: "" },
         { id: "P-1006", sku: "PHAR-AUG-006", barcode: "502324221122", name: "Augmentin Syrup 156.25mg", category: "Pharmacy", brand: "GSK", costPrice: 180, salePrice: 220, wholesalePrice: 200, taxRate: 0, stock: 4, minStock: 10, unit: "Bottle", expiryDate: "2026-08-30", batchNumber: "AUG-B344" }
       ];
       saveTenantData("unipos_products", initProducts);
