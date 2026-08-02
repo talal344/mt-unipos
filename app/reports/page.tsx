@@ -97,6 +97,7 @@ export default function ReportsPage() {
   const [salesFilterType, setSalesFilterType] = useState<"all" | "customer" | "staff">("all");
   const [selectedCustomerFilter, setSelectedCustomerFilter] = useState<string>("ALL");
   const [selectedStaffFilter, setSelectedStaffFilter] = useState<string>("ALL");
+  const [salesDetailLevel, setSalesDetailLevel] = useState<"summary" | "itemized">("itemized");
 
   const [toast, setToast] = useState<string | null>(null);
   const reportContainerRef = useRef<HTMLDivElement>(null);
@@ -520,12 +521,12 @@ export default function ReportsPage() {
 
       XLSX.writeFile(wb, `Reports_Excel_Overview_Report_${period}_${isoDate(new Date())}.xlsx`);
       triggerToast("📁 Complete Overview Excel report ready! Saved into Reports/Excel/ folder.");
-    } else if (activeTab === "sales") {
+      // Sheet 1: Transactions Summary
       const salesData = filteredSales.map(s => ({
         "Receipt #": s.receiptNumber,
         "Date": new Date(s.date).toLocaleString(),
         "Customer": s.customerName,
-        "Cashier": s.cashierName,
+        "Cashier / Staff": s.cashierName,
         "Payment Method": s.paymentMethod,
         "Items Count": s.items.length,
         [`Subtotal (${currencySymbol})`]: s.subtotal,
@@ -538,9 +539,31 @@ export default function ReportsPage() {
       if (salesData.length > 0) {
         ws["!cols"] = Object.keys(salesData[0]).map(() => ({ wch: 16 }));
       }
-      XLSX.utils.book_append_sheet(wb, ws, "Sales Transactions");
+      XLSX.utils.book_append_sheet(wb, ws, "Sales Summary");
+
+      // Sheet 2: Itemized Products Line Breakdown
+      const itemizedData = filteredSales.flatMap(s =>
+        (s.items || []).map(item => ({
+          "Receipt #": s.receiptNumber,
+          "Date & Time": new Date(s.date).toLocaleString(),
+          "Customer": s.customerName,
+          "Cashier / Staff": s.cashierName,
+          "Payment Method": s.paymentMethod,
+          "Product Name": item.productName || item.name || "Item",
+          "Quantity": item.qty,
+          [`Unit Price (${currencySymbol})`]: item.price || item.unitPrice || 0,
+          [`Total Amount (${currencySymbol})`]: (item.qty || 1) * (item.price || item.unitPrice || 0),
+          "Transaction Status": s.status,
+        }))
+      );
+      if (itemizedData.length > 0) {
+        const wsItem = XLSX.utils.json_to_sheet(itemizedData);
+        wsItem["!cols"] = Object.keys(itemizedData[0]).map(() => ({ wch: 18 }));
+        XLSX.utils.book_append_sheet(wb, wsItem, "Itemized Products Detail");
+      }
+
       XLSX.writeFile(wb, `Reports_Excel_Sales_Report_${period}_${isoDate(new Date())}.xlsx`);
-      triggerToast("📁 Sales Excel report ready! Saved into Reports/Excel/ folder.");
+      triggerToast("📁 Itemized Sales Excel report ready! Saved into Reports/Excel/ folder.");
     } else if (activeTab === "inventory") {
       const invData = products.map(p => ({
         "SKU": p.sku,
@@ -773,7 +796,7 @@ export default function ReportsPage() {
         <body>
           <div class="flex justify-between items-center border-b-2 border-gray-200 pb-5 mb-6 p-4">
             <div class="flex items-center gap-3">
-              <img src="/logo.png" style="height:44px;width:auto;object-fit:contain;" alt="MT UniPOS Logo" />
+              <img src="/logo-report.png" style="height:55px;width:auto;object-fit:contain;" alt="MT UniPOS Logo" />
               <div>
                 <h1 class="text-2xl font-black uppercase tracking-tight text-gray-900">${title}</h1>
                 <p class="text-xs text-gray-500 mt-1">Branch: ${currentBranch} · Period: ${PERIOD_LABELS[period]} · Save Destination: Reports/PDF/</p>
@@ -1235,45 +1258,66 @@ export default function ReportsPage() {
           )}
 
           {/* ══════════════════════════════════════════════════════════════════
-              SALES TAB — Full transactions table with filters
+              SALES TAB — Itemized & Summary transactions with filters
           ══════════════════════════════════════════════════════════════════ */}
           {activeTab === "sales" && (
             <div className="space-y-4">
               {/* Sales Filter Bar */}
-              <div className="bg-brand-dark-surface/40 border border-brand-dark-border p-4 rounded-2xl flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center no-print">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">View Mode:</span>
-                  <div className="bg-black border border-brand-dark-border p-1 rounded-lg flex gap-1 text-[10px]">
-                    <button 
-                      onClick={() => setSalesFilterType("all")}
-                      className={`px-3 py-1.5 rounded font-bold uppercase ${salesFilterType === "all" ? "bg-brand-sky text-black font-black" : "text-gray-400 hover:text-white"}`}
-                    >
-                      All Sales
-                    </button>
-                    <button 
-                      onClick={() => setSalesFilterType("customer")}
-                      className={`px-3 py-1.5 rounded font-bold uppercase ${salesFilterType === "customer" ? "bg-brand-sky text-black font-black" : "text-gray-400 hover:text-white"}`}
-                    >
-                      Customer-wise
-                    </button>
-                    <button 
-                      onClick={() => setSalesFilterType("staff")}
-                      className={`px-3 py-1.5 rounded font-bold uppercase ${salesFilterType === "staff" ? "bg-brand-sky text-black font-black" : "text-gray-400 hover:text-white"}`}
-                    >
-                      Staff-wise
-                    </button>
+              <div className="bg-brand-dark-surface/40 border border-brand-dark-border p-4 rounded-2xl flex flex-col lg:flex-row gap-3 justify-between items-start lg:items-center no-print">
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Filter By:</span>
+                    <div className="bg-black border border-brand-dark-border p-1 rounded-lg flex gap-1 text-[10px]">
+                      <button 
+                        onClick={() => setSalesFilterType("all")}
+                        className={`px-3 py-1 rounded font-bold uppercase ${salesFilterType === "all" ? "bg-brand-sky text-black font-black" : "text-gray-400 hover:text-white"}`}
+                      >
+                        All Sales
+                      </button>
+                      <button 
+                        onClick={() => setSalesFilterType("customer")}
+                        className={`px-3 py-1 rounded font-bold uppercase ${salesFilterType === "customer" ? "bg-brand-sky text-black font-black" : "text-gray-400 hover:text-white"}`}
+                      >
+                        Customer-wise
+                      </button>
+                      <button 
+                        onClick={() => setSalesFilterType("staff")}
+                        className={`px-3 py-1 rounded font-bold uppercase ${salesFilterType === "staff" ? "bg-brand-sky text-black font-black" : "text-gray-400 hover:text-white"}`}
+                      >
+                        Staff-wise
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Format Toggle */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Format:</span>
+                    <div className="bg-black border border-brand-dark-border p-1 rounded-lg flex gap-1 text-[10px]">
+                      <button 
+                        onClick={() => setSalesDetailLevel("itemized")}
+                        className={`px-3 py-1 rounded font-bold uppercase ${salesDetailLevel === "itemized" ? "bg-purple-500 text-white font-black" : "text-gray-400 hover:text-white"}`}
+                      >
+                        📦 Itemized Products
+                      </button>
+                      <button 
+                        onClick={() => setSalesDetailLevel("summary")}
+                        className={`px-3 py-1 rounded font-bold uppercase ${salesDetailLevel === "summary" ? "bg-purple-500 text-white font-black" : "text-gray-400 hover:text-white"}`}
+                      >
+                        📋 Summary Table
+                      </button>
+                    </div>
                   </div>
                 </div>
 
                 {/* Dropdown Filters */}
-                <div className="flex items-center gap-2 w-full sm:w-auto">
+                <div className="flex items-center gap-2 w-full lg:w-auto">
                   {salesFilterType === "customer" && (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 w-full sm:w-auto">
                       <label className="text-[10px] text-gray-400 font-bold uppercase">Customer:</label>
                       <select 
                         value={selectedCustomerFilter}
                         onChange={e => setSelectedCustomerFilter(e.target.value)}
-                        className="bg-black border border-brand-sky/40 text-white text-xs p-2 rounded-lg font-mono focus:outline-none"
+                        className="bg-black border border-brand-sky/40 text-white text-xs p-2 rounded-lg font-mono focus:outline-none w-full sm:w-auto"
                       >
                         <option value="ALL">All Customers</option>
                         {customers.map(c => (
@@ -1284,12 +1328,12 @@ export default function ReportsPage() {
                   )}
 
                   {salesFilterType === "staff" && (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 w-full sm:w-auto">
                       <label className="text-[10px] text-gray-400 font-bold uppercase">Staff / Cashier:</label>
                       <select 
                         value={selectedStaffFilter}
                         onChange={e => setSelectedStaffFilter(e.target.value)}
-                        className="bg-black border border-brand-sky/40 text-white text-xs p-2 rounded-lg font-mono focus:outline-none"
+                        className="bg-black border border-brand-sky/40 text-white text-xs p-2 rounded-lg font-mono focus:outline-none w-full sm:w-auto"
                       >
                         <option value="ALL">All Staff</option>
                         {employees.map(emp => (
@@ -1301,66 +1345,143 @@ export default function ReportsPage() {
                 </div>
               </div>
 
-              {/* Transactions Table */}
-              <div className="bg-brand-dark-surface/30 border border-brand-dark-border rounded-2xl overflow-hidden page-break-avoid">
-                <div className="p-4 border-b border-brand-dark-border flex items-center justify-between">
-                  <div>
-                    <h3 className="text-xs font-black text-white uppercase tracking-wider">
-                      {salesFilterType === "customer" && selectedCustomerFilter !== "ALL" ? `Customer Sales: ${selectedCustomerFilter}` : salesFilterType === "staff" && selectedStaffFilter !== "ALL" ? `Staff Sales: ${selectedStaffFilter}` : "Sales Transactions"}
-                    </h3>
-                    <p className="text-[9px] text-gray-500 mt-0.5">{filteredSales.length} records in {PERIOD_LABELS[period]}</p>
-                  </div>
-                  <div className="flex items-center gap-3 font-mono text-[10px]">
-                    <span className="text-gray-500">Total: <span className="text-emerald-400 font-black">{currencySymbol} {totalRevenue.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span></span>
-                  </div>
+              {/* Transactions Title Header */}
+              <div className="bg-brand-dark-surface/40 border border-brand-dark-border p-4 rounded-2xl flex justify-between items-center">
+                <div>
+                  <h3 className="text-xs font-black text-white uppercase tracking-wider">
+                    {salesFilterType === "customer" && selectedCustomerFilter !== "ALL" 
+                      ? `Customer Purchase History: ${selectedCustomerFilter}` 
+                      : salesFilterType === "staff" && selectedStaffFilter !== "ALL" 
+                      ? `Staff Sales & Returns Log: ${selectedStaffFilter}` 
+                      : "Sales Transactions History"}
+                  </h3>
+                  <p className="text-[9px] text-gray-500 mt-0.5">{filteredSales.length} transactions in {PERIOD_LABELS[period]}</p>
                 </div>
+                <div className="font-mono text-xs text-right">
+                  <span className="text-gray-400">Total Value: </span>
+                  <span className="text-emerald-400 font-black">{currencySymbol} {totalRevenue.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                </div>
+              </div>
 
-                <div className="w-full">
-                  <table className="w-full text-left text-xs border-collapse">
-                    <thead className="sticky top-0 bg-[#0d0d0d]">
-                      <tr className="border-b border-brand-dark-border text-gray-500 font-mono">
-                        <th className="p-3 font-semibold">Receipt #</th>
-                        <th className="p-3 font-semibold">Date & Time</th>
-                        <th className="p-3 font-semibold">Customer</th>
-                        <th className="p-3 font-semibold">Cashier</th>
-                        <th className="p-3 font-semibold">Method</th>
-                        <th className="p-3 font-semibold text-right">Tax</th>
-                        <th className="p-3 font-semibold text-right">Discount</th>
-                        <th className="p-3 font-semibold text-right">Total</th>
-                        <th className="p-3 font-semibold text-center">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-brand-dark-border/30 font-mono text-[11px]">
-                      {filteredSales.length === 0 ? (
-                        <tr><td colSpan={9} className="p-12 text-center text-gray-600">No transactions match your selected filter</td></tr>
-                      ) : filteredSales.map(s => (
-                        <tr key={s.id} className="hover:bg-brand-dark-surface/40 transition">
-                          <td className="p-3 text-brand-sky font-bold">{s.receiptNumber}</td>
-                          <td className="p-3 text-gray-400">{new Date(s.date).toLocaleString("en-PK", { dateStyle: "short", timeStyle: "short" })}</td>
-                          <td className="p-3 text-white font-sans">{s.customerName}</td>
-                          <td className="p-3 text-gray-400 font-sans">{s.cashierName}</td>
-                          <td className="p-3">
-                            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold"
-                              style={{ color: pmColors[s.paymentMethod] || "#9ca3af", backgroundColor: (pmColors[s.paymentMethod] || "#9ca3af") + "20" }}>
+              {/* ── ITEMIZED PRODUCTS BREAKDOWN VIEW ── */}
+              {salesDetailLevel === "itemized" ? (
+                <div className="space-y-4">
+                  {filteredSales.length === 0 ? (
+                    <div className="bg-brand-dark-surface/30 border border-brand-dark-border rounded-2xl p-12 text-center text-gray-600 font-mono text-xs">
+                      No transactions match your selected filter
+                    </div>
+                  ) : (
+                    filteredSales.map(s => (
+                      <div key={s.id} className="bg-brand-dark-surface/40 border border-brand-dark-border rounded-2xl p-4 space-y-3 page-break-avoid">
+                        {/* Transaction Header Info */}
+                        <div className="flex flex-wrap justify-between items-center border-b border-brand-dark-border/60 pb-3 text-xs font-mono gap-2">
+                          <div className="flex items-center gap-3">
+                            <span className="text-brand-sky font-bold text-sm">{s.receiptNumber}</span>
+                            <span className="text-gray-400 text-[11px]">{new Date(s.date).toLocaleString("en-PK", { dateStyle: "medium", timeStyle: "short" })}</span>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-3 text-[11px]">
+                            <span className="text-gray-300"><span className="text-gray-500 uppercase">Customer:</span> <strong className="text-white">{s.customerName}</strong></span>
+                            <span className="text-gray-300"><span className="text-gray-500 uppercase">Cashier:</span> <strong className="text-white">{s.cashierName}</strong></span>
+                            <span className="px-2 py-0.5 rounded font-bold text-[10px]" style={{ color: pmColors[s.paymentMethod] || "#9ca3af", backgroundColor: (pmColors[s.paymentMethod] || "#9ca3af") + "20" }}>
                               {s.paymentMethod}
                             </span>
-                          </td>
-                          <td className="p-3 text-right text-red-400">{currencySymbol} {s.tax.toFixed(0)}</td>
-                          <td className="p-3 text-right text-amber-400">{currencySymbol} {s.discount.toFixed(0)}</td>
-                          <td className="p-3 text-right text-white font-black">{currencySymbol} {s.total.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
-                          <td className="p-3 text-center">
-                            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
+                            <span className={`px-2 py-0.5 rounded font-bold text-[10px] ${
                               s.status === "Completed" ? "bg-emerald-500/15 text-emerald-400"
                               : s.status === "Returned" ? "bg-amber-500/15 text-amber-400"
                               : "bg-red-500/15 text-red-400"
                             }`}>{s.status}</span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                          </div>
+                        </div>
+
+                        {/* Purchased Items Table */}
+                        <div className="w-full">
+                          <table className="w-full text-left text-xs font-mono border-collapse">
+                            <thead>
+                              <tr className="text-gray-500 text-[10px] uppercase border-b border-brand-dark-border/40">
+                                <th className="pb-2">Product Item</th>
+                                <th className="pb-2 text-center">Qty Purchased / Returned</th>
+                                <th className="pb-2 text-right">Unit Sale Price</th>
+                                <th className="pb-2 text-right">Total Line Amount</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-brand-dark-border/20 text-[11px]">
+                              {(s.items || []).map((item, idx) => (
+                                <tr key={idx} className="hover:bg-black/20">
+                                  <td className="py-2 text-white font-sans font-bold">{item.productName || item.name}</td>
+                                  <td className="py-2 text-center font-bold text-gray-300">{item.qty} {item.unit || "units"}</td>
+                                  <td className="py-2 text-right text-gray-400">{currencySymbol} {(item.price || item.unitPrice || 0).toLocaleString()}</td>
+                                  <td className="py-2 text-right font-bold text-emerald-400">{currencySymbol} {((item.qty || 1) * (item.price || item.unitPrice || 0)).toLocaleString()}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+
+                        {/* Transaction Footer Summary */}
+                        <div className="flex justify-between items-center pt-2 border-t border-brand-dark-border/40 text-[11px] font-mono text-gray-400">
+                          <div className="flex gap-4 text-[10px]">
+                            <span>Subtotal: {currencySymbol} {s.subtotal.toFixed(0)}</span>
+                            <span>Tax: <strong className="text-red-400">{currencySymbol} {s.tax.toFixed(0)}</strong></span>
+                            <span>Discount: <strong className="text-amber-400">{currencySymbol} {s.discount.toFixed(0)}</strong></span>
+                          </div>
+                          <div className="text-xs font-black text-white">
+                            Receipt Net Total: <span className="text-brand-sky font-mono text-sm">{currencySymbol} {s.total.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
-              </div>
+              ) : (
+                /* ── SUMMARY TABLE VIEW ── */
+                <div className="bg-brand-dark-surface/30 border border-brand-dark-border rounded-2xl overflow-hidden page-break-avoid">
+                  <div className="w-full">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead className="sticky top-0 bg-[#0d0d0d]">
+                        <tr className="border-b border-brand-dark-border text-gray-500 font-mono">
+                          <th className="p-3 font-semibold">Receipt #</th>
+                          <th className="p-3 font-semibold">Date & Time</th>
+                          <th className="p-3 font-semibold">Customer</th>
+                          <th className="p-3 font-semibold">Cashier</th>
+                          <th className="p-3 font-semibold">Method</th>
+                          <th className="p-3 font-semibold text-right">Tax</th>
+                          <th className="p-3 font-semibold text-right">Discount</th>
+                          <th className="p-3 font-semibold text-right">Total</th>
+                          <th className="p-3 font-semibold text-center">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-brand-dark-border/30 font-mono text-[11px]">
+                        {filteredSales.length === 0 ? (
+                          <tr><td colSpan={9} className="p-12 text-center text-gray-600">No transactions match your selected filter</td></tr>
+                        ) : filteredSales.map(s => (
+                          <tr key={s.id} className="hover:bg-brand-dark-surface/40 transition">
+                            <td className="p-3 text-brand-sky font-bold">{s.receiptNumber}</td>
+                            <td className="p-3 text-gray-400">{new Date(s.date).toLocaleString("en-PK", { dateStyle: "short", timeStyle: "short" })}</td>
+                            <td className="p-3 text-white font-sans">{s.customerName}</td>
+                            <td className="p-3 text-gray-400 font-sans">{s.cashierName}</td>
+                            <td className="p-3">
+                              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold"
+                                style={{ color: pmColors[s.paymentMethod] || "#9ca3af", backgroundColor: (pmColors[s.paymentMethod] || "#9ca3af") + "20" }}>
+                                {s.paymentMethod}
+                              </span>
+                            </td>
+                            <td className="p-3 text-right text-red-400">{currencySymbol} {s.tax.toFixed(0)}</td>
+                            <td className="p-3 text-right text-amber-400">{currencySymbol} {s.discount.toFixed(0)}</td>
+                            <td className="p-3 text-right text-white font-black">{currencySymbol} {s.total.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
+                            <td className="p-3 text-center">
+                              <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
+                                s.status === "Completed" ? "bg-emerald-500/15 text-emerald-400"
+                                : s.status === "Returned" ? "bg-amber-500/15 text-amber-400"
+                                : "bg-red-500/15 text-red-400"
+                              }`}>{s.status}</span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
