@@ -7,7 +7,7 @@ import {
   FileDown, Calendar, TrendingUp, TrendingDown, BarChart3,
   ShoppingCart, DollarSign, CreditCard, Download, Package,
   Users, ArrowUpRight, AlertTriangle, CheckCircle2, UserCheck, ShieldAlert,
-  Image, Printer, FileSpreadsheet
+  Image, Printer, FileSpreadsheet, X
 } from "lucide-react";
 import * as XLSX from "xlsx";
 
