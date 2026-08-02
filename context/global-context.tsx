@@ -64,6 +64,33 @@ export interface Tenant {
   trialEndsAt?: string;
 }
 
+// ─── PERMANENT SEED TENANTS ───────────────────────────────────────────────────
+// These tenants are ALWAYS guaranteed to exist regardless of browser clear.
+// Add your real clients here. They are seeded from code — not from localStorage.
+// ─────────────────────────────────────────────────────────────────────────────
+const PERMANENT_SEED_TENANTS: Tenant[] = [
+  {
+    id: "MT-1001",
+    businessName: "MT Store",
+    ownerName: "Mian Talal",
+    email: "miantalal2@gmail.com",
+    phone: "03396399895",
+    businessType: "Super Markets",
+    plan: "Professional",
+    billingCycle: "monthly",
+    signupDate: "2026-01-01",
+    status: "Active",
+    usersCount: 1,
+    monthlyRevenue: 0,
+    branches: ["Main Branch"],
+    defaultCurrency: "PKR",
+    credentialPresets: [
+      { id: "CRED-MT-1001", label: "Owner", email: "miantalal2@gmail.com", pass: "owner123", role: "Owner" }
+    ]
+  }
+];
+
+
 export interface SaaSInvoice {
   id: string;
   tenantId: string;
@@ -943,11 +970,24 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       if (migrated) {
         localStorage.setItem("unipos_tenants", JSON.stringify(currentTenants));
       }
-    } else {
-      const initTenants: Tenant[] = [];
-      localStorage.setItem("unipos_tenants", JSON.stringify(initTenants));
-      currentTenants = initTenants;
     }
+
+    // ── PERMANENT SEED INJECTION ──────────────────────────────────────────────
+    // Always ensure every seed tenant exists. This guarantees owner accounts
+    // survive localStorage clears, incognito sessions, or browser resets.
+    let seedChanged = false;
+    for (const seed of PERMANENT_SEED_TENANTS) {
+      const alreadyExists = currentTenants.some(t => t.id === seed.id);
+      if (!alreadyExists) {
+        currentTenants = [seed, ...currentTenants];
+        seedChanged = true;
+      }
+    }
+    if (seedChanged || !savedTenants) {
+      localStorage.setItem("unipos_tenants", JSON.stringify(currentTenants));
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
 
     // MIGRATION: Ensure all Approved demos have a corresponding Tenant so they can log in
     const savedDemosForMigration = localStorage.getItem("unipos_demos");
