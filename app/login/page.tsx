@@ -214,13 +214,8 @@ function LoginContent() {
         )}
 
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2.5 mb-7 group">
-          <div className="bg-brand-sky p-2.5 rounded-xl text-black font-black flex items-center justify-center transition-all group-hover:bg-brand-sky-light group-hover:rotate-6">
-            <Laptop size={22} />
-          </div>
-          <span className="text-2xl font-black tracking-tighter text-white">
-            MT <span className="text-brand-sky">UniPOS</span>
-          </span>
+        <Link href="/" className="flex items-center justify-center mb-6 group">
+          <img src="/logo.png" alt="MT UniPOS Logo" className="h-14 w-auto object-contain transition-all group-hover:scale-105" />
         </Link>
 
         {/* Sign In Box */}

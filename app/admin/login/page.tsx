@@ -67,14 +67,9 @@ export default function SuperAdminLoginPage() {
     <div className="flex flex-col min-h-screen bg-black font-sans text-gray-100 justify-center items-center px-4 relative">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(168,85,247,0.08),transparent_65%)] pointer-events-none" />
 
-      {/* Logo */}
-      <Link href="/" className="flex items-center gap-2.5 mb-7 group relative z-10">
-        <div className="bg-purple-600 p-2.5 rounded-xl text-white font-black flex items-center justify-center transition-all group-hover:bg-purple-500 group-hover:rotate-6">
-          <Laptop size={22} />
-        </div>
-        <span className="text-2xl font-black tracking-tighter text-white">
-          MT <span className="text-purple-400">UniPOS</span>
-        </span>
+      {/* Brand Header */}
+      <Link href="/" className="flex items-center justify-center mb-6 group">
+        <img src="/logo.png" alt="MT UniPOS Logo" className="h-12 w-auto object-contain transition-all group-hover:scale-105" />
       </Link>
 
       <div className="bg-brand-dark-surface border border-purple-500/20 w-full max-w-md p-7 rounded-2xl glass-panel relative z-10 shadow-2xl shadow-purple-500/5 space-y-6">

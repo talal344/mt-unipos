@@ -157,8 +157,7 @@ function buildSlipHTML(
 
   <!-- Header -->
   <div style="text-align:center;margin-bottom:8px">
-    <div style="font-size:13px;font-weight:900;letter-spacing:1px">🛒 MT UniPOS</div>
-    <div style="font-size:8px;color:#555">Smart POS for Smart Business</div>
+    <img src="/logo.png" style="height:44px;max-width:180px;object-fit:contain;margin:0 auto 4px auto;display:block" alt="MT UniPOS" />
     <div style="font-size:13px;font-weight:900;letter-spacing:1px;margin-top:4px;text-transform:uppercase">${businessName}</div>
     ${city ? `<div style="font-size:9px">${city}</div>` : ""}
     ${phone ? `<div style="font-size:9px">Ph: ${phone}</div>` : ""}
@@ -496,8 +495,7 @@ export default function ThermalSlipModal({
           >
             {/* ── Store Header ── */}
             <div style={{ textAlign: "center", marginBottom: "8px" }}>
-              <div style={{ fontSize: "14px", fontWeight: 900, letterSpacing: "0.5px" }}>🛒 MT UniPOS</div>
-              <div style={{ fontSize: "8px", color: "#555" }}>Smart POS for Smart Business</div>
+              <img src="/logo.png" style={{ height: "44px", maxWidth: "180px", objectFit: "contain", margin: "0 auto 4px auto", display: "block" }} alt="MT UniPOS Logo" />
               <div style={{ fontSize: "14px", fontWeight: 900, letterSpacing: "0.5px", marginTop: "4px", textTransform: "uppercase" }}>{businessName}</div>
               {city && <div style={{ fontSize: "9px" }}>{city}</div>}
               {phone && <div style={{ fontSize: "9px" }}>Ph: {phone}</div>}

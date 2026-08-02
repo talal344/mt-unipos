@@ -179,16 +179,10 @@ export default function ClientSidebar() {
 
       <div className="flex flex-col flex-1 min-h-0">
         {/* Brand Header */}
-        <div className="h-14 flex items-center gap-2 px-4 border-b border-brand-dark-border shrink-0">
-          <div className="bg-brand-sky p-1.5 rounded text-black font-black">
-            <Laptop size={16} />
-          </div>
-          <span className="font-black text-sm tracking-tight text-white flex-grow">
-            MT <span className="text-brand-sky">UniPOS</span>
-          </span>
-          <span className="bg-emerald-500/20 text-emerald-400 text-[8px] px-1.5 rounded font-black uppercase tracking-widest">
-            Store
-          </span>
+        <div className="h-14 flex items-center justify-between gap-2 px-4 border-b border-brand-dark-border shrink-0">
+          <Link href="/dashboard" className="flex items-center gap-2 flex-grow min-w-0">
+            <img src="/logo.png" alt="MT UniPOS Logo" className="h-8 w-auto object-contain shrink-0" />
+          </Link>
           {/* Bell */}
           <button
             onClick={() => setShowNotifications(v => !v)}

@@ -620,13 +620,16 @@ export default function ReportsPage() {
         </head>
         <body>
           <div class="flex justify-between items-center border-b-2 border-gray-200 pb-5 mb-6">
-            <div>
-              <h1 class="text-2xl font-black uppercase tracking-tight text-gray-900">${title}</h1>
-              <p class="text-xs text-gray-500 mt-1">Branch: ${currentBranch} · Period: ${PERIOD_LABELS[period]}</p>
+            <div class="flex items-center gap-3">
+              <img src="/logo.png" style="height:40px;width:auto;object-fit:contain;" alt="MT UniPOS Logo" />
+              <div>
+                <h1 class="text-2xl font-black uppercase tracking-tight text-gray-900">${title}</h1>
+                <p class="text-xs text-gray-500 mt-1">Branch: ${currentBranch} · Period: ${PERIOD_LABELS[period]}</p>
+              </div>
             </div>
             <div class="text-right text-[10px] text-gray-400 font-mono">
               Printed: ${new Date().toLocaleString()}<br/>
-              UniPOS ERP System
+              MT UniPOS ERP System
             </div>
           </div>
           <div class="print-container">

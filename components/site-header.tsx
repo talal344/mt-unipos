@@ -77,12 +77,7 @@ export default function SiteHeader() {
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center cursor-pointer select-none" onClick={handleLogoTap}>
             <Link href="/" className="flex items-center gap-2 group">
-              <div className="bg-brand-sky p-2 rounded-lg text-black font-black flex items-center justify-center transition-all duration-300 group-hover:bg-brand-sky-light group-hover:rotate-6">
-                <Laptop size={20} />
-              </div>
-              <span className="text-xl font-black tracking-tighter text-white group-hover:sky-neon-text transition-all duration-300">
-                MT <span className="text-brand-sky">UniPOS</span>
-              </span>
+              <img src="/logo.png" alt="MT UniPOS" className="h-9 w-auto object-contain transition-all duration-300 group-hover:scale-105" />
             </Link>
           </div>
 
