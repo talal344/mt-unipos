@@ -2431,59 +2431,95 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     setSales(updatedSales);
     saveTenantData("unipos_sales", updatedSales);
 
-    // 2. Reduce products inventory & compute COGS
+    // 2. Adjust products inventory & compute COGS
+    const isReturn = sale.status === "Returned" || sale.status === "Refunded";
+    const isDuesRecovery = (sale as any).status === "Dues_Recovery";
     let totalCogs = 0;
-    const updatedProducts = [...products];
 
-    sale.items.forEach(cartItem => {
-      const pIdx = updatedProducts.findIndex(p => p.id === cartItem.productId);
-      if (pIdx === -1) return;
-      const p = updatedProducts[pIdx];
+    if (!isDuesRecovery) {
+      const updatedProducts = [...products];
 
-      totalCogs += p.costPrice * cartItem.qty;
+      sale.items.forEach(cartItem => {
+        const pIdx = updatedProducts.findIndex(p => p.id === cartItem.productId);
+        if (pIdx === -1) return;
+        const p = updatedProducts[pIdx];
 
-      if (p.ingredients && p.ingredients.length > 0) {
-        // Recipe logic: Deduct raw materials
-        p.ingredients.forEach(ing => {
-          const ingIdx = updatedProducts.findIndex(ip => ip.id === ing.productId);
-          if (ingIdx !== -1) {
-            updatedProducts[ingIdx] = {
-              ...updatedProducts[ingIdx],
-              stock: Math.max(0, updatedProducts[ingIdx].stock - (ing.qty * cartItem.qty))
+        totalCogs += p.costPrice * cartItem.qty;
+
+        if (isReturn) {
+          // RETURN SALE: RESTORE / ADD stock back to inventory (+)
+          if (p.ingredients && p.ingredients.length > 0) {
+            p.ingredients.forEach(ing => {
+              const ingIdx = updatedProducts.findIndex(ip => ip.id === ing.productId);
+              if (ingIdx !== -1) {
+                updatedProducts[ingIdx] = {
+                  ...updatedProducts[ingIdx],
+                  stock: updatedProducts[ingIdx].stock + (ing.qty * cartItem.qty)
+                };
+              }
+            });
+          } else {
+            updatedProducts[pIdx] = {
+              ...p,
+              stock: p.stock + cartItem.qty
             };
           }
-        });
-      } else {
-        // Standard logic: Deduct direct stock
-        updatedProducts[pIdx] = {
-          ...p,
-          stock: Math.max(0, p.stock - cartItem.qty)
-        };
-      }
-    });
+        } else {
+          // NORMAL SALE: DEDUCT stock from inventory (-)
+          if (p.ingredients && p.ingredients.length > 0) {
+            p.ingredients.forEach(ing => {
+              const ingIdx = updatedProducts.findIndex(ip => ip.id === ing.productId);
+              if (ingIdx !== -1) {
+                updatedProducts[ingIdx] = {
+                  ...updatedProducts[ingIdx],
+                  stock: Math.max(0, updatedProducts[ingIdx].stock - (ing.qty * cartItem.qty))
+                };
+              }
+            });
+          } else {
+            updatedProducts[pIdx] = {
+              ...p,
+              stock: Math.max(0, p.stock - cartItem.qty)
+            };
+          }
+        }
+      });
 
-    setProducts(updatedProducts);
-    saveTenantData("unipos_products", updatedProducts);
+      setProducts(updatedProducts);
+      saveTenantData("unipos_products", updatedProducts);
 
-    // 2b. Consume FIFO batches — deduct remainingQty in FIFO order
-    const updatedBatches = [...batches];
-    sale.items.forEach(cartItem => {
-      let remaining = cartItem.qty;
-      const available = updatedBatches
-        .filter(b => b.productId === cartItem.productId && b.remainingQty > 0)
-        .sort((a, b) => new Date(a.purchasedAt).getTime() - new Date(b.purchasedAt).getTime());
+      // 2b. Consume or Restore FIFO batches
+      const updatedBatches = [...batches];
+      sale.items.forEach(cartItem => {
+        if (isReturn) {
+          // Restore batch stock
+          const matchBatch = updatedBatches.find(b => b.productId === cartItem.productId);
+          if (matchBatch) {
+            const idx = updatedBatches.findIndex(b => b.id === matchBatch.id);
+            if (idx !== -1) {
+              updatedBatches[idx] = { ...updatedBatches[idx], remainingQty: updatedBatches[idx].remainingQty + cartItem.qty };
+            }
+          }
+        } else {
+          // Consume FIFO batch
+          let remaining = cartItem.qty;
+          const available = updatedBatches
+            .filter(b => b.productId === cartItem.productId && b.remainingQty > 0)
+            .sort((a, b) => new Date(a.purchasedAt).getTime() - new Date(b.purchasedAt).getTime());
 
-      for (const batch of available) {
-        if (remaining <= 0) break;
-        const idx = updatedBatches.findIndex(b => b.id === batch.id);
-        if (idx === -1) continue;
-        const consumed = Math.min(updatedBatches[idx].remainingQty, remaining);
-        updatedBatches[idx] = { ...updatedBatches[idx], remainingQty: updatedBatches[idx].remainingQty - consumed };
-        remaining -= consumed;
-      }
-    });
-    setBatches(updatedBatches);
-    saveTenantData("unipos_batches", updatedBatches);
+          for (const batch of available) {
+            if (remaining <= 0) break;
+            const idx = updatedBatches.findIndex(b => b.id === batch.id);
+            if (idx !== -1) continue;
+            const consumed = Math.min(updatedBatches[idx].remainingQty, remaining);
+            updatedBatches[idx] = { ...updatedBatches[idx], remainingQty: updatedBatches[idx].remainingQty - consumed };
+            remaining -= consumed;
+          }
+        }
+      });
+      setBatches(updatedBatches);
+      saveTenantData("unipos_batches", updatedBatches);
+    }
 
 
     // 3. Accumulate loyalty points for customer (no points earned on return sales)

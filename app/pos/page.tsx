@@ -257,14 +257,6 @@ export default function PosPage() {
       return;
     }
 
-    // 1. Restore stock in inventory
-    returningItemsList.forEach((item: any) => {
-      const prod = products.find((p: any) => p.id === item.productId);
-      if (prod) {
-        updateProduct(prod.id, { stock: prod.stock + item.returnQty });
-      }
-    });
-
     const refundTotal = returningItemsList.reduce((a: number, i: any) => a + (i.returnQty * i.price), 0);
 
     // 2. Adjust Customer Wallet Balance if refundMethod is Wallet
