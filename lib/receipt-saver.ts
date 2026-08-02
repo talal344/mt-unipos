@@ -1,6 +1,8 @@
 import { saveFileToSelectedFolder } from "@/lib/local-storage-folder";
 import { BusinessSettings } from "@/context/global-context";
 
+const savedReceiptsSet = new Set<string>();
+
 /**
  * Automatically captures a rich, full thermal receipt image matching Picture 2
  * (with MT UniPOS header, Customer ID, totals breakdown, payment details,
@@ -16,6 +18,11 @@ export async function autoSaveReceiptToDisk(
     if (typeof window === "undefined" || !sale || !sale.receiptNumber) {
       return { success: false, error: "Invalid parameters or SSR context" };
     }
+
+    if (savedReceiptsSet.has(sale.receiptNumber)) {
+      return { success: true, filePath: `${sale.receiptNumber}.jpg` };
+    }
+    savedReceiptsSet.add(sale.receiptNumber);
 
     const category =
       sale.status === "Dues_Recovery"

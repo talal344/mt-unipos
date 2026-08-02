@@ -188,18 +188,20 @@ export async function saveFileToSelectedFolder(
       }
     }
 
-    // ── METHOD 3: Always Trigger Browser Download Fallback as 100% Fail-Safe ──
-    try {
-      const a = document.createElement("a");
-      a.href = cleanBase64;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      if (!savedPath) savedPath = `Downloads/${fileName}`;
-      fsSuccess = true;
-    } catch (dlErr) {
-      console.warn("Browser download trigger failed:", dlErr);
+    // ── METHOD 3: Emergency Download Fallback ONLY if both direct folder & server API failed ──
+    if (!fsSuccess) {
+      try {
+        const a = document.createElement("a");
+        a.href = cleanBase64;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        savedPath = `Downloads/${fileName}`;
+        fsSuccess = true;
+      } catch (dlErr) {
+        console.warn("Browser download trigger failed:", dlErr);
+      }
     }
 
     return {
