@@ -89,9 +89,6 @@ export default function FeaturesPage() {
         </div>
       </section>
 
-      {/* Real Screenshots Showcase */}
-      <SoftwareShowcase />
-
       <SiteFooter />
     </div>
   );

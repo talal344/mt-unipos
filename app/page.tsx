@@ -290,11 +290,6 @@ export default function HomePage() {
       </section>
 
       {/* ══════════════════════════════════════════════════════════════════════
-          REAL SOFTWARE SHOWCASE GALLERY (Interactive Screenshot Tabs)
-      ══════════════════════════════════════════════════════════════════════ */}
-      <SoftwareShowcase />
-
-      {/* ══════════════════════════════════════════════════════════════════════
           INDUSTRIES
       ══════════════════════════════════════════════════════════════════════ */}
       <section className="py-20 bg-brand-dark-surface/20 border-b border-brand-dark-border">
