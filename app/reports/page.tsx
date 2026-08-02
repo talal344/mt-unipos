@@ -803,13 +803,6 @@ export default function ReportsPage() {
     }
   };
 
-    const printWindow = window.open("", "_blank");
-    if (printWindow) {
-      printWindow.document.write(fullHtmlDoc);
-      printWindow.document.close();
-    }
-  };
-
   return (
     <div className="flex min-h-screen bg-black text-gray-100 font-sans">
       <ClientSidebar />
