@@ -419,9 +419,49 @@ export default function ReportsPage() {
   // ─────────────────────────────────────────────────────────────────────────
   //  EXPORTS HANDLERS
   // ─────────────────────────────────────────────────────────────────────────
+  //  DIRECT LOCAL DISK SAVE HELPER (Documents/Reports/PDF | Excel | JPG)
+  // ─────────────────────────────────────────────────────────────────────────
+  const saveReportToLocalDisk = async (
+    fileType: "Excel" | "JPG" | "PDF",
+    fileName: string,
+    fileBase64: string,
+    fallbackDownloadFn?: () => void
+  ) => {
+    try {
+      const res = await fetch("/api/save-report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fileType,
+          fileName,
+          fileBase64,
+        }),
+      });
+
+      const json = await res.json();
+      if (json.success) {
+        triggerToast(`📁 SAVED: Documents/Reports/${fileType}/${fileName}`);
+      } else {
+        if (fallbackDownloadFn) fallbackDownloadFn();
+        else triggerToast(`📁 Downloaded ${fileName}`);
+      }
+    } catch (err) {
+      if (fallbackDownloadFn) fallbackDownloadFn();
+      else triggerToast(`📁 Downloaded ${fileName}`);
+    }
+  };
+
+  const saveWorkbook = async (wb: XLSX.WorkBook, fileName: string) => {
+    const base64Str = XLSX.write(wb, { bookType: "xlsx", type: "base64" });
+    await saveReportToLocalDisk("Excel", fileName, base64Str, () => {
+      XLSX.writeFile(wb, fileName);
+    });
+  };
+
+  // ─────────────────────────────────────────────────────────────────────────
   //  EXPORTS HANDLERS
   // ─────────────────────────────────────────────────────────────────────────
-  const handleExcelExport = () => {
+  const handleExcelExport = async () => {
     const wb = XLSX.utils.book_new();
 
     if (activeTab === "pl") {
@@ -443,8 +483,7 @@ export default function ReportsPage() {
       const ws = XLSX.utils.json_to_sheet(plData);
       ws["!cols"] = [{ wch: 38 }, { wch: 25 }];
       XLSX.utils.book_append_sheet(wb, ws, "Profit & Loss Statement");
-      XLSX.writeFile(wb, `Reports_Excel_PL_Statement_${period}_${isoDate(new Date())}.xlsx`);
-      triggerToast("📁 P/L Excel report ready! Saved into Reports/Excel/ folder.");
+      await saveWorkbook(wb, `Reports_Excel_PL_Statement_${period}_${isoDate(new Date())}.xlsx`);
       return;
     }
 
@@ -519,8 +558,7 @@ export default function ReportsPage() {
       }
       XLSX.utils.book_append_sheet(wb, ws4, "Expenses Summary");
 
-      XLSX.writeFile(wb, `Reports_Excel_Overview_Report_${period}_${isoDate(new Date())}.xlsx`);
-      triggerToast("📁 Complete Overview Excel report ready! Saved into Reports/Excel/ folder.");
+      await saveWorkbook(wb, `Reports_Excel_Overview_Report_${period}_${isoDate(new Date())}.xlsx`);
     } else if (activeTab === "sales") {
       // Sheet 1: Transactions Summary
       const salesData = filteredSales.map(s => ({
@@ -563,8 +601,7 @@ export default function ReportsPage() {
         XLSX.utils.book_append_sheet(wb, wsItem, "Itemized Products Detail");
       }
 
-      XLSX.writeFile(wb, `Reports_Excel_Sales_Report_${period}_${isoDate(new Date())}.xlsx`);
-      triggerToast("📁 Itemized Sales Excel report ready! Saved into Reports/Excel/ folder.");
+      await saveWorkbook(wb, `Reports_Excel_Sales_Report_${period}_${isoDate(new Date())}.xlsx`);
     } else if (activeTab === "inventory") {
       const invData = products.map(p => ({
         "SKU": p.sku,
@@ -582,8 +619,7 @@ export default function ReportsPage() {
         ws["!cols"] = Object.keys(invData[0]).map(() => ({ wch: 16 }));
       }
       XLSX.utils.book_append_sheet(wb, ws, "Inventory Status");
-      XLSX.writeFile(wb, `Reports_Excel_Inventory_Report_${isoDate(new Date())}.xlsx`);
-      triggerToast("📁 Inventory Excel report ready! Saved into Reports/Excel/ folder.");
+      await saveWorkbook(wb, `Reports_Excel_Inventory_Report_${isoDate(new Date())}.xlsx`);
     } else if (activeTab === "expenses") {
       const expData = filteredExpenses.map(e => ({
         "Voucher ID": e.id,
@@ -598,8 +634,7 @@ export default function ReportsPage() {
         ws["!cols"] = Object.keys(expData[0]).map(() => ({ wch: 16 }));
       }
       XLSX.utils.book_append_sheet(wb, ws, "Expenses Summary");
-      XLSX.writeFile(wb, `Reports_Excel_Expenses_Report_${period}_${isoDate(new Date())}.xlsx`);
-      triggerToast("📁 Expenses Excel report ready! Saved into Reports/Excel/ folder.");
+      await saveWorkbook(wb, `Reports_Excel_Expenses_Report_${period}_${isoDate(new Date())}.xlsx`);
     } else if (activeTab === "employees") {
       const empData = employeeStats.map(e => ({
         "Staff ID": e.id,
@@ -615,8 +650,7 @@ export default function ReportsPage() {
         ws["!cols"] = Object.keys(empData[0]).map(() => ({ wch: 18 }));
       }
       XLSX.utils.book_append_sheet(wb, ws, "Employees Performance");
-      XLSX.writeFile(wb, `Reports_Excel_Employees_Report_${period}_${isoDate(new Date())}.xlsx`);
-      triggerToast("📁 Employees Performance Excel report ready! Saved into Reports/Excel/ folder.");
+      await saveWorkbook(wb, `Reports_Excel_Employees_Report_${period}_${isoDate(new Date())}.xlsx`);
     } else if (activeTab === "customers") {
       const custData = customerStats.map(c => ({
         "Customer ID": c.id,
@@ -632,8 +666,7 @@ export default function ReportsPage() {
         ws["!cols"] = Object.keys(custData[0]).map(() => ({ wch: 18 }));
       }
       XLSX.utils.book_append_sheet(wb, ws, "Customers Ledger");
-      XLSX.writeFile(wb, `Reports_Excel_Customers_Report_${period}_${isoDate(new Date())}.xlsx`);
-      triggerToast("📁 Customers Ledger Excel report ready! Saved into Reports/Excel/ folder.");
+      await saveWorkbook(wb, `Reports_Excel_Customers_Report_${period}_${isoDate(new Date())}.xlsx`);
     } else if (activeTab === "suppliers") {
       const supData = supplierStats.map(s => ({
         "Supplier ID": s.id,
@@ -650,8 +683,7 @@ export default function ReportsPage() {
         ws["!cols"] = Object.keys(supData[0]).map(() => ({ wch: 18 }));
       }
       XLSX.utils.book_append_sheet(wb, ws, "Suppliers Ledger");
-      XLSX.writeFile(wb, `Reports_Excel_Suppliers_Report_${period}_${isoDate(new Date())}.xlsx`);
-      triggerToast("📁 Suppliers Ledger Excel report ready! Saved into Reports/Excel/ folder.");
+      await saveWorkbook(wb, `Reports_Excel_Suppliers_Report_${period}_${isoDate(new Date())}.xlsx`);
     } else if (activeTab === "payroll") {
       const payData = payrollStats.map(p => ({
         "Staff ID": p.id,
@@ -669,8 +701,7 @@ export default function ReportsPage() {
         ws["!cols"] = Object.keys(payData[0]).map(() => ({ wch: 18 }));
       }
       XLSX.utils.book_append_sheet(wb, ws, "Payroll & Attendance");
-      XLSX.writeFile(wb, `Reports_Excel_Payroll_Report_${period}_${isoDate(new Date())}.xlsx`);
-      triggerToast("📁 Payroll & Attendance Excel report ready! Saved into Reports/Excel/ folder.");
+      await saveWorkbook(wb, `Reports_Excel_Payroll_Report_${period}_${isoDate(new Date())}.xlsx`);
     }
   };
 
@@ -686,18 +717,21 @@ export default function ReportsPage() {
         allowTaint: true,
       });
       const dataUrl = canvas.toDataURL("image/jpeg", 0.95);
-      const link = document.createElement("a");
-      link.download = `Reports_JPG_${activeTab.toUpperCase()}_Report_${period}_${isoDate(new Date())}.jpg`;
-      link.href = dataUrl;
-      link.click();
-      triggerToast("📁 Report image ready! Saved into Reports/JPG/ folder.");
+      const fileName = `Reports_JPG_${activeTab.toUpperCase()}_Report_${period}_${isoDate(new Date())}.jpg`;
+
+      await saveReportToLocalDisk("JPG", fileName, dataUrl, () => {
+        const link = document.createElement("a");
+        link.download = fileName;
+        link.href = dataUrl;
+        link.click();
+      });
     } catch (err) {
       console.error("Image export failed", err);
       triggerToast("❌ Image export failed.");
     }
   };
 
-  const handlePdfExport = () => {
+  const handlePdfExport = async () => {
     if (!reportContainerRef.current) return;
 
     // Create a clone to remove max-height and inner scrollbar constraints
@@ -711,15 +745,10 @@ export default function ReportsPage() {
     });
 
     const printContent = cloned.innerHTML;
-    const printWindow = window.open("", "_blank");
-    if (!printWindow) {
-      triggerToast("❌ Popup blocked! Please allow popups to export PDF.");
-      return;
-    }
-
     const title = `MT UniPOS - ${activeTab.toUpperCase()} Report (${PERIOD_LABELS[period]})`;
+    const fileName = `Reports_PDF_${activeTab.toUpperCase()}_Report_${period}_${isoDate(new Date())}.pdf`;
 
-    printWindow.document.write(`
+    const fullHtmlDoc = `
       <!DOCTYPE html>
       <html>
         <head>
@@ -800,7 +829,7 @@ export default function ReportsPage() {
               <img src="/logo-report.png" style="height:55px;width:auto;object-fit:contain;" alt="MT UniPOS Logo" />
               <div>
                 <h1 class="text-2xl font-black uppercase tracking-tight text-gray-900">${title}</h1>
-                <p class="text-xs text-gray-500 mt-1">Branch: ${currentBranch} · Period: ${PERIOD_LABELS[period]} · Save Destination: Reports/PDF/</p>
+                <p class="text-xs text-gray-500 mt-1">Branch: ${currentBranch} · Period: ${PERIOD_LABELS[period]} · Saved to: Documents/Reports/PDF/</p>
               </div>
             </div>
             <div class="text-right text-[10px] text-gray-400 font-mono">
@@ -815,15 +844,23 @@ export default function ReportsPage() {
             window.onload = function() {
               setTimeout(function() {
                 window.print();
-                window.close();
               }, 500);
             };
           </script>
         </body>
       </html>
-    `);
-    printWindow.document.close();
-    triggerToast("📁 A4 PDF Report ready! Save inside Reports/PDF/ subfolder.");
+    `;
+
+    // Save directly to Documents/Reports/PDF/
+    const base64Html = btoa(unescape(encodeURIComponent(fullHtmlDoc)));
+    await saveReportToLocalDisk("PDF", fileName, base64Html);
+
+    // Open print window
+    const printWindow = window.open("", "_blank");
+    if (printWindow) {
+      printWindow.document.write(fullHtmlDoc);
+      printWindow.document.close();
+    }
   };
 
   return (
