@@ -24,7 +24,13 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
       pathname.startsWith("/login") || 
       pathname.startsWith("/admin/login") || 
       pathname === "/" || 
-      pathname.startsWith("/qr-menu")
+      pathname.startsWith("/qr-menu") ||
+      pathname.startsWith("/track-ticket") ||
+      pathname.startsWith("/demo") ||
+      pathname.startsWith("/features") ||
+      pathname.startsWith("/about") ||
+      pathname.startsWith("/blog") ||
+      pathname.startsWith("/contact")
     ) {
       return;
     }
