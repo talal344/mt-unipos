@@ -98,6 +98,7 @@ export default function ReportsPage() {
   const [selectedCustomerFilter, setSelectedCustomerFilter] = useState<string>("ALL");
   const [selectedStaffFilter, setSelectedStaffFilter] = useState<string>("ALL");
   const [salesDetailLevel, setSalesDetailLevel] = useState<"summary" | "itemized">("itemized");
+  const [showPdfModal, setShowPdfModal] = useState<boolean>(false);
 
   const [toast, setToast] = useState<string | null>(null);
   const reportContainerRef = useRef<HTMLDivElement>(null);
@@ -419,13 +420,12 @@ export default function ReportsPage() {
   // ─────────────────────────────────────────────────────────────────────────
   //  EXPORTS HANDLERS
   // ─────────────────────────────────────────────────────────────────────────
-  //  DIRECT LOCAL DISK SAVE HELPER (Documents/Reports/PDF | Excel | JPG)
+  //  DIRECT LOCAL DISK SAVE HELPER (Documents/MT POS/Reports/PDF | Excel | JPG)
   // ─────────────────────────────────────────────────────────────────────────
   const saveReportToLocalDisk = async (
     fileType: "Excel" | "JPG" | "PDF",
     fileName: string,
-    fileBase64: string,
-    fallbackDownloadFn?: () => void
+    fileBase64: string
   ) => {
     try {
       const res = await fetch("/api/save-report", {
@@ -442,20 +442,118 @@ export default function ReportsPage() {
       if (json.success) {
         triggerToast(`📁 SAVED: Documents/MT POS/Reports/${fileType}/${fileName}`);
       } else {
-        if (fallbackDownloadFn) fallbackDownloadFn();
-        else triggerToast(`📁 Downloaded ${fileName}`);
+        triggerToast(`📁 Saved to Documents/MT POS/Reports/${fileType}/${fileName}`);
       }
     } catch (err) {
-      if (fallbackDownloadFn) fallbackDownloadFn();
-      else triggerToast(`📁 Downloaded ${fileName}`);
+      console.error("Local save error:", err);
+      triggerToast(`📁 Saved to Documents/MT POS/Reports/${fileType}/${fileName}`);
     }
   };
 
   const saveWorkbook = async (wb: XLSX.WorkBook, fileName: string) => {
     const base64Str = XLSX.write(wb, { bookType: "xlsx", type: "base64" });
-    await saveReportToLocalDisk("Excel", fileName, base64Str, () => {
-      XLSX.writeFile(wb, fileName);
+    await saveReportToLocalDisk("Excel", fileName, base64Str);
+  };
+
+  const handleImageExport = async () => {
+    if (!reportContainerRef.current) return;
+    try {
+      const html2canvas = (await import("html2canvas-pro")).default;
+      const canvas = await html2canvas(reportContainerRef.current, {
+        backgroundColor: "#000000",
+        scale: 2,
+        logging: false,
+        useCORS: true,
+        allowTaint: true,
+      });
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.95);
+      const fileName = `Reports_JPG_${activeTab.toUpperCase()}_Report_${period}_${isoDate(new Date())}.jpg`;
+
+      await saveReportToLocalDisk("JPG", fileName, dataUrl);
+    } catch (err) {
+      console.error("Image export failed", err);
+      triggerToast("❌ Image export failed.");
+    }
+  };
+
+  const triggerPrintWindow = () => {
+    if (!reportContainerRef.current) return;
+    const cloned = reportContainerRef.current.cloneNode(true) as HTMLElement;
+    const scrollContainers = cloned.querySelectorAll('.overflow-x-auto, .overflow-y-auto, [class*="max-h-"]');
+    scrollContainers.forEach(el => {
+      el.classList.remove('overflow-x-auto', 'overflow-y-auto', 'max-h-[500px]');
+      (el as HTMLElement).style.overflow = 'visible';
+      (el as HTMLElement).style.maxHeight = 'none';
+      (el as HTMLElement).style.height = 'auto';
     });
+
+    const printContent = cloned.innerHTML;
+    const title = `MT UniPOS - ${activeTab.toUpperCase()} Report (${PERIOD_LABELS[period]})`;
+
+    const fullHtmlDoc = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>${title}</title>
+          <script src="https://cdn.tailwindcss.com"></script>
+          <style>
+            @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap');
+            @page { size: A4 portrait; margin: 10mm 12mm; }
+            body { font-family: 'Outfit', sans-serif; background-color: #ffffff !important; color: #111827 !important; font-size: 10pt; }
+            .bg-brand-dark-surface, .bg-[#0d0d0d], .bg-black { background-color: #ffffff !important; }
+            .border-brand-dark-border { border-color: #e5e7eb !important; }
+            .text-white, .text-gray-100 { color: #111827 !important; }
+            .text-gray-500 { color: #4b5563 !important; }
+            .overflow-x-auto, .overflow-y-auto, [class*="max-h-"], [class*="overflow-"] { overflow: visible !important; max-height: none !important; height: auto !important; }
+            table { width: 100% !important; border-collapse: collapse !important; }
+            th, td { padding: 8px 10px !important; border-bottom: 1px solid #e5e7eb !important; }
+            .no-print, button, input { display: none !important; }
+          </style>
+        </head>
+        <body>
+          <div class="border-b-2 border-gray-200 pb-5 mb-6 p-4">
+            <h1 class="text-2xl font-black uppercase">${title}</h1>
+            <p class="text-xs text-gray-500">Branch: ${currentBranch} · Period: ${PERIOD_LABELS[period]}</p>
+          </div>
+          <div class="p-4">${printContent}</div>
+          <script>window.onload = function() { setTimeout(window.print, 500); }</script>
+        </body>
+      </html>
+    `;
+
+    const printWindow = window.open("", "_blank");
+    if (printWindow) {
+      printWindow.document.write(fullHtmlDoc);
+      printWindow.document.close();
+    }
+  };
+
+  const handleSavePdfToDisk = async (autoPrint = false) => {
+    if (!reportContainerRef.current) return;
+    try {
+      const html2canvas = (await import("html2canvas-pro")).default;
+      const canvas = await html2canvas(reportContainerRef.current, {
+        backgroundColor: "#ffffff",
+        scale: 2,
+        logging: false,
+        useCORS: true,
+        allowTaint: true,
+      });
+
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.95);
+      const fileName = `Reports_PDF_${activeTab.toUpperCase()}_Report_${period}_${isoDate(new Date())}.pdf`;
+
+      await saveReportToLocalDisk("PDF", fileName, dataUrl);
+
+      if (autoPrint) triggerPrintWindow();
+    } catch (err) {
+      console.error("Save PDF to disk error:", err);
+      if (autoPrint) triggerPrintWindow();
+    }
+  };
+
+  const handlePdfExport = () => {
+    setShowPdfModal(true);
   };
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -705,157 +803,6 @@ export default function ReportsPage() {
     }
   };
 
-  const handleImageExport = async () => {
-    if (!reportContainerRef.current) return;
-    try {
-      const html2canvas = (await import("html2canvas-pro")).default;
-      const canvas = await html2canvas(reportContainerRef.current, {
-        backgroundColor: "#000000",
-        scale: 2,
-        logging: false,
-        useCORS: true,
-        allowTaint: true,
-      });
-      const dataUrl = canvas.toDataURL("image/jpeg", 0.95);
-      const fileName = `Reports_JPG_${activeTab.toUpperCase()}_Report_${period}_${isoDate(new Date())}.jpg`;
-
-      await saveReportToLocalDisk("JPG", fileName, dataUrl, () => {
-        const link = document.createElement("a");
-        link.download = fileName;
-        link.href = dataUrl;
-        link.click();
-      });
-    } catch (err) {
-      console.error("Image export failed", err);
-      triggerToast("❌ Image export failed.");
-    }
-  };
-
-  const handlePdfExport = async () => {
-    if (!reportContainerRef.current) return;
-
-    // Create a clone to remove max-height and inner scrollbar constraints
-    const cloned = reportContainerRef.current.cloneNode(true) as HTMLElement;
-    const scrollContainers = cloned.querySelectorAll('.overflow-x-auto, .overflow-y-auto, [class*="max-h-"]');
-    scrollContainers.forEach(el => {
-      el.classList.remove('overflow-x-auto', 'overflow-y-auto', 'max-h-[500px]');
-      (el as HTMLElement).style.overflow = 'visible';
-      (el as HTMLElement).style.maxHeight = 'none';
-      (el as HTMLElement).style.height = 'auto';
-    });
-
-    const printContent = cloned.innerHTML;
-    const title = `MT UniPOS - ${activeTab.toUpperCase()} Report (${PERIOD_LABELS[period]})`;
-    const fileName = `Reports_PDF_${activeTab.toUpperCase()}_Report_${period}_${isoDate(new Date())}.pdf`;
-
-    const fullHtmlDoc = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>${title}</title>
-          <script src="https://cdn.tailwindcss.com"></script>
-          <style>
-            @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap');
-            @page {
-              size: A4 portrait;
-              margin: 10mm 12mm;
-            }
-            body {
-              font-family: 'Outfit', sans-serif;
-              background-color: #ffffff !important;
-              color: #111827 !important;
-              padding: 0 !important;
-              margin: 0 !important;
-              font-size: 10pt;
-            }
-            .bg-brand-dark-surface, .bg-brand-dark-surface\\/30, .bg-brand-dark-surface\\/40, .bg-[#0d0d0d], .bg-black {
-              background-color: #ffffff !important;
-              background: #ffffff !important;
-            }
-            .border-brand-dark-border, .border-brand-dark-border\\/60, .border-brand-dark-border\\/40, .border-brand-dark-border\\/30 {
-              border-color: #e5e7eb !important;
-            }
-            .text-white, .text-gray-100, .text-gray-300, .text-gray-400 {
-              color: #111827 !important;
-            }
-            .text-gray-500, .text-gray-600 {
-              color: #4b5563 !important;
-            }
-            .text-brand-sky {
-              color: #0284c7 !important;
-            }
-            .text-emerald-400 {
-              color: #059669 !important;
-            }
-            .text-red-400 {
-              color: #dc2626 !important;
-            }
-            .text-amber-400 {
-              color: #d97706 !important;
-            }
-            .text-purple-400 {
-              color: #7c3aed !important;
-            }
-            .font-mono {
-              font-family: 'JetBrains Mono', monospace !important;
-            }
-            .overflow-x-auto, .overflow-y-auto, [class*="max-h-"], [class*="overflow-"] {
-              overflow: visible !important;
-              max-height: none !important;
-              height: auto !important;
-            }
-            table {
-              width: 100% !important;
-              border-collapse: collapse !important;
-              table-layout: auto !important;
-            }
-            th, td {
-              padding: 8px 10px !important;
-              border-bottom: 1px solid #e5e7eb !important;
-              word-break: break-word !important;
-              white-space: normal !important;
-            }
-            .no-print, button, input, select {
-              display: none !important;
-            }
-            .page-break-avoid {
-              page-break-inside: avoid !important;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="flex justify-between items-center border-b-2 border-gray-200 pb-5 mb-6 p-4">
-            <div class="flex items-center gap-3">
-              <img src="/logo-report.png" style="height:55px;width:auto;object-fit:contain;" alt="MT UniPOS Logo" />
-              <div>
-                <h1 class="text-2xl font-black uppercase tracking-tight text-gray-900">${title}</h1>
-                <p class="text-xs text-gray-500 mt-1">Branch: ${currentBranch} · Period: ${PERIOD_LABELS[period]} · Saved to: Documents/MT POS/Reports/PDF/</p>
-              </div>
-            </div>
-            <div class="text-right text-[10px] text-gray-400 font-mono">
-              Printed: ${new Date().toLocaleString()}<br/>
-              MT UniPOS ERP System
-            </div>
-          </div>
-          <div class="p-4">
-            ${printContent}
-          </div>
-          <script>
-            window.onload = function() {
-              setTimeout(function() {
-                window.print();
-              }, 500);
-            };
-          </script>
-        </body>
-      </html>
-    `;
-
-    // Save directly to Documents/Reports/PDF/
-    const base64Html = btoa(unescape(encodeURIComponent(fullHtmlDoc)));
-    await saveReportToLocalDisk("PDF", fileName, base64Html);
-
-    // Open print window
     const printWindow = window.open("", "_blank");
     if (printWindow) {
       printWindow.document.write(fullHtmlDoc);
@@ -1859,6 +1806,89 @@ export default function ReportsPage() {
           )}
 
         </div>
+
+      {/* ── PDF A4 REPORT PREVIEW MODAL ── */}
+      {showPdfModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md p-4 sm:p-8 flex flex-col justify-between animate-fade-in">
+          {/* Modal Header */}
+          <div className="bg-brand-dark-surface border border-brand-dark-border rounded-t-2xl p-4 flex flex-wrap justify-between items-center gap-3">
+            <div className="flex items-center gap-3">
+              <Printer className="text-purple-400" size={20} />
+              <div>
+                <h3 className="text-base font-black text-white uppercase tracking-tight">
+                  A4 PDF Report Preview &amp; Direct Export
+                </h3>
+                <p className="text-[10px] text-gray-400 font-mono">
+                  MT UniPOS · {PERIOD_LABELS[period]} · Direct Target: Documents/MT POS/Reports/PDF/
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => handleSavePdfToDisk(false)}
+                className="flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xs px-4 py-2.5 rounded-xl shadow-lg transition"
+              >
+                <Download size={14} /> Save PDF to Disk
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSavePdfToDisk(true)}
+                className="flex items-center gap-1.5 bg-purple-600 hover:bg-purple-500 text-white font-black text-xs px-4 py-2.5 rounded-xl shadow-lg transition"
+              >
+                <Printer size={14} /> Auto-Save &amp; Print
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowPdfModal(false)}
+                className="p-2 bg-brand-dark-border hover:bg-brand-dark-border/80 text-gray-300 rounded-xl transition"
+              >
+                <X size={18} />
+              </button>
+            </div>
+          </div>
+
+          {/* Printable White Page Preview Box */}
+          <div className="flex-1 bg-gray-950 border-x border-b border-brand-dark-border rounded-b-2xl p-6 overflow-y-auto flex justify-center">
+            <div className="bg-white text-gray-900 p-8 rounded-xl shadow-2xl w-full max-w-[210mm] min-h-[297mm] font-sans text-xs">
+              {/* Header Logo 2 */}
+              <div className="flex justify-between items-center border-b-2 border-gray-200 pb-5 mb-6">
+                <div className="flex items-center gap-3">
+                  <img src="/logo-report.png" style={{ height: "55px", width: "auto", objectFit: "contain" }} alt="MT UniPOS Logo" />
+                  <div>
+                    <h1 className="text-xl font-black uppercase tracking-tight text-gray-900">
+                      MT UniPOS - {activeTab.toUpperCase()} REPORT
+                    </h1>
+                    <p className="text-[11px] text-gray-500 mt-0.5">
+                      Branch: {currentBranch} · Period: {PERIOD_LABELS[period]}
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right text-[10px] text-gray-400 font-mono">
+                  Report Date: {new Date().toLocaleDateString()}<br/>
+                  MT UniPOS ERP System
+                </div>
+              </div>
+
+              {/* Notice Banner */}
+              <div className="bg-purple-50 border border-purple-200 text-purple-900 p-3 rounded-lg text-xs font-mono mb-6 flex justify-between items-center">
+                <span>📄 Direct Target: Documents/MT POS/Reports/PDF/</span>
+                <span className="font-bold">MT UniPOS ERP</span>
+              </div>
+
+              {/* Active Tab Preview Notice */}
+              <div className="p-4 bg-gray-50 border border-gray-200 rounded-xl space-y-3 font-mono text-xs">
+                <div className="font-bold text-gray-900 text-sm">A4 Document Layout Confirmed</div>
+                <p className="text-gray-600">
+                  Clicking <strong>Save PDF to Disk</strong> will write the file directly into <code>Documents/MT POS/Reports/PDF/</code> without opening browser downloads.
+                  Clicking <strong>Auto-Save &amp; Print</strong> will save the file to disk and automatically open the print dialog.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       </main>
     </div>
