@@ -69,6 +69,8 @@ function DemoStatusBadge({ status }: { status: DemoRequest["status"] }) {
       "bg-amber-500/10 border border-amber-500/30 text-amber-400",
     Reviewed:
       "bg-sky-500/10 border border-sky-500/30 text-sky-400",
+    "Under Review":
+      "bg-purple-500/10 border border-purple-500/30 text-purple-400",
     Approved:
       "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400",
     Rejected:
@@ -976,17 +978,19 @@ export default function AdminClientsPage() {
               </div>
               {/* Status Filter */}
               <div className="flex gap-1.5">
-                {(["All", "Pending", "Reviewed", "Approved", "Rejected"] as const).map(
+                {(["All", "Pending", "Under Review", "Reviewed", "Approved", "Rejected"] as const).map(
                   (s) => (
                     <button
                       key={s}
-                      onClick={() => setDemoStatusFilter(s)}
+                      onClick={() => setDemoStatusFilter(s as any)}
                       className={`px-3 py-2 rounded-lg text-[10px] font-bold border transition ${
                         demoStatusFilter === s
                           ? s === "All"
                             ? "bg-sky-600 border-sky-500 text-white"
                             : s === "Pending"
                             ? "bg-amber-500/20 border-amber-500/50 text-amber-400"
+                            : s === "Under Review"
+                            ? "bg-purple-500/20 border-purple-500/50 text-purple-400"
                             : s === "Reviewed"
                             ? "bg-sky-500/20 border-sky-500/50 text-sky-400"
                             : s === "Approved"
@@ -1062,6 +1066,16 @@ export default function AdminClientsPage() {
                               <div className="flex gap-1.5 justify-center">
                                 {canAct && (
                                   <>
+                                    <button
+                                      onClick={() => {
+                                        updateDemoStatus(req.id, "Under Review");
+                                      }}
+                                      className="flex items-center gap-1 px-2.5 py-1.5 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 border border-purple-500/20 rounded-lg text-[10px] font-bold transition"
+                                      title="Mark as Under Review"
+                                    >
+                                      <Eye size={10} />
+                                      Reviewing
+                                    </button>
                                     <button
                                       onClick={() => setApproveTarget(req)}
                                       className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 rounded-lg text-[10px] font-bold transition"

@@ -21,7 +21,7 @@ export interface DemoRequest {
   country: string;
   businessType: string;
   date: string;
-  status: "Pending" | "Reviewed" | "Approved" | "Rejected";
+  status: "Pending" | "Reviewed" | "Under Review" | "Approved" | "Rejected";
   // Approval fields
   trialDays?: number;
   trialEndsAt?: string;
@@ -628,8 +628,8 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         }
         
         if (changed) {
-          console.log("Supabase downloaded new data. Reloading state...");
-          window.location.reload();
+          console.log("Supabase downloaded new data. Updating state...");
+          window.dispatchEvent(new Event('unipos_sync_updated'));
         }
       } catch (e) {
         console.error("Failed to fetch from Supabase:", e);
@@ -638,12 +638,28 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     
     syncFromSupabase();
 
+    // Supabase Realtime Sync
+    const channel = supabase
+      .channel("schema-db-changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "unipos_global" },
+        () => syncFromSupabase()
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "unipos_collections" },
+        () => syncFromSupabase()
+      )
+      .subscribe();
+
     // Also sync whenever the internet comes back online
     window.addEventListener('online', syncFromSupabase);
 
     return () => {
       window.localStorage.setItem = originalSetItem;
       window.removeEventListener('online', syncFromSupabase);
+      supabase.removeChannel(channel);
     };
   }, []);
   // SaaS Admin States
@@ -720,6 +736,27 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
   }, [currentUser, tenants]);
 
   // Pre-seed mock data on first load
+  useEffect(() => {
+    const handleStateRefresh = () => {
+      try {
+        const d = localStorage.getItem("unipos_demos");
+        if (d) setDemoRequests(JSON.parse(d));
+        
+        const t = localStorage.getItem("unipos_tenants");
+        if (t) setTenants(JSON.parse(t));
+        
+        const i = localStorage.getItem("unipos_saas_invoices");
+        if (i) setSaasInvoices(JSON.parse(i));
+        
+        const st = localStorage.getItem("unipos_support_tickets");
+        if (st) setSupportTickets(JSON.parse(st));
+      } catch(e) {}
+    };
+
+    window.addEventListener('unipos_sync_updated', handleStateRefresh);
+    return () => window.removeEventListener('unipos_sync_updated', handleStateRefresh);
+  }, []);
+
   useEffect(() => {
     // 1. Load SaaS Demo Requests
     const savedDemos = localStorage.getItem("unipos_demos");

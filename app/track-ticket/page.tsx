@@ -39,6 +39,7 @@ const STEPS = [
 function getStepIndex(status: DemoRequest["status"]): number {
   switch (status) {
     case "Pending":  return 0;
+    case "Under Review":
     case "Reviewed": return 1;
     case "Approved":
     case "Rejected": return 3;
@@ -50,6 +51,7 @@ function getStepIndex(status: DemoRequest["status"]): number {
 function StatusBadge({ status }: { status: DemoRequest["status"] }) {
   const map: Record<DemoRequest["status"], { label: string; cls: string }> = {
     Pending:  { label: "PENDING",  cls: "bg-amber-500/15 text-amber-400 border-amber-500/40"   },
+    "Under Review": { label: "REVIEWING", cls: "bg-purple-500/15 text-purple-400 border-purple-500/40"       },
     Reviewed: { label: "REVIEWED", cls: "bg-blue-500/15 text-blue-400 border-blue-500/40"       },
     Approved: { label: "APPROVED", cls: "bg-emerald-500/15 text-emerald-400 border-emerald-500/40" },
     Rejected: { label: "REJECTED", cls: "bg-red-500/15 text-red-400 border-red-500/40"         },
@@ -946,6 +948,7 @@ export default function TrackTicketPage() {
                       <p className="text-gray-400 text-xs">Your demo request was not approved at this time.</p>
                     </div>
                   </div>
+
                   {demoTicket!.rejectedReason && (
                     <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4">
                       <p className="text-[10px] uppercase text-gray-500 font-semibold mb-1.5 tracking-wide">Reason</p>
@@ -963,7 +966,7 @@ export default function TrackTicketPage() {
               )}
 
               {/* ── PENDING / REVIEWED info ── */}
-              {ticketType === "demo" && (demoTicket!.status === "Pending" || demoTicket!.status === "Reviewed") && (
+              {ticketType === "demo" && (demoTicket!.status === "Pending" || demoTicket!.status === "Reviewed" || demoTicket!.status === "Under Review") && (
                 <div className="bg-brand-dark-surface border border-brand-dark-border rounded-2xl p-6 sm:p-8 flex items-start gap-4">
                   <div className="w-10 h-10 rounded-full bg-amber-500/15 border border-amber-500/40 flex items-center justify-center shrink-0">
                     <Clock size={18} className="text-amber-400" />
