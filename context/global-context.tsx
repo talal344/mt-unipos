@@ -583,6 +583,25 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
             const current = window.localStorage.getItem(row.key);
             const incoming = JSON.stringify(row.value);
             
+            // Safety check: never overwrite local data with Supabase empty arrays/objects
+            // This prevents stale empty Supabase rows from wiping local data
+            if (current) {
+              try {
+                const localParsed = JSON.parse(current);
+                const incomingParsed = row.value;
+                
+                // If both are arrays and Supabase has FEWER items, local wins
+                if (Array.isArray(localParsed) && Array.isArray(incomingParsed)) {
+                  if (incomingParsed.length < localParsed.length) return;
+                  // If same length, do deep compare to detect real changes
+                  if (incomingParsed.length === localParsed.length) {
+                    const sameContent = JSON.stringify(localParsed) === JSON.stringify(incomingParsed);
+                    if (sameContent) return;
+                  }
+                }
+              } catch(e) {}
+            }
+            
             // Deep compare instead of simple string equality to ignore key reordering
             let isDifferent = current !== incoming;
             if (isDifferent && current) {
