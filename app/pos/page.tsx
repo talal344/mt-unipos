@@ -130,6 +130,7 @@ export default function PosPage() {
   // ── POS Quick Credit Recovery
   const [showPosRecoveryModal, setShowPosRecoveryModal] = useState(false);
   const [posRecoveryAmount, setPosRecoveryAmount]       = useState("");
+  const [posRecoveryMethod, setPosRecoveryMethod]       = useState("Cash");
 
   // ── Shift Management
   const [shiftOpen, setShiftOpen] = useState<boolean>(false);
@@ -1963,6 +1964,18 @@ export default function PosPage() {
             </div>
 
             <div>
+              <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Payment Method</label>
+              <select
+                value={posRecoveryMethod}
+                onChange={e => setPosRecoveryMethod(e.target.value)}
+                className="w-full bg-black border border-brand-dark-border p-2.5 rounded-xl text-white font-bold focus:outline-none focus:border-red-500 mb-3"
+              >
+                <option value="Cash">💵 Cash</option>
+                <option value="Card">💳 Credit / Debit Card</option>
+                <option value="Bank Transfer">🏦 Bank Transfer</option>
+                <option value="EasyPaisa / JazzCash">📱 EasyPaisa / JazzCash</option>
+              </select>
+
               <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Recovery Payment Amount</label>
               <input
                 type="number"
@@ -1977,13 +1990,17 @@ export default function PosPage() {
               onClick={() => {
                 const amt = parseFloat(posRecoveryAmount);
                 if (!amt || amt <= 0) { triggerToast("Enter valid recovery amount."); return; }
-                recordDueRecovery(selectedCustObj.id, amt);
-                triggerToast(`✅ Recovered ${currencySymbol} ${amt} from ${selectedCustObj.name}! FIFO credit settled.`);
+                const recSale = recordDueRecovery(selectedCustObj.id, amt, posRecoveryMethod);
+                if (recSale) {
+                  setSuccessReceipt(recSale);
+                  setShowThermalModal(true);
+                }
+                triggerToast(`✅ Recovered ${currencySymbol} ${amt} via ${posRecoveryMethod}! Receipt saved in /Dues_Clear/`);
                 setShowPosRecoveryModal(false);
               }}
               className="w-full py-3 bg-red-500 hover:bg-red-400 text-black font-black uppercase rounded-xl text-xs tracking-wider transition"
             >
-              Confirm FIFO Credit Settlement
+              Confirm Dues Recovery & Issue Receipt
             </button>
           </div>
         </div>

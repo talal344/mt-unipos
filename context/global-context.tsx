@@ -250,7 +250,7 @@ export interface SaleTransaction {
   total: number;
   paymentMethod: string;
   isCredit?: boolean;
-  status: "Completed" | "Returned" | "Refunded";
+  status: "Completed" | "Returned" | "Refunded" | "Dues_Recovery";
   notes?: string;
   redeemLoyalty?: boolean;
   loyaltyPointsEarned?: number;
@@ -258,6 +258,8 @@ export interface SaleTransaction {
   splitPayments?: Record<string, number>;
   receivedAmount?: number;
   changeReturned?: number;
+  previousCreditBalance?: number;
+  totalCreditBalance?: number;
 }
 
 export interface Expense {
@@ -432,7 +434,7 @@ interface GlobalContextType {
   updateCustomer: (id: string, cust: Partial<Omit<Customer, "id" | "loyaltyPoints" | "creditBalance" | "dueRecoveryHistory">>) => void;
   deleteCustomer: (id: string) => void;
   updateCustomerBalance: (id: string, dueAmountChange: number) => void;
-  recordDueRecovery: (id: string, amount: number) => void;
+  recordDueRecovery: (id: string, amount: number, paymentMethod?: string) => SaleTransaction | undefined;
 
   suppliers: Supplier[];
   addSupplier: (supp: Omit<Supplier, "id" | "dueAmount" | "purchaseHistory">) => void;
@@ -1997,26 +1999,100 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     saveTenantData("unipos_customers", updated);
   };
 
-  const recordDueRecovery = (id: string, amount: number) => {
-    const updated = customers.map(c => {
+  const recordDueRecovery = (id: string, amount: number, paymentMethod?: string): SaleTransaction | undefined => {
+    const cust = customers.find(c => c.id === id);
+    if (!cust) return undefined;
+
+    const previousDue = cust.creditBalance;
+    const remainingDue = Math.max(0, previousDue - amount);
+
+    const updatedCusts = customers.map(c => {
       if (c.id === id) {
         return {
           ...c,
-          creditBalance: Math.max(0, c.creditBalance - amount),
-          dueRecoveryHistory: [...c.dueRecoveryHistory, { date: new Date().toISOString().split("T")[0], amount }]
+          creditBalance: remainingDue,
+          dueRecoveryHistory: [...(c.dueRecoveryHistory || []), { date: new Date().toISOString().split("T")[0], amount }]
         };
       }
       return c;
     });
-    setCustomers(updated);
-    saveTenantData("unipos_customers", updated);
+    setCustomers(updatedCusts);
+    saveTenantData("unipos_customers", updatedCusts);
+
+    // Apply FIFO credit settlement across customer's credit sales
+    let remainingPayment = amount;
+    const custSales = sales
+      .filter(s => s.customerName === cust.name && (s.paymentMethod === "On Credit" || s.isCredit))
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    if (custSales.length > 0) {
+      const updatedSales = sales.map(s => {
+        if (s.customerName === cust.name && (s.paymentMethod === "On Credit" || s.isCredit) && remainingPayment > 0) {
+          const currentDue = (s as any).dueAmount !== undefined ? (s as any).dueAmount : s.total;
+          if (currentDue > 0) {
+            const settled = Math.min(currentDue, remainingPayment);
+            remainingPayment -= settled;
+            return {
+              ...s,
+              dueAmount: currentDue - settled,
+              notes: (s.notes ? s.notes + " | " : "") + `Recovered ${settled}`
+            };
+          }
+        }
+        return s;
+      });
+      setSales(updatedSales);
+      saveTenantData("unipos_sales", updatedSales);
+    }
+
+    // Generate Dues Recovery Receipt Transaction
+    const now = new Date();
+    const dd = String(now.getDate()).padStart(2, "0");
+    const mm = String(now.getMonth() + 1).padStart(2, "0");
+    const yy = String(now.getFullYear()).slice(-2);
+    const hh = String(now.getHours()).padStart(2, "0");
+    const min = String(now.getMinutes()).padStart(2, "0");
+
+    const recTxn: SaleTransaction = {
+      id: `S-REC-${Math.floor(1000 + Math.random() * 9000)}`,
+      receiptNumber: `REC-TXN-${dd}${mm}${yy}${hh}${min}`,
+      date: now.toISOString(),
+      branch: currentBranch,
+      cashierName: currentUser?.name || "Cashier",
+      customerName: cust.name,
+      customerNo: cust.customerNo,
+      items: [{
+        productId: "MISC-REC",
+        productName: "Customer Credit Due Recovery Payment",
+        price: amount,
+        qty: 1,
+        subtotal: amount
+      }],
+      subtotal: amount,
+      discount: 0,
+      tax: 0,
+      total: amount,
+      paymentMethod: paymentMethod || "Cash",
+      previousCreditBalance: previousDue,
+      totalCreditBalance: remainingDue,
+      receivedAmount: amount,
+      status: "Dues_Recovery" as any,
+      notes: `Dues clear payment for ${cust.name}`
+    };
+
+    const newSalesList = [recTxn, ...sales];
+    setSales(newSalesList);
+    saveTenantData("unipos_sales", newSalesList);
 
     // Live Double Entry Accounting
+    const accountCode = (paymentMethod === "Bank Transfer" || paymentMethod === "Card" || paymentMethod === "EasyPaisa / JazzCash") ? "1002" : "1001";
     addJournalEntry(
-      `Customer Credit Recovery payment received`,
-      [{ accountCode: "1001", amount }], // Debit Cash
+      `Customer Credit Recovery payment received (${cust.name}) - ${paymentMethod || "Cash"}`,
+      [{ accountCode, amount }],
       [{ accountCode: "1004", amount }]  // Credit Accounts Receivable
     );
+
+    return recTxn;
   };
 
   // Supplier Actions

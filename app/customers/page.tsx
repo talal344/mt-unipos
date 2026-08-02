@@ -10,6 +10,8 @@ import {
   Printer, User, RefreshCw, BadgeCheck, Hash
 } from "lucide-react";
 
+import ThermalSlipModal from "@/components/thermal-slip-modal";
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Tab = "overview" | "purchases" | "receipts" | "loyalty" | "credit";
 
@@ -56,6 +58,11 @@ export default function CustomersPage() {
     customers, addCustomer, updateCustomer, deleteCustomer,
     sales, currencySymbol, recordDueRecovery
   } = useGlobalContext();
+
+  // ── Thermal Slip Modal State
+  const [thermalSale, setThermalSale] = useState<any>(null);
+  const [showThermalModal, setShowThermalModal] = useState(false);
+  const [recoveryPaymentMethod, setRecoveryPaymentMethod] = useState("Cash");
 
   // ── List state
   const [search, setSearch] = useState("");
@@ -405,15 +412,12 @@ export default function CustomersPage() {
       return;
     }
 
-    recordDueRecovery(recoveryCustomer.id, amount);
-    triggerToast(`Logged recovery payment of ${currencySymbol} ${amount.toLocaleString()} from customer.`);
+    const recSale = recordDueRecovery(recoveryCustomer.id, amount, recoveryPaymentMethod);
+    triggerToast(`Logged recovery payment of ${currencySymbol} ${amount.toLocaleString()} via ${recoveryPaymentMethod}.`);
     
-    if (confirm("Do you want to print a Credit Recovery Slip for this payment?")) {
-      const adjustedCustomer = {
-        ...recoveryCustomer,
-        creditBalance: Math.max(0, recoveryCustomer.creditBalance - amount)
-      };
-      printCreditRecoverySlip(adjustedCustomer, amount);
+    if (recSale) {
+      setThermalSale(recSale);
+      setShowThermalModal(true);
     }
 
     setRecoveryCustomer(null);
@@ -1321,6 +1325,18 @@ export default function CustomersPage() {
               </div>
 
               <div>
+                <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Payment Method</label>
+                <select
+                  value={recoveryPaymentMethod}
+                  onChange={e => setRecoveryPaymentMethod(e.target.value)}
+                  className="w-full bg-black border border-brand-dark-border p-2.5 rounded text-white font-bold focus:outline-none focus:border-brand-sky mb-3"
+                >
+                  <option value="Cash">💵 Cash</option>
+                  <option value="Card">💳 Credit / Debit Card</option>
+                  <option value="Bank Transfer">🏦 Bank Transfer</option>
+                  <option value="EasyPaisa / JazzCash">📱 EasyPaisa / JazzCash</option>
+                </select>
+
                 <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Log Payment Received</label>
                 <input
                   type="number"
@@ -1464,6 +1480,13 @@ export default function CustomersPage() {
             </div>
           </div>
         </div>
+      )}
+      {showThermalModal && thermalSale && (
+        <ThermalSlipModal
+          sale={thermalSale}
+          currencySymbol={currencySymbol}
+          onClose={() => { setShowThermalModal(false); setThermalSale(null); }}
+        />
       )}
     </div>
   );

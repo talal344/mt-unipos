@@ -42,7 +42,7 @@ interface Sale {
 
 interface Props {
   sale: Sale;
-  currencySymbol: string;
+  currencySymbol?: string;
   branch?: string;
   businessSettings?: BusinessSettings;
   onClose: () => void;
@@ -72,11 +72,13 @@ function buildSlipHTML(
 
   // Determine receipt type label
   const isCreditSale = sale.paymentMethod === "On Credit" || sale.isCredit || (sale as any).splitPayments?.["On Credit"] > 0;
-  const statusLabel = sale.status === "Returned" || sale.status === "Refunded"
-    ? "RETURN RECEIPT"
-    : isCreditSale
-      ? "CREDIT SALE RECEIPT"
-      : "CASH SALE RECEIPT";
+  const statusLabel = sale.status === "Dues_Recovery"
+    ? "DUES RECOVERY RECEIPT"
+    : sale.status === "Returned" || sale.status === "Refunded"
+      ? "RETURN RECEIPT"
+      : isCreditSale
+        ? "CREDIT SALE RECEIPT"
+        : "CASH SALE RECEIPT";
 
   const itemRows = sale.items.map((item, idx) => {
     const rate = item.price ?? (item.subtotal / item.qty);
@@ -268,7 +270,7 @@ export default function ThermalSlipModal({
   const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saving" | "success" | "error">("idle");
   const hasAutoSaved = useRef(false);
 
-  const slipHTML = buildSlipHTML(sale, currencySymbol, branch, businessSettings);
+  const slipHTML = buildSlipHTML(sale, currencySymbol || "PKR", branch, businessSettings);
 
   // Auto-save logic
   useEffect(() => {
@@ -330,9 +332,11 @@ export default function ThermalSlipModal({
         // 2. Offline Storage (Local Directory Organized into Subfolders)
         if (localReceiptsDirHandle) {
           try {
-            const folderName = (sale.status === "Returned" || sale.status === "Refunded")
-              ? "Return_Receipts"
-              : "Sales_Receipts";
+            const folderName = sale.status === "Dues_Recovery"
+              ? "Dues_Clear"
+              : (sale.status === "Returned" || sale.status === "Refunded")
+                ? "Return_Receipts"
+                : "Sales_Receipts";
             const targetDirHandle = await localReceiptsDirHandle.getDirectoryHandle(folderName, { create: true });
             const fileHandle = await targetDirHandle.getFileHandle(localFileName, { create: true });
             const writable = await fileHandle.createWritable();
@@ -383,7 +387,7 @@ export default function ThermalSlipModal({
     };
 
     performAutoSave();
-  }, [sale.receiptNumber, localReceiptsDirHandle]);
+  }, [sale, localReceiptsDirHandle]);
 
   const handlePrint = () => {
     const win = window.open("", "_blank", "width=420,height=800");

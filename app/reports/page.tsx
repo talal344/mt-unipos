@@ -129,6 +129,28 @@ export default function ReportsPage() {
   const netProfit    = grossProfit - totalExpAmt;
   const grossMargin  = totalRevenue > 0 ? (grossProfit / totalRevenue) * 100 : 0;
 
+  // ── Cash Flow Audit ("Kahan Sy Aaye, Kahan Gae") ───────────────────
+  const cashSalesInflow = filteredSales
+    .filter(s => (s.status as string) !== "Returned" && (s.status as string) !== "Dues_Recovery" && (s.paymentMethod === "Cash" || s.splitPayments?.["Cash"]))
+    .reduce((a, s) => a + (s.splitPayments ? (s.splitPayments["Cash"] || 0) : s.total), 0);
+
+  const duesRecoveredInflow = filteredSales
+    .filter(s => (s as any).status === "Dues_Recovery")
+    .reduce((a, s) => a + s.total, 0);
+
+  const cardBankInflow = filteredSales
+    .filter(s => s.status !== "Returned" && (s.paymentMethod === "Card" || s.paymentMethod === "Bank Transfer" || s.paymentMethod === "EasyPaisa / JazzCash"))
+    .reduce((a, s) => a + s.total, 0);
+
+  const totalInflow = cashSalesInflow + duesRecoveredInflow + cardBankInflow;
+
+  const cashReturnsOutflow = filteredSales
+    .filter(s => s.status === "Returned" && s.paymentMethod !== "Store Wallet Credit")
+    .reduce((a, s) => a + s.total, 0);
+
+  const totalOutflow = cashReturnsOutflow + totalExpAmt;
+  const netCashInHand = totalInflow - totalOutflow;
+
   // ── Daily revenue for bar chart (last 14 days bucketed) ──────────────────
   const dailyRevenue = useMemo(() => {
     const days: Record<string, number> = {};
@@ -735,6 +757,46 @@ export default function ReportsPage() {
                     <div className="text-[9px] text-gray-500 uppercase tracking-wide mt-1">{s.label}</div>
                   </div>
                 ))}
+              </div>
+
+              {/* Cash Flow Audit — Kahan Sy Aaye, Kahan Gae */}
+              <div className="bg-brand-dark-surface/40 border border-brand-sky/20 rounded-2xl p-5 space-y-4 page-break-avoid">
+                <div className="flex justify-between items-center border-b border-brand-dark-border pb-3">
+                  <h3 className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-2">
+                    <DollarSign size={14} className="text-emerald-400" />
+                    Daily Cash Flow Audit — (رقم کہاں سے آئی اور کہاں گئی)
+                  </h3>
+                  <span className="text-[10px] font-mono font-bold text-gray-400 uppercase">
+                    Net Cash In Hand: <span className="text-emerald-400 font-black">{currencySymbol} {netCashInHand.toLocaleString()}</span>
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-mono">
+                  {/* Inflows (Kahan Sy Aaye) */}
+                  <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3.5 space-y-2">
+                    <div className="text-[10px] font-black uppercase text-emerald-400 tracking-wider flex items-center justify-between">
+                      <span>📥 Total Cash Inflow (کہاں سے رقم آئی)</span>
+                      <span>{currencySymbol} {totalInflow.toLocaleString()}</span>
+                    </div>
+                    <div className="space-y-1 text-[11px] pt-1 border-t border-emerald-500/20 text-gray-300">
+                      <div className="flex justify-between"><span>Direct Cash Sales:</span><span className="font-bold">{currencySymbol} {cashSalesInflow.toLocaleString()}</span></div>
+                      <div className="flex justify-between"><span>Credit Dues Recovery Payments:</span><span className="font-bold text-emerald-400">+{currencySymbol} {duesRecoveredInflow.toLocaleString()}</span></div>
+                      <div className="flex justify-between"><span>Card & Online Receipts:</span><span className="font-bold">{currencySymbol} {cardBankInflow.toLocaleString()}</span></div>
+                    </div>
+                  </div>
+
+                  {/* Outflows (Kahan Gae) */}
+                  <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3.5 space-y-2">
+                    <div className="text-[10px] font-black uppercase text-red-400 tracking-wider flex items-center justify-between">
+                      <span>📤 Total Outflow & Expenses (کہاں رقم گئی)</span>
+                      <span>{currencySymbol} {totalOutflow.toLocaleString()}</span>
+                    </div>
+                    <div className="space-y-1 text-[11px] pt-1 border-t border-red-500/20 text-gray-300">
+                      <div className="flex justify-between"><span>Cash Sales Returns / Refunds:</span><span className="font-bold text-red-400">-{currencySymbol} {cashReturnsOutflow.toLocaleString()}</span></div>
+                      <div className="flex justify-between"><span>Operating Expenses:</span><span className="font-bold text-red-400">-{currencySymbol} {totalExpAmt.toLocaleString()}</span></div>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Revenue chart + Payment breakdown */}
