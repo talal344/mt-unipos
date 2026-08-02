@@ -168,6 +168,28 @@ export interface Product {
   ingredients?: RecipeIngredient[];
 }
 
+// FIFO Batch Tracking
+export interface ProductBatch {
+  id: string;
+  productId: string;
+  batchNumber: string;
+  expiryDate?: string;
+  purchasedAt: string;      // ISO — FIFO sort key (oldest first)
+  costPrice: number;
+  salePrice: number;        // sale price locked at time of purchase
+  initialQty: number;
+  remainingQty: number;
+}
+
+export interface BatchConsumption {
+  batchId: string;
+  batchNumber: string;
+  qty: number;
+  costPrice: number;
+  salePrice: number;        // sale price from that specific batch
+  expiryDate?: string;
+}
+
 export interface Customer {
   id: string;
   customerNo?: string;
@@ -420,7 +442,13 @@ interface GlobalContextType {
 
   purchaseOrders: PurchaseOrder[];
   createPurchaseOrder: (po: Omit<PurchaseOrder, "id" | "date" | "status">) => void;
-  receiveGoods: (id: string) => void;
+  receiveGoods: (id: string, batchData?: Array<{ productId: string; batchNumber: string; expiryDate?: string; salePrice: number }>) => void;
+
+  // FIFO Batch Management
+  batches: ProductBatch[];
+  addBatch: (batch: Omit<ProductBatch, "id">) => void;
+  previewFIFO: (productId: string, qty: number) => BatchConsumption[];
+  getProductBatches: (productId: string) => ProductBatch[];
 
   sales: SaleTransaction[];
   addSale: (sale: Omit<SaleTransaction, "id" | "receiptNumber" | "date">) => SaleTransaction;
@@ -704,6 +732,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([]);
+  const [batches, setBatches] = useState<ProductBatch[]>([]);  // FIFO batch ledger
   const [sales, setSales] = useState<SaleTransaction[]>([]);
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
   const [payrollRecords, setPayrollRecords] = useState<PayrollRecord[]>([]);
@@ -1069,6 +1098,11 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       saveTenantData("unipos_pos", initPOs);
       setPurchaseOrders(initPOs);
     } else { saveTenantData("unipos_pos", []); setPurchaseOrders([]); }
+
+    // 7b. Load FIFO Batches
+    const savedBatches = localStorage.getItem("unipos_batches_" + currentUser.tenantId);
+    if (savedBatches) setBatches(JSON.parse(savedBatches));
+    else { saveTenantData("unipos_batches", []); setBatches([]); }
 
     // 8. Load Sales History
     const savedSales = localStorage.getItem("unipos_sales_" + currentUser.tenantId);
@@ -2032,51 +2066,117 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     saveTenantData("unipos_pos", updated);
   };
 
-  const receiveGoods = (id: string) => {
-    const updatedPOs = purchaseOrders.map(po => {
-      if (po.id === id) {
-        // 1. Mark PO received
-        const updatedPo = { ...po, status: "Received" as const };
-        
-        // 2. Increment products inventory sharded stock
-        const updatedProds = products.map(p => {
-          const poItem = po.items.find(item => item.productId === p.id);
-          if (poItem) {
-            return {
-              ...p,
-              stock: p.stock + poItem.qty
-            };
-          }
-          return p;
-        });
-        setProducts(updatedProds);
-        saveTenantData("unipos_products", updatedProds);
+  // ── FIFO Batch Functions ─────────────────────────────────────────────────────
 
-        // 3. Update Supplier Accounts Payable balances
-        const updatedSuppliers = suppliers.map(s => {
-          if (s.id === po.supplierId) {
-            return {
-              ...s,
-              dueAmount: s.dueAmount + po.total,
-              purchaseHistory: [...s.purchaseHistory, { date: new Date().toISOString().split("T")[0], orderId: po.id, total: po.total }]
-            };
-          }
-          return s;
-        });
-        setSuppliers(updatedSuppliers);
-        saveTenantData("unipos_suppliers", updatedSuppliers);
+  const addBatch = (batch: Omit<ProductBatch, "id">) => {
+    const newBatch: ProductBatch = {
+      ...batch,
+      id: `BAT-${Date.now().toString().slice(-6)}-${Math.floor(10 + Math.random() * 90)}`
+    };
+    const updated = [...batches, newBatch];
+    setBatches(updated);
+    saveTenantData("unipos_batches", updated);
+    return newBatch;
+  };
 
-        // 4. Double Entry Accounting Journal Voucher
-        addJournalEntry(
-          `Stock GRN received for ${po.supplierName} (PO: ${po.id})`,
-          [{ accountCode: "1003", amount: po.total }], // Debit Stock asset
-          [{ accountCode: "2001", amount: po.total }]  // Credit Accounts Payable
-        );
+  const previewFIFO = (productId: string, qty: number): BatchConsumption[] => {
+    // Sort batches FIFO: oldest purchasedAt first
+    const available = batches
+      .filter(b => b.productId === productId && b.remainingQty > 0)
+      .sort((a, b) => new Date(a.purchasedAt).getTime() - new Date(b.purchasedAt).getTime());
 
-        return updatedPo;
-      }
-      return po;
+    const result: BatchConsumption[] = [];
+    let remaining = qty;
+
+    for (const batch of available) {
+      if (remaining <= 0) break;
+      const consumed = Math.min(batch.remainingQty, remaining);
+      result.push({
+        batchId: batch.id,
+        batchNumber: batch.batchNumber,
+        qty: consumed,
+        costPrice: batch.costPrice,
+        salePrice: batch.salePrice,
+        expiryDate: batch.expiryDate
+      });
+      remaining -= consumed;
+    }
+
+    return result;
+  };
+
+  const getProductBatches = (productId: string): ProductBatch[] => {
+    return batches
+      .filter(b => b.productId === productId)
+      .sort((a, b) => new Date(a.purchasedAt).getTime() - new Date(b.purchasedAt).getTime());
+  };
+
+  const receiveGoods = (id: string, batchData?: Array<{ productId: string; batchNumber: string; expiryDate?: string; salePrice: number }>) => {
+    const po = purchaseOrders.find(p => p.id === id);
+    if (!po) return;
+
+    const updatedPOs = purchaseOrders.map(p => {
+      if (p.id !== id) return p;
+      return { ...p, status: "Received" as const };
     });
+
+    // 2. Increment products inventory sharded stock
+    const updatedProds = products.map(p => {
+      const poItem = po.items.find(item => item.productId === p.id);
+      if (poItem) {
+        return {
+          ...p,
+          stock: p.stock + poItem.qty
+        };
+      }
+      return p;
+    });
+    setProducts(updatedProds);
+    saveTenantData("unipos_products", updatedProds);
+
+    // 3. Create FIFO batches for each received item
+    const now = new Date().toISOString();
+    const newBatches = [...batches];
+    po.items.forEach(item => {
+      const batchInfo = batchData?.find(b => b.productId === item.productId);
+      const product = products.find(p => p.id === item.productId);
+      const newBatch: ProductBatch = {
+        id: `BAT-${Date.now().toString().slice(-6)}-${Math.floor(10 + Math.random() * 90)}`,
+        productId: item.productId,
+        batchNumber: batchInfo?.batchNumber || `BTH-${po.id.split("-")[1] || "AUTO"}`,
+        expiryDate: batchInfo?.expiryDate,
+        purchasedAt: now,
+        costPrice: item.costPrice,
+        salePrice: batchInfo?.salePrice || product?.salePrice || item.costPrice * 1.3,
+        initialQty: item.qty,
+        remainingQty: item.qty
+      };
+      newBatches.push(newBatch);
+    });
+    setBatches(newBatches);
+    saveTenantData("unipos_batches", newBatches);
+
+    // 4. Update Supplier Accounts Payable balances
+    const updatedSuppliers = suppliers.map(s => {
+      if (s.id === po.supplierId) {
+        return {
+          ...s,
+          dueAmount: s.dueAmount + po.total,
+          purchaseHistory: [...s.purchaseHistory, { date: new Date().toISOString().split("T")[0], orderId: po.id, total: po.total }]
+        };
+      }
+      return s;
+    });
+    setSuppliers(updatedSuppliers);
+    saveTenantData("unipos_suppliers", updatedSuppliers);
+
+    // 5. Double Entry Accounting Journal Voucher
+    addJournalEntry(
+      `Stock GRN received for ${po.supplierName} (PO: ${po.id})`,
+      [{ accountCode: "1003", amount: po.total }], // Debit Stock asset
+      [{ accountCode: "2001", amount: po.total }]  // Credit Accounts Payable
+    );
+
     setPurchaseOrders(updatedPOs);
     saveTenantData("unipos_pos", updatedPOs);
   };
@@ -2133,6 +2233,27 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
 
     setProducts(updatedProducts);
     saveTenantData("unipos_products", updatedProducts);
+
+    // 2b. Consume FIFO batches — deduct remainingQty in FIFO order
+    const updatedBatches = [...batches];
+    sale.items.forEach(cartItem => {
+      let remaining = cartItem.qty;
+      const available = updatedBatches
+        .filter(b => b.productId === cartItem.productId && b.remainingQty > 0)
+        .sort((a, b) => new Date(a.purchasedAt).getTime() - new Date(b.purchasedAt).getTime());
+
+      for (const batch of available) {
+        if (remaining <= 0) break;
+        const idx = updatedBatches.findIndex(b => b.id === batch.id);
+        if (idx === -1) continue;
+        const consumed = Math.min(updatedBatches[idx].remainingQty, remaining);
+        updatedBatches[idx] = { ...updatedBatches[idx], remainingQty: updatedBatches[idx].remainingQty - consumed };
+        remaining -= consumed;
+      }
+    });
+    setBatches(updatedBatches);
+    saveTenantData("unipos_batches", updatedBatches);
+
 
     // 3. Accumulate loyalty points for customer
     if (matchCust && matchCust.id !== "C-203") {
@@ -2438,6 +2559,10 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         purchaseOrders,
         createPurchaseOrder,
         receiveGoods,
+        batches,
+        addBatch,
+        previewFIFO,
+        getProductBatches,
         sales,
         addSale,
         expenses,

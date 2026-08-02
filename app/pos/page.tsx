@@ -9,10 +9,20 @@ import {
   Tag, DollarSign, Notebook, CreditCard, CheckCircle2, Printer,
   Landmark, Wallet, PlusCircle, Star, Check, X, Scale, Hash,
   Banknote, Calculator, ChevronDown, RotateCcw, AlertTriangle, Package,
-  Clock, Timer, LogOut, Download, WifiOff, Bell
+  Clock, Timer, LogOut, Download, WifiOff, Bell, Camera, PauseCircle, Play
 } from "lucide-react";
+import { BrowserMultiFormatReader } from '@zxing/browser';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
+interface HeldCart {
+  id: string;
+  label: string;
+  cart: CartItem[];
+  customer: string;
+  heldAt: string;
+  discountValue: number;
+  discountType: 'percent' | 'fixed';
+}
 interface CartItem {
   productId: string;
   name: string;
@@ -44,8 +54,20 @@ export default function PosPage() {
   const {
     products, customers, addCustomer, addSale, updateProduct, sales,
     currencySymbol, currentBranch, currentUser, businessSettings,
-    localReceiptsDirHandle, setLocalReceiptsDirHandle, isOffline
+    localReceiptsDirHandle, setLocalReceiptsDirHandle, isOffline, previewFIFO
   } = useGlobalContext();
+
+  // ── Held Cart State
+  const [heldCarts, setHeldCarts] = useState<HeldCart[]>([]);
+  const [showHeldCartsPanel, setShowHeldCartsPanel] = useState(false);
+  const [holdLabel, setHoldLabel] = useState('');
+  const [showHoldModal, setShowHoldModal] = useState(false);
+
+  // ── Camera Scanner State
+  const [showCameraScanner, setShowCameraScanner] = useState(false);
+  const [scannerError, setScannerError] = useState<string | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const scannerControlsRef = useRef<{ stop: () => void } | null>(null);
 
   // ── Cart & Search
   const [searchQuery, setSearchQuery]   = useState("");
@@ -373,6 +395,103 @@ export default function PosPage() {
   const handleRemoveItem   = (id: string) => setCart(cart.filter(i => i.productId !== id));
   const handleClearCart    = () => setCart([]);
 
+  const holdCurrentCart = () => {
+    if (cart.length === 0) { triggerToast('Cart is empty. Add items first.'); return; }
+    const held: HeldCart = {
+      id: `HOLD-${Date.now()}`,
+      label: holdLabel || `Customer ${heldCarts.length + 1}`,
+      cart,
+      customer: selectedCustomer,
+      heldAt: new Date().toISOString(),
+      discountValue,
+      discountType,
+    };
+    setHeldCarts(prev => [...prev, held]);
+    setCart([]);
+    setSelectedCustomer('Walk-in Customer');
+    setDiscountValue(0);
+    setShowHoldModal(false);
+    setHoldLabel('');
+    triggerToast(`Cart held as "${held.label}"`);
+  };
+
+  const retrieveHeldCart = (held: HeldCart) => {
+    if (cart.length > 0 && !confirm(`Current cart has ${cart.length} items. Replace with "${held.label}"?`)) return;
+    setCart(held.cart);
+    setSelectedCustomer(held.customer);
+    setDiscountValue(held.discountValue);
+    setDiscountType(held.discountType);
+    setHeldCarts(prev => prev.filter(h => h.id !== held.id));
+    setShowHeldCartsPanel(false);
+    triggerToast(`"${held.label}" restored to cart`);
+  };
+
+  const startCameraScanner = async () => {
+    setShowCameraScanner(true);
+    setScannerError(null);
+  };
+
+  const stopCameraScanner = () => {
+    scannerControlsRef.current?.stop();
+    scannerControlsRef.current = null;
+    // Also stop any live video tracks
+    if (videoRef.current?.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      stream.getTracks().forEach(t => t.stop());
+      videoRef.current.srcObject = null;
+    }
+    setShowCameraScanner(false);
+  };
+
+  useEffect(() => {
+    if (!showCameraScanner) return;
+    let mounted = true;
+    const codeReader = new BrowserMultiFormatReader();
+    
+    const startScan = async () => {
+      try {
+        if (!videoRef.current) return;
+        const controls = await codeReader.decodeFromVideoDevice(undefined, videoRef.current, (result, error) => {
+          if (!mounted) return;
+          if (result) {
+            const scannedCode = result.getText();
+            const match = products.find(p => p.barcode === scannedCode || p.sku.toLowerCase() === scannedCode.toLowerCase());
+            if (match) {
+              controls?.stop();
+              mounted = false;
+              setShowCameraScanner(false);
+              if (videoRef.current?.srcObject) {
+                const stream = videoRef.current.srcObject as MediaStream;
+                stream.getTracks().forEach(t => t.stop());
+                videoRef.current.srcObject = null;
+              }
+              if (WEIGHT_UNITS.includes(match.unit)) {
+                openAddModal(match);
+              } else {
+                directAddToCart(match);
+              }
+            }
+          }
+        });
+        scannerControlsRef.current = controls;
+      } catch (err: any) {
+        if (mounted) setScannerError(err.message || 'Camera access denied. Please allow camera permission.');
+      }
+    };
+    
+    startScan();
+    return () => {
+      mounted = false;
+      scannerControlsRef.current?.stop();
+      scannerControlsRef.current = null;
+      if (videoRef.current?.srcObject) {
+        const stream = videoRef.current.srcObject as MediaStream;
+        stream.getTracks().forEach(t => t.stop());
+      }
+    };
+  }, [showCameraScanner, products]);
+
+
   // ── Customer add
   const handleAddCustSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -653,6 +772,12 @@ export default function PosPage() {
                 <ShoppingCart size={10} className="text-gray-500" />
                 Sales: <span className="text-white font-black ml-0.5">{shiftSales.length}</span>
               </div>
+              <button 
+                onClick={() => setShowHeldCartsPanel(true)}
+                className={`flex items-center gap-1.5 text-[9px] font-black uppercase px-2 py-1 rounded transition ${heldCarts.length > 0 ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40 animate-pulse' : 'bg-gray-800 text-gray-400 border border-gray-700 hover:bg-gray-700'}`}>
+                <Clock size={10} />
+                Held ({heldCarts.length})
+              </button>
               <div className="hidden sm:flex items-center gap-1 text-[10px] text-gray-400 font-mono">
                 <DollarSign size={10} className="text-brand-sky" />
                 Cash: <span className="text-brand-sky font-black ml-0.5">{currencySymbol} {shiftCashSales.toFixed(0)}</span>
@@ -731,15 +856,25 @@ export default function PosPage() {
                 className="w-full bg-brand-dark-surface border border-brand-dark-border pl-10 pr-4 py-2.5 rounded-lg text-xs text-white focus:outline-none focus:border-brand-sky"
               />
             </div>
-            <form onSubmit={handleBarcodeSubmit} className="relative">
-              <Barcode className="absolute left-3 top-3 text-brand-sky" size={15} />
-              <input
-                type="text"
-                placeholder="Scan Barcode / SKU → Enter..."
-                value={barcodeInput}
-                onChange={e => setBarcodeInput(e.target.value)}
-                className="w-full bg-brand-dark-surface border border-brand-sky/30 pl-10 pr-4 py-2.5 rounded-lg text-xs text-white font-mono focus:outline-none focus:border-brand-sky"
-              />
+            <form onSubmit={handleBarcodeSubmit} className="relative flex gap-2">
+              <div className="relative flex-grow">
+                <Barcode className="absolute left-3 top-3 text-brand-sky" size={15} />
+                <input
+                  type="text"
+                  placeholder="Scan Barcode / SKU → Enter..."
+                  value={barcodeInput}
+                  onChange={e => setBarcodeInput(e.target.value)}
+                  className="w-full bg-brand-dark-surface border border-brand-sky/30 pl-10 pr-4 py-2.5 rounded-lg text-xs text-white font-mono focus:outline-none focus:border-brand-sky"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={startCameraScanner}
+                className="bg-brand-sky/10 border border-brand-sky/30 hover:bg-brand-sky/20 text-brand-sky p-2.5 rounded-lg transition shrink-0"
+                title="Use Camera Scanner"
+              >
+                <Camera size={15} />
+              </button>
             </form>
           </div>
 
@@ -816,6 +951,9 @@ export default function PosPage() {
 
               {/* Clear cart */}
               <div className="flex items-center justify-end gap-2">
+                <button onClick={() => setShowHoldModal(true)} className="text-[10px] text-amber-400 hover:text-amber-300 font-bold flex items-center gap-1 bg-amber-500/10 px-2 py-1 rounded transition">
+                  <PauseCircle size={11} /> Hold Sale
+                </button>
                 <button onClick={handleClearCart} className="text-[10px] text-red-400 hover:text-red-300 font-bold flex items-center gap-1">
                   <Trash2 size={11} /> Clear Cart
                 </button>
@@ -948,6 +1086,17 @@ export default function PosPage() {
                       <Banknote size={8} /> Sold by amount
                     </div>
                   )}
+                  {(() => {
+                    const itemBatches = previewFIFO ? previewFIFO(item.productId, item.qty) : [];
+                    if (itemBatches && itemBatches.length > 1) {
+                      return (
+                        <div className="mt-1 text-[8px] text-purple-400 flex items-center gap-1">
+                          <Package size={8} /> FIFO: {itemBatches.map((b: any) => `${b.qtyUsed}u @ ${b.costPrice}`).join(" + ")}
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
                 </div>
               ))}
 
@@ -1763,6 +1912,94 @@ export default function PosPage() {
                   <LogOut size={12} /> Close Shift
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Hold Cart Modal */}
+      {showHoldModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm print:hidden">
+          <div className="bg-brand-dark-surface border border-brand-dark-border rounded-2xl w-full max-w-sm p-5 shadow-2xl">
+            <h3 className="text-white font-bold mb-4 flex items-center gap-2">
+              <PauseCircle size={18} className="text-amber-400" /> Hold Current Sale
+            </h3>
+            <div className="mb-4">
+              <label className="block text-[10px] text-gray-400 uppercase font-bold mb-1">Reference Note (Optional)</label>
+              <input 
+                type="text" 
+                value={holdLabel} 
+                onChange={e => setHoldLabel(e.target.value)} 
+                placeholder="e.g. Table 4, Waiting for wallet..." 
+                className="w-full bg-black border border-brand-dark-border rounded-lg p-2.5 text-xs text-white focus:border-amber-400 focus:outline-none"
+                autoFocus
+              />
+            </div>
+            <div className="flex gap-2 justify-end">
+              <button onClick={() => setShowHoldModal(false)} className="px-4 py-2 rounded-lg text-xs font-bold text-gray-400 hover:text-white">Cancel</button>
+              <button onClick={holdCurrentCart} className="px-4 py-2 rounded-lg text-xs font-bold bg-amber-500 text-black hover:bg-amber-400">Hold Sale</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Held Carts Panel */}
+      {showHeldCartsPanel && (
+        <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-sm print:hidden" onClick={() => setShowHeldCartsPanel(false)}>
+          <div className="bg-brand-dark-surface w-full max-w-md h-full border-l border-brand-dark-border shadow-2xl flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="p-4 border-b border-brand-dark-border flex justify-between items-center bg-black/20">
+              <h2 className="text-white font-bold flex items-center gap-2"><Clock size={18} className="text-brand-sky" /> Parked Sales ({heldCarts.length})</h2>
+              <button onClick={() => setShowHeldCartsPanel(false)} className="text-gray-400 hover:text-white"><X size={18}/></button>
+            </div>
+            <div className="flex-grow overflow-y-auto p-4 space-y-3">
+              {heldCarts.length === 0 ? (
+                <div className="text-center text-gray-500 text-sm mt-10">No held sales.</div>
+              ) : (
+                heldCarts.map(h => (
+                  <div key={h.id} className="bg-black/40 border border-brand-dark-border rounded-xl p-4 flex flex-col gap-3 hover:border-brand-sky/40 transition">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div className="font-bold text-white text-sm">{h.label}</div>
+                        <div className="text-[10px] text-gray-500 flex items-center gap-1 mt-0.5"><User size={10}/> {h.customer}</div>
+                      </div>
+                      <div className="text-[10px] text-gray-500 font-mono">
+                        {new Date(h.heldAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center border-t border-brand-dark-border/40 pt-3">
+                      <span className="text-xs text-brand-sky font-bold font-mono">{h.cart.length} items</span>
+                      <button onClick={() => retrieveHeldCart(h)} className="px-3 py-1.5 bg-brand-sky/10 hover:bg-brand-sky text-brand-sky hover:text-black rounded-lg text-xs font-bold transition">
+                        Retrieve
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Camera Scanner Modal */}
+      {showCameraScanner && (
+        <div className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-black/95 backdrop-blur-md print:hidden p-4">
+          <div className="w-full max-w-lg bg-brand-dark-surface border border-brand-dark-border rounded-2xl overflow-hidden shadow-2xl flex flex-col">
+            <div className="p-4 border-b border-brand-dark-border flex justify-between items-center bg-black/50">
+              <h3 className="text-white font-bold flex items-center gap-2"><Camera size={18} className="text-brand-sky" /> Scan Barcode</h3>
+              <button onClick={stopCameraScanner} className="text-gray-400 hover:text-white"><X size={18}/></button>
+            </div>
+            <div className="relative bg-black aspect-video flex items-center justify-center overflow-hidden">
+              <video ref={videoRef} autoPlay playsInline className="absolute inset-0 w-full h-full object-cover" />
+              <div className="absolute inset-0 border-[40px] border-black/50 z-10 pointer-events-none"></div>
+              <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
+                <div className="w-48 h-32 border-2 border-brand-sky rounded-xl animate-pulse"></div>
+              </div>
+            </div>
+            <div className="p-4 text-center">
+              {scannerError ? (
+                <div className="text-red-400 text-xs font-bold flex items-center justify-center gap-1"><AlertTriangle size={14}/> {scannerError}</div>
+              ) : (
+                <div className="text-brand-sky text-xs font-bold animate-pulse">Point camera at barcode</div>
+              )}
             </div>
           </div>
         </div>

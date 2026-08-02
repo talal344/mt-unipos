@@ -6,7 +6,7 @@ import ClientSidebar from "@/components/client-sidebar";
 import {
   Plus, Edit2, Trash2, Barcode, RefreshCw, Tag, Search, X,
   Package, Upload, Download, FileSpreadsheet, CheckCircle2,
-  AlertTriangle, ChevronRight, Loader2, Eye, BarChart3, Printer
+  AlertTriangle, ChevronRight, Loader2, Eye, BarChart3, Printer, Layers
 } from "lucide-react";
 import * as XLSX from "xlsx";
 
@@ -98,7 +98,7 @@ interface ParsedRow {
 }
 
 export default function ProductsPage() {
-  const { products, addProduct, addProductsBulk, mergeProductsBulk, updateProduct, deleteProduct, deleteProductsBulk, currencySymbol } = useGlobalContext();
+  const { products, addProduct, addProductsBulk, mergeProductsBulk, updateProduct, deleteProduct, deleteProductsBulk, currencySymbol, getProductBatches } = useGlobalContext();
 
   // ── Single product modal state
   const [showModal, setShowModal] = useState(false);
@@ -139,6 +139,9 @@ export default function ProductsPage() {
     unit: "No Change",
   });
   const [isBulkCustomCat, setIsBulkCustomCat] = useState(false);
+
+  // ── Batch View state
+  const [batchViewProduct, setBatchViewProduct] = useState<any>(null);
 
   const triggerToast = (msg: string) => {
     setToast(msg);
@@ -778,6 +781,13 @@ export default function ProductsPage() {
                           <Edit2 size={12} />
                         </button>
                         <button
+                          onClick={() => setBatchViewProduct(prod)}
+                          className="p-1.5 bg-brand-dark-border hover:bg-purple-500/20 text-gray-400 hover:text-purple-400 rounded transition"
+                          title="View FIFO Batches"
+                        >
+                          <Layers size={12} />
+                        </button>
+                        <button
                           onClick={() => setActiveBarcode(prod)}
                           className="p-1.5 bg-brand-dark-border hover:bg-brand-sky/20 text-gray-300 hover:text-white rounded transition"
                           title="View Barcode Label"
@@ -1350,6 +1360,75 @@ export default function ProductsPage() {
           </div>
         </div>
       )}
+
+      {/* ═══════════════════════════════════════════════════════════════════════
+          FIFO BATCH VIEW MODAL
+      ═══════════════════════════════════════════════════════════════════════ */}
+      {batchViewProduct && (() => {
+        const productBatches = getProductBatches(batchViewProduct.id);
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4">
+            <div className="bg-[#0d0d0d] border border-purple-500/30 rounded-2xl w-full max-w-xl shadow-2xl max-h-[85vh] flex flex-col">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-brand-dark-border shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center">
+                    <Layers size={14} className="text-purple-400" />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-white text-sm">FIFO Batch Ledger</h3>
+                    <p className="text-[9px] text-gray-500">{batchViewProduct.name} · {productBatches.length} batch(es)</p>
+                  </div>
+                </div>
+                <button onClick={() => setBatchViewProduct(null)} className="text-gray-400 hover:text-white"><X size={16} /></button>
+              </div>
+              <div className="p-5 overflow-y-auto flex-grow space-y-3">
+                {productBatches.length === 0 ? (
+                  <div className="text-center py-10 text-gray-600 text-xs">
+                    <Layers size={32} className="mx-auto mb-3 text-gray-700" />
+                    No batches found. Receive goods via Purchase Orders to create FIFO batches.
+                  </div>
+                ) : (
+                  productBatches.map((batch, i) => {
+                    const isExpired = batch.expiryDate && new Date(batch.expiryDate) < new Date();
+                    const isExpiringSoon = batch.expiryDate && !isExpired && new Date(batch.expiryDate) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+                    return (
+                      <div key={batch.id} className={`bg-black/50 border rounded-xl p-4 text-xs ${isExpired ? 'border-red-500/40' : isExpiringSoon ? 'border-amber-500/40' : 'border-brand-dark-border'}`}>
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <span className="text-[9px] bg-purple-500/15 text-purple-400 border border-purple-500/30 px-2 py-0.5 rounded font-black font-mono">#{i + 1} FIFO</span>
+                            <span className="text-white font-black">{batch.batchNumber}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {isExpired && <span className="text-[9px] bg-red-500/15 text-red-400 border border-red-500/30 px-2 py-0.5 rounded font-black">EXPIRED</span>}
+                            {isExpiringSoon && <span className="text-[9px] bg-amber-500/15 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded font-black animate-pulse">EXPIRING SOON</span>}
+                            <span className={`font-black font-mono ${batch.remainingQty > 0 ? 'text-emerald-400' : 'text-gray-600'}`}>{batch.remainingQty} / {batch.initialQty} left</span>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3 font-mono text-[10px]">
+                          <div className="space-y-1.5">
+                            <div className="flex justify-between"><span className="text-gray-500">Purchase Price:</span><span className="text-white font-bold">{currencySymbol} {batch.costPrice}</span></div>
+                            <div className="flex justify-between"><span className="text-gray-500">Sale Price:</span><span className="text-brand-sky font-bold">{currencySymbol} {batch.salePrice}</span></div>
+                          </div>
+                          <div className="space-y-1.5">
+                            <div className="flex justify-between"><span className="text-gray-500">Received:</span><span className="text-gray-300">{new Date(batch.purchasedAt).toLocaleDateString('en-PK', {day:'2-digit', month:'short', year:'numeric'})}</span></div>
+                            {batch.expiryDate && <div className="flex justify-between"><span className="text-gray-500">Expiry:</span><span className={isExpired ? 'text-red-400 font-bold' : isExpiringSoon ? 'text-amber-400 font-bold' : 'text-gray-300'}>{batch.expiryDate}</span></div>}
+                          </div>
+                        </div>
+                        <div className="mt-2.5 bg-brand-dark-border/40 rounded-lg h-1.5">
+                          <div className="h-full rounded-lg bg-gradient-to-r from-purple-500 to-brand-sky transition-all" style={{width: `${batch.initialQty > 0 ? (batch.remainingQty / batch.initialQty) * 100 : 0}%`}} />
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+              <div className="px-5 py-4 border-t border-brand-dark-border shrink-0">
+                <button onClick={() => setBatchViewProduct(null)} className="w-full py-2.5 bg-brand-dark-border text-gray-300 font-bold text-xs rounded-xl hover:bg-brand-dark-border/70 transition">Close</button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* ═══════════════════════════════════════════════════════════════════════
           BARCODE LABEL MODAL

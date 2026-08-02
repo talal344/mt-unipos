@@ -43,6 +43,7 @@ export default function PurchasesPage() {
   const [receivePO, setReceivePO]     = useState<any>(null);
   const [receiveItems, setReceiveItems] = useState<ReceiveItem[]>([]);
   const [receiveNotes, setReceiveNotes] = useState("");
+  const [batchInputs, setBatchInputs] = useState<Record<number, { batchNumber?: string; expiryDate?: string; salePrice?: string }>>({});
 
   // ── Detail Modal ────────────────────────────────────────────────────────────
   const [detailPO, setDetailPO]       = useState<any>(null);
@@ -109,13 +110,23 @@ export default function PurchasesPage() {
       orderedQty: item.qty, receivedQty: item.qty, costPrice: item.costPrice
     })));
     setReceiveNotes("");
+    setBatchInputs({});
   };
 
   const handleConfirmReceive = () => {
     if (!receivePO) return;
-    receiveGoods(receivePO.id);
+    
+    const batchDataArray = receiveItems.map((item, i) => ({
+      productId: item.productId,
+      batchNumber: batchInputs[i]?.batchNumber || `BTH-${receivePO.id}`,
+      expiryDate: batchInputs[i]?.expiryDate || undefined,
+      salePrice: parseFloat(batchInputs[i]?.salePrice || '0') || (products.find(p => p.id === item.productId)?.salePrice || item.costPrice * 1.3)
+    }));
+
+    receiveGoods(receivePO.id, batchDataArray);
     triggerToast(`📦 GRN Confirmed! Stock updated for PO ${receivePO.id}.`);
     setReceivePO(null);
+    setBatchInputs({});
   };
 
   const poGrandTotal = poLines.reduce((a, l) => a + l.subtotal, 0);
@@ -385,7 +396,7 @@ export default function PurchasesPage() {
                   <p className="text-[9px] text-gray-500">PO: <span className="text-purple-400 font-mono">{receivePO.id}</span> · {receivePO.supplierName}</p>
                 </div>
               </div>
-              <button onClick={() => setReceivePO(null)} className="text-gray-400 hover:text-white"><X size={16} /></button>
+              <button onClick={() => { setReceivePO(null); setBatchInputs({}); }} className="text-gray-400 hover:text-white"><X size={16} /></button>
             </div>
 
             <div className="p-5 space-y-4 overflow-y-auto flex-grow text-xs">
@@ -394,21 +405,57 @@ export default function PurchasesPage() {
                 <label className="text-[9px] uppercase font-bold text-gray-400 block mb-2">Items to Receive</label>
                 <div className="space-y-2">
                   {receiveItems.map((item, i) => (
-                    <div key={i} className="bg-black/50 border border-brand-dark-border rounded-xl p-3 flex items-center gap-3">
-                      <div className="flex-grow min-w-0">
-                        <div className="font-bold text-white text-[11px] truncate">{item.productName}</div>
-                        <div className="text-[9px] text-gray-500 font-mono">Ordered: {item.orderedQty}</div>
+                    <div key={i} className="bg-black/50 border border-brand-dark-border rounded-xl p-3 flex flex-col gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="flex-grow min-w-0">
+                          <div className="font-bold text-white text-[11px] truncate">{item.productName}</div>
+                          <div className="text-[9px] text-gray-500 font-mono">Ordered: {item.orderedQty}</div>
+                        </div>
+                        <div className="shrink-0">
+                          <label className="text-[8px] text-gray-500 block mb-1">Received Qty</label>
+                          <input
+                            type="number" min="0" max={item.orderedQty}
+                            value={item.receivedQty}
+                            onChange={e => setReceiveItems(prev => prev.map((it, idx) =>
+                              idx === i ? { ...it, receivedQty: Math.min(Number(e.target.value), it.orderedQty) } : it
+                            ))}
+                            className="w-20 bg-black border border-brand-sky/30 p-1.5 rounded text-white font-mono text-[10px] focus:outline-none focus:border-brand-sky text-center"
+                          />
+                        </div>
                       </div>
-                      <div className="shrink-0">
-                        <label className="text-[8px] text-gray-500 block mb-1">Received Qty</label>
-                        <input
-                          type="number" min="0" max={item.orderedQty}
-                          value={item.receivedQty}
-                          onChange={e => setReceiveItems(prev => prev.map((it, idx) =>
-                            idx === i ? { ...it, receivedQty: Math.min(Number(e.target.value), it.orderedQty) } : it
-                          ))}
-                          className="w-20 bg-black border border-brand-sky/30 p-1.5 rounded text-white font-mono text-[10px] focus:outline-none focus:border-brand-sky text-center"
-                        />
+                      
+                      {/* Batch Details */}
+                      <div className="grid grid-cols-3 gap-2 border-t border-brand-dark-border/40 pt-3 mt-1">
+                        <div>
+                          <label className="text-[8px] text-gray-500 block mb-1">Batch Number</label>
+                          <input 
+                            type="text" 
+                            placeholder={`BTH-${receivePO.id}`}
+                            value={batchInputs[i]?.batchNumber || ''}
+                            onChange={e => setBatchInputs(prev => ({ ...prev, [i]: { ...prev[i], batchNumber: e.target.value } }))}
+                            className="w-full bg-black border border-brand-dark-border p-1.5 rounded text-white font-mono text-[10px] focus:outline-none focus:border-brand-sky"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[8px] text-gray-500 block mb-1">Expiry Date</label>
+                          <input 
+                            type="date"
+                            value={batchInputs[i]?.expiryDate || ''}
+                            onChange={e => setBatchInputs(prev => ({ ...prev, [i]: { ...prev[i], expiryDate: e.target.value } }))}
+                            className="w-full bg-black border border-brand-dark-border p-1.5 rounded text-white font-mono text-[10px] focus:outline-none focus:border-brand-sky"
+                            style={{ colorScheme: 'dark' }}
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[8px] text-gray-500 block mb-1">Sale Price</label>
+                          <input 
+                            type="number" step="0.01" min="0"
+                            placeholder={String(products.find(p => p.id === item.productId)?.salePrice || item.costPrice * 1.3)}
+                            value={batchInputs[i]?.salePrice || ''}
+                            onChange={e => setBatchInputs(prev => ({ ...prev, [i]: { ...prev[i], salePrice: e.target.value } }))}
+                            className="w-full bg-black border border-brand-dark-border p-1.5 rounded text-white font-mono text-[10px] focus:outline-none focus:border-brand-sky"
+                          />
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -433,7 +480,7 @@ export default function PurchasesPage() {
             </div>
 
             <div className="px-5 py-4 border-t border-brand-dark-border shrink-0 flex gap-2">
-              <button onClick={() => setReceivePO(null)}
+              <button onClick={() => { setReceivePO(null); setBatchInputs({}); }}
                 className="flex-1 py-2.5 bg-brand-dark-border text-gray-300 font-bold text-xs rounded-xl hover:bg-brand-dark-border/70 transition">
                 Cancel
               </button>
