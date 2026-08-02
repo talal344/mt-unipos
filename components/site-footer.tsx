@@ -24,7 +24,7 @@ export default function SiteFooter() {
         {/* Branding & Contact */}
         <div className="space-y-4">
           <Link href="/" className="flex items-center gap-2">
-            <img src="/logo.png" alt="MT UniPOS Logo" className="h-10 w-auto object-contain" />
+            <img src="/logo.png" alt="MT UniPOS Logo" className="h-14 w-auto max-w-[220px] object-contain drop-shadow-[0_0_12px_rgba(14,165,233,0.3)]" />
           </Link>
           <p className="text-xs leading-relaxed text-gray-500">
             MT UniPOS (Mian Talal UniPOS) is a premium cloud-based multi-tenant SaaS POS & ERP platform designed to optimize retail checkout, automated inventory, and split-ledger accounting.

@@ -72,12 +72,12 @@ export default function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-brand-dark-border bg-black/80 backdrop-blur-md glass-panel font-sans">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between">
+        <div className="flex h-20 items-center justify-between py-2">
 
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center cursor-pointer select-none" onClick={handleLogoTap}>
             <Link href="/" className="flex items-center gap-2 group">
-              <img src="/logo.png" alt="MT UniPOS" className="h-9 w-auto object-contain transition-all duration-300 group-hover:scale-105" />
+              <img src="/logo.png" alt="MT UniPOS" className="h-13 sm:h-14 w-auto max-w-[240px] object-contain transition-all duration-300 group-hover:scale-105 drop-shadow-[0_0_16px_rgba(14,165,233,0.35)]" />
             </Link>
           </div>
 

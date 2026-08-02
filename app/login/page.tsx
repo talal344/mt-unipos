@@ -215,7 +215,7 @@ function LoginContent() {
 
         {/* Logo */}
         <Link href="/" className="flex items-center justify-center mb-6 group">
-          <img src="/logo.png" alt="MT UniPOS Logo" className="h-14 w-auto object-contain transition-all group-hover:scale-105" />
+          <img src="/logo.png" alt="MT UniPOS Logo" className="h-20 sm:h-24 md:h-28 w-auto max-w-[320px] object-contain transition-all duration-300 group-hover:scale-105 drop-shadow-[0_0_20px_rgba(14,165,233,0.4)]" />
         </Link>
 
         {/* Sign In Box */}

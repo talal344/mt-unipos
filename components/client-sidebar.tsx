@@ -179,9 +179,9 @@ export default function ClientSidebar() {
 
       <div className="flex flex-col flex-1 min-h-0">
         {/* Brand Header */}
-        <div className="h-14 flex items-center justify-between gap-2 px-4 border-b border-brand-dark-border shrink-0">
+        <div className="py-3 px-4 flex items-center justify-between gap-3 border-b border-brand-dark-border shrink-0 bg-black/40">
           <Link href="/dashboard" className="flex items-center gap-2 flex-grow min-w-0">
-            <img src="/logo.png" alt="MT UniPOS Logo" className="h-8 w-auto object-contain shrink-0" />
+            <img src="/logo.png" alt="MT UniPOS Logo" className="h-11 w-auto max-w-[180px] object-contain drop-shadow-[0_0_12px_rgba(14,165,233,0.35)] transition-transform hover:scale-105" />
           </Link>
           {/* Bell */}
           <button
