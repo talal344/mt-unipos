@@ -298,6 +298,7 @@ export default function PosPage() {
 
   const selectedCustObj    = customers.find(c => c.name === selectedCustomer);
   const selectedCustPoints = selectedCustObj?.loyaltyPoints || 0;
+  const selectedCustWalletBalance = selectedCustObj?.walletBalance || 0;
 
   // ════════════════════════════════════════════════════════════════════════════
   //  ADD-TO-CART MODAL HELPERS
@@ -570,9 +571,6 @@ export default function PosPage() {
   const discountAmount = discountType === "percent" ? cartSubtotal * (discountValue / 100) : discountValue;
   const loyaltyDiscount= redeemLoyalty ? 100 : 0;
   const cartGrandTotal = Math.max(0, cartSubtotal + cartTax - discountAmount - loyaltyDiscount);
-
-  const selectedCustObj = customers.find(c => c.name === selectedCustomer);
-  const selectedCustWalletBalance = selectedCustObj?.walletBalance || 0;
 
   // ── Checkout
   const handleConfirmCheckout = (e: React.FormEvent) => {
