@@ -440,7 +440,7 @@ export default function ReportsPage() {
 
       const json = await res.json();
       if (json.success) {
-        triggerToast(`📁 SAVED: Documents/Reports/${fileType}/${fileName}`);
+        triggerToast(`📁 SAVED: Documents/MT POS/Reports/${fileType}/${fileName}`);
       } else {
         if (fallbackDownloadFn) fallbackDownloadFn();
         else triggerToast(`📁 Downloaded ${fileName}`);
@@ -829,7 +829,7 @@ export default function ReportsPage() {
               <img src="/logo-report.png" style="height:55px;width:auto;object-fit:contain;" alt="MT UniPOS Logo" />
               <div>
                 <h1 class="text-2xl font-black uppercase tracking-tight text-gray-900">${title}</h1>
-                <p class="text-xs text-gray-500 mt-1">Branch: ${currentBranch} · Period: ${PERIOD_LABELS[period]} · Saved to: Documents/Reports/PDF/</p>
+                <p class="text-xs text-gray-500 mt-1">Branch: ${currentBranch} · Period: ${PERIOD_LABELS[period]} · Saved to: Documents/MT POS/Reports/PDF/</p>
               </div>
             </div>
             <div class="text-right text-[10px] text-gray-400 font-mono">

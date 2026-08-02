@@ -16,9 +16,9 @@ export async function POST(req: Request) {
     if (folderName === "XLSX" || folderName === "XLS") folderName = "Excel";
     if (folderName === "JPEG") folderName = "JPG";
 
-    // Target path: C:\Users\<User>\Documents\Reports\<PDF | Excel | JPG>
+    // Target path: C:\Users\<User>\Documents\MT POS\Reports\<PDF | Excel | JPG>
     const userDocsDir = path.join(os.homedir(), "Documents");
-    const reportsDir = path.join(userDocsDir, "Reports", folderName);
+    const reportsDir = path.join(userDocsDir, "MT POS", "Reports", folderName);
 
     // Ensure directory structure exists on Windows hard drive
     if (!fs.existsSync(reportsDir)) {
