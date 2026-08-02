@@ -271,116 +271,87 @@ export default function ThermalSlipModal({
   const { localReceiptsDirHandle, currentUser } = useGlobalContext();
   const [isAutoSaving, setIsAutoSaving] = useState(false);
   const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saving" | "success" | "error">("idle");
+  const [autoSavedPath, setAutoSavedPath] = useState<string>("");
   const hasAutoSaved = useRef(false);
 
   const slipHTML = buildSlipHTML(sale, currencySymbol || "PKR", branch, businessSettings);
 
-  // Auto-save logic
+  // Auto-save logic — saves receipt to MT UniPOS folder on disk automatically
   useEffect(() => {
     if (hasAutoSaved.current || !slipRef.current) return;
     hasAutoSaved.current = true;
-    
+
     const performAutoSave = async () => {
       try {
         setIsAutoSaving(true);
         setAutoSaveStatus("saving");
-        
-        await new Promise(r => setTimeout(r, 800));
-        
+
+        await new Promise(r => setTimeout(r, 900));
+
         if (!slipRef.current) throw new Error("Slip DOM element not found");
 
         const { toBlob } = await import("html-to-image");
         const blob = await toBlob(slipRef.current, {
           backgroundColor: "#ffffff",
-          pixelRatio: 2, // Equivalent to scale: 2
+          pixelRatio: 2,
         });
 
-        if (!blob) {
-          throw new Error("Failed to generate image blob");
-        }
+        if (!blob) throw new Error("Failed to generate image blob");
 
-        const folderName = sale.status === "Dues_Recovery"
-          ? "Dues_Clear"
+        // Determine receipt category for local folder routing
+        const category = sale.status === "Dues_Recovery"
+          ? "dues-receipt"
           : (sale.status === "Returned" || sale.status === "Refunded")
-            ? "Return_Receipts"
-            : "Sales_Receipts";
+            ? "return-receipt"
+            : "sale-receipt";
 
-        const safeTenantId = currentUser?.tenantId || "UnknownTenant";
-        const cloudFileName = `${safeTenantId}/${folderName}/${sale.receiptNumber}.jpg`;
         const localFileName = `${sale.receiptNumber}.jpg`;
-        
-        let cloudSuccess = false;
-        let localSuccess = false;
 
-        // 1. Online Storage (Supabase) or Offline Queue
-        if (navigator.onLine) {
-          try {
-            const { error } = await supabase.storage.from('receipts').upload(cloudFileName, blob, {
-              contentType: 'image/jpeg',
-              upsert: true
-            });
-            if (error) {
-              console.error("Supabase Storage Error:", error);
-              // Queue for later if upload fails despite being online
-              await queueOfflineReceipt(sale.id || sale.receiptNumber, blob, cloudFileName);
-              cloudSuccess = true; // Count as success since it's queued
-            } else {
-              cloudSuccess = true;
-            }
-          } catch (err) {
-            console.error("Supabase upload exception:", err);
-            await queueOfflineReceipt(sale.id || sale.receiptNumber, blob, cloudFileName);
-            cloudSuccess = true; 
-          }
-        } else {
-          // Explicitly offline, queue immediately
-          await queueOfflineReceipt(sale.id || sale.receiptNumber, blob, cloudFileName);
-          cloudSuccess = true;
-        }
-        
-        // 2. Local Disk Storage via Node API (Documents/MT POS/Receipts/<subfolder>/<file>)
-        try {
+        // Convert blob → base64
+        const base64data: string = await new Promise((resolve, reject) => {
           const reader = new FileReader();
           reader.readAsDataURL(blob);
-          reader.onloadend = async () => {
-            const base64data = reader.result as string;
-            await fetch("/api/save-report", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                fileType: "Receipt",
-                subfolder: folderName,
-                fileName: localFileName,
-                fileBase64: base64data,
-              }),
-            }).catch(() => {});
-          };
-          localSuccess = true;
-        } catch (err) {
-          console.error("Local Save API error:", err);
-        }
-        
-        // 3. Optional localDirectoryHandle fallback
-        if (localReceiptsDirHandle) {
-          try {
-            const targetDirHandle = await localReceiptsDirHandle.getDirectoryHandle(folderName, { create: true });
-            const fileHandle = await targetDirHandle.getFileHandle(localFileName, { create: true });
-            const writable = await fileHandle.createWritable();
-            await writable.write(blob);
-            await writable.close();
-            localSuccess = true;
-          } catch (err) {
-            console.error("Local Directory Handle Save Error:", err);
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.onerror = reject;
+        });
+
+        // 1. Save to local MT UniPOS folder via API
+        let savedPath = "";
+        try {
+          const res = await fetch("/api/save-file", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ category, fileName: localFileName, fileBase64: base64data }),
+          });
+          const json = await res.json();
+          if (json.success) {
+            savedPath = json.filePath || "";
           }
+        } catch (diskErr) {
+          console.error("Local disk save error:", diskErr);
         }
 
-        if (cloudSuccess || localSuccess) {
-          setAutoSaveStatus("success");
+        // 2. Cloud backup (Supabase) or offline queue
+        const safeTenantId = currentUser?.tenantId || "UnknownTenant";
+        const cloudFileName = `${safeTenantId}/${category}/${localFileName}`;
+        if (navigator.onLine) {
+          try {
+            const { error } = await supabase.storage.from("receipts").upload(cloudFileName, blob, {
+              contentType: "image/jpeg",
+              upsert: true,
+            });
+            if (error) await queueOfflineReceipt(sale.id || sale.receiptNumber, blob, cloudFileName);
+          } catch {
+            await queueOfflineReceipt(sale.id || sale.receiptNumber, blob, cloudFileName);
+          }
         } else {
-          setAutoSaveStatus("error");
+          await queueOfflineReceipt(sale.id || sale.receiptNumber, blob, cloudFileName);
         }
+
+        setAutoSaveStatus("success");
+        setAutoSavedPath(savedPath);
       } catch (err: any) {
-        console.error("Auto-save general error:", err);
+        console.error("Auto-save error:", err);
         setAutoSaveStatus("error");
       } finally {
         setIsAutoSaving(false);
@@ -429,30 +400,28 @@ export default function ThermalSlipModal({
         useCORS: true
       });
       const dataUrl = canvas.toDataURL("image/jpeg", 0.95);
-      const subfolder = sale.status === "Dues_Recovery"
-        ? "Dues_Clear"
+      const category = sale.status === "Dues_Recovery"
+        ? "dues-receipt"
         : (sale.status === "Returned" || sale.status === "Refunded")
-          ? "Return_Receipts"
-          : "Sales_Receipts";
+          ? "return-receipt"
+          : "sale-receipt";
 
-      const res = await fetch("/api/save-report", {
+      const res = await fetch("/api/save-file", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          fileType: "Receipt",
-          subfolder,
+          category,
           fileName: `${sale.receiptNumber}.jpg`,
           fileBase64: dataUrl,
         }),
       });
       const json = await res.json();
       if (json.success) {
-        alert(`📁 SAVED: Documents/MT POS/Receipts/${subfolder}/${sale.receiptNumber}.jpg`);
-      } else {
-        handleDownload();
+        setAutoSavedPath(json.filePath || "");
+        setAutoSaveStatus("success");
       }
     } catch (err) {
-      handleDownload();
+      console.error("Save to disk error:", err);
     }
   };
 
@@ -497,10 +466,22 @@ export default function ThermalSlipModal({
               <h3 className="font-black text-white text-sm flex items-center gap-2">
                 Thermal Slip
                 {autoSaveStatus === "saving" && <Loader2 size={12} className="animate-spin text-brand-sky" />}
-                {autoSaveStatus === "success" && <span className="text-[9px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-500/30">Auto-saved</span>}
-                {autoSaveStatus === "error" && <span className="text-[9px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded border border-red-500/30" title="Check console for errors">Save Failed</span>}
+                {autoSaveStatus === "success" && (
+                  <span
+                    className="text-[9px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-500/30 cursor-pointer"
+                    title={autoSavedPath ? `Saved to: ${autoSavedPath}` : "Saved to MT UniPOS folder"}
+                  >
+                    ✅ Auto-saved
+                  </span>
+                )}
+                {autoSaveStatus === "error" && <span className="text-[9px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded border border-red-500/30">Save Failed</span>}
               </h3>
               <p className="text-[9px] text-gray-500 font-mono">{sale.receiptNumber}</p>
+              {autoSaveStatus === "success" && autoSavedPath && (
+                <p className="text-[8px] text-emerald-400/70 font-mono truncate max-w-[200px]" title={autoSavedPath}>
+                  📁 {autoSavedPath.split(/[\/\\]/).slice(-3).join(" › ")}
+                </p>
+              )}
             </div>
           </div>
           <button onClick={onClose} className="text-gray-500 hover:text-white p-1 rounded hover:bg-brand-dark-border transition">

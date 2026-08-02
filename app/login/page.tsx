@@ -139,9 +139,23 @@ function LoginContent() {
         businessName: activeTenant?.businessName || "Unknown",
         tenantId: activeTenant?.id || "",
       };
-      setTimeout(() => {
+      setTimeout(async () => {
         localStorage.setItem("unipos_current_user", JSON.stringify(user));
         setCurrentUser(user);
+
+        // Initialize MT UniPOS folder structure on first login (once per device)
+        const folderInitKey = `unipos_folders_init_${activeTenant?.id || ""}`;
+        if (!localStorage.getItem(folderInitKey)) {
+          try {
+            const res = await fetch("/api/save-file");
+            if (res.ok) {
+              localStorage.setItem(folderInitKey, "1");
+            }
+          } catch (err) {
+            console.warn("MT UniPOS folder init skipped:", err);
+          }
+        }
+
         router.push(role === "Cashier" ? "/pos" : "/dashboard");
       }, 1200);
     }, 600);

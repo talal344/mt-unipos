@@ -423,36 +423,33 @@ export default function ReportsPage() {
   //  DIRECT LOCAL DISK SAVE HELPER (Documents/MT POS/Reports/PDF | Excel | JPG)
   // ─────────────────────────────────────────────────────────────────────────
   const saveReportToLocalDisk = async (
-    fileType: "Excel" | "JPG" | "PDF",
+    category: "report-pdf" | "report-excel" | "report-jpg",
     fileName: string,
     fileBase64: string
   ) => {
     try {
-      const res = await fetch("/api/save-report", {
+      const res = await fetch("/api/save-file", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          fileType,
-          fileName,
-          fileBase64,
-        }),
+        body: JSON.stringify({ category, fileName, fileBase64 }),
       });
 
       const json = await res.json();
-      if (json.success) {
-        triggerToast(`📁 SAVED: Documents/MT POS/Reports/${fileType}/${fileName}`);
+      if (json.success && json.filePath) {
+        triggerToast(`📁 Saved: ${json.filePath}`);
       } else {
-        triggerToast(`📁 Saved to Documents/MT POS/Reports/${fileType}/${fileName}`);
+        const folderLabel = category === "report-pdf" ? "Reports/PDF" : category === "report-excel" ? "Reports/Excel" : "Reports/JPG";
+        triggerToast(`📁 Saved to MT UniPOS/${folderLabel}/${fileName}`);
       }
     } catch (err) {
       console.error("Local save error:", err);
-      triggerToast(`📁 Saved to Documents/MT POS/Reports/${fileType}/${fileName}`);
+      triggerToast(`⚠️ Save failed. Check if app server is running locally.`);
     }
   };
 
   const saveWorkbook = async (wb: XLSX.WorkBook, fileName: string) => {
     const base64Str = XLSX.write(wb, { bookType: "xlsx", type: "base64" });
-    await saveReportToLocalDisk("Excel", fileName, base64Str);
+    await saveReportToLocalDisk("report-excel", fileName, base64Str);
   };
 
   const handleImageExport = async () => {
@@ -469,7 +466,7 @@ export default function ReportsPage() {
       const dataUrl = canvas.toDataURL("image/jpeg", 0.95);
       const fileName = `Reports_JPG_${activeTab.toUpperCase()}_Report_${period}_${isoDate(new Date())}.jpg`;
 
-      await saveReportToLocalDisk("JPG", fileName, dataUrl);
+      await saveReportToLocalDisk("report-jpg", fileName, dataUrl);
     } catch (err) {
       console.error("Image export failed", err);
       triggerToast("❌ Image export failed.");
@@ -543,7 +540,7 @@ export default function ReportsPage() {
       const dataUrl = canvas.toDataURL("image/jpeg", 0.95);
       const fileName = `Reports_PDF_${activeTab.toUpperCase()}_Report_${period}_${isoDate(new Date())}.pdf`;
 
-      await saveReportToLocalDisk("PDF", fileName, dataUrl);
+      await saveReportToLocalDisk("report-pdf", fileName, dataUrl);
 
       if (autoPrint) triggerPrintWindow();
     } catch (err) {
