@@ -17,14 +17,14 @@ export default function SettingsPage() {
   } = useGlobalContext();
 
   const [form, setForm] = useState({
-    businessName: businessSettings.businessName || "Al-Fatah Superstore",
-    ownerName: businessSettings.ownerName || "Mian Talal",
-    phone: businessSettings.phone || "+92 321 5550100",
-    email: businessSettings.email || "talal@alfatah.com",
-    address: businessSettings.address || "Gulberg III, Main Boulevard",
-    city: businessSettings.city || "Lahore",
+    businessName: businessSettings.businessName || "",
+    ownerName: businessSettings.ownerName || "",
+    phone: businessSettings.phone || "",
+    email: businessSettings.email || "",
+    address: businessSettings.address || "",
+    city: businessSettings.city || "",
     country: businessSettings.country || "Pakistan",
-    taxNumber: businessSettings.taxNumber || "NTN-1234567-8",
+    taxNumber: businessSettings.taxNumber || "",
     receiptHeader: businessSettings.receiptHeader || "MT UniPOS ERP",
     receiptFooter: businessSettings.receiptFooter || "Thank you for shopping! Powered by MT UniPOS.",
     defaultTaxRate: businessSettings.defaultTaxRate !== undefined ? businessSettings.defaultTaxRate.toString() : "17",
@@ -36,6 +36,29 @@ export default function SettingsPage() {
     loyaltyRedeemValue: businessSettings.loyaltyRedeemValue !== undefined ? businessSettings.loyaltyRedeemValue.toString() : "100",
     logoUrl: businessSettings.logoUrl || "",
   });
+
+  React.useEffect(() => {
+    setForm({
+      businessName: businessSettings.businessName || "",
+      ownerName: businessSettings.ownerName || "",
+      phone: businessSettings.phone || "",
+      email: businessSettings.email || "",
+      address: businessSettings.address || "",
+      city: businessSettings.city || "",
+      country: businessSettings.country || "Pakistan",
+      taxNumber: businessSettings.taxNumber || "",
+      receiptHeader: businessSettings.receiptHeader || "MT UniPOS ERP",
+      receiptFooter: businessSettings.receiptFooter || "Thank you for shopping! Powered by MT UniPOS.",
+      defaultTaxRate: businessSettings.defaultTaxRate !== undefined ? businessSettings.defaultTaxRate.toString() : "17",
+      defaultCurrency: businessSettings.defaultCurrency || "PKR",
+      lowStockAlert: businessSettings.lowStockAlert !== undefined ? businessSettings.lowStockAlert.toString() : "10",
+      allowCreditSales: businessSettings.allowCreditSales !== undefined ? businessSettings.allowCreditSales : true,
+      loyaltyPointsPerAmount: businessSettings.loyaltyPointsPerAmount !== undefined ? businessSettings.loyaltyPointsPerAmount.toString() : "50",
+      loyaltyRedeemThreshold: businessSettings.loyaltyRedeemThreshold !== undefined ? businessSettings.loyaltyRedeemThreshold.toString() : "1000",
+      loyaltyRedeemValue: businessSettings.loyaltyRedeemValue !== undefined ? businessSettings.loyaltyRedeemValue.toString() : "100",
+      logoUrl: businessSettings.logoUrl || "",
+    });
+  }, [businessSettings]);
 
   const [toast, setToast] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"general" | "pos" | "loyalty" | "system">("general");

@@ -740,14 +740,14 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [businessSettings, setBusinessSettings] = useState<BusinessSettings>({
-    businessName: "Al-Fatah Superstore",
-    ownerName: "Mian Talal",
-    phone: "+92 321 5550100",
-    email: "talal@alfatah.com",
-    address: "Gulberg III, Main Boulevard",
-    city: "Lahore",
+    businessName: "",
+    ownerName: "",
+    phone: "",
+    email: "",
+    address: "",
+    city: "",
     country: "Pakistan",
-    taxNumber: "NTN-1234567-8",
+    taxNumber: "",
     receiptFooter: "Thank you for shopping! Powered by MT UniPOS.",
     receiptHeader: "MT UniPOS ERP",
     defaultTaxRate: 17,
@@ -993,6 +993,49 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     }
 
     const isPrimaryDemo = currentUser.tenantId === "AFS-101";
+
+    // 0. Load Business Settings for Active Tenant
+    const savedSettings = localStorage.getItem("unipos_settings_" + currentUser.tenantId);
+    const tenantRecord = tenants.find(t => t.id === currentUser.tenantId);
+
+    if (savedSettings) {
+      try {
+        const parsed: BusinessSettings = JSON.parse(savedSettings);
+        // Clean up any stale legacy default data if this is NOT the AFS-101 demo store
+        if (!isPrimaryDemo && parsed.businessName === "Al-Fatah Superstore" && tenantRecord && tenantRecord.businessName !== "Al-Fatah Superstore") {
+          parsed.businessName = tenantRecord.businessName;
+          if (tenantRecord.ownerName) parsed.ownerName = tenantRecord.ownerName;
+          if (tenantRecord.phone) parsed.phone = tenantRecord.phone;
+          if (tenantRecord.email) parsed.email = tenantRecord.email;
+          if (parsed.address === "Gulberg III, Main Boulevard") parsed.address = "";
+          saveTenantData("unipos_settings", parsed);
+        }
+        setBusinessSettings(parsed);
+      } catch (e) {}
+    } else {
+      const initSettings: BusinessSettings = {
+        businessName: tenantRecord?.businessName || currentUser?.businessName || (isPrimaryDemo ? "Al-Fatah Superstore" : "My Business"),
+        ownerName: tenantRecord?.ownerName || currentUser?.name || (isPrimaryDemo ? "Mian Talal" : "Owner"),
+        phone: tenantRecord?.phone || (isPrimaryDemo ? "+92 321 5550100" : ""),
+        email: tenantRecord?.email || currentUser?.email || (isPrimaryDemo ? "talal@alfatah.com" : ""),
+        address: isPrimaryDemo ? "Gulberg III, Main Boulevard" : "",
+        city: isPrimaryDemo ? "Lahore" : "",
+        country: "Pakistan",
+        taxNumber: isPrimaryDemo ? "NTN-1234567-8" : "",
+        receiptHeader: tenantRecord?.businessName || currentUser?.businessName || "MT UniPOS ERP",
+        receiptFooter: "Thank you for shopping! Powered by MT UniPOS.",
+        defaultTaxRate: 17,
+        defaultCurrency: tenantRecord?.defaultCurrency || "PKR",
+        lowStockAlert: 10,
+        allowCreditSales: true,
+        loyaltyPointsPerAmount: 50,
+        loyaltyRedeemThreshold: 1000,
+        loyaltyRedeemValue: 100,
+        logoUrl: "",
+      };
+      saveTenantData("unipos_settings", initSettings);
+      setBusinessSettings(initSettings);
+    }
 
     // 5. Load Products (with SKU and Barcodes)
     const savedProducts = localStorage.getItem("unipos_products_" + currentUser.tenantId);
@@ -2051,6 +2094,25 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     const updated = { ...businessSettings, ...s };
     setBusinessSettings(updated);
     saveTenantData("unipos_settings", updated);
+
+    if (currentUser?.tenantId) {
+      setTenants(prev => {
+        const next = prev.map(t => {
+          if (t.id === currentUser.tenantId) {
+            return {
+              ...t,
+              businessName: updated.businessName || t.businessName,
+              ownerName: updated.ownerName || t.ownerName,
+              phone: updated.phone || t.phone,
+              email: updated.email || t.email,
+            };
+          }
+          return t;
+        });
+        localStorage.setItem("unipos_tenants", JSON.stringify(next));
+        return next;
+      });
+    }
   };
 
   // Advanced ERP: Purchases & Good Receive Notes (GRN)
