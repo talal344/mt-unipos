@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase";
 import { queueOfflineReceipt } from "@/lib/offline-sync";
 
 import Barcode from "react-barcode";
+import { autoSaveReceiptToDisk } from "@/lib/receipt-saver";
 
 interface SaleItem {
   productName: string;
@@ -282,79 +283,19 @@ export default function ThermalSlipModal({
     hasAutoSaved.current = true;
 
     const performAutoSave = async () => {
-      try {
-        setIsAutoSaving(true);
-        setAutoSaveStatus("saving");
+      setIsAutoSaving(true);
+      setAutoSaveStatus("saving");
 
-        // Wait for DOM to be ready
-        await new Promise(r => setTimeout(r, 1200));
+      const result = await autoSaveReceiptToDisk(sale, businessSettings, currencySymbol || "PKR");
 
-        if (!slipRef.current) throw new Error("Slip DOM element not found");
-
-        // Use html2canvas-pro for reliable cross-element capture
-        const html2canvas = (await import("html2canvas-pro")).default;
-        const canvas = await html2canvas(slipRef.current, {
-          backgroundColor: "#ffffff",
-          scale: 2,
-          logging: false,
-          useCORS: true,
-          allowTaint: true,
-        });
-
-        const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
-        if (!dataUrl || dataUrl === "data:,") throw new Error("Canvas capture returned empty");
-
-        // Determine receipt category for local folder routing
-        const category = sale.status === "Dues_Recovery"
-          ? "dues-receipt"
-          : (sale.status === "Returned" || sale.status === "Refunded")
-            ? "return-receipt"
-            : "sale-receipt";
-
-        const localFileName = `${sale.receiptNumber}.jpg`;
-
-        // Save to local MT UniPOS folder via API
-        let savedPath = "";
-        try {
-          const res = await fetch("/api/save-file", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ category, fileName: localFileName, fileBase64: dataUrl }),
-          });
-          const json = await res.json();
-          if (json.success) {
-            savedPath = json.filePath || "";
-          }
-        } catch (diskErr) {
-          console.error("Local disk save error:", diskErr);
-        }
-
-        // Cloud backup (Supabase) or offline queue
-        try {
-          const blob = await (await fetch(dataUrl)).blob();
-          const safeTenantId = currentUser?.tenantId || "UnknownTenant";
-          const cloudFileName = `${safeTenantId}/${category}/${localFileName}`;
-          if (navigator.onLine) {
-            const { error } = await supabase.storage.from("receipts").upload(cloudFileName, blob, {
-              contentType: "image/jpeg",
-              upsert: true,
-            });
-            if (error) await queueOfflineReceipt(sale.id || sale.receiptNumber, blob, cloudFileName);
-          } else {
-            await queueOfflineReceipt(sale.id || sale.receiptNumber, blob, cloudFileName);
-          }
-        } catch (cloudErr) {
-          console.warn("Cloud backup skipped:", cloudErr);
-        }
-
+      if (result.success) {
         setAutoSaveStatus("success");
-        setAutoSavedPath(savedPath);
-      } catch (err: any) {
-        console.error("Auto-save error:", err);
+        setAutoSavedPath(result.filePath || "");
+      } else {
+        console.warn("ThermalSlipModal auto-save error:", result.error);
         setAutoSaveStatus("error");
-      } finally {
-        setIsAutoSaving(false);
       }
+      setIsAutoSaving(false);
     };
 
     performAutoSave();

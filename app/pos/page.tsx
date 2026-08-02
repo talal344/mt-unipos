@@ -12,6 +12,7 @@ import {
   Clock, Timer, LogOut, Download, WifiOff, Bell, Camera, PauseCircle, Play
 } from "lucide-react";
 import { BrowserMultiFormatReader } from '@zxing/browser';
+import { autoSaveReceiptToDisk } from "@/lib/receipt-saver";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface HeldCart {
@@ -643,6 +644,13 @@ export default function PosPage() {
 
       setSuccessReceipt(finalSale);
       setShowCheckoutModal(false);
+      autoSaveReceiptToDisk(finalSale, businessSettings, currencySymbol).then(res => {
+        if (res.success) {
+          triggerToast(`✅ Receipt auto-saved to Documents/MT UniPOS/Sale Receipts!`);
+        } else {
+          console.warn("Receipt auto-save warning:", res.error);
+        }
+      });
       if (whatsappNumber.trim()) {
         setTimeout(() => triggerToast(`Digital receipt successfully sent to ${whatsappNumber} via WhatsApp API.`), 500);
       }
@@ -696,6 +704,13 @@ export default function PosPage() {
 
       setSuccessReceipt(finalSale);
       setShowCheckoutModal(false);
+      autoSaveReceiptToDisk(finalSale, businessSettings, currencySymbol).then(res => {
+        if (res.success) {
+          triggerToast(`✅ Receipt auto-saved to Documents/MT UniPOS/Sale Receipts!`);
+        } else {
+          console.warn("Receipt auto-save warning:", res.error);
+        }
+      });
       if (whatsappNumber.trim()) {
         setTimeout(() => triggerToast(`Digital receipt successfully sent to ${whatsappNumber} via WhatsApp API.`), 500);
       }
