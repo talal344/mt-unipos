@@ -853,6 +853,29 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     }
   }, [currentUser, tenants]);
 
+  // ── MT UniPOS Folder Initialization ──────────────────────────────────────────
+  // Runs once per device per tenant when user logs in.
+  // Creates: Documents/MT UniPOS/ (Windows) or Desktop/MT UniPOS/ (macOS)
+  // with subfolders: Sale Receipts, Dues Clear Receipts,
+  //   Sale or Purchase Return Receipts, Reports/PDF, Reports/Excel, Reports/JPG
+  useEffect(() => {
+    if (!currentUser?.tenantId) return;
+    const folderInitKey = `unipos_folders_init_${currentUser.tenantId}`;
+    if (localStorage.getItem(folderInitKey)) return; // Already initialized on this device
+    
+    fetch("/api/save-file")
+      .then(res => res.json())
+      .then(json => {
+        if (json.success) {
+          localStorage.setItem(folderInitKey, "1");
+          console.log("✅ MT UniPOS folders initialized at:", json.baseDir);
+        }
+      })
+      .catch(err => {
+        console.warn("MT UniPOS folder init failed (app may not be running locally):", err);
+      });
+  }, [currentUser?.tenantId]);
+
   // Pre-seed mock data on first load
   useEffect(() => {
     const handleStateRefresh = () => {

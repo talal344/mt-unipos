@@ -278,7 +278,7 @@ export default function ThermalSlipModal({
 
   // Auto-save logic — saves receipt to MT UniPOS folder on disk automatically
   useEffect(() => {
-    if (hasAutoSaved.current || !slipRef.current) return;
+    if (hasAutoSaved.current) return;
     hasAutoSaved.current = true;
 
     const performAutoSave = async () => {
@@ -286,17 +286,23 @@ export default function ThermalSlipModal({
         setIsAutoSaving(true);
         setAutoSaveStatus("saving");
 
-        await new Promise(r => setTimeout(r, 900));
+        // Wait for DOM to be ready
+        await new Promise(r => setTimeout(r, 1200));
 
         if (!slipRef.current) throw new Error("Slip DOM element not found");
 
-        const { toBlob } = await import("html-to-image");
-        const blob = await toBlob(slipRef.current, {
+        // Use html2canvas-pro for reliable cross-element capture
+        const html2canvas = (await import("html2canvas-pro")).default;
+        const canvas = await html2canvas(slipRef.current, {
           backgroundColor: "#ffffff",
-          pixelRatio: 2,
+          scale: 2,
+          logging: false,
+          useCORS: true,
+          allowTaint: true,
         });
 
-        if (!blob) throw new Error("Failed to generate image blob");
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
+        if (!dataUrl || dataUrl === "data:,") throw new Error("Canvas capture returned empty");
 
         // Determine receipt category for local folder routing
         const category = sale.status === "Dues_Recovery"
@@ -307,21 +313,13 @@ export default function ThermalSlipModal({
 
         const localFileName = `${sale.receiptNumber}.jpg`;
 
-        // Convert blob → base64
-        const base64data: string = await new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.readAsDataURL(blob);
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.onerror = reject;
-        });
-
-        // 1. Save to local MT UniPOS folder via API
+        // Save to local MT UniPOS folder via API
         let savedPath = "";
         try {
           const res = await fetch("/api/save-file", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ category, fileName: localFileName, fileBase64: base64data }),
+            body: JSON.stringify({ category, fileName: localFileName, fileBase64: dataUrl }),
           });
           const json = await res.json();
           if (json.success) {
@@ -331,21 +329,22 @@ export default function ThermalSlipModal({
           console.error("Local disk save error:", diskErr);
         }
 
-        // 2. Cloud backup (Supabase) or offline queue
-        const safeTenantId = currentUser?.tenantId || "UnknownTenant";
-        const cloudFileName = `${safeTenantId}/${category}/${localFileName}`;
-        if (navigator.onLine) {
-          try {
+        // Cloud backup (Supabase) or offline queue
+        try {
+          const blob = await (await fetch(dataUrl)).blob();
+          const safeTenantId = currentUser?.tenantId || "UnknownTenant";
+          const cloudFileName = `${safeTenantId}/${category}/${localFileName}`;
+          if (navigator.onLine) {
             const { error } = await supabase.storage.from("receipts").upload(cloudFileName, blob, {
               contentType: "image/jpeg",
               upsert: true,
             });
             if (error) await queueOfflineReceipt(sale.id || sale.receiptNumber, blob, cloudFileName);
-          } catch {
+          } else {
             await queueOfflineReceipt(sale.id || sale.receiptNumber, blob, cloudFileName);
           }
-        } else {
-          await queueOfflineReceipt(sale.id || sale.receiptNumber, blob, cloudFileName);
+        } catch (cloudErr) {
+          console.warn("Cloud backup skipped:", cloudErr);
         }
 
         setAutoSaveStatus("success");
@@ -359,7 +358,7 @@ export default function ThermalSlipModal({
     };
 
     performAutoSave();
-  }, [sale, localReceiptsDirHandle]);
+  }, [sale.receiptNumber]);
 
   const handlePrint = () => {
     const win = window.open("", "_blank", "width=420,height=800");
