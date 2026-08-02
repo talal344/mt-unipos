@@ -27,6 +27,10 @@ import {
   Users
 } from "lucide-react";
 import Link from "next/link";
+import { 
+  LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
+  XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer 
+} from "recharts";
 
 // ── SVG Sparkline (no external lib) ──────────────────────────────────────────
 function Sparkline({ values, color = "#38bdf8" }: { values: number[]; color?: string }) {
@@ -127,6 +131,30 @@ export default function ClientDashboardPage() {
     }
     return days;
   }, [sales]);
+
+  // Recharts Data Prep
+  const chartData = useMemo(() => {
+    const data = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(); d.setDate(d.getDate() - i);
+      const key = d.toDateString();
+      const daySales = sales.filter(s => new Date(s.date).toDateString() === key);
+      const revenue = daySales.reduce((a, s) => a + s.total, 0);
+      let cost = 0;
+      daySales.forEach(s => s.items.forEach(item => {
+        const prod = products.find(p => p.id === item.productId);
+        if (prod) cost += prod.costPrice * item.qty;
+      }));
+      data.push({
+        name: d.toLocaleDateString("en-US", { weekday: "short" }),
+        Revenue: revenue,
+        Profit: revenue - cost
+      });
+    }
+    return data;
+  }, [sales, products]);
+
+  const pieColors = ["#38bdf8", "#34d399", "#fbbf24", "#f87171", "#c084fc"];
 
   // Overdue customers
   const overdueCustomers = [...customers]
@@ -239,6 +267,87 @@ export default function ClientDashboardPage() {
             </div>
           </div>
         </div>
+
+        {/* -------------------- INTERACTIVE RECHARTS ANALYTICS -------------------- */}
+        <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Revenue & Profit Trends (Line Chart) */}
+          <div className="lg:col-span-2 bg-brand-dark-surface/40 border border-brand-dark-border p-5 rounded-2xl">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xs uppercase font-bold text-white tracking-wide flex items-center gap-1.5">
+                <BarChart3 className="text-brand-sky" size={14} />
+                7-Day Revenue & Profit Trends
+              </h3>
+            </div>
+            <div className="h-64 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
+                  <XAxis dataKey="name" stroke="#888" fontSize={10} tickLine={false} axisLine={false} />
+                  <YAxis stroke="#888" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(value) => `${value / 1000}k`} />
+                  <RechartsTooltip 
+                    contentStyle={{ backgroundColor: '#111', borderColor: '#333', borderRadius: '8px', fontSize: '12px' }}
+                    itemStyle={{ fontWeight: 'bold' }}
+                  />
+                  <Legend iconType="circle" wrapperStyle={{ fontSize: '10px' }} />
+                  <Line type="monotone" dataKey="Revenue" stroke="#0ea5e9" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
+                  <Line type="monotone" dataKey="Profit" stroke="#10b981" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Top Selling Products (Pie Chart) */}
+          <div className="bg-brand-dark-surface/40 border border-brand-dark-border p-5 rounded-2xl flex flex-col">
+            <h3 className="text-xs uppercase font-bold text-white tracking-wide flex items-center gap-1.5 mb-2">
+              <Package className="text-amber-400" size={14} />
+              Today's Top Products
+            </h3>
+            {todayTopProducts.length > 0 ? (
+              <div className="flex-1 min-h-[220px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={todayTopProducts}
+                      dataKey="revenue"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={80}
+                      paddingAngle={5}
+                      stroke="none"
+                    >
+                      {todayTopProducts.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={pieColors[index % pieColors.length]} />
+                      ))}
+                    </Pie>
+                    <RechartsTooltip 
+                      formatter={(value: any) => [`${currencySymbol} ${Number(value || 0).toLocaleString()}`, 'Revenue']}
+                      contentStyle={{ backgroundColor: '#111', borderColor: '#333', borderRadius: '8px', fontSize: '12px' }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+                {/* Custom Legend */}
+                <div className="mt-2 space-y-1.5 px-2">
+                  {todayTopProducts.slice(0, 3).map((p, i) => (
+                    <div key={p.name} className="flex justify-between items-center text-[10px]">
+                      <div className="flex items-center gap-1.5 truncate pr-2">
+                        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: pieColors[i] }} />
+                        <span className="text-gray-300 truncate">{p.name}</span>
+                      </div>
+                      <span className="font-bold text-white font-mono">{currencySymbol} {p.revenue.toLocaleString()}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="flex-1 flex flex-col items-center justify-center text-gray-500 opacity-50">
+                <Package size={32} className="mb-2" />
+                <p className="text-[10px]">No sales recorded today.</p>
+              </div>
+            )}
+          </div>
+        </section>
 
         {/* -------------------- VERTICAL DASHBOARD ROUTING -------------------- */}
 

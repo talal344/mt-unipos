@@ -20,6 +20,8 @@ export default function SiteHeader() {
   const [passcodeError, setPasscodeError]   = useState(false);
   const passcodeRef = useRef<HTMLInputElement>(null);
   const bufferTimer = useRef<ReturnType<typeof setTimeout>|null>(null);
+  const [logoTaps, setLogoTaps]             = useState(0);
+  const tapTimer = useRef<ReturnType<typeof setTimeout>|null>(null);
 
   // Listen for keyboard typing of secret code anywhere on the page
   useEffect(() => {
@@ -45,6 +47,20 @@ export default function SiteHeader() {
     setSuperVisible(false);
   };
 
+  const handleLogoTap = () => {
+    setLogoTaps(prev => {
+      const next = prev + 1;
+      if (next >= 5) {
+        setSuperVisible(true);
+        return 0;
+      }
+      return next;
+    });
+    
+    if (tapTimer.current) clearTimeout(tapTimer.current);
+    tapTimer.current = setTimeout(() => setLogoTaps(0), 2000); // reset if gap > 2s
+  };
+
   const navLinks = [
     { name: "Features",     href: "/features"      },
     { name: "About Us",     href: "/about"         },
@@ -59,14 +75,16 @@ export default function SiteHeader() {
         <div className="flex h-16 items-center justify-between">
 
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="bg-brand-sky p-2 rounded-lg text-black font-black flex items-center justify-center transition-all duration-300 group-hover:bg-brand-sky-light group-hover:rotate-6">
-              <Laptop size={20} />
-            </div>
-            <span className="text-xl font-black tracking-tighter text-white group-hover:sky-neon-text transition-all duration-300">
-              MT <span className="text-brand-sky">UniPOS</span>
-            </span>
-          </Link>
+          <div className="flex-shrink-0 flex items-center cursor-pointer select-none" onClick={handleLogoTap}>
+            <Link href="/" className="flex items-center gap-2 group">
+              <div className="bg-brand-sky p-2 rounded-lg text-black font-black flex items-center justify-center transition-all duration-300 group-hover:bg-brand-sky-light group-hover:rotate-6">
+                <Laptop size={20} />
+              </div>
+              <span className="text-xl font-black tracking-tighter text-white group-hover:sky-neon-text transition-all duration-300">
+                MT <span className="text-brand-sky">UniPOS</span>
+              </span>
+            </Link>
+          </div>
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-8">

@@ -9,7 +9,7 @@ import {
   Tag, DollarSign, Notebook, CreditCard, CheckCircle2, Printer,
   Landmark, Wallet, PlusCircle, Star, Check, X, Scale, Hash,
   Banknote, Calculator, ChevronDown, RotateCcw, AlertTriangle, Package,
-  Clock, Timer, LogOut, Download, WifiOff
+  Clock, Timer, LogOut, Download, WifiOff, Bell
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -60,7 +60,10 @@ export default function PosPage() {
   });
 
   // ── Inline qty edit in cart
-  const [editingQty, setEditingQty] = useState<{ id: string; val: string } | null>(null);
+  const [printingStatus, setPrintingStatus] = useState<"idle" | "printing" | "success" | "error">("idle");
+  const [editingQty, setEditingQty] = useState<{ id: string, val: string } | null>(null);
+
+  const lowStockAlerts = products.filter(p => p.stock <= p.minStock);
 
   // ── Customer
   const [selectedCustomer, setSelectedCustomer] = useState("Walk-in Customer");
@@ -105,6 +108,7 @@ export default function PosPage() {
   const [openingCash, setOpeningCash] = useState('');
   const [showOpenShiftModal, setShowOpenShiftModal] = useState<boolean>(false);
   const [showCloseShiftModal, setShowCloseShiftModal] = useState(false);
+  const [showLowStockModal, setShowLowStockModal] = useState(false);
   const [shiftStartTime, setShiftStartTime] = useState<string>(() => new Date().toISOString());
   const [mounted, setMounted] = useState(false);
 
@@ -645,6 +649,42 @@ export default function PosPage() {
               <div className="hidden sm:flex items-center gap-1 text-[10px] text-gray-400 font-mono">
                 <DollarSign size={10} className="text-brand-sky" />
                 Cash: <span className="text-brand-sky font-black ml-0.5">{currencySymbol} {shiftCashSales.toFixed(0)}</span>
+              </div>
+              <div className="relative">
+                <button 
+                  onClick={() => setShowLowStockModal(!showLowStockModal)}
+                  className={`flex items-center gap-1.5 text-[9px] font-black uppercase px-2 py-1 rounded transition ${lowStockAlerts.length > 0 ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40 animate-pulse' : 'bg-gray-800 text-gray-400 border border-gray-700 hover:bg-gray-700'}`}>
+                  <Bell size={10} />
+                  Alerts {lowStockAlerts.length > 0 && `(${lowStockAlerts.length})`}
+                </button>
+                {showLowStockModal && (
+                  <div className="absolute top-8 left-0 w-64 bg-[#111111] border border-brand-dark-border rounded-xl shadow-2xl z-50 overflow-hidden">
+                    <div className="bg-amber-500/10 border-b border-brand-dark-border px-3 py-2 flex justify-between items-center">
+                      <span className="text-[10px] font-black text-amber-400 uppercase flex items-center gap-1">
+                        <Package size={10} /> Low Stock Alerts
+                      </span>
+                      <button onClick={() => setShowLowStockModal(false)} className="text-gray-500 hover:text-white"><X size={12} /></button>
+                    </div>
+                    <div className="max-h-60 overflow-y-auto">
+                      {lowStockAlerts.length > 0 ? (
+                        lowStockAlerts.map(p => (
+                          <div key={p.id} className="flex justify-between items-center px-3 py-2 border-b border-brand-dark-border/40 hover:bg-brand-dark-border/20">
+                            <div>
+                              <div className="text-[10px] font-bold text-white truncate w-32">{p.name}</div>
+                              <div className="text-[8px] text-gray-500 font-mono">{p.sku}</div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-[10px] font-black text-red-400">{p.stock} left</div>
+                              <div className="text-[8px] text-gray-500">Min: {p.minStock}</div>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="px-3 py-6 text-center text-[10px] text-gray-500">All stock levels healthy!</div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
               <button onClick={async () => {
                 try {

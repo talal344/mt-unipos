@@ -247,10 +247,7 @@ export default function TrackTicketPage() {
     ? new Date(demoTicket.trialEndsAt) < new Date()
     : false;
 
-  // Scroll to bottom of chat when messages update
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [ticketType === "demo" ? demoTicket?.messages?.length : supportTicket?.replies?.length]);
+  // Auto-scroll removed from useEffect to prevent jump on search
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -272,6 +269,9 @@ export default function TrackTicketPage() {
     
     setMessageText("");
     setMessageSent(true);
+    setTimeout(() => {
+      chatEndRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }, 100);
     setTimeout(() => setMessageSent(false), 3000);
   };
 

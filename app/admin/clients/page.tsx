@@ -720,6 +720,7 @@ export default function AdminClientsPage() {
   };
 
   const [addForm, setAddForm] = useState({
+    id: "",
     businessName: "",
     ownerName: "",
     email: "",
@@ -760,6 +761,7 @@ export default function AdminClientsPage() {
     registerTenant(addForm);
     setShowAddModal(false);
     setAddForm({
+      id: "",
       businessName: "",
       ownerName: "",
       email: "",
@@ -1412,6 +1414,37 @@ export default function AdminClientsPage() {
             </div>
 
             <form onSubmit={handleAddSubmit} className="space-y-4 text-xs font-sans">
+              <div>
+                <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
+                  Tenant Key (Leave blank to auto-generate)
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="e.g. MT-1234"
+                    value={addForm.id}
+                    onChange={(e) =>
+                      setAddForm({ ...addForm, id: e.target.value.toUpperCase() })
+                    }
+                    className="flex-1 bg-black border border-brand-dark-border p-2.5 rounded text-white focus:outline-none focus:border-purple-500 font-mono tracking-widest uppercase"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const words = addForm.businessName.split(" ").filter(Boolean);
+                      let initials = "TEN";
+                      if (words.length === 1) initials = words[0].substring(0, 3).toUpperCase();
+                      else if (words.length > 1) initials = words.map(w => w[0]).join("").toUpperCase();
+                      setAddForm(prev => ({ ...prev, id: `${initials}-${Math.floor(1000 + Math.random() * 9000)}` }));
+                    }}
+                    className="px-3 bg-purple-600 hover:bg-purple-500 text-white rounded font-bold transition flex items-center justify-center"
+                    title="Auto-Generate"
+                  >
+                    <RefreshCw size={14} />
+                  </button>
+                </div>
+              </div>
+
               <div>
                 <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
                   Company / Store Name

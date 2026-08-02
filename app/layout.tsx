@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { GlobalProvider } from "@/context/global-context";
+import AuthGuard from "@/components/auth-guard";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -26,7 +27,9 @@ export default function RootLayout({
       </head>
       <body suppressHydrationWarning className="bg-black text-gray-100 min-h-full flex flex-col font-sans">
         <GlobalProvider>
-          {children}
+          <AuthGuard>
+            {children}
+          </AuthGuard>
         </GlobalProvider>
         <script
           dangerouslySetInnerHTML={{

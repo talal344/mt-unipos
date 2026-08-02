@@ -329,7 +329,7 @@ interface GlobalContextType {
   rejectDemoRequest: (id: string, reason: string) => void;
   addDemoMessage: (ticketNumber: string, message: string, sender: "Client" | "Admin") => void;
   deleteDemoRequest: (id: string) => void;
-  registerTenant: (tenant: Omit<Tenant, "id" | "signupDate" | "status" | "usersCount" | "monthlyRevenue" | "branches">) => string;
+  registerTenant: (tenant: Omit<Tenant, "id" | "signupDate" | "status" | "usersCount" | "monthlyRevenue" | "branches"> & { id?: string }) => string;
   updateTenantStatus: (id: string, status: Tenant["status"]) => void;
   deleteTenant: (id: string) => void;
   setTenantCurrency: (id: string, currency: string) => void;
@@ -1247,16 +1247,24 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
   };
 
 
-  const registerTenant = (tenant: Omit<Tenant, "id" | "signupDate" | "status" | "usersCount" | "monthlyRevenue" | "branches">) => {
-    // Generate initials from businessName
-    const words = tenant.businessName.split(" ").filter(Boolean);
-    let initials = "";
-    if (words.length === 1) {
-      initials = words[0].substring(0, 3).toUpperCase();
-    } else {
-      initials = words.map(w => w[0]).join("").toUpperCase();
+  const registerTenant = (tenant: Omit<Tenant, "id" | "signupDate" | "status" | "usersCount" | "monthlyRevenue" | "branches"> & { id?: string }) => {
+    let finalId = tenant.id;
+    if (!finalId) {
+      // Generate initials from businessName
+      const words = tenant.businessName.split(" ").filter(Boolean);
+      let initials = "";
+      if (words.length === 1) {
+        initials = words[0].substring(0, 3).toUpperCase();
+      } else {
+        initials = words.map(w => w[0]).join("").toUpperCase();
+      }
+      finalId = `${initials}-${Math.floor(1000 + Math.random() * 9000)}`;
     }
-    const generatedId = `${initials}-${Math.floor(1000 + Math.random() * 9000)}`;
+
+    // Ensure uniqueness
+    while (tenants.some(t => t.id === finalId)) {
+      finalId = `${finalId}-${Math.floor(Math.random() * 100)}`;
+    }
 
     const signupDateStr = new Date().toISOString().split("T")[0];
     const statusVal = tenant.isTrial ? "Trial" : "Active";
@@ -1268,7 +1276,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
 
     const newTenant: Tenant = {
       ...tenant,
-      id: generatedId,
+      id: finalId,
       signupDate: signupDateStr,
       status: statusVal,
       trialEndsAt: trialEndsAtVal,
@@ -1305,7 +1313,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     setSaasInvoices(updatedInvs);
     localStorage.setItem("unipos_invoices", JSON.stringify(updatedInvs));
 
-    return generatedId;
+    return finalId;
   };
 
   const updateTenantStatus = (id: string, status: Tenant["status"]) => {
