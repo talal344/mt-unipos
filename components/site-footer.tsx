@@ -32,15 +32,15 @@ export default function SiteFooter() {
           <div className="space-y-2 text-xs">
             <div className="flex items-center gap-2 hover:text-white transition">
               <Mail size={14} className="text-brand-sky" />
-              <span>sales@mtunipos.com</span>
+              <a href="mailto:miantalal2@gmail.com">miantalal2@gmail.com</a>
             </div>
             <div className="flex items-center gap-2 hover:text-white transition">
               <Phone size={14} className="text-brand-sky" />
-              <span>+92 321 5550100</span>
+              <a href="tel:03396399895">03396399895</a>
             </div>
             <div className="flex items-center gap-2 text-emerald-400 hover:underline transition">
               <MessageCircle size={14} />
-              <a href="https://wa.me/923215550100" target="_blank" rel="noreferrer">WhatsApp Chat Support</a>
+              <a href="https://wa.me/923396399895" target="_blank" rel="noreferrer">WhatsApp Chat Support (03396399895)</a>
             </div>
           </div>
         </div>
@@ -72,7 +72,7 @@ export default function SiteFooter() {
           <div className="pt-2 border-t border-brand-dark-border/50 text-[11px] leading-relaxed text-gray-500">
             <div className="flex items-start gap-1.5">
               <MapPin size={16} className="text-brand-sky shrink-0" />
-              <span>Corporate HQ: Penthouse #4A, Eden Heights, Gulberg III, Lahore, Pakistan.</span>
+              <span>Headquarters: Kohinoor, Faisalabad, Pakistan.</span>
             </div>
           </div>
         </div>

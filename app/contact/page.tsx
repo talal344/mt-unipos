@@ -58,29 +58,29 @@ export default function ContactPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="bg-brand-dark-surface/50 border border-brand-dark-border p-4 rounded-xl space-y-2">
               <Mail className="text-brand-sky" size={20} />
-              <h4 className="text-white font-bold text-xs">Email Communication</h4>
-              <p className="text-[10px] text-gray-400">sales@mtunipos.com<br />support@mtunipos.com</p>
+              <h4 className="text-white font-bold text-xs">Direct Email</h4>
+              <p className="text-[10px] text-gray-400">miantalal2@gmail.com</p>
             </div>
             <div className="bg-brand-dark-surface/50 border border-brand-dark-border p-4 rounded-xl space-y-2">
               <Phone className="text-brand-sky" size={20} />
-              <h4 className="text-white font-bold text-xs">Phone Hotline</h4>
-              <p className="text-[10px] text-gray-400">Mon-Fri, 9am - 6pm PKT<br />+92 321 5550100</p>
+              <h4 className="text-white font-bold text-xs">Direct Hotline</h4>
+              <p className="text-[10px] text-gray-400">03396399895</p>
             </div>
           </div>
 
           <div className="bg-brand-dark-surface/50 border border-brand-dark-border p-5 rounded-xl flex items-start gap-4">
             <MapPin className="text-brand-sky shrink-0" size={24} />
             <div>
-              <h4 className="text-white font-bold text-xs mb-1">Corporate Headquarters</h4>
+              <h4 className="text-white font-bold text-xs mb-1">Headquarters Location</h4>
               <p className="text-[10px] text-gray-400 leading-relaxed">
-                Penthouse Suite #4A, Eden Heights, Main Boulevard, Gulberg III, Lahore, Punjab, Pakistan.
+                Kohinoor, Faisalabad, Pakistan.
               </p>
             </div>
           </div>
 
           {/* Interactive WhatsApp Hotline */}
           <a
-            href="https://wa.me/923215550100"
+            href="https://wa.me/923396399895"
             target="_blank"
             rel="noreferrer"
             className="flex items-center justify-between bg-emerald-500/10 border border-emerald-500/30 hover:border-emerald-500/80 p-4 rounded-xl transition"
@@ -89,7 +89,7 @@ export default function ContactPage() {
               <MessageCircle className="text-emerald-400 animate-pulse" size={24} />
               <div className="text-left">
                 <h4 className="text-emerald-400 font-bold text-xs">Immediate WhatsApp Assistance</h4>
-                <p className="text-[9px] text-gray-400">Direct query handling with Mian Talal's dev desk</p>
+                <p className="text-[9px] text-gray-400">Direct chat with Founder Mian Talal (03396399895)</p>
               </div>
             </div>
             <span className="text-[10px] font-black uppercase text-emerald-400 tracking-wider">Chat Now</span>
