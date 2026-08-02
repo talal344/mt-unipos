@@ -1283,55 +1283,59 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     }
 
     // Auto sync customer wallet balances from return sales & wallet payment history
-    const allSales = savedSales ? JSON.parse(savedSales) : [];
-    const allCusts = savedCustomers ? JSON.parse(savedCustomers) : [];
-    if (allSales.length > 0 && allCusts.length > 0) {
-      let dirty = false;
-      const syncedCusts = allCusts.map((c: Customer) => {
-        if (c.id === "C-203" || c.name === "Walk-in Customer") return c;
+    try {
+      const allSales: SaleTransaction[] = Array.isArray(savedSales) ? savedSales : (typeof savedSales === "string" ? JSON.parse(savedSales) : []);
+      const allCusts: Customer[] = Array.isArray(savedCustomers) ? savedCustomers : (typeof savedCustomers === "string" ? JSON.parse(savedCustomers) : []);
+      if (allSales.length > 0 && allCusts.length > 0) {
+        let dirty = false;
+        const syncedCusts = allCusts.map((c: Customer) => {
+          if (c.id === "C-203" || c.name === "Walk-in Customer") return c;
 
-        let computedWalletFromSales = 0;
-        allSales.forEach((s: SaleTransaction) => {
-          const isMatch = (s.customerName || "").toLowerCase().trim() === c.name.toLowerCase().trim() || (c.customerNo && c.customerNo !== "N/A" && s.customerNo === c.customerNo);
-          if (!isMatch) return;
+          let computedWalletFromSales = 0;
+          allSales.forEach((s: SaleTransaction) => {
+            const isMatch = (s.customerName || "").toLowerCase().trim() === (c.name || "").toLowerCase().trim() || (c.customerNo && c.customerNo !== "N/A" && s.customerNo === c.customerNo);
+            if (!isMatch) return;
 
-          const isReturn = s.status === "Returned" || s.status === "Refunded";
-          const isWallet = s.paymentMethod === "Store Wallet Credit" || s.paymentMethod === "Wallet";
+            const isReturn = s.status === "Returned" || s.status === "Refunded";
+            const isWallet = s.paymentMethod === "Store Wallet Credit" || s.paymentMethod === "Wallet";
 
-          if (isWallet) {
-            if (isReturn) computedWalletFromSales += s.total;
-            else computedWalletFromSales -= s.total;
-          } else if (s.splitPayments) {
-            const splitAmt = s.splitPayments["Store Wallet Credit"] || s.splitPayments["Wallet"] || 0;
-            if (splitAmt > 0) {
-              if (isReturn) computedWalletFromSales += splitAmt;
-              else computedWalletFromSales -= splitAmt;
+            if (isWallet) {
+              if (isReturn) computedWalletFromSales += s.total;
+              else computedWalletFromSales -= s.total;
+            } else if (s.splitPayments) {
+              const splitAmt = s.splitPayments["Store Wallet Credit"] || s.splitPayments["Wallet"] || 0;
+              if (splitAmt > 0) {
+                if (isReturn) computedWalletFromSales += splitAmt;
+                else computedWalletFromSales -= splitAmt;
+              }
             }
+          });
+
+          let finalWallet = Math.max(0, c.walletBalance || 0, computedWalletFromSales);
+          let finalCredit = c.creditBalance;
+          if (finalCredit < 0) {
+            finalWallet += Math.abs(finalCredit);
+            finalCredit = 0;
           }
+
+          if (finalWallet !== c.walletBalance || finalCredit !== c.creditBalance) {
+            dirty = true;
+            return {
+              ...c,
+              creditBalance: finalCredit,
+              walletBalance: finalWallet
+            };
+          }
+          return c;
         });
 
-        let finalWallet = Math.max(0, c.walletBalance || 0, computedWalletFromSales);
-        let finalCredit = c.creditBalance;
-        if (finalCredit < 0) {
-          finalWallet += Math.abs(finalCredit);
-          finalCredit = 0;
+        if (dirty) {
+          setCustomers(syncedCusts);
+          saveTenantData("unipos_customers", syncedCusts);
         }
-
-        if (finalWallet !== c.walletBalance || finalCredit !== c.creditBalance) {
-          dirty = true;
-          return {
-            ...c,
-            creditBalance: finalCredit,
-            walletBalance: finalWallet
-          };
-        }
-        return c;
-      });
-
-      if (dirty) {
-        setCustomers(syncedCusts);
-        saveTenantData("unipos_customers", syncedCusts);
       }
+    } catch (e) {
+      console.error("Wallet auto-sync error:", e);
     }
 
     // 9. Load Expenses
