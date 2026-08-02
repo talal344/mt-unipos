@@ -5,6 +5,8 @@ import { useGlobalContext } from "@/context/global-context";
 import ClientSidebar from "@/components/client-sidebar";
 import { MessageSquare, Users, Award, ShieldCheck, Mail, Send, DollarSign } from "lucide-react";
 
+import ThermalSlipModal from "@/components/thermal-slip-modal";
+
 export default function CrmPage() {
   const { customers, suppliers, recordDueRecovery, recordSupplierPayment, currencySymbol } = useGlobalContext();
   const [successMsg, setSuccessMsg] = useState("");
@@ -20,6 +22,11 @@ export default function CrmPage() {
   // Customer dues recovery states
   const [recoveryCustomer, setRecoveryCustomer] = useState<any>(null);
   const [recoveryAmount, setRecoveryAmount] = useState("");
+  const [recoveryPaymentMethod, setRecoveryPaymentMethod] = useState("Cash");
+
+  // Thermal Slip Modal state
+  const [thermalSale, setThermalSale] = useState<any>(null);
+  const [showThermalModal, setShowThermalModal] = useState(false);
 
   // Supplier payout states
   const [payoutSupplier, setPayoutSupplier] = useState<any>(null);
@@ -39,8 +46,14 @@ export default function CrmPage() {
     e.preventDefault();
     if (!recoveryCustomer || !recoveryAmount) return;
 
-    recordDueRecovery(recoveryCustomer.id, Number(recoveryAmount));
-    setSuccessMsg(`Due Recovery logged! Settle amount of ${currencySymbol} ${recoveryAmount} credited to ${recoveryCustomer.name}. Cash asset debited.`);
+    const amt = Number(recoveryAmount);
+    const recSale = recordDueRecovery(recoveryCustomer.id, amt, recoveryPaymentMethod);
+    if (recSale) {
+      setThermalSale(recSale);
+      setShowThermalModal(true);
+    }
+
+    setSuccessMsg(`Due Recovery logged! Settle amount of ${currencySymbol} ${recoveryAmount} credited via ${recoveryPaymentMethod}. Receipt saved in /Dues_Clear/`);
     setRecoveryCustomer(null);
     setRecoveryAmount("");
     setTimeout(() => setSuccessMsg(""), 3500);
@@ -288,6 +301,18 @@ export default function CrmPage() {
               </div>
 
               <div>
+                <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Payment Method</label>
+                <select
+                  value={recoveryPaymentMethod}
+                  onChange={e => setRecoveryPaymentMethod(e.target.value)}
+                  className="w-full bg-black border border-brand-dark-border p-2.5 rounded text-white font-bold focus:outline-none focus:border-brand-sky mb-3"
+                >
+                  <option value="Cash">💵 Cash</option>
+                  <option value="Card">💳 Credit / Debit Card</option>
+                  <option value="Bank Transfer">🏦 Bank Transfer</option>
+                  <option value="EasyPaisa / JazzCash">📱 EasyPaisa / JazzCash</option>
+                </select>
+
                 <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Recovery Payment Received</label>
                 <input
                   type="number"
@@ -348,6 +373,13 @@ export default function CrmPage() {
         </div>
       )}
 
+      {showThermalModal && thermalSale && (
+        <ThermalSlipModal
+          sale={thermalSale}
+          currencySymbol={currencySymbol}
+          onClose={() => { setShowThermalModal(false); setThermalSale(null); }}
+        />
+      )}
     </div>
   );
 }
