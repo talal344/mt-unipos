@@ -521,6 +521,7 @@ export default function ReportsPage() {
 
       XLSX.writeFile(wb, `Reports_Excel_Overview_Report_${period}_${isoDate(new Date())}.xlsx`);
       triggerToast("📁 Complete Overview Excel report ready! Saved into Reports/Excel/ folder.");
+    } else if (activeTab === "sales") {
       // Sheet 1: Transactions Summary
       const salesData = filteredSales.map(s => ({
         "Receipt #": s.receiptNumber,
