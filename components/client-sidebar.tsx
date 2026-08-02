@@ -179,36 +179,43 @@ export default function ClientSidebar() {
 
       <div className="flex flex-col flex-1 min-h-0">
         {/* Brand Header */}
-        <div className="py-3 px-4 flex items-center justify-between gap-3 border-b border-brand-dark-border shrink-0 bg-black/40">
-          <Link href="/dashboard" className="flex items-center gap-2 flex-grow min-w-0">
-            <img src="/logo.png" alt="MT UniPOS Logo" className="h-11 w-auto max-w-[180px] object-contain drop-shadow-[0_0_12px_rgba(14,165,233,0.35)] transition-transform hover:scale-105" />
+        <div className="py-4 px-3 border-b border-brand-dark-border shrink-0 bg-black/50 flex items-center justify-center">
+          <Link href="/dashboard" className="w-full flex items-center justify-center">
+            <img 
+              src="/logo.png" 
+              alt="MT UniPOS Logo" 
+              className="h-16 w-full max-w-[220px] object-contain drop-shadow-[0_0_16px_rgba(14,165,233,0.4)] transition-transform duration-300 hover:scale-105" 
+            />
           </Link>
-          {/* Bell */}
-          <button
-            onClick={() => setShowNotifications(v => !v)}
-            className={`relative ml-1 w-8 h-8 flex items-center justify-center rounded-lg transition ${
-              showNotifications ? "bg-amber-500/20 border border-amber-500/40" : "hover:bg-brand-dark-border"
-            }`}
-          >
-            <Bell size={14} className={totalAlerts > 0 ? "text-amber-400" : "text-gray-500"} />
-            {totalAlerts > 0 && (
-              <span className="absolute -top-1 -right-1 min-w-[16px] h-4 bg-red-500 text-white text-[8px] font-black rounded-full flex items-center justify-center leading-none px-0.5">
-                {totalAlerts > 9 ? "9+" : totalAlerts}
-              </span>
-            )}
-          </button>
         </div>
 
         {/* User Role Card */}
         <div className="p-3 border-b border-brand-dark-border/40 space-y-2 shrink-0">
-          <div className="flex items-center gap-3 bg-black/40 border border-brand-dark-border/80 p-2.5 rounded-lg">
-            <div className="w-8 h-8 rounded-full bg-brand-sky text-black font-black flex items-center justify-center text-xs shrink-0">
-              {currentUser?.name?.substring(0, 2).toUpperCase() || "MT"}
+          <div className="flex items-center justify-between gap-2 bg-black/40 border border-brand-dark-border/80 p-2.5 rounded-lg">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-8 h-8 rounded-full bg-brand-sky text-black font-black flex items-center justify-center text-xs shrink-0">
+                {currentUser?.name?.substring(0, 2).toUpperCase() || "MT"}
+              </div>
+              <div className="min-w-0">
+                <h4 className="text-white font-bold text-xs truncate">{currentUser?.name || "Mian Talal"}</h4>
+                <p className="text-[9px] text-brand-sky font-bold uppercase tracking-wider">{userRole}</p>
+              </div>
             </div>
-            <div className="min-w-0">
-              <h4 className="text-white font-bold text-xs truncate">{currentUser?.name || "Mian Talal"}</h4>
-              <p className="text-[9px] text-brand-sky font-bold uppercase tracking-wider">{userRole}</p>
-            </div>
+            {/* Bell Icon inside User Card */}
+            <button
+              onClick={() => setShowNotifications(v => !v)}
+              className={`relative shrink-0 w-8 h-8 flex items-center justify-center rounded-lg transition ${
+                showNotifications ? "bg-amber-500/20 border border-amber-500/40" : "hover:bg-brand-dark-border/80"
+              }`}
+              title="Notifications"
+            >
+              <Bell size={15} className={totalAlerts > 0 ? "text-amber-400" : "text-gray-400"} />
+              {totalAlerts > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[16px] h-4 bg-red-500 text-white text-[8px] font-black rounded-full flex items-center justify-center leading-none px-0.5">
+                  {totalAlerts > 9 ? "9+" : totalAlerts}
+                </span>
+              )}
+            </button>
           </div>
         </div>
 
