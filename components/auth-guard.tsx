@@ -44,8 +44,9 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     // Role-based restrictions
     const role = currentUser.role;
 
-    // Cashier can ONLY access /pos
-    if (role === "Cashier" && pathname !== "/pos") {
+    // Cashier allowed routes (/pos, /sales, /customers, /restaurant, /kds)
+    const cashierAllowedRoutes = ["/pos", "/sales", "/customers", "/restaurant", "/kds"];
+    if (role === "Cashier" && !cashierAllowedRoutes.some(route => pathname.startsWith(route))) {
       router.replace("/pos");
       return;
     }
