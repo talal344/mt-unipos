@@ -1528,29 +1528,36 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     } else { saveTenantData("unipos_kitchen", []); setKitchenTickets([]); }
 
     // 13. Load Accounting Ledgers
+    const defaultInitAccounts: AccountLedger[] = [
+      { code: "1001", name: "Main Cash Box / Till", type: "Asset", balance: 0 },
+      { code: "1002", name: "Bank Current Account", type: "Asset", balance: 0 },
+      { code: "1003", name: "Product Stock Valuation", type: "Asset", balance: 0 },
+      { code: "1004", name: "Accounts Receivable (Customer Due)", type: "Asset", balance: 0 },
+      { code: "2001", name: "Accounts Payable (Supplier Debt)", type: "Liability", balance: 0 },
+      { code: "3001", name: "Owner Capital & Retained Earnings", type: "Equity", balance: 0 },
+      { code: "4001", name: "POS & Retail Sales Revenue", type: "Revenue", balance: 0 },
+      { code: "5001", name: "Cost of Goods Sold (COGS)", type: "Expense", balance: 0 },
+      { code: "5002", name: "Operating & Utility Expenses", type: "Expense", balance: 0 }
+    ];
+
     const savedAccounts = localStorage.getItem("unipos_accounts_" + currentUser.tenantId);
-    if (savedAccounts) setAccounts(JSON.parse(savedAccounts));
-    else if (isPrimaryDemo) {
-      const initAccounts: AccountLedger[] = [
-        // Assets
-        { code: "1001", name: "Main Cash Box", type: "Asset", balance: 145000 },
-        { code: "1002", name: "Bank Current Account", type: "Asset", balance: 2450000 },
-        { code: "1003", name: "Product Stock Valuation", type: "Asset", balance: 154000 },
-        { code: "1004", name: "Accounts Receivable (Customer Due)", type: "Asset", balance: 3200 },
-        // Liabilities
-        { code: "2001", name: "Accounts Payable (Supplier Debt)", type: "Liability", balance: 63200 },
-        // Equity
-        { code: "3001", name: "Retained Earnings", type: "Equity", balance: 2500000 },
-        // Revenue
-        { code: "4001", name: "POS Retail Sales Revenue", type: "Revenue", balance: 4895 },
-        // Expenses
-        { code: "5001", name: "Cost of Goods Sold (COGS)", type: "Expense", balance: 2710 },
-        { code: "5002", name: "Utility Expenses", type: "Expense", balance: 48000 },
-        { code: "5003", name: "Office Admin Expenses", type: "Expense", balance: 2400 }
-      ];
-      saveTenantData("unipos_accounts", initAccounts);
-      setAccounts(initAccounts);
-    } else { saveTenantData("unipos_accounts", []); setAccounts([]); }
+    if (savedAccounts) {
+      try {
+        const parsed: AccountLedger[] = JSON.parse(savedAccounts);
+        if (parsed && parsed.length > 0) {
+          setAccounts(parsed);
+        } else {
+          saveTenantData("unipos_accounts", defaultInitAccounts);
+          setAccounts(defaultInitAccounts);
+        }
+      } catch {
+        saveTenantData("unipos_accounts", defaultInitAccounts);
+        setAccounts(defaultInitAccounts);
+      }
+    } else {
+      saveTenantData("unipos_accounts", defaultInitAccounts);
+      setAccounts(defaultInitAccounts);
+    }
 
 
 
