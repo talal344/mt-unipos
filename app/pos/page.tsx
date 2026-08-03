@@ -582,10 +582,20 @@ export default function PosPage() {
     if (isSplit) {
       // 1. Calculate splits
       const splits = { ...parsedSplits };
+      let currentTotal = totalSplitEntered;
+
+      // 1b. Auto-absorb minor leftover decimal fractions (< 1.0 PKR/currency)
+      const diff = cartGrandTotal - currentTotal;
+      if (diff > 0 && diff < 1.0) {
+        const primaryKey = splits["Cash"] > 0 ? "Cash" : (splits["On Credit"] > 0 ? "On Credit" : "Cash");
+        splits[primaryKey] = (splits[primaryKey] || 0) + diff;
+        currentTotal = cartGrandTotal;
+      }
 
       // 2. Validate total
-      if (totalSplitEntered < cartGrandTotal) {
-        triggerToast(`Total split entered (${currencySymbol} ${totalSplitEntered.toFixed(2)}) is less than Grand Total (${currencySymbol} ${cartGrandTotal.toFixed(2)})`);
+      if (currentTotal < cartGrandTotal) {
+        const rem = (cartGrandTotal - currentTotal).toFixed(2);
+        triggerToast(`Payment incomplete! Remaining balance of ${currencySymbol} ${rem} must be entered.`);
         return;
       }
 
@@ -1617,11 +1627,29 @@ export default function PosPage() {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <label className="block text-[10px] uppercase font-bold text-gray-500">Split Breakdown</label>
-                    {selectedCustomer !== "Walk-in Customer" && (
-                      <span className="text-[9px] text-emerald-400 font-mono font-bold">
-                        💳 Wallet: {currencySymbol} {selectedCustWalletBalance.toFixed(2)}
-                      </span>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {remainingSplit > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const targetKey = parsedSplits["Cash"] > 0 ? "Cash" : (parsedSplits["On Credit"] > 0 ? "On Credit" : "Cash");
+                            const currentVal = parsedSplits[targetKey] || 0;
+                            setSplitAmounts(prev => ({
+                              ...prev,
+                              [targetKey]: (currentVal + remainingSplit).toFixed(2)
+                            }));
+                          }}
+                          className="text-[9px] bg-brand-sky/20 border border-brand-sky/40 text-brand-sky hover:bg-brand-sky hover:text-black font-bold px-2 py-0.5 rounded transition animate-pulse"
+                        >
+                          ⚡ Auto Balance ({currencySymbol} {remainingSplit.toFixed(2)})
+                        </button>
+                      )}
+                      {selectedCustomer !== "Walk-in Customer" && (
+                        <span className="text-[9px] text-emerald-400 font-mono font-bold">
+                          💳 Wallet: {currencySymbol} {selectedCustWalletBalance.toFixed(2)}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className="grid grid-cols-2 gap-2.5 bg-black/40 p-3 rounded-xl border border-brand-dark-border/60">
                     {[
@@ -1652,9 +1680,23 @@ export default function PosPage() {
                                     "Store Wallet Credit": applyAmt.toFixed(2)
                                   }));
                                 }}
-                                className="text-[8px] text-emerald-400 hover:underline font-mono"
-                              >
+                                >
                                 [Apply Max]
+                              </button>
+                            )}
+                            {!isWallet && remainingSplit > 0 && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const currentVal = parsedSplits[m.id] || 0;
+                                  setSplitAmounts(prev => ({
+                                    ...prev,
+                                    [m.id]: (currentVal + remainingSplit).toFixed(2)
+                                  }));
+                                }}
+                                className="text-[8px] text-brand-sky hover:underline font-mono"
+                              >
+                                [+ Remaining]
                               </button>
                             )}
                           </div>
@@ -1714,6 +1756,23 @@ export default function PosPage() {
                   </>
                 )}
               </div>
+
+              {isSplit && remainingSplit > 0 && (
+                <div className="bg-red-500/10 border border-red-500/30 p-2.5 rounded-xl text-[10px] text-red-400 font-bold flex items-center justify-between animate-shake">
+                  <span>⚠️ Unpaid Remaining: {currencySymbol} {remainingSplit.toFixed(2)}</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const targetKey = parsedSplits["Cash"] > 0 ? "Cash" : (parsedSplits["On Credit"] > 0 ? "On Credit" : "Cash");
+                      const currentVal = parsedSplits[targetKey] || 0;
+                      setSplitAmounts(prev => ({ ...prev, [targetKey]: (currentVal + remainingSplit).toFixed(2) }));
+                    }}
+                    className="bg-red-500 text-white text-[9px] px-2 py-1 rounded font-mono uppercase tracking-wider hover:bg-red-600 font-bold"
+                  >
+                    Auto-Fill Balance
+                  </button>
+                </div>
+              )}
 
               {/* Cash change */}
               {!isSplit && paymentMethod === "Cash" && (
