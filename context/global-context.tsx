@@ -1049,6 +1049,40 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     
     setTenants(currentTenants);
 
+    // ── HARD DRIVE LICENSE FILE RECOVERY ──────────────────────────────────────
+    // If browser cache was cleared or user switched browsers on the same computer,
+    // restore tenant license data directly from the computer's hard drive!
+    fetch("/api/license-file")
+      .then(res => res.json())
+      .then(json => {
+        if (json.success && json.data && Array.isArray(json.data.tenants)) {
+          let tenantsUpdated = false;
+          const hardDriveTenants: Tenant[] = json.data.tenants;
+          const currentList = [...currentTenants];
+          for (const hdt of hardDriveTenants) {
+            const existingIdx = currentList.findIndex(t => t.id === hdt.id);
+            if (existingIdx === -1) {
+              currentList.push(hdt);
+              tenantsUpdated = true;
+            } else {
+              // Ensure license fields are merged
+              if (hdt.licenseExpiresAt || hdt.connectivityPlan) {
+                currentList[existingIdx] = { ...currentList[existingIdx], ...hdt };
+                tenantsUpdated = true;
+              }
+            }
+          }
+          if (tenantsUpdated) {
+            currentTenants = currentList;
+            localStorage.setItem("unipos_tenants", JSON.stringify(currentTenants));
+            setTenants(currentTenants);
+            console.log("✅ Restored tenant licenses from computer hard drive file!");
+          }
+        }
+      })
+      .catch(() => {});
+    // ─────────────────────────────────────────────────────────────────────────
+
     // 3. Load Invoices
     const savedInvoices = localStorage.getItem("unipos_invoices");
     let currentInvoices: SaaSInvoice[] = [];
@@ -3075,6 +3109,15 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
 
       setTenants(updated);
       localStorage.setItem("unipos_tenants", JSON.stringify(updated));
+
+      // Backup to computer hard drive file (survives browser clear & browser switches on same PC)
+      try {
+        fetch("/api/license-file", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ tenants: updated }),
+        }).catch(() => {});
+      } catch {}
 
       return { success: true, tenantId: importedTenant.id };
     } catch (err) {

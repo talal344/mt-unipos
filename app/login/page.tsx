@@ -59,6 +59,15 @@ function LoginContent() {
     }
   }, [searchParams]);
 
+  useEffect(() => {
+    if (!inputTenantId && tenants.length > 0) {
+      const customTenant = tenants.find(t => t.id !== "MT-1001");
+      if (customTenant) {
+        setInputTenantId(customTenant.id);
+      }
+    }
+  }, [tenants, inputTenantId]);
+
   const handleCredentialsSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) { setErrorMessage("Please enter both email and password."); return; }
