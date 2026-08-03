@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import { generateLicenseKey } from "@/lib/license-key";
 import { useGlobalContext } from "@/context/global-context";
 import AdminSidebar from "@/components/admin-sidebar";
 import {
@@ -659,6 +660,17 @@ export default function AdminClientsPage() {
   const [restoreTenantId, setRestoreTenantId] = useState<string | null>(null);
   const [restoreLoading, setRestoreLoading] = useState(false);
 
+  // ─── License Key State ─────────────────────────────────────────────────
+  const [licenseKeyModal, setLicenseKeyModal] = useState<{
+    tenant: any;
+    key: string;
+    loading: boolean;
+    ownerEmail: string;
+    durationDays: number;
+    connectivityPlan: "offline-only" | "online-only" | "hybrid";
+  } | null>(null);
+  // ──────────────────────────────────────────────────────────────
+
   const filteredTenants = useMemo(() => {
     return tenants.filter((t) => {
       const q = tenantSearch.toLowerCase();
@@ -815,12 +827,14 @@ export default function AdminClientsPage() {
     billingCycle: "monthly" as const,
     isTrial: false,
     trialDays: 7,
+    connectivityPlan: "hybrid" as "offline-only" | "online-only" | "hybrid",
   });
 
   const [editForm, setEditForm] = useState({
     plan: "Starter" as const,
     billingCycle: "monthly" as const,
     defaultCurrency: "PKR",
+    connectivityPlan: "hybrid" as "offline-only" | "online-only" | "hybrid",
   });
 
   const [credForm, setCredForm] = useState({
@@ -856,6 +870,7 @@ export default function AdminClientsPage() {
       billingCycle: "monthly",
       isTrial: false,
       trialDays: 7,
+      connectivityPlan: "hybrid",
     });
     triggerToast("Provisioned new Tenant database sharding successfully!");
   };
@@ -866,6 +881,7 @@ export default function AdminClientsPage() {
       plan: tenant.plan,
       billingCycle: tenant.billingCycle,
       defaultCurrency: tenant.defaultCurrency || "PKR",
+      connectivityPlan: tenant.connectivityPlan || "hybrid",
     });
     setShowEditModal(true);
   };
@@ -875,6 +891,7 @@ export default function AdminClientsPage() {
     if (!selectedTenant) return;
     selectedTenant.plan = editForm.plan;
     selectedTenant.billingCycle = editForm.billingCycle;
+    selectedTenant.connectivityPlan = editForm.connectivityPlan;
     setTenantCurrency(selectedTenant.id, editForm.defaultCurrency);
     setShowEditModal(false);
     setSelectedTenant(null);
@@ -897,6 +914,39 @@ export default function AdminClientsPage() {
       triggerToast(`✅ Permanently deleted Tenant "${name}" and all its data.`);
     }
   };
+
+  // ─── License Key Handler ───────────────────────────────────────────────
+  const handleGenerateLicenseKey = async (
+    tenant: any,
+    ownerEmail?: string,
+    durationDays: number = 30,
+    connectivityPlan: "offline-only" | "online-only" | "hybrid" = tenant.connectivityPlan || "hybrid"
+  ) => {
+    const email = ownerEmail || tenant.email;
+    setLicenseKeyModal({
+      tenant,
+      key: "",
+      loading: true,
+      ownerEmail: email,
+      durationDays,
+      connectivityPlan,
+    });
+    try {
+      const key = await generateLicenseKey(tenant, email, durationDays, connectivityPlan);
+      setLicenseKeyModal({
+        tenant,
+        key,
+        loading: false,
+        ownerEmail: email,
+        durationDays,
+        connectivityPlan,
+      });
+    } catch {
+      setLicenseKeyModal(null);
+      triggerToast("License key generate karne mein error aayi!");
+    }
+  };
+  // ──────────────────────────────────────────────────────────────
 
   const handleOpenPresets = (tenant: any) => {
     setSelectedTenant(tenant);
@@ -1326,9 +1376,26 @@ export default function AdminClientsPage() {
                             </div>
                           </td>
                           <td className="p-4">
-                            <span className="bg-purple-500/10 border border-purple-500/20 text-purple-400 font-bold px-2 py-0.5 rounded text-[10px]">
-                              {tenant.plan} ({tenant.billingCycle})
-                            </span>
+                            <div className="space-y-1">
+                              <span className="bg-purple-500/10 border border-purple-500/20 text-purple-400 font-bold px-2 py-0.5 rounded text-[10px] block w-fit">
+                                {tenant.plan} ({tenant.billingCycle})
+                              </span>
+                              <span
+                                className={`px-2 py-0.5 rounded text-[9px] font-bold block w-fit border ${
+                                  tenant.connectivityPlan === "offline-only"
+                                    ? "bg-amber-500/10 border-amber-500/30 text-amber-400"
+                                    : tenant.connectivityPlan === "online-only"
+                                    ? "bg-sky-500/10 border-sky-500/30 text-sky-400"
+                                    : "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+                                }`}
+                              >
+                                {tenant.connectivityPlan === "offline-only"
+                                  ? "📴 Offline Only"
+                                  : tenant.connectivityPlan === "online-only"
+                                  ? "🌐 Online Only"
+                                  : "🔄 Hybrid Sync"}
+                              </span>
+                            </div>
                           </td>
                           <td className="p-4 font-bold text-white">
                             {tenant.defaultCurrency || "PKR"}
@@ -1410,6 +1477,13 @@ export default function AdminClientsPage() {
                                 <Upload size={12} />
                               </button>
                               <button
+                                onClick={() => handleGenerateLicenseKey(tenant)}
+                                className="p-1.5 bg-violet-500/10 hover:bg-violet-500/30 text-violet-400 hover:text-white rounded transition"
+                                title="Generate Offline License Key"
+                              >
+                                <Shield size={12} />
+                              </button>
+                              <button
                                 onClick={() =>
                                   handleDeleteTenant(tenant.id, tenant.businessName)
                                 }
@@ -1431,7 +1505,164 @@ export default function AdminClientsPage() {
         )}
       </main>
 
-      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      {/* ══════════════════════════════════════════════════════════════════════ */}
+      {/* OFFLINE LICENSE KEY MODAL                                                 */}
+      {/* ══════════════════════════════════════════════════════════════════════ */}
+      {licenseKeyModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4">
+          <div className="bg-brand-dark-surface border border-violet-500/40 p-6 rounded-2xl w-full max-w-lg shadow-2xl">
+            {/* Header */}
+            <div className="flex justify-between items-center border-b border-brand-dark-border pb-3 mb-5">
+              <div className="flex items-center gap-2">
+                <Shield size={16} className="text-violet-400" />
+                <h3 className="font-black text-white text-sm">Offline License Key</h3>
+              </div>
+              <button onClick={() => setLicenseKeyModal(null)} className="text-gray-400 hover:text-white">
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Tenant Info */}
+            <div className="bg-black/30 border border-brand-dark-border rounded-xl p-3 mb-4 space-y-1 text-xs font-mono">
+              <div className="flex gap-2">
+                <span className="text-gray-500 w-24">Tenant ID</span>
+                <span className="text-violet-400 font-bold">{licenseKeyModal.tenant.id}</span>
+              </div>
+              <div className="flex gap-2">
+                <span className="text-gray-500 w-24">Business</span>
+                <span className="text-white">{licenseKeyModal.tenant.businessName}</span>
+              </div>
+              <div className="flex gap-2">
+                <span className="text-gray-500 w-24">Owner</span>
+                <span className="text-white">{licenseKeyModal.tenant.ownerName}</span>
+              </div>
+              <div className="flex gap-2">
+                <span className="text-gray-500 w-24">Status</span>
+                <span className={licenseKeyModal.tenant.status === 'Active' ? 'text-emerald-400' : 'text-amber-400'}>
+                  {licenseKeyModal.tenant.status}
+                </span>
+              </div>
+            </div>
+
+            {/* Info Box */}
+            <div className="bg-violet-500/10 border border-violet-500/30 rounded-xl p-3 mb-4 text-xs text-violet-300 leading-relaxed space-y-1">
+              <span className="font-black block">🔑 Strict Owner License Generator</span>
+              <p className="text-[10px] text-gray-400">
+                Ye key specifically is owner email ke liye locked hai. Expire hone ke baad offline access stop ho jayega.
+              </p>
+            </div>
+
+            {/* Customization Inputs */}
+            <div className="space-y-3 mb-4 bg-black/40 border border-brand-dark-border p-3 rounded-xl">
+              <div>
+                <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
+                  Bound Owner Email (Strict Security)
+                </label>
+                <input
+                  type="email"
+                  value={licenseKeyModal.ownerEmail}
+                  onChange={(e) =>
+                    handleGenerateLicenseKey(
+                      licenseKeyModal.tenant,
+                      e.target.value,
+                      licenseKeyModal.durationDays,
+                      licenseKeyModal.connectivityPlan
+                    )
+                  }
+                  className="w-full bg-black border border-brand-dark-border p-2 rounded text-white text-xs font-mono focus:outline-none focus:border-violet-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
+                    License Validity / Duration
+                  </label>
+                  <select
+                    value={licenseKeyModal.durationDays}
+                    onChange={(e) =>
+                      handleGenerateLicenseKey(
+                        licenseKeyModal.tenant,
+                        licenseKeyModal.ownerEmail,
+                        parseInt(e.target.value, 10),
+                        licenseKeyModal.connectivityPlan
+                      )
+                    }
+                    className="w-full bg-black border border-brand-dark-border p-2 rounded text-white text-xs focus:outline-none focus:border-violet-500 font-bold"
+                  >
+                    <option value={7}>7 Days (Trial)</option>
+                    <option value={30}>30 Days (1 Month)</option>
+                    <option value={90}>90 Days (3 Months)</option>
+                    <option value={365}>365 Days (1 Year)</option>
+                    <option value={-1}>Lifetime Access</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
+                    Connectivity Mode
+                  </label>
+                  <select
+                    value={licenseKeyModal.connectivityPlan}
+                    onChange={(e) =>
+                      handleGenerateLicenseKey(
+                        licenseKeyModal.tenant,
+                        licenseKeyModal.ownerEmail,
+                        licenseKeyModal.durationDays,
+                        e.target.value as any
+                      )
+                    }
+                    className="w-full bg-black border border-brand-dark-border p-2 rounded text-white text-xs focus:outline-none focus:border-violet-500 font-bold"
+                  >
+                    <option value="hybrid">🔄 Hybrid (Online + Offline)</option>
+                    <option value="offline-only">📴 Offline Only (Local DB)</option>
+                    <option value="online-only">🌐 Online Only (Supabase)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Key Display */}
+            {licenseKeyModal.loading ? (
+              <div className="flex items-center justify-center py-8 gap-3 text-violet-400 text-xs font-mono">
+                <div className="w-5 h-5 border-2 border-violet-400 border-t-transparent rounded-full animate-spin" />
+                Generating secure key...
+              </div>
+            ) : (
+              <>
+                <div className="relative">
+                  <textarea
+                    readOnly
+                    value={licenseKeyModal.key}
+                    rows={5}
+                    className="w-full bg-black border border-violet-500/40 rounded-xl p-3 text-violet-300 font-mono text-[10px] resize-none focus:outline-none leading-relaxed"
+                  />
+                </div>
+                <div className="flex gap-2 mt-3">
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(licenseKeyModal.key);
+                      triggerToast('License key clipboard mein copy ho gayi!');
+                    }}
+                    className="flex-1 py-2.5 bg-violet-600 hover:bg-violet-500 text-white font-black text-xs uppercase rounded-lg flex items-center justify-center gap-2 transition"
+                  >
+                    <Key size={13} />
+                    Copy License Key
+                  </button>
+                  <button
+                    onClick={() => setLicenseKeyModal(null)}
+                    className="px-4 py-2.5 bg-brand-dark-border hover:bg-brand-dark-border/80 text-gray-300 font-bold text-xs rounded-lg transition"
+                  >
+                    Close
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════════════ */}
       {/* RESTORE BACKUP MODAL                                                   */}
       {/* ═══════════════════════════════════════════════════════════════════════ */}
       {showRestoreModal && (

@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { queueSyncKey, getQueuedItems, dequeueItem, STORE_SYNC_KEYS, STORE_RECEIPTS } from "@/lib/offline-sync";
+import { verifyAndDecodeLicenseKey } from "@/lib/license-key";
 
 // Types
 export interface DemoMessage {
@@ -62,6 +63,8 @@ export interface Tenant {
   isTrial?: boolean;
   trialDays?: number;
   trialEndsAt?: string;
+  connectivityPlan?: "offline-only" | "online-only" | "hybrid";
+  licenseExpiresAt?: string;
 }
 
 // ─── PERMANENT SEED TENANTS ───────────────────────────────────────────────────
@@ -535,6 +538,8 @@ interface GlobalContextType {
   salesTaxRate: number;
   setSalesTaxRate: (rate: number) => void;
   isOffline: boolean;
+  importTenantFromLicenseKey: (key: string, enteredEmail?: string) => Promise<{ success: boolean; tenantId?: string; error?: string }>;
+  isOnlineOnlyBlocked: boolean;
 }
 
 const GlobalContext = createContext<GlobalContextType | undefined>(undefined);
@@ -577,15 +582,25 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
           parsedData = value; // Fallback
         }
         
-        // Immediately queue it to prevent data loss if page reloads before upsert finishes
+        // Check if the last segment looks like a tenant ID (contains a dash and letters)
+        const isTenantKey = /^[A-Z]+-\d+$/.test(possibleTenantId) ||
+          possibleTenantId.startsWith('AFS-') ||
+          possibleTenantId.startsWith('DEMO-') ||
+          possibleTenantId.startsWith('MT-');
+
+        // Check if tenant has offline-only connectivity plan
+        const localTenantsRaw = localStorage.getItem("unipos_tenants");
+        if (localTenantsRaw && isTenantKey) {
+          try {
+            const parsedTenants: Tenant[] = JSON.parse(localTenantsRaw);
+            const targetTenant = parsedTenants.find(t => t.id === possibleTenantId);
+            if (targetTenant?.connectivityPlan === "offline-only") {
+              return; // Do NOT sync to Supabase for offline-only tenant!
+            }
+          } catch {}
+        }
         queueSyncKey(key).then(() => {
           if (!navigator.onLine) return;
-
-          // Check if the last segment looks like a tenant ID (contains a dash and letters)
-          const isTenantKey = /^[A-Z]+-\d+$/.test(possibleTenantId) ||
-            possibleTenantId.startsWith('AFS-') ||
-            possibleTenantId.startsWith('DEMO-') ||
-            possibleTenantId.startsWith('MT-');
 
           if (isTenantKey) {
             const collection = key.replace('_' + possibleTenantId, '');
@@ -3009,6 +3024,71 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     saveTenantData("unipos_accounts", updatedAccounts);
   };
 
+  // ─── OFFLINE LICENSE KEY IMPORT ─────────────────────────────────────────────
+  // Naya PC par internet na ho to admin ki di hui license key se tenant activate karo.
+  const importTenantFromLicenseKey = async (
+    key: string,
+    enteredEmail?: string
+  ): Promise<{ success: boolean; tenantId?: string; error?: string }> => {
+    try {
+      const payload = await verifyAndDecodeLicenseKey(key.trim());
+      if (!payload) {
+        return { success: false, error: "Invalid license key. Signature match nahi hui ya key corrupt hai." };
+      }
+
+      // 1. Expiry Check
+      if (payload.expiresAt && payload.expiresAt !== "LIFETIME") {
+        const expDate = new Date(payload.expiresAt + "T23:59:59");
+        if (expDate < new Date()) {
+          return { success: false, error: `License key expire ho chuki hai (${payload.expiresAt}). Admin se nai key lein.` };
+        }
+      }
+
+      // 2. Owner Email strict binding check
+      if (enteredEmail && payload.ownerEmail) {
+        if (enteredEmail.trim().toLowerCase() !== payload.ownerEmail.trim().toLowerCase()) {
+          return {
+            success: false,
+            error: `Ye key specifically ${payload.ownerEmail} ke liye issued hai. Aapka entered email match nahi kar raha.`
+          };
+        }
+      }
+
+      const importedTenant = payload.tenant as unknown as Tenant;
+      if (!importedTenant || !importedTenant.id) {
+        return { success: false, error: "License key mein tenant data missing hai." };
+      }
+
+      // Set connectivityPlan & licenseExpiresAt on tenant
+      importedTenant.connectivityPlan = payload.connectivityPlan || importedTenant.connectivityPlan || "hybrid";
+      importedTenant.licenseExpiresAt = payload.expiresAt || importedTenant.licenseExpiresAt || "LIFETIME";
+
+      // Merge into tenants
+      const existingIndex = tenants.findIndex(t => t.id === importedTenant.id);
+      let updated: Tenant[];
+      if (existingIndex >= 0) {
+        updated = [...tenants];
+        updated[existingIndex] = { ...updated[existingIndex], ...importedTenant };
+      } else {
+        updated = [importedTenant, ...tenants];
+      }
+
+      setTenants(updated);
+      localStorage.setItem("unipos_tenants", JSON.stringify(updated));
+
+      return { success: true, tenantId: importedTenant.id };
+    } catch (err) {
+      return { success: false, error: "Key process karte waqt error aayi. Dobara try karein." };
+    }
+  };
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  // Check if current logged in user belongs to an online-only tenant while offline
+  const currentTenantObj = tenants.find(t => t.id === currentUser?.tenantId);
+  const isOnlineOnlyBlocked = Boolean(
+    isOffline && currentTenantObj?.connectivityPlan === "online-only"
+  );
+
   return (
     <GlobalContext.Provider
       value={{
@@ -3118,6 +3198,8 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         salesTaxRate,
         setSalesTaxRate,
         isOffline,
+        importTenantFromLicenseKey,
+        isOnlineOnlyBlocked,
       }}
     >
       {children}

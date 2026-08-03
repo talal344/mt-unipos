@@ -11,7 +11,7 @@ import {
 function LoginContent() {
   const router       = useRouter();
   const searchParams = useSearchParams();
-  const { tenants, setCurrentUser } = useGlobalContext();
+  const { tenants, setCurrentUser, importTenantFromLicenseKey } = useGlobalContext();
 
   const [inputTenantId, setInputTenantId] = useState("");
   const [email,    setEmail]    = useState("");
@@ -24,6 +24,14 @@ function LoginContent() {
   const [verificationSuccess, setVerificationSuccess] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [loading, setLoading]   = useState(false);
+
+  // Offline Activation State
+  const [showOfflineActivation, setShowOfflineActivation] = useState(false);
+  const [offlineKey, setOfflineKey] = useState("");
+  const [offlineEmail, setOfflineEmail] = useState("");
+  const [offlineLoading, setOfflineLoading] = useState(false);
+  const [offlineError, setOfflineError] = useState("");
+  const [offlineSuccess, setOfflineSuccess] = useState("");
 
   const activeTenant = tenants.find(t => t.id === inputTenantId) || null;
   const presets      = activeTenant?.credentialPresets || [];
@@ -66,6 +74,21 @@ function LoginContent() {
     if (activeTenant.status === "Suspended") {
       setErrorMessage("This workspace has been suspended. Please contact administration.");
       return;
+    }
+
+    // Check Online-Only requirement
+    if (activeTenant.connectivityPlan === "online-only" && typeof navigator !== "undefined" && !navigator.onLine) {
+      setErrorMessage("This workspace is configured for Online-Only mode. Active internet connection is required to sign in.");
+      return;
+    }
+
+    // Check License Expiration
+    if (activeTenant.licenseExpiresAt && activeTenant.licenseExpiresAt !== "LIFETIME") {
+      const expDate = new Date(activeTenant.licenseExpiresAt + "T23:59:59");
+      if (expDate < new Date()) {
+        setErrorMessage(`License expired on ${activeTenant.licenseExpiresAt}. Please contact administration for a new license key.`);
+        return;
+      }
     }
 
     // Load custom employees registered under this specific tenant ID
@@ -145,6 +168,26 @@ function LoginContent() {
         router.push(role === "Cashier" ? "/pos" : "/dashboard");
       }, 1200);
     }, 600);
+  };
+
+  const handleOfflineActivation = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!offlineKey.trim()) { setOfflineError("License key paste karein."); return; }
+    setOfflineLoading(true);
+    setOfflineError("");
+    setOfflineSuccess("");
+    const result = await importTenantFromLicenseKey(offlineKey.trim(), offlineEmail.trim());
+    setOfflineLoading(false);
+    if (result.success) {
+      setOfflineSuccess(`Tenant activate ho gaya! Workspace ID: ${result.tenantId}. Ab login karein.`);
+      setInputTenantId(result.tenantId || "");
+      if (offlineEmail.trim()) setEmail(offlineEmail.trim());
+      setOfflineKey("");
+      setOfflineEmail("");
+      setTimeout(() => setShowOfflineActivation(false), 3000);
+    } else {
+      setOfflineError(result.error || "Key invalid hai.");
+    }
   };
 
   return (
@@ -350,6 +393,83 @@ function LoginContent() {
             {" · "}
             <Link href="/" className="text-gray-500 hover:text-white">Back to Website</Link>
           </p>
+        </div>
+
+        {/* ── OFFLINE ACTIVATION PANEL ── */}
+        <div className="w-full max-w-md relative z-10">
+          <button
+            type="button"
+            onClick={() => { setShowOfflineActivation(v => !v); setOfflineError(""); setOfflineSuccess(""); }}
+            className="w-full flex items-center justify-between text-[10px] text-gray-500 hover:text-gray-300 border border-dashed border-brand-dark-border/50 hover:border-violet-500/40 rounded-xl px-4 py-3 transition group"
+          >
+            <span className="flex items-center gap-2">
+              <Lock size={11} className="text-violet-400" />
+              Offline ho? License Key se activate karein
+            </span>
+            <span className={`transition-transform duration-200 ${showOfflineActivation ? "rotate-180" : ""}`}>▾</span>
+          </button>
+
+          {showOfflineActivation && (
+            <div className="mt-2 bg-brand-dark-surface border border-violet-500/30 rounded-xl p-5 space-y-4 animate-fade-in-up">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <Lock size={11} className="text-violet-400" />
+                  <span className="text-[10px] font-black text-violet-400 uppercase tracking-wider">Offline License Activation</span>
+                </div>
+                <p className="text-[9px] text-gray-500 leading-relaxed">
+                  Admin se mili hui license key yahan paste karein. Internet ke baghair bhi kaam karega.
+                </p>
+              </div>
+
+              {offlineError && (
+                <div className="bg-red-500/10 border border-red-500/30 p-2.5 rounded-lg text-[10px] flex items-start gap-2 text-red-400">
+                  <AlertCircle size={12} className="shrink-0 mt-0.5" /> {offlineError}
+                </div>
+              )}
+              {offlineSuccess && (
+                <div className="bg-emerald-500/10 border border-emerald-500/30 p-2.5 rounded-lg text-[10px] flex items-start gap-2 text-emerald-400">
+                  <CheckCircle2 size={12} className="shrink-0 mt-0.5" /> {offlineSuccess}
+                </div>
+              )}
+
+              <form onSubmit={handleOfflineActivation} className="space-y-3">
+                <div>
+                  <label className="block text-[10px] uppercase font-bold text-gray-400 tracking-wider mb-1">
+                    Owner Corporate Email
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={offlineEmail}
+                    onChange={e => setOfflineEmail(e.target.value)}
+                    placeholder="owner@company.com"
+                    className="w-full bg-black border border-brand-dark-border focus:border-violet-500 p-2.5 rounded-xl text-white text-xs outline-none transition mb-2"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] uppercase font-bold text-gray-400 tracking-wider mb-1">
+                    License Key
+                  </label>
+                  <textarea
+                    value={offlineKey}
+                    onChange={e => setOfflineKey(e.target.value)}
+                    placeholder="UNIPOS-V1.eyJ0ZW5hbn..."
+                    rows={4}
+                    className="w-full bg-black border border-brand-dark-border focus:border-violet-500 p-3 rounded-xl text-white text-[10px] font-mono outline-none transition resize-none"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={offlineLoading}
+                  className="w-full py-2.5 bg-violet-600 hover:bg-violet-500 disabled:opacity-60 text-white font-black uppercase text-xs tracking-wider rounded-xl flex items-center justify-center gap-2 transition"
+                >
+                  {offlineLoading
+                    ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    : <><Lock size={12} /> Verify &amp; Activate Workspace</>}
+                </button>
+              </form>
+            </div>
+          )}
         </div>
       </div>
     </div>
