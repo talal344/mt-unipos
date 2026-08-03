@@ -3083,7 +3083,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         if (enteredEmail.trim().toLowerCase() !== payload.ownerEmail.trim().toLowerCase()) {
           return {
             success: false,
-            error: `Ye key specifically ${payload.ownerEmail} ke liye issued hai. Aapka entered email match nahi kar raha.`
+            error: "Entered email address is not authorized for this license key. Email match nahi kar raha."
           };
         }
       }
