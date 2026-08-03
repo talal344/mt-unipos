@@ -36,10 +36,22 @@ export default function RootLayout({
             __html: `
               if ('serviceWorker' in navigator) {
                 window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js').then(function(registration) {
-                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
-                  }, function(err) {
-                    console.log('ServiceWorker registration failed: ', err);
+                  navigator.serviceWorker.register('/sw.js').then(function(reg) {
+                    reg.onupdatefound = function() {
+                      var installingWorker = reg.installing;
+                      if (installingWorker) {
+                        installingWorker.onstatechange = function() {
+                          if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            if (window.caches) {
+                              caches.keys().then(function(names) {
+                                for (var name of names) caches.delete(name);
+                              });
+                            }
+                            window.location.reload();
+                          }
+                        };
+                      }
+                    };
                   });
                 });
               }
