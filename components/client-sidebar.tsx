@@ -7,7 +7,7 @@ import { useGlobalContext } from "@/context/global-context";
 import {
   Laptop, LayoutDashboard, ShoppingCart, Database, DollarSign, Utensils,
   Heart, Users, Users2, MessageCircle, FileDown, Brain, ExternalLink,
-  LogOut, ShieldAlert, ShoppingBag, Receipt, Sliders, Bell, X, Package, CreditCard, Monitor, Settings
+  LogOut, ShieldAlert, ShoppingBag, Receipt, Sliders, Bell, X, Package, CreditCard, Monitor, Settings, Landmark
 } from "lucide-react";
 
 export default function ClientSidebar() {
@@ -61,6 +61,7 @@ export default function ClientSidebar() {
     { name: "Purchase Orders",      href: "/purchases",  icon: ShoppingBag,     roles: ["Owner","Manager","Warehouse Staff"],     verticals: ["Retail","Pharmacy","Bookstore"] },
     { name: "Inventory Ledger",     href: "/inventory",  icon: Database,        roles: ["Owner","Manager","Warehouse Staff"],     verticals: ["Retail","Pharmacy","Bookstore"] },
     { name: "Expense Vouchers",     href: "/expenses",   icon: Receipt,         roles: ["Owner","Manager","Accountant"],                             verticals: ["Retail","F&B","Pharmacy","Bookstore"] },
+    { name: "Accounting Ledgers",   href: "/accounting", icon: Landmark,        roles: ["Owner","Manager","Accountant"],                             verticals: ["Retail","F&B","Pharmacy","Bookstore"] },
     { name: "Staff Payroll",        href: "/payroll",    icon: Users,           roles: ["Owner","Manager","HR"],                                     verticals: ["Retail","F&B","Pharmacy","Bookstore"] },
     { name: "Staff & Roles",        href: "/staff",      icon: Users,           roles: ["Owner","HR"],                                               verticals: ["Retail","F&B","Pharmacy","Bookstore"] },
     { name: "CRM Campaigns",        href: "/crm",        icon: MessageCircle,   roles: ["Owner","Manager"],                                          verticals: ["Retail","F&B","Pharmacy"] },
