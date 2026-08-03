@@ -69,8 +69,16 @@ export default function ClientDashboardPage() {
     customers,
     setCurrencySymbol,
     salesTaxRate,
-    setSalesTaxRate
+    setSalesTaxRate,
   } = useGlobalContext();
+
+  const sym = currencySymbol || "PKR";
+  const formatAmt = (val: number) => {
+    if (sym === "PKR") {
+      return `PKR ${Math.round(val).toLocaleString()}`;
+    }
+    return `${sym} ${val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  };
 
   // 1. Look up active tenant sharded business type
   const activeTenant = tenants.find(t => t.id === currentUser?.tenantId);
@@ -297,51 +305,53 @@ export default function ClientDashboardPage() {
           </div>
 
           {/* Top Selling Products (Pie Chart) */}
-          <div className="bg-brand-dark-surface/40 border border-brand-dark-border p-5 rounded-2xl flex flex-col">
+          <div className="bg-brand-dark-surface/40 border border-brand-dark-border p-5 rounded-2xl flex flex-col min-h-[300px] overflow-hidden">
             <h3 className="text-xs uppercase font-bold text-white tracking-wide flex items-center gap-1.5 mb-2">
               <Package className="text-amber-400" size={14} />
               Today's Top Products
             </h3>
             {todayTopProducts.length > 0 ? (
-              <div className="flex-1 min-h-[220px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={todayTopProducts}
-                      dataKey="revenue"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={80}
-                      paddingAngle={5}
-                      stroke="none"
-                    >
-                      {todayTopProducts.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={pieColors[index % pieColors.length]} />
-                      ))}
-                    </Pie>
-                    <RechartsTooltip 
-                      formatter={(value: any) => [`${currencySymbol} ${Number(value || 0).toLocaleString()}`, 'Revenue']}
-                      contentStyle={{ backgroundColor: '#111', borderColor: '#333', borderRadius: '8px', fontSize: '12px' }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
+              <div className="flex flex-col justify-between flex-1">
+                <div className="h-[150px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={todayTopProducts}
+                        dataKey="revenue"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={45}
+                        outerRadius={65}
+                        paddingAngle={4}
+                        stroke="none"
+                      >
+                        {todayTopProducts.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={pieColors[index % pieColors.length]} />
+                        ))}
+                      </Pie>
+                      <RechartsTooltip 
+                        formatter={(value: any) => [formatAmt(Number(value || 0)), 'Revenue']}
+                        contentStyle={{ backgroundColor: '#111', borderColor: '#333', borderRadius: '8px', fontSize: '12px' }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
                 {/* Custom Legend */}
-                <div className="mt-2 space-y-1.5 px-2">
+                <div className="mt-2 space-y-1.5 px-1 border-t border-brand-dark-border/40 pt-2">
                   {todayTopProducts.slice(0, 3).map((p, i) => (
                     <div key={p.name} className="flex justify-between items-center text-[10px]">
                       <div className="flex items-center gap-1.5 truncate pr-2">
-                        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: pieColors[i] }} />
+                        <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: pieColors[i] }} />
                         <span className="text-gray-300 truncate">{p.name}</span>
                       </div>
-                      <span className="font-bold text-white font-mono">{currencySymbol} {p.revenue.toLocaleString()}</span>
+                      <span className="font-bold text-white font-mono shrink-0">{formatAmt(p.revenue)}</span>
                     </div>
                   ))}
                 </div>
               </div>
             ) : (
-              <div className="flex-1 flex flex-col items-center justify-center text-gray-500 opacity-50">
+              <div className="flex-1 flex flex-col items-center justify-center text-gray-500 opacity-50 py-8">
                 <Package size={32} className="mb-2" />
                 <p className="text-[10px]">No sales recorded today.</p>
               </div>
@@ -389,7 +399,7 @@ export default function ClientDashboardPage() {
                   <span className="text-[10px] uppercase font-bold tracking-wider">Sales Today</span>
                   <DollarSign size={16} className="text-emerald-400" />
                 </div>
-                <div className="text-xl font-black text-white">{currencySymbol} {totalRevenue.toLocaleString()}</div>
+                <div className="text-xl font-black text-white">{formatAmt(totalRevenue)}</div>
                 <p className="text-[9px] text-gray-500">{totalSalesCount} food checkouts completed</p>
               </div>
             </div>
@@ -842,7 +852,7 @@ export default function ClientDashboardPage() {
                           <div className="text-[10px] font-bold text-white truncate">{p.name}</div>
                           <div className="text-[8px] text-gray-600">{p.qty} sold</div>
                         </div>
-                        <span className="text-[10px] font-black font-mono text-brand-sky shrink-0">{currencySymbol} {Math.round(p.revenue).toLocaleString()}</span>
+                        <span className="text-[10px] font-black font-mono text-brand-sky shrink-0">{formatAmt(p.revenue)}</span>
                       </div>
                     ))}
                   </div>
@@ -889,7 +899,7 @@ export default function ClientDashboardPage() {
                           <div className="text-[10px] font-bold text-white truncate">{c.name}</div>
                           <div className="text-[9px] text-gray-500 font-mono">{c.mobile}</div>
                         </div>
-                        <span className="text-red-400 font-black font-mono text-[11px] shrink-0">{currencySymbol} {c.creditBalance.toLocaleString(undefined,{maximumFractionDigits:0})}</span>
+                        <span className="text-red-400 font-black font-mono text-[11px] shrink-0">{formatAmt(c.creditBalance)}</span>
                       </div>
                     ))}
                   </div>

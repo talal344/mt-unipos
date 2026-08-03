@@ -572,7 +572,8 @@ export default function PosPage() {
   const cartTax        = cart.reduce((a, i) => a + i.subtotal * (i.taxRate / 100), 0);
   const discountAmount = discountType === "percent" ? cartSubtotal * (discountValue / 100) : discountValue;
   const loyaltyDiscount= redeemLoyalty ? 100 : 0;
-  const cartGrandTotal = Math.max(0, cartSubtotal + cartTax - discountAmount - loyaltyDiscount);
+  const rawGrandTotal  = Math.max(0, cartSubtotal + cartTax - discountAmount - loyaltyDiscount);
+  const cartGrandTotal = (currencySymbol === "PKR" || !currencySymbol) ? Math.round(rawGrandTotal) : rawGrandTotal;
 
   // ── Checkout
   const handleConfirmCheckout = (e: React.FormEvent) => {
