@@ -32,6 +32,13 @@ function LoginContent() {
   const [offlineLoading, setOfflineLoading] = useState(false);
   const [offlineError, setOfflineError] = useState("");
   const [offlineSuccess, setOfflineSuccess] = useState("");
+  const [isDesktopApp, setIsDesktopApp] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && ((window as any).electronAPI || navigator.userAgent.includes("Electron"))) {
+      setIsDesktopApp(true);
+    }
+  }, []);
 
   const activeTenant = tenants.find(t => t.id === inputTenantId) || null;
   const presets      = activeTenant?.credentialPresets || [];
@@ -402,12 +409,27 @@ function LoginContent() {
             </form>
           )}
 
-          <p className="text-[9px] text-gray-600 text-center">
-            Don&apos;t have an account?{" "}
-            <Link href="/demo" className="text-brand-sky hover:underline font-bold">Request a Demo</Link>
-            {" · "}
-            <Link href="/" className="text-gray-500 hover:text-white">Back to Website</Link>
-          </p>
+          {/* Quick links & Desktop action bar */}
+          <div className="space-y-2 text-center pt-2">
+            <div className="flex items-center justify-center gap-3 text-[10px] text-gray-400 flex-wrap">
+              <Link href="/demo" className="text-brand-sky font-bold hover:underline flex items-center gap-1">
+                📝 Apply for Demo
+              </Link>
+              <span>·</span>
+              <Link href="/track-ticket" className="text-purple-400 font-bold hover:underline flex items-center gap-1">
+                🎟️ Track Ticket
+              </Link>
+              <span>·</span>
+              <Link href="/features" className="text-emerald-400 font-bold hover:underline flex items-center gap-1">
+                ✨ Features
+              </Link>
+            </div>
+            {!isDesktopApp && (
+              <p className="text-[9px] text-gray-600">
+                <Link href="/" className="text-gray-500 hover:text-white">← Back to Website</Link>
+              </p>
+            )}
+          </div>
         </div>
 
         {/* ── OFFLINE ACTIVATION PANEL ── */}
