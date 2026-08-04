@@ -250,16 +250,29 @@ export default function GoogleDriveBackupModal({
                   </div>
 
                   <div className="col-span-2">
-                    <label className="block text-[11px] uppercase font-bold text-gray-400 mb-1">
-                      Google Refresh Token (Permanent Access Token)
-                    </label>
+                    <div className="flex justify-between items-center mb-1">
+                      <label className="block text-[11px] uppercase font-bold text-gray-400">
+                        Google Refresh Token (Permanent Access Token)
+                      </label>
+                      <a
+                        href="https://developers.google.com/oauthplayground/"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-[10px] text-sky-400 underline font-bold flex items-center gap-1"
+                      >
+                        <ExternalLink size={10} /> Get Refresh Token Link
+                      </a>
+                    </div>
                     <input
                       type="password"
                       value={config.refreshToken}
                       onChange={(e) => setConfig({ ...config, refreshToken: e.target.value })}
-                      placeholder="1//04xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                      placeholder="1//04xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx (Optional - check Guide tab)"
                       className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white text-xs font-mono focus:outline-none focus:border-sky-500"
                     />
+                    <p className="text-[10px] text-gray-500 mt-1">
+                      💡 Yeh token Google Drive API ko 24/7 access deta hai. Agar khali chhorien ge to system local cloud vault mein encrypted backup tayyar rakhta hai.
+                    </p>
                   </div>
                 </div>
 
