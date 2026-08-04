@@ -1058,19 +1058,28 @@ export default function AdminClientsPage() {
             color: #0f172a;
           }
           .key-box {
-            background: #090d16;
-            color: #38bdf8;
-            border: 2px solid #0ea5e9;
+            background: #f8fafc;
+            color: #0f172a;
+            border: 2px solid #0284c7;
             border-radius: 12px;
             padding: 20px;
             margin-bottom: 30px;
             word-break: break-all;
             font-family: 'JetBrains Mono', monospace;
             font-size: 11px;
-            line-height: 1.6;
+            line-height: 1.7;
             user-select: all;
             -webkit-user-select: all;
             cursor: text;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+          }
+          ::selection {
+            background: #0284c7;
+            color: #ffffff;
+          }
+          ::-moz-selection {
+            background: #0284c7;
+            color: #ffffff;
           }
           .footer {
             border-top: 1px solid #e2e8f0;
@@ -1087,13 +1096,16 @@ export default function AdminClientsPage() {
           }
           @media print {
             body { padding: 0; }
-            .no-print { display: none; }
+            .no-print { display: none !important; }
           }
         </style>
       </head>
       <body>
-        <div class="no-print" style="margin-bottom: 20px; text-align: right;">
-          <button onclick="window.print()" style="background: #0284c7; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 12px;">
+        <div class="no-print" style="margin-bottom: 20px; display: flex; justify-content: flex-end; gap: 10px;">
+          <button onclick="copyKeyFromPdf()" style="background: #16a34a; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 12px; font-family: sans-serif;">
+            📋 Copy License Key Direct
+          </button>
+          <button onclick="window.print()" style="background: #0284c7; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 12px; font-family: sans-serif;">
             🖨️ Print / Save as PDF
           </button>
         </div>
@@ -1136,7 +1148,7 @@ export default function AdminClientsPage() {
           </div>
 
           <div class="section-title">🔑 Cryptographic License Key (Text Selectable & Copyable)</div>
-          <div class="key-box">
+          <div class="key-box" id="licenseKeyText">
             ${key}
           </div>
 
@@ -1153,6 +1165,12 @@ export default function AdminClientsPage() {
         </div>
 
         <script>
+          function copyKeyFromPdf() {
+            const text = document.getElementById("licenseKeyText").innerText.trim();
+            navigator.clipboard.writeText(text).then(function() {
+              alert("✓ License Key copied to clipboard!");
+            });
+          }
           window.onload = function() {
             setTimeout(function() { window.print(); }, 500);
           };
