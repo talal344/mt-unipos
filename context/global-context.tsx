@@ -661,23 +661,28 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         const { data: globalData } = await supabase.from('unipos_global').select('*');
         if (globalData) {
           // ── Special case: Restore tenants from Supabase if localStorage is missing/empty ──
+          let blacklisted: string[] = [];
+          try {
+            blacklisted = JSON.parse(window.localStorage.getItem("unipos_blacklisted_tenants") || "[]");
+          } catch {}
+
           const tenantsRow = globalData.find(row => row.key === 'unipos_tenants');
-          if (tenantsRow && Array.isArray(tenantsRow.value) && tenantsRow.value.length > 0) {
+          if (tenantsRow && Array.isArray(tenantsRow.value)) {
+            const cleanCloud = tenantsRow.value.filter((t: any) => !blacklisted.includes(t.id));
             const localTenants = window.localStorage.getItem('unipos_tenants');
             let localParsed: any[] = [];
             try { localParsed = localTenants ? JSON.parse(localTenants) : []; } catch { localParsed = []; }
-            
-            // Only seed tenants in local → Supabase has real data → restore!
+
             const onlySeedLocal = localParsed.every(t => PERMANENT_SEED_TENANTS.some(s => s.id === t.id));
-            if (onlySeedLocal && tenantsRow.value.length > localParsed.length) {
-              // Merge: Supabase tenants + seed tenants (no duplicates)
-              const merged = [...tenantsRow.value];
+            if (onlySeedLocal && cleanCloud.length > localParsed.length) {
+              const merged = [...cleanCloud];
               for (const seed of PERMANENT_SEED_TENANTS) {
-                if (!merged.some((t: any) => t.id === seed.id)) merged.unshift(seed);
+                if (!blacklisted.includes(seed.id) && !merged.some((t: any) => t.id === seed.id)) {
+                  merged.unshift(seed);
+                }
               }
               originalSetItem.call(window.localStorage, 'unipos_tenants', JSON.stringify(merged));
               changed = true;
-              console.log('✅ Tenants restored from Supabase cloud backup:', merged.length, 'tenants');
             }
           }
           globalData.forEach(row => {
@@ -953,7 +958,12 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       setDemoRequests(initDemos);
     }
 
-    // 2. Load Tenants
+    // 2. Load Tenants & Blacklist
+    let blacklistedTenants: string[] = [];
+    try {
+      blacklistedTenants = JSON.parse(localStorage.getItem("unipos_blacklisted_tenants") || "[]");
+    } catch {}
+
     const savedTenants = localStorage.getItem("unipos_tenants");
     let currentTenants: Tenant[] = [];
     if (savedTenants) {
@@ -978,11 +988,13 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    // ── PERMANENT SEED INJECTION ──────────────────────────────────────────────
-    // Always ensure every seed tenant exists. This guarantees owner accounts
-    // survive localStorage clears, incognito sessions, or browser resets.
+    // Filter out blacklisted / deleted tenants strictly
+    currentTenants = currentTenants.filter(t => !blacklistedTenants.includes(t.id));
+
+    // ── PERMANENT SEED INJECTION (ONLY NON-DELETED) ──────────────────────────
     let seedChanged = false;
     for (const seed of PERMANENT_SEED_TENANTS) {
+      if (blacklistedTenants.includes(seed.id)) continue; // NEVER RE-INJECT DELETED TENANTS!
       const alreadyExists = currentTenants.some(t => t.id === seed.id);
       if (!alreadyExists) {
         currentTenants = [seed, ...currentTenants];
