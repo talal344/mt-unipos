@@ -78,7 +78,12 @@ export default function GoogleDriveBackupModal({
     }
   };
 
-  const isDriveConfigured = !!(config.clientId && config.clientSecret && config.refreshToken);
+  const isDriveConfigured = !!(
+    config.clientId && 
+    config.clientSecret && 
+    config.refreshToken && 
+    !config.refreshToken.includes("xxxx")
+  );
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 animate-fade-in font-sans">

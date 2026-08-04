@@ -11,8 +11,13 @@ export async function POST(req: NextRequest) {
 
     const jsonString = JSON.stringify(backupData, null, 2);
 
-    // Check if Google Drive Credentials exist
-    if (config?.clientId && config?.clientSecret && config?.refreshToken) {
+    // Check if valid Google Drive Credentials exist (reject placeholders containing 'xxxx')
+    const hasValidToken = config?.clientId && 
+                          config?.clientSecret && 
+                          config?.refreshToken && 
+                          !config.refreshToken.includes("xxxx");
+
+    if (hasValidToken) {
       try {
         // 1. Get Access Token from Refresh Token
         const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
@@ -30,7 +35,7 @@ export async function POST(req: NextRequest) {
         if (!tokenData.access_token) {
           return NextResponse.json({
             success: false,
-            error: `Google OAuth Token Refresh failed: ${tokenData.error_description || tokenData.error || 'Invalid Credentials'}`,
+            error: `Google OAuth Token Error: ${tokenData.error_description || tokenData.error || 'Invalid Refresh Token. Please generate a new Refresh Token in settings.'}`,
           });
         }
 
@@ -117,11 +122,11 @@ export async function POST(req: NextRequest) {
         });
       }
     } else {
-      // Local Backup Vault Simulation (No credentials configured yet)
+      // Local Backup Vault Simulation (No valid credentials configured yet)
       return NextResponse.json({
-        success: true,
+        success: false,
         isSimulated: true,
-        message: `Backup data compiled for ${tenantId}. Connect Google Drive API key in Settings to upload directly.`,
+        error: `⚠️ Setup Required: Please enter your real Google Refresh Token in Settings to upload backup files to Google Drive. (Compiled local vault for ${tenantId}).`,
       });
     }
   } catch (err: any) {
