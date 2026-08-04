@@ -1809,6 +1809,18 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     const updated = tenants.map(t => t.id === id ? { ...t, status } : t);
     setTenants(updated);
     localStorage.setItem("unipos_tenants", JSON.stringify(updated));
+
+    if ((status as string) === "Suspended" || (status as string) === "Inactive" || status === "Expired") {
+      const activeOfflineTenant = localStorage.getItem("unipos_offline_activated_tenant");
+      if (activeOfflineTenant === id) {
+        localStorage.removeItem("unipos_offline_activated_system");
+        localStorage.removeItem("unipos_offline_activated_tenant");
+      }
+      if (currentUser?.tenantId === id) {
+        setCurrentUser(null);
+        localStorage.removeItem("unipos_current_user");
+      }
+    }
   };
 
   // ─── ALL localStorage keys that store per-tenant data ───────────────────────
@@ -1821,17 +1833,38 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
   ];
 
   const deleteTenant = async (id: string) => {
+    // 0. Add to blacklisted / revoked tenant registry
+    let blacklisted: string[] = [];
+    try {
+      blacklisted = JSON.parse(localStorage.getItem("unipos_blacklisted_tenants") || "[]");
+    } catch {}
+    if (!blacklisted.includes(id)) {
+      blacklisted.push(id);
+      localStorage.setItem("unipos_blacklisted_tenants", JSON.stringify(blacklisted));
+    }
+
     // 1. Remove from tenant list
     const updated = tenants.filter(t => t.id !== id);
     setTenants(updated);
     localStorage.setItem("unipos_tenants", JSON.stringify(updated));
 
-    // 2. Remove all linked invoices
+    // 2. Immediate session & offline activation revocation
+    const activeOfflineTenant = localStorage.getItem("unipos_offline_activated_tenant");
+    if (activeOfflineTenant === id) {
+      localStorage.removeItem("unipos_offline_activated_system");
+      localStorage.removeItem("unipos_offline_activated_tenant");
+    }
+    if (currentUser?.tenantId === id) {
+      setCurrentUser(null);
+      localStorage.removeItem("unipos_current_user");
+    }
+
+    // 3. Remove all linked invoices
     const updatedInvs = saasInvoices.filter(i => i.tenantId !== id);
     setSaasInvoices(updatedInvs);
     localStorage.setItem("unipos_invoices", JSON.stringify(updatedInvs));
 
-    // 3. Wipe ALL tenant-specific localStorage keys
+    // 4. Wipe ALL tenant-specific localStorage keys
     TENANT_DATA_KEYS.forEach(key => {
       localStorage.removeItem(`${key}_${id}`);
     });
@@ -1843,11 +1876,15 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     }
     keysToRemove.forEach(k => localStorage.removeItem(k));
 
-    // 4. Delete from Supabase unipos_collections (all rows for this tenant)
+    // 5. Delete from Supabase unipos_collections & sync blacklist
     try {
       await supabase.from('unipos_collections').delete().eq('tenant_id', id);
+      await supabase.from('unipos_global').upsert({
+        key: 'unipos_blacklisted_tenants',
+        value: blacklisted
+      });
     } catch (e) {
-      console.warn('Supabase tenant data delete failed (will retry on next sync):', e);
+      console.warn('Supabase tenant data delete failed:', e);
     }
   };
 
@@ -3075,6 +3112,29 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       const payload = await verifyAndDecodeLicenseKey(key.trim());
       if (!payload) {
         return { success: false, error: "Invalid license key. Signature match nahi hui ya key corrupt hai." };
+      }
+      const targetTenantId = payload.issuedFor || (payload.tenant as any)?.id;
+
+      // 0. Blacklist / Revocation check
+      let blacklisted: string[] = [];
+      try {
+        blacklisted = JSON.parse(localStorage.getItem("unipos_blacklisted_tenants") || "[]");
+      } catch {}
+
+      if (blacklisted.includes(targetTenantId)) {
+        return {
+          success: false,
+          error: `⛔ ACCESS DENIED: Workspace "${targetTenantId}" Super Admin se DELETE kar diya gaya hai. License key is permanently revoked!`
+        };
+      }
+
+      // Check existing status in tenants registry
+      const existingTenant = tenants.find(t => t.id === targetTenantId);
+      if (existingTenant && ((existingTenant.status as string) === "Suspended" || (existingTenant.status as string) === "Inactive")) {
+        return {
+          success: false,
+          error: `⛔ ACCESS DENIED: Workspace "${targetTenantId}" Super Admin se SUSPEND / DEACTIVATE kar diya gaya hai. Activation stopped!`
+        };
       }
 
       // 1. Expiry Check

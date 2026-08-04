@@ -69,22 +69,74 @@ function LoginContent() {
     }
   }, [searchParams]);
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const activatedTenantId = localStorage.getItem("unipos_last_activated_tenant");
+      let blacklisted: string[] = [];
+      try {
+        blacklisted = JSON.parse(localStorage.getItem("unipos_blacklisted_tenants") || "[]");
+      } catch {}
 
+      if (activatedTenantId) {
+        const tenantInReg = tenants.find(t => t.id === activatedTenantId);
+        const isDeleted = blacklisted.includes(activatedTenantId) || (!tenantInReg && tenants.length > 0);
+        const isSuspended = tenantInReg && ((tenantInReg.status as string) === "Suspended" || (tenantInReg.status as string) === "Inactive");
+
+        if (isDeleted || isSuspended) {
+          localStorage.removeItem("unipos_offline_activated_system");
+          localStorage.removeItem("unipos_last_activated_tenant");
+          localStorage.removeItem("unipos_current_user");
+          setErrorMessage(
+            isDeleted
+              ? `⛔ ACCESS DENIED: Workspace "${activatedTenantId}" Super Admin se DELETE ho chuka hai. License access stopped!`
+              : `⛔ ACCESS DENIED: Workspace "${activatedTenantId}" Super Admin se SUSPEND ho chuka hai. License access stopped!`
+          );
+        }
+      }
+    }
+  }, [tenants]);
 
   const handleCredentialsSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) { setErrorMessage("Please enter both email and password."); return; }
-    if (!isValidTenant) {
-      setErrorMessage("Workspace ID not found. Please verify your ID.");
+
+    let blacklisted: string[] = [];
+    try {
+      blacklisted = JSON.parse(localStorage.getItem("unipos_blacklisted_tenants") || "[]");
+    } catch {}
+
+    if (blacklisted.includes(inputTenantId)) {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("unipos_offline_activated_system");
+        localStorage.removeItem("unipos_last_activated_tenant");
+        localStorage.removeItem("unipos_current_user");
+      }
+      setErrorMessage(`⛔ ACCESS DENIED: Workspace "${inputTenantId}" has been deleted by Super Admin. Login rejected.`);
       return;
     }
+
+    if (!isValidTenant) {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("unipos_offline_activated_system");
+        localStorage.removeItem("unipos_last_activated_tenant");
+        localStorage.removeItem("unipos_current_user");
+      }
+      setErrorMessage(`⛔ ACCESS DENIED: Workspace ID "${inputTenantId}" not found or deleted by Super Admin.`);
+      return;
+    }
+
     const isTrialExpired = activeTenant.status === "Trial" && activeTenant.trialEndsAt && new Date(activeTenant.trialEndsAt + "T23:59:59") < new Date();
     if (activeTenant.status === "Expired" || isTrialExpired) {
       setErrorMessage("Your trial has expired. Please contact administration to activate your workspace.");
       return;
     }
-    if (activeTenant.status === "Suspended") {
-      setErrorMessage("This workspace has been suspended. Please contact administration.");
+    if ((activeTenant.status as string) === "Suspended" || (activeTenant.status as string) === "Inactive") {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("unipos_offline_activated_system");
+        localStorage.removeItem("unipos_last_activated_tenant");
+        localStorage.removeItem("unipos_current_user");
+      }
+      setErrorMessage("⛔ ACCESS DENIED: Workspace has been suspended/deactivated by Super Admin.");
       return;
     }
 
