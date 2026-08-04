@@ -71,27 +71,7 @@ export interface Tenant {
 // These tenants are ALWAYS guaranteed to exist regardless of browser clear.
 // Add your real clients here. They are seeded from code — not from localStorage.
 // ─────────────────────────────────────────────────────────────────────────────
-const PERMANENT_SEED_TENANTS: Tenant[] = [
-  {
-    id: "MT-1001",
-    businessName: "MT Store",
-    ownerName: "Mian Talal",
-    email: "miantalal2@gmail.com",
-    phone: "03396399895",
-    businessType: "Super Markets",
-    plan: "Professional",
-    billingCycle: "monthly",
-    signupDate: "2026-01-01",
-    status: "Active",
-    usersCount: 1,
-    monthlyRevenue: 0,
-    branches: ["Main Branch"],
-    defaultCurrency: "PKR",
-    credentialPresets: [
-      { id: "CRED-MT-1001", label: "Owner", email: "miantalal2@gmail.com", pass: "owner123", role: "Owner" }
-    ]
-  }
-];
+const PERMANENT_SEED_TENANTS: Tenant[] = [];
 
 
 export interface SaaSInvoice {
@@ -1896,12 +1876,16 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     }
     keysToRemove.forEach(k => localStorage.removeItem(k));
 
-    // 5. Delete from Supabase unipos_collections & sync blacklist
+    // 5. Delete from Supabase unipos_collections & sync updated tenants & blacklist
     try {
       await supabase.from('unipos_collections').delete().eq('tenant_id', id);
       await supabase.from('unipos_global').upsert({
         key: 'unipos_blacklisted_tenants',
         value: blacklisted
+      });
+      await supabase.from('unipos_global').upsert({
+        key: 'unipos_tenants',
+        value: updated
       });
     } catch (e) {
       console.warn('Supabase tenant data delete failed:', e);
