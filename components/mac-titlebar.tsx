@@ -34,7 +34,7 @@ export default function MacTitlebar() {
   // Render mac-style custom titlebar for desktop app (and fallback top bar)
   return (
     <div
-      className="w-full bg-[#0A0A0B] border-b border-[#1F2937]/80 h-9 px-3 flex items-center justify-between select-none z-[999999] shrink-0 font-sans print:hidden"
+      className="sticky top-0 left-0 right-0 w-full bg-[#0A0A0B] border-b border-[#1F2937]/80 h-9 px-3 flex items-center justify-between select-none z-[999999] shrink-0 font-sans print:hidden"
       style={{ WebkitAppRegion: "drag" } as any}
     >
       {/* Left: macOS Traffic-Light Round Control Buttons */}

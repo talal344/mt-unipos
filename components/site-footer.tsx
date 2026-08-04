@@ -1,8 +1,18 @@
-import React from "react";
+"use client";
+
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Laptop, Mail, Phone, MapPin, MessageCircle } from "lucide-react";
 
 export default function SiteFooter() {
+  const [isDesktopApp, setIsDesktopApp] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && ((window as any).electronAPI || navigator.userAgent.includes("Electron"))) {
+      setIsDesktopApp(true);
+    }
+  }, []);
+
   const industries = [
     "Departmental Stores", "Super Markets", "Grocery Stores", 
     "Pharmacy Stores", "Medical Stores", "Book Stores", 
@@ -16,6 +26,19 @@ export default function SiteFooter() {
     { name: "Company Blog", href: "/blog" },
     { name: "Contact Sales", href: "/contact" }
   ];
+
+  if (isDesktopApp) {
+    return (
+      <footer className="bg-brand-dark-surface border-t border-brand-dark-border py-4 px-6 text-center text-xs text-gray-500 font-sans print:hidden">
+        <div className="flex items-center justify-between max-w-7xl mx-auto">
+          <span>© {new Date().getFullYear()} MT UniPOS Desktop Workstation</span>
+          <Link href="/login" className="text-brand-sky font-bold hover:underline">
+            ← Back to Sign In
+          </Link>
+        </div>
+      </footer>
+    );
+  }
 
   return (
     <footer className="bg-brand-dark-surface border-t border-brand-dark-border pt-16 pb-8 px-6 lg:px-16 xl:px-24">

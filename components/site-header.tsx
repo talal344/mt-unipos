@@ -11,6 +11,13 @@ export default function SiteHeader() {
   const pathname = usePathname();
   const router   = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isDesktopApp, setIsDesktopApp] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && ((window as any).electronAPI || navigator.userAgent.includes("Electron"))) {
+      setIsDesktopApp(true);
+    }
+  }, []);
   
   // ── Hidden Super Admin access ───────────────────────────────────────────────
   const [keyBuffer, setKeyBuffer]           = useState("");
@@ -68,6 +75,26 @@ export default function SiteHeader() {
     { name: "Track Ticket", href: "/track-ticket"  },
     { name: "Contact",      href: "/contact"       },
   ];
+
+  if (isDesktopApp) {
+    return (
+      <header className="sticky top-9 z-40 w-full border-b border-brand-dark-border/80 bg-black/95 backdrop-blur-md font-sans">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex h-14 items-center justify-between">
+            <Link href="/login" className="flex items-center gap-2 group">
+              <img src="/logo.png" alt="MT UniPOS" className="h-9 w-auto object-contain" />
+            </Link>
+            <Link
+              href="/login"
+              className="inline-flex items-center gap-2 bg-brand-sky/10 border border-brand-sky/30 text-brand-sky hover:bg-brand-sky/20 px-3.5 py-1.5 rounded-xl text-xs font-bold transition"
+            >
+              ← Back to Sign In
+            </Link>
+          </div>
+        </div>
+      </header>
+    );
+  }
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-brand-dark-border bg-black/80 backdrop-blur-md glass-panel font-sans">
