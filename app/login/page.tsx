@@ -289,6 +289,34 @@ function LoginContent() {
           {/* ── CREDENTIALS STEP ── */}
           {step === "credentials" && (
             <form onSubmit={handleCredentialsSubmit} className="space-y-4 text-xs">
+              
+              {/* Quick Demo Credentials Shortcuts */}
+              <div className="bg-brand-dark-surface/60 border border-brand-dark-border/60 p-2.5 rounded-xl space-y-1.5">
+                <div className="text-[9px] uppercase font-bold text-gray-400 tracking-wider">Quick Demo Credentials:</div>
+                <div className="flex flex-wrap gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => { setEmail("owner@alfatah.com"); setPassword("owner123"); setErrorMessage(""); }}
+                    className="px-2 py-1 bg-brand-sky/10 border border-brand-sky/30 text-brand-sky text-[9px] font-bold rounded hover:bg-brand-sky/20 transition"
+                  >
+                    👤 Owner (owner123)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setEmail("kashif@alfatah.com"); setPassword("password123"); setErrorMessage(""); }}
+                    className="px-2 py-1 bg-purple-500/10 border border-purple-500/30 text-purple-400 text-[9px] font-bold rounded hover:bg-purple-500/20 transition"
+                  >
+                    👔 Manager (password123)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setEmail("hassan@alfatah.com"); setPassword("password123"); setErrorMessage(""); }}
+                    className="px-2 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[9px] font-bold rounded hover:bg-emerald-500/20 transition"
+                  >
+                    🛒 Cashier (password123)
+                  </button>
+                </div>
+              </div>
               <div>
                 <label className="block text-[10px] uppercase font-bold text-brand-sky tracking-wider mb-1.5">
                   <Building2 size={9} className="inline mr-1" /> Workspace / Tenant ID
