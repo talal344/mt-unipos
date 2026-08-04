@@ -37,6 +37,13 @@ function createWindow() {
     mainWindow = null;
   });
 
+  // Enable F5 / Ctrl+R reload shortcuts in Desktop Window
+  mainWindow.webContents.on('before-input-event', (event, input) => {
+    if (input.type === 'keyDown' && (input.key === 'F5' || (input.control && input.key.toLowerCase() === 'r'))) {
+      mainWindow.reload();
+    }
+  });
+
   // Open external non-app links in default OS browser
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (url.startsWith('http:') || url.startsWith('https:')) {
