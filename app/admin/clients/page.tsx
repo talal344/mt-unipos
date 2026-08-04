@@ -1632,7 +1632,7 @@ export default function AdminClientsPage() {
                             </span>
                           </td>
                           <td className="p-4">
-                            <div className="flex gap-2 justify-center">
+                            <div className="flex gap-1.5 justify-center flex-wrap">
                               <button
                                 onClick={() => setShardDetailTarget(tenant)}
                                 className="p-1.5 bg-brand-dark-border hover:bg-emerald-600/30 text-gray-300 hover:text-emerald-400 rounded transition"
@@ -1640,6 +1640,56 @@ export default function AdminClientsPage() {
                               >
                                 <Database size={12} />
                               </button>
+
+                              <button
+                                onClick={() => handleOpenPresets(tenant)}
+                                className="p-1.5 bg-brand-dark-border hover:bg-brand-sky/30 text-gray-300 hover:text-brand-sky rounded transition"
+                                title="Manage Credentials Presets"
+                              >
+                                <Key size={12} />
+                              </button>
+
+                              <button
+                                onClick={() => handleOpenEdit(tenant)}
+                                className="p-1.5 bg-brand-dark-border hover:bg-purple-600/30 text-gray-300 hover:text-white rounded transition"
+                                title="Adjust Plan & Currency"
+                              >
+                                <Edit2 size={12} />
+                              </button>
+
+                              <button
+                                onClick={() => handleToggleStatus(tenant.id, tenant.status)}
+                                className={`p-1.5 rounded transition ${
+                                  tenant.status === "Active"
+                                    ? "bg-emerald-500/15 text-emerald-400 hover:bg-amber-500/20 hover:text-amber-400"
+                                    : "bg-red-500/15 text-red-400 hover:bg-emerald-500/20 hover:text-emerald-400"
+                                }`}
+                                title={tenant.status === "Active" ? "Suspend Client" : "Activate Client"}
+                              >
+                                {tenant.status === "Active" ? <ToggleRight size={14} /> : <ToggleLeft size={14} />}
+                              </button>
+
+                              <button
+                                onClick={() => handleBackupDb(tenant.id)}
+                                disabled={backupLoading[tenant.id]}
+                                className="p-1.5 bg-sky-500/10 hover:bg-sky-500/30 text-sky-400 hover:text-white rounded transition disabled:opacity-50"
+                                title="Download Backup — Export full data as JSON"
+                              >
+                                {backupLoading[tenant.id] ? (
+                                  <RefreshCw size={12} className="animate-spin" />
+                                ) : (
+                                  <Download size={12} />
+                                )}
+                              </button>
+
+                              <button
+                                onClick={() => handleRestoreDb(tenant.id)}
+                                className="p-1.5 bg-amber-500/10 hover:bg-amber-500/30 text-amber-400 hover:text-white rounded transition"
+                                title="Upload Backup — Restore data from JSON file"
+                              >
+                                <Upload size={12} />
+                              </button>
+
                               <button
                                 onClick={() => handleOpenLicenseKeyModal(tenant)}
                                 className="p-1.5 bg-violet-500/10 hover:bg-violet-500 text-violet-400 hover:text-white rounded transition"
@@ -1647,10 +1697,9 @@ export default function AdminClientsPage() {
                               >
                                 <Shield size={12} />
                               </button>
+
                               <button
-                                onClick={() =>
-                                  handleDeleteTenant(tenant.id, tenant.businessName)
-                                }
+                                onClick={() => handleDeleteTenant(tenant.id, tenant.businessName)}
                                 className="p-1.5 bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white rounded transition"
                                 title="Permanently Delete Tenant & All Data"
                               >
