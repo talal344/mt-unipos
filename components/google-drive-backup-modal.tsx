@@ -381,15 +381,13 @@ export default function GoogleDriveBackupModal({
                 </div>
 
                 <div className="bg-black/40 border border-gray-800 p-3.5 rounded-xl space-y-1">
-                  <span className="font-bold text-sky-400 block">Step 3: OAuth Credentials Haasil Karein</span>
+                  <span className="font-bold text-sky-400 block">Step 3: OAuth Credentials &amp; Redirect URI Add Karein</span>
                   <p className="text-gray-400">
-                    1. <b>APIs &amp; Services &gt; Credentials</b> mein jayein aur <b>Create Credentials &gt; OAuth client ID</b> select karein.
+                    1. <b>APIs &amp; Services &gt; Credentials</b> mein <b>Create Credentials &gt; OAuth client ID</b> (Web Application) select karein.
                     <br />
-                    2. Application Type mein <b>Web Application</b> select karein.
+                    2. <b>Authorized redirect URIs</b> box mein yeh link add karein: <code className="text-sky-300 font-mono bg-black px-1.5 py-0.5 rounded border border-gray-700">https://developers.google.com/oauthplayground</code>
                     <br />
-                    3. Aap ko <b>Client ID</b> aur <b>Client Secret</b> mil jaye ga.
-                    <br />
-                    4. In keys ko yahan Settings tab mein paste karke <b>Save Drive Configuration</b> par click kar dein!
+                    3. Save par click karein. Aap ko <b>Client ID</b> aur <b>Client Secret</b> mil jaye ga!
                   </p>
                 </div>
               </div>
