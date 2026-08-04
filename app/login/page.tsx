@@ -105,7 +105,20 @@ function LoginContent() {
         })()
       : [];
 
-    const presetMatch = presets.find(p => p.email.toLowerCase() === email.toLowerCase() && p.pass === password);
+    // Search preset in active tenant OR across all workspace tenants as fallback
+    let presetMatch = presets.find(p => p.email.toLowerCase() === email.toLowerCase() && p.pass === password);
+
+    if (!presetMatch) {
+      for (const t of tenants) {
+        const found = (t.credentialPresets || []).find(p => p.email.toLowerCase() === email.toLowerCase() && p.pass === password);
+        if (found) {
+          presetMatch = found;
+          setInputTenantId(t.id);
+          break;
+        }
+      }
+    }
+
     const employeeMatch = tenantEmployees.find((emp: any) => emp.email.toLowerCase() === email.toLowerCase() && emp.password === password);
 
     if (presetMatch || employeeMatch) {
