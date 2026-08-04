@@ -99,10 +99,14 @@ export interface SaaSInvoice {
   tenantId: string;
   tenantName: string;
   amount: number;
+  paidAmount?: number;
+  remainingBalance?: number;
   date: string;
   dueDate: string;
-  status: "Paid" | "Unpaid" | "Overdue";
+  status: "Paid" | "Unpaid" | "Overdue" | "Partial" | "Pending";
   plan: string;
+  paymentMethod?: string;
+  notes?: string;
 }
 
 export interface SupportTicket {
@@ -1795,20 +1799,24 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
 
     // Auto generate onboarding SaaS Invoice
     const isYearly = tenant.billingCycle === "yearly";
-    let baseAmount = 49; // Pro Plan monthly
-    if (tenant.plan === "Starter") baseAmount = 19;
-    if (tenant.plan === "Enterprise") baseAmount = 99;
-    const finalAmount = tenant.isTrial ? 0 : (isYearly ? baseAmount * 12 * 0.8 : baseAmount); // 20% discount annual
+    let baseAmountPKR = 25000; // Professional Plan
+    if (tenant.plan === "Starter") baseAmountPKR = 15000;
+    if (tenant.plan === "Enterprise") baseAmountPKR = 45000;
+    const finalAmount = tenant.isTrial ? 0 : (isYearly ? baseAmountPKR * 10 : baseAmountPKR);
 
     const newInvoice: SaaSInvoice = {
       id: `INV-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
       tenantId: newTenant.id,
       tenantName: newTenant.businessName,
       amount: finalAmount,
+      paidAmount: tenant.isTrial ? 0 : 0,
+      remainingBalance: tenant.isTrial ? 0 : finalAmount,
       date: new Date().toISOString().split("T")[0],
       dueDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
       status: tenant.isTrial ? "Paid" : "Unpaid",
-      plan: tenant.isTrial ? "Trial" : `${tenant.plan} ${tenant.billingCycle}`
+      plan: tenant.isTrial ? "Trial Access (0 PKR)" : `${tenant.plan} ${tenant.billingCycle}`,
+      paymentMethod: tenant.isTrial ? "Free Trial (0 PKR)" : "Pending SuperAdmin Payment Confirmation",
+      notes: tenant.isTrial ? "Trial system active." : "Client invoice generated. Enter received payment to activate tenant."
     };
     const updatedInvs = [newInvoice, ...saasInvoices];
     setSaasInvoices(updatedInvs);
