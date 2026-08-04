@@ -16,19 +16,20 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
       contextIsolation: true,
-      webSecurity: true,
+      webSecurity: false, // Allow cross-origin local storage & API requests in desktop container
     },
   });
 
-  const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
+  const isDev = process.env.NODE_ENV === 'development' && !app.isPackaged;
 
   if (isDev) {
     mainWindow.loadURL('http://localhost:3000');
   } else {
-    // Production Mode: Load local app server URL or fallback
-    const startUrl = process.env.ELECTRON_START_URL || 'http://localhost:3000';
-    mainWindow.loadURL(startUrl).catch(() => {
-      setTimeout(() => mainWindow.loadURL(startUrl), 2000);
+    // Production Mode: Load production Web app URL with offline PWA caching
+    const startUrl = process.env.ELECTRON_START_URL || 'https://mt-unipos.vercel.app';
+    mainWindow.loadURL(startUrl).catch((err) => {
+      console.error('Failed to load app URL:', err);
+      mainWindow.loadURL('http://localhost:3000');
     });
   }
 
@@ -36,11 +37,13 @@ function createWindow() {
     mainWindow = null;
   });
 
-  // Open external links in default OS browser
+  // Open external non-app links in default OS browser
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (url.startsWith('http:') || url.startsWith('https:')) {
-      shell.openExternal(url);
-      return { action: 'deny' };
+      if (!url.includes('mt-unipos.vercel.app') && !url.includes('localhost')) {
+        shell.openExternal(url);
+        return { action: 'deny' };
+      }
     }
     return { action: 'allow' };
   });
