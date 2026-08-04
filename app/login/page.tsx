@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useGlobalContext } from "@/context/global-context";
 import {
-  Laptop, ArrowRight, CheckCircle2, AlertCircle, Eye, EyeOff, Building2, Lock
+  Laptop, ArrowRight, CheckCircle2, AlertCircle, Eye, EyeOff, Building2, Lock, Download, ShieldCheck
 } from "lucide-react";
 
 function LoginContent() {
@@ -19,20 +19,23 @@ function LoginContent() {
   const [showPwd,  setShowPwd]  = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
-  const [step, setStep] = useState<"credentials" | "otp">("credentials");
+  const [step, setStep] = useState<"credentials" | "otp" | "offline">("credentials");
   const [otpCode, setOtpCode]   = useState(["", "", "", ""]);
   const [verificationSuccess, setVerificationSuccess] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [loading, setLoading]   = useState(false);
 
   // Offline Activation State
-  const [showOfflineActivation, setShowOfflineActivation] = useState(false);
   const [offlineKey, setOfflineKey] = useState("");
   const [offlineEmail, setOfflineEmail] = useState("");
   const [offlineLoading, setOfflineLoading] = useState(false);
   const [offlineError, setOfflineError] = useState("");
   const [offlineSuccess, setOfflineSuccess] = useState("");
   const [isDesktopApp, setIsDesktopApp] = useState(false);
+
+  // Activation Modal State
+  const [showActivationModal, setShowActivationModal] = useState(false);
+  const [activatedCredentials, setActivatedCredentials] = useState<{ tenantId: string; email: string; pass: string; businessName: string } | null>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined" && ((window as any).electronAPI || navigator.userAgent.includes("Electron"))) {
@@ -201,15 +204,55 @@ function LoginContent() {
     const result = await importTenantFromLicenseKey(offlineKey.trim(), offlineEmail.trim());
     setOfflineLoading(false);
     if (result.success) {
-      setOfflineSuccess(`Tenant activate ho gaya! Workspace ID: ${result.tenantId}. Ab login karein.`);
+      if (typeof window !== "undefined") {
+        localStorage.setItem("unipos_offline_activated_system", "true");
+        localStorage.setItem("unipos_last_activated_tenant", result.tenantId || "");
+      }
+      const ownerEmail = offlineEmail.trim() || "owner@alfatah.com";
+      const ownerPass = "owner123";
+
       setInputTenantId(result.tenantId || "");
-      if (offlineEmail.trim()) setEmail(offlineEmail.trim());
-      setOfflineKey("");
-      setOfflineEmail("");
-      setTimeout(() => setShowOfflineActivation(false), 3000);
+      setEmail(ownerEmail);
+      setPassword(ownerPass);
+
+      setActivatedCredentials({
+        tenantId: result.tenantId || "AFS-1001",
+        email: ownerEmail,
+        pass: ownerPass,
+        businessName: (result as any).businessName || "Talal Mart",
+      });
+
+      setShowActivationModal(true);
     } else {
-      setOfflineError(result.error || "Key invalid hai.");
+      setOfflineError(result.error || "Key invalid hai. Sahi license key paste karein.");
     }
+  };
+
+  const handleDownloadCredentialsFile = () => {
+    if (!activatedCredentials) return;
+    const content = `==============================================\nMT UniPOS Offline License Activation Record\n==============================================\nBusiness Name   : ${activatedCredentials.businessName}\nWorkspace ID    : ${activatedCredentials.tenantId}\nCorporate Email : ${activatedCredentials.email}\nDefault Password: ${activatedCredentials.pass}\nLicense Status  : ACTIVATED & LIFETIME VERIFIED\nActivation Date : ${new Date().toLocaleDateString()}\nSystem ID       : UNIPOS-OFFLINE-LOCAL\n==============================================\n`;
+    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `MT_UniPOS_Credentials_${activatedCredentials.tenantId}.txt`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleLaunchDashboardFromActivation = () => {
+    if (!activatedCredentials) return;
+    const user = {
+      name: "Owner",
+      role: "Owner",
+      email: activatedCredentials.email,
+      businessName: activatedCredentials.businessName,
+      tenantId: activatedCredentials.tenantId,
+    };
+    localStorage.setItem("unipos_current_user", JSON.stringify(user));
+    setCurrentUser(user);
+    setShowActivationModal(false);
+    router.push("/dashboard");
   };
 
   return (
@@ -409,6 +452,74 @@ function LoginContent() {
             </form>
           )}
 
+          {/* ── OFFLINE LICENSE ACTIVATION STEP ── */}
+          {step === "offline" && (
+            <form onSubmit={handleOfflineActivation} className="space-y-4 text-xs animate-fade-in-up">
+              <div className="bg-purple-500/10 border border-purple-500/30 p-3.5 rounded-xl space-y-1">
+                <div className="flex items-center gap-2 text-purple-400 font-black text-xs uppercase tracking-wider">
+                  <Lock size={13} /> Offline License Activation
+                </div>
+                <p className="text-[10px] text-gray-400 leading-relaxed">
+                  Enter your Owner Corporate Email &amp; License Key. System will activate offline for lifetime.
+                </p>
+              </div>
+
+              {offlineError && (
+                <div className="bg-red-500/10 border border-red-500/30 p-3 rounded-xl text-xs flex items-start gap-2 text-red-400">
+                  <AlertCircle size={15} className="shrink-0 mt-0.5" /> {offlineError}
+                </div>
+              )}
+
+              <div>
+                <label className="block text-[10px] uppercase font-bold text-gray-400 tracking-wider mb-1.5">
+                  Owner Corporate Email
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={offlineEmail}
+                  onChange={(e) => { setOfflineEmail(e.target.value); setOfflineError(""); }}
+                  placeholder="owner@company.com"
+                  className="w-full bg-black border border-brand-dark-border p-3 rounded-xl text-white focus:outline-none focus:border-purple-500 transition"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] uppercase font-bold text-gray-400 tracking-wider mb-1.5">
+                  License Key / Activation String
+                </label>
+                <textarea
+                  required
+                  rows={3}
+                  value={offlineKey}
+                  onChange={(e) => { setOfflineKey(e.target.value); setOfflineError(""); }}
+                  placeholder="UNIPOS-V1.eyJ0ZW5hbnRJZCI6IkFGUy0xMDAxI..."
+                  className="w-full bg-black border border-brand-dark-border p-3 rounded-xl text-white font-mono text-[10px] focus:outline-none focus:border-purple-500 transition resize-none"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={offlineLoading}
+                className="w-full py-3 bg-purple-600 hover:bg-purple-500 disabled:opacity-60 text-white font-black uppercase text-xs tracking-wider rounded-xl flex items-center justify-center gap-2 transition shadow-lg shadow-purple-600/20"
+              >
+                {offlineLoading ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <>🔑 Activate &amp; Generate Credentials <ArrowRight size={14} /></>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => { setStep("credentials"); setOfflineError(""); }}
+                className="w-full text-center text-[10px] text-gray-500 hover:text-white transition pt-1"
+              >
+                ← Back to Online Sign In
+              </button>
+            </form>
+          )}
+
           {/* Quick links & Desktop action bar */}
           <div className="space-y-2 text-center pt-2">
             <div className="flex items-center justify-center gap-3 text-[10px] text-gray-400 flex-wrap">
@@ -432,83 +543,83 @@ function LoginContent() {
           </div>
         </div>
 
-        {/* ── OFFLINE ACTIVATION PANEL ── */}
+        {/* ── OFFLINE ACTIVATION BUTTON ── */}
         <div className="w-full max-w-md relative z-10">
-          <button
-            type="button"
-            onClick={() => { setShowOfflineActivation(v => !v); setOfflineError(""); setOfflineSuccess(""); }}
-            className="w-full flex items-center justify-between text-[10px] text-gray-500 hover:text-gray-300 border border-dashed border-brand-dark-border/50 hover:border-violet-500/40 rounded-xl px-4 py-3 transition group"
-          >
-            <span className="flex items-center gap-2">
-              <Lock size={11} className="text-violet-400" />
-              Offline ho? License Key se activate karein
-            </span>
-            <span className={`transition-transform duration-200 ${showOfflineActivation ? "rotate-180" : ""}`}>▾</span>
-          </button>
-
-          {showOfflineActivation && (
-            <div className="mt-2 bg-brand-dark-surface border border-violet-500/30 rounded-xl p-5 space-y-4 animate-fade-in-up">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <Lock size={11} className="text-violet-400" />
-                  <span className="text-[10px] font-black text-violet-400 uppercase tracking-wider">Offline License Activation</span>
-                </div>
-                <p className="text-[9px] text-gray-500 leading-relaxed">
-                  Admin se mili hui license key yahan paste karein. Internet ke baghair bhi kaam karega.
-                </p>
-              </div>
-
-              {offlineError && (
-                <div className="bg-red-500/10 border border-red-500/30 p-2.5 rounded-lg text-[10px] flex items-start gap-2 text-red-400">
-                  <AlertCircle size={12} className="shrink-0 mt-0.5" /> {offlineError}
-                </div>
-              )}
-              {offlineSuccess && (
-                <div className="bg-emerald-500/10 border border-emerald-500/30 p-2.5 rounded-lg text-[10px] flex items-start gap-2 text-emerald-400">
-                  <CheckCircle2 size={12} className="shrink-0 mt-0.5" /> {offlineSuccess}
-                </div>
-              )}
-
-              <form onSubmit={handleOfflineActivation} className="space-y-3">
-                <div>
-                  <label className="block text-[10px] uppercase font-bold text-gray-400 tracking-wider mb-1">
-                    Owner Corporate Email
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    value={offlineEmail}
-                    onChange={e => setOfflineEmail(e.target.value)}
-                    placeholder="owner@company.com"
-                    className="w-full bg-black border border-brand-dark-border focus:border-violet-500 p-2.5 rounded-xl text-white text-xs outline-none transition mb-2"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] uppercase font-bold text-gray-400 tracking-wider mb-1">
-                    License Key
-                  </label>
-                  <textarea
-                    value={offlineKey}
-                    onChange={e => setOfflineKey(e.target.value)}
-                    placeholder="UNIPOS-V1.eyJ0ZW5hbn..."
-                    rows={4}
-                    className="w-full bg-black border border-brand-dark-border focus:border-violet-500 p-3 rounded-xl text-white text-[10px] font-mono outline-none transition resize-none"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  disabled={offlineLoading}
-                  className="w-full py-2.5 bg-violet-600 hover:bg-violet-500 disabled:opacity-60 text-white font-black uppercase text-xs tracking-wider rounded-xl flex items-center justify-center gap-2 transition"
-                >
-                  {offlineLoading
-                    ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    : <><Lock size={12} /> Verify &amp; Activate Workspace</>}
-                </button>
-              </form>
-            </div>
+          {step !== "offline" && (
+            <button
+              type="button"
+              onClick={() => { setStep("offline"); setOfflineError(""); setErrorMessage(""); }}
+              className="w-full flex items-center justify-between text-[10px] text-gray-400 hover:text-white border border-dashed border-brand-dark-border/60 hover:border-purple-500/50 rounded-xl px-4 py-3 transition group bg-brand-dark-surface/40"
+            >
+              <span className="flex items-center gap-2">
+                <Lock size={12} className="text-purple-400" />
+                Offline ho? License Key se activate karein
+              </span>
+              <span className="text-purple-400 font-bold group-hover:translate-x-1 transition-transform">→</span>
+            </button>
           )}
         </div>
+
       </div>
+
+      {/* ── ACTIVATION CREDENTIALS POPUP MODAL ── */}
+      {showActivationModal && activatedCredentials && (
+        <div className="fixed inset-0 z-[999999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-[#0d1117] border border-purple-500/40 w-full max-w-md rounded-2xl p-6 shadow-[0_0_50px_rgba(168,85,247,0.3)] space-y-5 relative font-sans">
+            <div className="text-center space-y-1">
+              <div className="w-12 h-12 rounded-2xl bg-purple-500/20 border border-purple-500/40 text-purple-400 flex items-center justify-center mx-auto mb-2 animate-bounce">
+                <CheckCircle2 size={24} />
+              </div>
+              <h3 className="text-lg font-black text-white">System Activated Successfully!</h3>
+              <p className="text-[11px] text-gray-400">
+                Aap ka offline system 1-time activate ho gaya hai. Aap ke Login Credentials yeh hain:
+              </p>
+            </div>
+
+            {/* Credentials Card */}
+            <div className="bg-black/80 border border-purple-500/30 p-4 rounded-xl space-y-3 text-xs font-mono">
+              <div className="flex justify-between items-center pb-2 border-b border-gray-800">
+                <span className="text-gray-400 text-[10px] uppercase font-bold">Workspace / Tenant ID</span>
+                <span className="text-purple-300 font-black text-sm">{activatedCredentials.tenantId}</span>
+              </div>
+
+              <div className="flex justify-between items-center pb-2 border-b border-gray-800">
+                <span className="text-gray-400 text-[10px] uppercase font-bold">Username / Email</span>
+                <span className="text-white font-bold">{activatedCredentials.email}</span>
+              </div>
+
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400 text-[10px] uppercase font-bold">Default Password</span>
+                <span className="text-emerald-400 font-black tracking-widest">{activatedCredentials.pass}</span>
+              </div>
+            </div>
+
+            <div className="bg-emerald-500/10 border border-emerald-500/30 p-2.5 rounded-xl text-[10px] text-emerald-400 flex items-center gap-2">
+              <ShieldCheck size={14} className="shrink-0" />
+              <span>Next time se is system par sirf Workspace ID &amp; Password se direct login ho ga!</span>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="space-y-2 pt-1">
+              <button
+                type="button"
+                onClick={handleDownloadCredentialsFile}
+                className="w-full py-2.5 bg-gray-800 hover:bg-gray-700 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition border border-gray-700"
+              >
+                <Download size={14} /> Save &amp; Download Credentials File (.txt)
+              </button>
+
+              <button
+                type="button"
+                onClick={handleLaunchDashboardFromActivation}
+                className="w-full py-3 bg-purple-600 hover:bg-purple-500 text-white font-black uppercase text-xs tracking-wider rounded-xl flex items-center justify-center gap-2 transition shadow-lg shadow-purple-600/30"
+              >
+                🚀 Launch Dashboard Now <ArrowRight size={14} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
