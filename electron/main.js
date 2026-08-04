@@ -10,13 +10,15 @@ function createWindow() {
     minWidth: 1024,
     minHeight: 600,
     title: 'MT UniPOS - Enterprise POS & ERP',
-    icon: path.join(__dirname, '../public/logo.jpg'),
+    icon: path.join(__dirname, '../public/logo.png'),
+    frame: false, // Custom frameless window for macOS style titlebar
     autoHideMenuBar: true,
+    backgroundColor: '#000000',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
       contextIsolation: true,
-      webSecurity: false, // Allow cross-origin local storage & API requests in desktop container
+      webSecurity: false,
     },
   });
 
@@ -72,7 +74,22 @@ app.on('window-all-closed', () => {
   }
 });
 
-// IPC Handlers for native Windows capabilities
+// IPC Handlers for Window Controls & Platform Info
+ipcMain.on('window-minimize', () => {
+  if (mainWindow) mainWindow.minimize();
+});
+
+ipcMain.on('window-maximize', () => {
+  if (mainWindow) {
+    if (mainWindow.isMaximized()) mainWindow.unmaximize();
+    else mainWindow.maximize();
+  }
+});
+
+ipcMain.on('window-close', () => {
+  if (mainWindow) mainWindow.close();
+});
+
 ipcMain.handle('get-app-version', () => {
   return app.getVersion();
 });
