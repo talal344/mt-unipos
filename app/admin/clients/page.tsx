@@ -915,22 +915,26 @@ export default function AdminClientsPage() {
     }
   };
 
-  // ─── License Key Handler ───────────────────────────────────────────────
-  const handleGenerateLicenseKey = async (
-    tenant: any,
-    ownerEmail?: string,
-    durationDays: number = 30,
-    connectivityPlan: "offline-only" | "online-only" | "hybrid" = tenant.connectivityPlan || "hybrid"
-  ) => {
-    const email = ownerEmail || tenant.email;
+  // ─── License Key Handlers ───────────────────────────────────────────────
+  const handleOpenLicenseKeyModal = (tenant: any) => {
     setLicenseKeyModal({
       tenant,
       key: "",
-      loading: true,
-      ownerEmail: email,
-      durationDays,
-      connectivityPlan,
+      loading: false,
+      ownerEmail: tenant.email,
+      durationDays: -1,
+      connectivityPlan: tenant.connectivityPlan || "hybrid",
     });
+  };
+
+  const handleGenerateLicenseKey = async (
+    tenant: any,
+    ownerEmail?: string,
+    durationDays: number = -1,
+    connectivityPlan: "offline-only" | "online-only" | "hybrid" = tenant.connectivityPlan || "hybrid"
+  ) => {
+    const email = ownerEmail || tenant.email;
+    setLicenseKeyModal((prev) => prev ? { ...prev, loading: true } : null);
     try {
       const key = await generateLicenseKey(tenant, email, durationDays, connectivityPlan);
       setLicenseKeyModal({
@@ -941,10 +945,224 @@ export default function AdminClientsPage() {
         durationDays,
         connectivityPlan,
       });
+      triggerToast("🔑 Unique License Key generated successfully!");
     } catch {
-      setLicenseKeyModal(null);
+      setLicenseKeyModal((prev) => prev ? { ...prev, loading: false } : null);
       triggerToast("License key generate karne mein error aayi!");
     }
+  };
+
+  const handleDownloadPdfCertificate = () => {
+    if (!licenseKeyModal || !licenseKeyModal.key) return;
+
+    const tenant = licenseKeyModal.tenant;
+    const key = licenseKeyModal.key;
+    const durationText =
+      licenseKeyModal.durationDays === -1
+        ? "Lifetime Access"
+        : `${licenseKeyModal.durationDays} Days`;
+
+    const printWindow = window.open("", "_blank", "width=850,height=1100");
+    if (!printWindow) {
+      triggerToast("Pop-up window blocked! Please allow pop-ups for PDF download.");
+      return;
+    }
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>MT UniPOS Official License Certificate - ${tenant.id}</title>
+        <style>
+          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=JetBrains+Mono:wght@500;700&display=swap');
+          * { box-sizing: border-box; margin: 0; padding: 0; }
+          body {
+            font-family: 'Inter', sans-serif;
+            background: #ffffff;
+            color: #0f172a;
+            padding: 40px;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          .certificate-card {
+            border: 2px solid #0ea5e9;
+            border-radius: 16px;
+            padding: 40px;
+            background: linear-gradient(180deg, #f0f9ff 0%, #ffffff 100%);
+            box-shadow: 0 10px 30px rgba(14,165,233,0.1);
+            position: relative;
+          }
+          .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+          }
+          .brand-title {
+            font-size: 24px;
+            font-weight: 900;
+            color: #0284c7;
+            letter-spacing: -0.5px;
+          }
+          .brand-sub {
+            font-size: 11px;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+          }
+          .cert-badge {
+            background: #0284c7;
+            color: #ffffff;
+            font-size: 10px;
+            font-weight: 800;
+            padding: 6px 12px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+          }
+          .section-title {
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: #0369a1;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+          }
+          .grid-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+            border: 1px solid #e2e8f0;
+          }
+          .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+          }
+          .info-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+          }
+          .info-value {
+            font-size: 14px;
+            font-weight: 800;
+            color: #0f172a;
+          }
+          .key-box {
+            background: #090d16;
+            color: #38bdf8;
+            border: 2px solid #0ea5e9;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            word-break: break-all;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            line-height: 1.6;
+            user-select: all;
+            -webkit-user-select: all;
+            cursor: text;
+          }
+          .footer {
+            border-top: 1px solid #e2e8f0;
+            padding-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 10px;
+            color: #64748b;
+          }
+          .footer-bold {
+            font-weight: 800;
+            color: #0f172a;
+          }
+          @media print {
+            body { padding: 0; }
+            .no-print { display: none; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="no-print" style="margin-bottom: 20px; text-align: right;">
+          <button onclick="window.print()" style="background: #0284c7; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 12px;">
+            🖨️ Print / Save as PDF
+          </button>
+        </div>
+
+        <div class="certificate-card">
+          <div class="header">
+            <div>
+              <div class="brand-title">MT UniPOS</div>
+              <div class="brand-sub">Enterprise SaaS POS & ERP System</div>
+            </div>
+            <div class="cert-badge">Official License Certificate</div>
+          </div>
+
+          <div class="section-title">🏢 Workspace & Tenant Information</div>
+          <div class="grid-info">
+            <div class="info-item">
+              <span class="info-label">Workspace / Tenant ID</span>
+              <span class="info-value" style="color: #0284c7;">${tenant.id}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Business Name</span>
+              <span class="info-value">${tenant.businessName}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Owner Name</span>
+              <span class="info-value">${tenant.ownerName}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Registered Corporate Email</span>
+              <span class="info-value">${licenseKeyModal.ownerEmail}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">License Duration</span>
+              <span class="info-value" style="color: #16a34a;">${durationText}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Connectivity Mode</span>
+              <span class="info-value" style="text-transform: uppercase;">${licenseKeyModal.connectivityPlan}</span>
+            </div>
+          </div>
+
+          <div class="section-title">🔑 Cryptographic License Key (Text Selectable & Copyable)</div>
+          <div class="key-box">
+            ${key}
+          </div>
+
+          <div class="footer">
+            <div>
+              <span class="footer-bold">MT UniPOS Software Suite</span> • Engineered by Founder Mian Talal<br/>
+              Support Contact: <span class="footer-bold">03396399895</span> | Email: <span class="footer-bold">miantalal2@gmail.com</span>
+            </div>
+            <div style="text-align: right;">
+              <span class="footer-bold">Verification:</span> LIFETIME AUTHENTICATED<br/>
+              Issued Date: ${new Date().toLocaleDateString()}
+            </div>
+          </div>
+        </div>
+
+        <script>
+          window.onload = function() {
+            setTimeout(function() { window.print(); }, 500);
+          };
+        </script>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
   };
   // ──────────────────────────────────────────────────────────────
 
@@ -1423,62 +1641,8 @@ export default function AdminClientsPage() {
                                 <Database size={12} />
                               </button>
                               <button
-                                onClick={() => handleOpenPresets(tenant)}
-                                className="p-1.5 bg-brand-dark-border hover:bg-brand-sky/30 text-gray-300 hover:text-brand-sky rounded transition"
-                                title="Manage Credentials Presets"
-                              >
-                                <Key size={12} />
-                              </button>
-                              <button
-                                onClick={() => handleOpenEdit(tenant)}
-                                className="p-1.5 bg-brand-dark-border hover:bg-purple-600/30 text-gray-300 hover:text-white rounded transition"
-                                title="Adjust Plan &amp; Currency"
-                              >
-                                <Edit2 size={12} />
-                              </button>
-                              <button
-                                onClick={() =>
-                                  handleToggleStatus(tenant.id, tenant.status)
-                                }
-                                className={`p-1.5 rounded transition ${
-                                  tenant.status === "Active"
-                                    ? "bg-emerald-500/15 text-emerald-400 hover:bg-amber-500/20 hover:text-amber-400"
-                                    : "bg-red-500/15 text-red-400 hover:bg-emerald-500/20 hover:text-emerald-400"
-                                }`}
-                                title={
-                                  tenant.status === "Active"
-                                    ? "Suspend Client"
-                                    : "Activate Client"
-                                }
-                              >
-                                {tenant.status === "Active" ? (
-                                  <ToggleRight size={14} />
-                                ) : (
-                                  <ToggleLeft size={14} />
-                                )}
-                              </button>
-                              <button
-                                onClick={() => handleBackupDb(tenant.id)}
-                                disabled={backupLoading[tenant.id]}
-                                className="p-1.5 bg-sky-500/10 hover:bg-sky-500/30 text-sky-400 hover:text-white rounded transition disabled:opacity-50"
-                                title="Download Backup — Export full data as JSON"
-                              >
-                                {backupLoading[tenant.id] ? (
-                                  <RefreshCw size={12} className="animate-spin" />
-                                ) : (
-                                  <Download size={12} />
-                                )}
-                              </button>
-                              <button
-                                onClick={() => handleRestoreDb(tenant.id)}
-                                className="p-1.5 bg-amber-500/10 hover:bg-amber-500/30 text-amber-400 hover:text-white rounded transition"
-                                title="Upload Backup — Restore data from JSON file"
-                              >
-                                <Upload size={12} />
-                              </button>
-                              <button
-                                onClick={() => handleGenerateLicenseKey(tenant)}
-                                className="p-1.5 bg-violet-500/10 hover:bg-violet-500/30 text-violet-400 hover:text-white rounded transition"
+                                onClick={() => handleOpenLicenseKeyModal(tenant)}
+                                className="p-1.5 bg-violet-500/10 hover:bg-violet-500 text-violet-400 hover:text-white rounded transition"
                                 title="Generate Offline License Key"
                               >
                                 <Shield size={12} />
@@ -1509,67 +1673,56 @@ export default function AdminClientsPage() {
       {/* OFFLINE LICENSE KEY MODAL                                                 */}
       {/* ══════════════════════════════════════════════════════════════════════ */}
       {licenseKeyModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4">
-          <div className="bg-brand-dark-surface border border-violet-500/40 p-6 rounded-2xl w-full max-w-lg shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 animate-fade-in font-sans">
+          <div className="bg-brand-dark-surface border border-violet-500/40 p-6 rounded-2xl w-full max-w-lg shadow-2xl space-y-4">
             {/* Header */}
-            <div className="flex justify-between items-center border-b border-brand-dark-border pb-3 mb-5">
+            <div className="flex justify-between items-center border-b border-brand-dark-border pb-3">
               <div className="flex items-center gap-2">
                 <Shield size={16} className="text-violet-400" />
-                <h3 className="font-black text-white text-sm">Offline License Key</h3>
+                <h3 className="font-black text-white text-sm">Offline License Key Generator</h3>
               </div>
-              <button onClick={() => setLicenseKeyModal(null)} className="text-gray-400 hover:text-white">
+              <button onClick={() => setLicenseKeyModal(null)} className="text-gray-400 hover:text-white transition">
                 <X size={16} />
               </button>
             </div>
 
             {/* Tenant Info */}
-            <div className="bg-black/30 border border-brand-dark-border rounded-xl p-3 mb-4 space-y-1 text-xs font-mono">
-              <div className="flex gap-2">
-                <span className="text-gray-500 w-24">Tenant ID</span>
+            <div className="bg-black/40 border border-brand-dark-border rounded-xl p-3 space-y-1 text-xs font-mono">
+              <div className="flex justify-between">
+                <span className="text-gray-500">Tenant ID:</span>
                 <span className="text-violet-400 font-bold">{licenseKeyModal.tenant.id}</span>
               </div>
-              <div className="flex gap-2">
-                <span className="text-gray-500 w-24">Business</span>
-                <span className="text-white">{licenseKeyModal.tenant.businessName}</span>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Business:</span>
+                <span className="text-white font-bold">{licenseKeyModal.tenant.businessName}</span>
               </div>
-              <div className="flex gap-2">
-                <span className="text-gray-500 w-24">Owner</span>
-                <span className="text-white">{licenseKeyModal.tenant.ownerName}</span>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Owner Name:</span>
+                <span className="text-gray-300">{licenseKeyModal.tenant.ownerName}</span>
               </div>
-              <div className="flex gap-2">
-                <span className="text-gray-500 w-24">Status</span>
-                <span className={licenseKeyModal.tenant.status === 'Active' ? 'text-emerald-400' : 'text-amber-400'}>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Status:</span>
+                <span className={licenseKeyModal.tenant.status === 'Active' ? 'text-emerald-400 font-bold' : 'text-amber-400 font-bold'}>
                   {licenseKeyModal.tenant.status}
                 </span>
               </div>
             </div>
 
-            {/* Info Box */}
-            <div className="bg-violet-500/10 border border-violet-500/30 rounded-xl p-3 mb-4 text-xs text-violet-300 leading-relaxed space-y-1">
-              <span className="font-black block">🔑 Strict Owner License Generator</span>
-              <p className="text-[10px] text-gray-400">
-                Ye key specifically is owner email ke liye locked hai. Expire hone ke baad offline access stop ho jayega.
-              </p>
-            </div>
-
             {/* Customization Inputs */}
-            <div className="space-y-3 mb-4 bg-black/40 border border-brand-dark-border p-3 rounded-xl">
+            <div className="space-y-3 bg-black/40 border border-brand-dark-border p-3.5 rounded-xl">
               <div>
                 <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
-                  Bound Owner Email (Strict Security)
+                  Bound Owner Email (Strict Cryptographic Binding)
                 </label>
                 <input
                   type="email"
                   value={licenseKeyModal.ownerEmail}
                   onChange={(e) =>
-                    handleGenerateLicenseKey(
-                      licenseKeyModal.tenant,
-                      e.target.value,
-                      licenseKeyModal.durationDays,
-                      licenseKeyModal.connectivityPlan
+                    setLicenseKeyModal((prev) =>
+                      prev ? { ...prev, ownerEmail: e.target.value, key: "" } : null
                     )
                   }
-                  className="w-full bg-black border border-brand-dark-border p-2 rounded text-white text-xs font-mono focus:outline-none focus:border-violet-500"
+                  className="w-full bg-black border border-brand-dark-border p-2 rounded-lg text-white text-xs font-mono focus:outline-none focus:border-violet-500"
                 />
               </div>
 
@@ -1581,20 +1734,23 @@ export default function AdminClientsPage() {
                   <select
                     value={licenseKeyModal.durationDays}
                     onChange={(e) =>
-                      handleGenerateLicenseKey(
-                        licenseKeyModal.tenant,
-                        licenseKeyModal.ownerEmail,
-                        parseInt(e.target.value, 10),
-                        licenseKeyModal.connectivityPlan
+                      setLicenseKeyModal((prev) =>
+                        prev
+                          ? {
+                              ...prev,
+                              durationDays: parseInt(e.target.value, 10),
+                              key: "",
+                            }
+                          : null
                       )
                     }
-                    className="w-full bg-black border border-brand-dark-border p-2 rounded text-white text-xs focus:outline-none focus:border-violet-500 font-bold"
+                    className="w-full bg-black border border-brand-dark-border p-2 rounded-lg text-white text-xs focus:outline-none focus:border-violet-500 font-bold"
                   >
-                    <option value={7}>7 Days (Trial)</option>
-                    <option value={30}>30 Days (1 Month)</option>
-                    <option value={90}>90 Days (3 Months)</option>
-                    <option value={365}>365 Days (1 Year)</option>
                     <option value={-1}>Lifetime Access</option>
+                    <option value={365}>365 Days (1 Year)</option>
+                    <option value={90}>90 Days (3 Months)</option>
+                    <option value={30}>30 Days (1 Month)</option>
+                    <option value={7}>7 Days (Trial)</option>
                   </select>
                 </div>
 
@@ -1605,14 +1761,17 @@ export default function AdminClientsPage() {
                   <select
                     value={licenseKeyModal.connectivityPlan}
                     onChange={(e) =>
-                      handleGenerateLicenseKey(
-                        licenseKeyModal.tenant,
-                        licenseKeyModal.ownerEmail,
-                        licenseKeyModal.durationDays,
-                        e.target.value as any
+                      setLicenseKeyModal((prev) =>
+                        prev
+                          ? {
+                              ...prev,
+                              connectivityPlan: e.target.value as any,
+                              key: "",
+                            }
+                          : null
                       )
                     }
-                    className="w-full bg-black border border-brand-dark-border p-2 rounded text-white text-xs focus:outline-none focus:border-violet-500 font-bold"
+                    className="w-full bg-black border border-brand-dark-border p-2 rounded-lg text-white text-xs focus:outline-none focus:border-violet-500 font-bold"
                   >
                     <option value="hybrid">🔄 Hybrid (Online + Offline)</option>
                     <option value="offline-only">📴 Offline Only (Local DB)</option>
@@ -1622,42 +1781,70 @@ export default function AdminClientsPage() {
               </div>
             </div>
 
-            {/* Key Display */}
+            {/* Key Action & Display */}
             {licenseKeyModal.loading ? (
-              <div className="flex items-center justify-center py-8 gap-3 text-violet-400 text-xs font-mono">
+              <div className="flex items-center justify-center py-6 gap-3 text-violet-400 text-xs font-mono bg-black/40 rounded-xl border border-violet-500/30">
                 <div className="w-5 h-5 border-2 border-violet-400 border-t-transparent rounded-full animate-spin" />
-                Generating secure key...
+                Generating unique cryptographic license key for Tenant {licenseKeyModal.tenant.id}...
               </div>
+            ) : !licenseKeyModal.key ? (
+              <button
+                onClick={() =>
+                  handleGenerateLicenseKey(
+                    licenseKeyModal.tenant,
+                    licenseKeyModal.ownerEmail,
+                    licenseKeyModal.durationDays,
+                    licenseKeyModal.connectivityPlan
+                  )
+                }
+                className="w-full py-3.5 bg-violet-600 hover:bg-violet-500 text-white font-black text-xs uppercase tracking-wider rounded-xl flex items-center justify-center gap-2 transition shadow-lg shadow-violet-600/30"
+              >
+                <Key size={15} /> Generate Unique License Key Now
+              </button>
             ) : (
-              <>
-                <div className="relative">
+              <div className="space-y-3 animate-fade-in">
+                <div>
+                  <div className="flex justify-between items-center mb-1 text-[10px] text-gray-400 font-mono">
+                    <span>GENERATED LICENSE KEY (UNIQUE &amp; ENCRYPTED)</span>
+                    <span className="text-emerald-400 font-bold">✓ Ready for Client</span>
+                  </div>
                   <textarea
                     readOnly
                     value={licenseKeyModal.key}
-                    rows={5}
-                    className="w-full bg-black border border-violet-500/40 rounded-xl p-3 text-violet-300 font-mono text-[10px] resize-none focus:outline-none leading-relaxed"
+                    rows={4}
+                    className="w-full bg-black border border-violet-500/50 rounded-xl p-3 text-violet-300 font-mono text-[10px] resize-none focus:outline-none leading-relaxed select-all"
                   />
                 </div>
-                <div className="flex gap-2 mt-3">
+
+                <div className="grid grid-cols-2 gap-2">
                   <button
                     onClick={() => {
                       navigator.clipboard.writeText(licenseKeyModal.key);
-                      triggerToast('License key clipboard mein copy ho gayi!');
+                      triggerToast("✓ Key copied to clipboard successfully!");
                     }}
-                    className="flex-1 py-2.5 bg-violet-600 hover:bg-violet-500 text-white font-black text-xs uppercase rounded-lg flex items-center justify-center gap-2 transition"
+                    className="py-2.5 bg-violet-600 hover:bg-violet-500 text-white font-black text-xs uppercase rounded-xl flex items-center justify-center gap-2 transition shadow-md shadow-violet-600/20"
                   >
-                    <Key size={13} />
-                    Copy License Key
+                    <Key size={13} /> Copy License Key
                   </button>
+
                   <button
-                    onClick={() => setLicenseKeyModal(null)}
-                    className="px-4 py-2.5 bg-brand-dark-border hover:bg-brand-dark-border/80 text-gray-300 font-bold text-xs rounded-lg transition"
+                    onClick={handleDownloadPdfCertificate}
+                    className="py-2.5 bg-brand-sky hover:bg-brand-sky-light text-black font-black text-xs uppercase rounded-xl flex items-center justify-center gap-2 transition shadow-md shadow-brand-sky/20"
                   >
-                    Close
+                    📄 Download PDF Certificate
                   </button>
                 </div>
-              </>
+              </div>
             )}
+
+            <div className="flex justify-end pt-2 border-t border-brand-dark-border">
+              <button
+                onClick={() => setLicenseKeyModal(null)}
+                className="px-5 py-2 bg-brand-dark-border hover:bg-brand-dark-border/80 text-gray-300 font-bold text-xs rounded-xl transition"
+              >
+                Close Window
+              </button>
+            </div>
           </div>
         </div>
       )}
