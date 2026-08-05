@@ -20,18 +20,12 @@ function LoginContent() {
   const [showPwd,  setShowPwd]  = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
-  const [step, setStep] = useState<"credentials" | "otp" | "offline">("credentials");
+  const [step, setStep] = useState<"credentials" | "otp">("credentials");
   const [otpCode, setOtpCode]   = useState(["", "", "", ""]);
   const [verificationSuccess, setVerificationSuccess] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [loading, setLoading]   = useState(false);
 
-  // Offline Activation State
-  const [offlineKey, setOfflineKey] = useState("");
-  const [offlineEmail, setOfflineEmail] = useState("");
-  const [offlineLoading, setOfflineLoading] = useState(false);
-  const [offlineError, setOfflineError] = useState("");
-  const [offlineSuccess, setOfflineSuccess] = useState("");
   // Activation Modal State
   const [showActivationModal, setShowActivationModal] = useState(false);
   const [activatedCredentials, setActivatedCredentials] = useState<{ tenantId: string; email: string; pass: string; businessName: string } | null>(null);
@@ -78,7 +72,6 @@ function LoginContent() {
         const isSuspended = tenantInReg && ((tenantInReg.status as string) === "Suspended" || (tenantInReg.status as string) === "Inactive");
 
         if (isDeleted || isSuspended) {
-          localStorage.removeItem("unipos_offline_activated_system");
           localStorage.removeItem("unipos_last_activated_tenant");
           localStorage.removeItem("unipos_current_user");
         }
@@ -101,8 +94,7 @@ function LoginContent() {
           localStorage.setItem("unipos_blacklisted_tenants", JSON.stringify(blacklistRow.value));
           if (blacklistRow.value.includes(cleanTenantId)) {
             if (typeof window !== "undefined") {
-              localStorage.removeItem("unipos_offline_activated_system");
-              localStorage.removeItem("unipos_last_activated_tenant");
+                  localStorage.removeItem("unipos_last_activated_tenant");
               localStorage.removeItem("unipos_current_user");
             }
             setErrorMessage(`⛔ ACCESS DENIED: Workspace "${cleanTenantId}" has been deleted by Super Admin. Access revoked!`);
@@ -135,7 +127,6 @@ function LoginContent() {
 
     if (blacklisted.includes(cleanTenantId)) {
       if (typeof window !== "undefined") {
-        localStorage.removeItem("unipos_offline_activated_system");
         localStorage.removeItem("unipos_last_activated_tenant");
         localStorage.removeItem("unipos_current_user");
       }
@@ -155,7 +146,6 @@ function LoginContent() {
     }
     if ((activeTenant.status as string) === "Suspended" || (activeTenant.status as string) === "Inactive" || (activeTenant.status as string) === "Pending Payment") {
       if (typeof window !== "undefined") {
-        localStorage.removeItem("unipos_offline_activated_system");
         localStorage.removeItem("unipos_last_activated_tenant");
         localStorage.removeItem("unipos_current_user");
       }
@@ -283,38 +273,6 @@ function LoginContent() {
     }, 600);
   };
 
-  const handleOfflineActivation = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!offlineKey.trim()) { setOfflineError("License key paste karein."); return; }
-    setOfflineLoading(true);
-    setOfflineError("");
-    setOfflineSuccess("");
-    const result = await importTenantFromLicenseKey(offlineKey.trim(), offlineEmail.trim());
-    setOfflineLoading(false);
-    if (result.success) {
-      if (typeof window !== "undefined") {
-        localStorage.setItem("unipos_offline_activated_system", "true");
-        localStorage.setItem("unipos_last_activated_tenant", result.tenantId || "");
-      }
-      const ownerEmail = offlineEmail.trim() || "owner@alfatah.com";
-      const ownerPass = "owner123";
-
-      setInputTenantId(result.tenantId || "");
-      setEmail(ownerEmail);
-      setPassword(ownerPass);
-
-      setActivatedCredentials({
-        tenantId: result.tenantId || "AFS-1001",
-        email: ownerEmail,
-        pass: ownerPass,
-        businessName: (result as any).businessName || "Talal Mart",
-      });
-
-      setShowActivationModal(true);
-    } else {
-      setOfflineError(result.error || "Key invalid hai. Sahi license key paste karein.");
-    }
-  };
 
   const handleDownloadCredentialsFile = () => {
     if (!activatedCredentials) return;
@@ -648,76 +606,6 @@ function LoginContent() {
 
       </div>
 
-      {/* ── ACTIVATION CREDENTIALS POPUP MODAL ── */}
-      {showActivationModal && activatedCredentials && (
-        <div className="fixed inset-0 z-[999999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
-          <div className="bg-[#0d1117] border border-purple-500/40 w-full max-w-md rounded-2xl p-6 shadow-[0_0_50px_rgba(168,85,247,0.3)] space-y-5 relative font-sans">
-            <div className="text-center space-y-1">
-              <div className="w-12 h-12 rounded-2xl bg-purple-500/20 border border-purple-500/40 text-purple-400 flex items-center justify-center mx-auto mb-2 animate-bounce">
-                <CheckCircle2 size={24} />
-              </div>
-              <h3 className="text-lg font-black text-white">System Activated Successfully!</h3>
-              <p className="text-[11px] text-gray-400">
-                Aap ka offline system 1-time activate ho gaya hai. Aap ke Login Credentials yeh hain:
-              </p>
-            </div>
-
-            {/* Credentials Card */}
-            <div className="bg-black/80 border border-purple-500/30 p-4 rounded-xl space-y-3 text-xs font-mono">
-              <div className="flex justify-between items-center pb-2 border-b border-gray-800">
-                <span className="text-gray-400 text-[10px] uppercase font-bold">Workspace / Tenant ID</span>
-                <span className="text-purple-300 font-black text-sm">{activatedCredentials.tenantId}</span>
-              </div>
-
-              <div className="flex justify-between items-center pb-2 border-b border-gray-800">
-                <span className="text-gray-400 text-[10px] uppercase font-bold">Username / Email</span>
-                <span className="text-white font-bold">{activatedCredentials.email}</span>
-              </div>
-
-              <div className="flex justify-between items-center">
-                <span className="text-gray-400 text-[10px] uppercase font-bold">Default Password</span>
-                <span className="text-emerald-400 font-black tracking-widest">{activatedCredentials.pass}</span>
-              </div>
-            </div>
-
-            <div className="bg-emerald-500/10 border border-emerald-500/30 p-2.5 rounded-xl text-[10px] text-emerald-400 flex items-center gap-2">
-              <ShieldCheck size={14} className="shrink-0" />
-              <span>Next time se is system par sirf Workspace ID &amp; Password se direct login ho ga!</span>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="space-y-2 pt-1">
-              <button
-                type="button"
-                onClick={handleDownloadCredentialsFile}
-                className="w-full py-2.5 bg-gray-800 hover:bg-gray-700 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition border border-gray-700"
-              >
-                <Download size={14} /> Save &amp; Download Credentials File (.txt)
-              </button>
-
-              <button
-                type="button"
-                onClick={handleLaunchDashboardFromActivation}
-                className="w-full py-3 bg-purple-600 hover:bg-purple-500 text-white font-black uppercase text-xs tracking-wider rounded-xl flex items-center justify-center gap-2 transition shadow-lg shadow-purple-600/30"
-              >
-                🚀 Launch Dashboard Now <ArrowRight size={14} />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
-  );
-}
-
-export default function ClientLoginPage() {
-  return (
-    <Suspense fallback={
-      <div className="flex min-h-screen bg-black font-sans text-gray-500 justify-center items-center text-xs font-mono">
-        Loading MT UniPOS authentication...
-      </div>
-    }>
-      <LoginContent />
-    </Suspense>
   );
 }

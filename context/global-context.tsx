@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { queueSyncKey, getQueuedItems, dequeueItem, STORE_SYNC_KEYS, STORE_RECEIPTS } from "@/lib/offline-sync";
-import { verifyAndDecodeLicenseKey } from "@/lib/license-key";
+
 
 // Types
 export interface DemoMessage {
@@ -522,7 +522,7 @@ interface GlobalContextType {
   salesTaxRate: number;
   setSalesTaxRate: (rate: number) => void;
   isOffline: boolean;
-  importTenantFromLicenseKey: (key: string, enteredEmail?: string) => Promise<{ success: boolean; tenantId?: string; error?: string }>;
+
   isOnlineOnlyBlocked: boolean;
 }
 
@@ -3083,101 +3083,6 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     saveTenantData("unipos_accounts", updatedAccounts);
   };
 
-  // ─── OFFLINE LICENSE KEY IMPORT ─────────────────────────────────────────────
-  // Naya PC par internet na ho to admin ki di hui license key se tenant activate karo.
-  const importTenantFromLicenseKey = async (
-    key: string,
-    enteredEmail?: string
-  ): Promise<{ success: boolean; tenantId?: string; error?: string }> => {
-    try {
-      const payload = await verifyAndDecodeLicenseKey(key.trim());
-      if (!payload) {
-        return { success: false, error: "Invalid license key. Signature match nahi hui ya key corrupt hai." };
-      }
-      const targetTenantId = payload.issuedFor || (payload.tenant as any)?.id;
-
-      // 0. Blacklist / Revocation check
-      let blacklisted: string[] = [];
-      try {
-        blacklisted = JSON.parse(localStorage.getItem("unipos_blacklisted_tenants") || "[]");
-      } catch {}
-
-      // Check existing status in tenants registry
-      const existingTenant = tenants.find(t => t.id === targetTenantId);
-
-      // If tenant currently exists and is Active in tenants registry, auto-unblacklist it!
-      if (existingTenant && existingTenant.status === "Active") {
-        if (blacklisted.includes(targetTenantId)) {
-          blacklisted = blacklisted.filter((b: string) => b !== targetTenantId);
-          localStorage.setItem("unipos_blacklisted_tenants", JSON.stringify(blacklisted));
-          try {
-            await supabase.from('unipos_global').upsert({
-              key: 'unipos_blacklisted_tenants',
-              value: blacklisted
-            });
-          } catch {}
-        }
-      } else if (blacklisted.includes(targetTenantId)) {
-        return {
-          success: false,
-          error: `⛔ ACCESS DENIED: Workspace "${targetTenantId}" Super Admin se DELETE kar diya gaya hai. License key is permanently revoked!`
-        };
-      }
-
-      if (existingTenant && ((existingTenant.status as string) === "Suspended" || (existingTenant.status as string) === "Inactive")) {
-        return {
-          success: false,
-          error: `⛔ ACCESS DENIED: Workspace "${targetTenantId}" Super Admin se SUSPEND / DEACTIVATE kar diya gaya hai. Activation stopped!`
-        };
-      }
-
-      // 1. Expiry Check
-      if (payload.expiresAt && payload.expiresAt !== "LIFETIME") {
-        const expDate = new Date(payload.expiresAt + "T23:59:59");
-        if (expDate < new Date()) {
-          return { success: false, error: `License key expire ho chuki hai (${payload.expiresAt}). Admin se nai key lein.` };
-        }
-      }
-
-      // 2. Owner Email strict binding check
-      if (enteredEmail && payload.ownerEmail) {
-        if (enteredEmail.trim().toLowerCase() !== payload.ownerEmail.trim().toLowerCase()) {
-          return {
-            success: false,
-            error: "Entered email address is not authorized for this license key. Email match nahi kar raha."
-          };
-        }
-      }
-
-      const importedTenant = payload.tenant as unknown as Tenant;
-      if (!importedTenant || !importedTenant.id) {
-        return { success: false, error: "License key mein tenant data missing hai." };
-      }
-
-      // Set connectivityPlan & licenseExpiresAt on tenant
-      importedTenant.connectivityPlan = payload.connectivityPlan || importedTenant.connectivityPlan || "hybrid";
-      importedTenant.licenseExpiresAt = payload.expiresAt || importedTenant.licenseExpiresAt || "LIFETIME";
-
-      // Merge into tenants
-      const existingIndex = tenants.findIndex(t => t.id === importedTenant.id);
-      let updated: Tenant[];
-      if (existingIndex >= 0) {
-        updated = [...tenants];
-        updated[existingIndex] = { ...updated[existingIndex], ...importedTenant };
-      } else {
-        updated = [importedTenant, ...tenants];
-      }
-
-      setTenants(updated);
-      localStorage.setItem("unipos_tenants", JSON.stringify(updated));
-
-
-      return { success: true, tenantId: importedTenant.id };
-    } catch (err) {
-      return { success: false, error: "Key process karte waqt error aayi. Dobara try karein." };
-    }
-  };
-  // ─────────────────────────────────────────────────────────────────────────────
 
   // Check if current logged in user belongs to an online-only tenant while offline
   const currentTenantObj = tenants.find(t => t.id === currentUser?.tenantId);
@@ -3294,7 +3199,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         salesTaxRate,
         setSalesTaxRate,
         isOffline,
-        importTenantFromLicenseKey,
+
         isOnlineOnlyBlocked,
       }}
     >

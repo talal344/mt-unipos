@@ -90,7 +90,7 @@ export default function AccountingPage() {
       else if (acc.code === "4001") liveBal = totalSalesRevenue;
       else if (acc.code === "5001") liveBal = totalCogsAmt;
       else if (acc.code === "5002") liveBal = totalExpensesAmt;
-      else if (acc.code === "3001") liveBal = Math.max(0, totalSalesRevenue - totalCogsAmt - totalExpensesAmt + 500000);
+      else if (acc.code === "3001") liveBal = Math.max(0, totalSalesRevenue - totalCogsAmt - totalExpensesAmt);
 
       // Add manual journal vouchers
       const jvDebits = journalEntries.reduce((sum, jv) => {
