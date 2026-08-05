@@ -12,7 +12,7 @@ import {
 function LoginContent() {
   const router       = useRouter();
   const searchParams = useSearchParams();
-  const { tenants, setCurrentUser, importTenantFromLicenseKey } = useGlobalContext();
+  const { tenants, setCurrentUser } = useGlobalContext();
 
   const [inputTenantId, setInputTenantId] = useState("");
   const [email,    setEmail]    = useState("");
