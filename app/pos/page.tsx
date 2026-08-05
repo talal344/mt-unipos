@@ -311,6 +311,10 @@ export default function PosPage() {
     const existIdx = cart.findIndex(i => i.productId === prod.id);
     if (existIdx > -1) {
       const newQty = cart[existIdx].qty + 1;
+      if (newQty > prod.stock) {
+        triggerToast(`Only ${prod.stock} ${prod.unit || "Pcs"} available in stock!`);
+        return;
+      }
       const updatedItem = {
         ...cart[existIdx],
         qty: newQty,
@@ -319,6 +323,10 @@ export default function PosPage() {
       const filtered = cart.filter(i => i.productId !== prod.id);
       setCart([updatedItem, ...filtered]);
     } else {
+      if (prod.stock < 1) {
+        triggerToast("Out of stock!");
+        return;
+      }
       setCart(prev => [{
         productId: prod.id,
         name: prod.name,
@@ -373,6 +381,10 @@ export default function PosPage() {
     const existIdx = cart.findIndex(i => i.productId === prod.id);
     if (existIdx > -1) {
       const newQty = parseFloat((cart[existIdx].qty + qty).toFixed(4));
+      if (newQty > prod.stock) {
+        triggerToast(`Only ${prod.stock} ${prod.unit || "Pcs"} available in stock!`);
+        return;
+      }
       const updatedItem = {
         ...cart[existIdx],
         qty: newQty,
@@ -381,6 +393,10 @@ export default function PosPage() {
       const filtered = cart.filter(i => i.productId !== prod.id);
       setCart([updatedItem, ...filtered]);
     } else {
+      if (qty > prod.stock) {
+        triggerToast(`Only ${prod.stock} ${prod.unit || "Pcs"} available in stock!`);
+        return;
+      }
       setCart([
         {
           productId: prod.id,
@@ -422,8 +438,13 @@ export default function PosPage() {
   const commitQtyEdit = (prodId: string) => {
     if (!editingQty || editingQty.id !== prodId) return;
     const newQty = parseFloat(editingQty.val);
+    const prod = products.find(p => p.id === prodId);
     if (isNaN(newQty) || newQty <= 0) {
       setCart(cart.filter(i => i.productId !== prodId));
+    } else if (prod && newQty > prod.stock) {
+      triggerToast(`Only ${prod.stock} ${prod.unit || "Pcs"} available in stock!`);
+      setEditingQty(null);
+      return;
     } else {
       setCart(cart.map(i => i.productId === prodId
         ? { ...i, qty: newQty, subtotal: parseFloat((newQty * i.price).toFixed(2)) }
@@ -434,11 +455,16 @@ export default function PosPage() {
   };
 
   const handleQtyDelta = (prodId: string, delta: number) => {
+    const prod = products.find(p => p.id === prodId);
     setCart(cart.map(i => {
       if (i.productId !== prodId) return i;
       // step: 0.25 for weight items (Kg/g/Liter/ml), 1 for others
       const step = ["Kg", "Gram", "Liter", "ml", "Meter"].includes(i.unit) ? 0.25 : 1;
       const next = parseFloat(Math.max(step, i.qty + delta * step).toFixed(4));
+      if (prod && next > prod.stock) {
+        triggerToast(`Only ${prod.stock} ${prod.unit || "Pcs"} available in stock!`);
+        return i;
+      }
       return { ...i, qty: next, subtotal: parseFloat((next * i.price).toFixed(2)) };
     }));
   };
