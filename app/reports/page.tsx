@@ -166,6 +166,10 @@ export default function ReportsPage() {
 
       if (isReturn) {
         returnsTotal += s.total;
+        s.items.forEach(item => {
+          const prod = products.find(p => p.id === item.productId);
+          if (prod) cogsTotal -= prod.costPrice * item.qty;
+        });
       } else if (isDuesRecovery) {
         duesRecoveredTotal += s.total;
       } else {
