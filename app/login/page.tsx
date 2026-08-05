@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useGlobalContext } from "@/context/global-context";
 import { supabase } from "@/lib/supabase";
 import {
-  Laptop, ArrowRight, CheckCircle2, AlertCircle, Eye, EyeOff, Building2, Lock, Download, ShieldCheck
+  Laptop, ArrowRight, CheckCircle2, AlertCircle, Eye, EyeOff, Building2
 } from "lucide-react";
 
 function LoginContent() {
@@ -498,73 +498,7 @@ function LoginContent() {
             </form>
           )}
 
-          {/* ── OFFLINE LICENSE ACTIVATION STEP ── */}
-          {step === "offline" && (
-            <form onSubmit={handleOfflineActivation} className="space-y-4 text-xs animate-fade-in-up">
-              <div className="bg-purple-500/10 border border-purple-500/30 p-3.5 rounded-xl space-y-1">
-                <div className="flex items-center gap-2 text-purple-400 font-black text-xs uppercase tracking-wider">
-                  <Lock size={13} /> Offline License Activation
-                </div>
-                <p className="text-[10px] text-gray-400 leading-relaxed">
-                  Enter your Owner Corporate Email &amp; License Key. System will activate offline for lifetime.
-                </p>
-              </div>
 
-              {offlineError && (
-                <div className="bg-red-500/10 border border-red-500/30 p-3 rounded-xl text-xs flex items-start gap-2 text-red-400">
-                  <AlertCircle size={15} className="shrink-0 mt-0.5" /> {offlineError}
-                </div>
-              )}
-
-              <div>
-                <label className="block text-[10px] uppercase font-bold text-gray-400 tracking-wider mb-1.5">
-                  Owner Corporate Email
-                </label>
-                <input
-                  type="email"
-                  required
-                  value={offlineEmail}
-                  onChange={(e) => { setOfflineEmail(e.target.value); setOfflineError(""); }}
-                  placeholder="owner@company.com"
-                  className="w-full bg-black border border-brand-dark-border p-3 rounded-xl text-white focus:outline-none focus:border-purple-500 transition"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] uppercase font-bold text-gray-400 tracking-wider mb-1.5">
-                  License Key / Activation String
-                </label>
-                <textarea
-                  required
-                  rows={3}
-                  value={offlineKey}
-                  onChange={(e) => { setOfflineKey(e.target.value); setOfflineError(""); }}
-                  placeholder="UNIPOS-V1.eyJ0ZW5hbnRJZCI6IkFGUy0xMDAxI..."
-                  className="w-full bg-black border border-brand-dark-border p-3 rounded-xl text-white font-mono text-[10px] focus:outline-none focus:border-purple-500 transition resize-none"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={offlineLoading}
-                className="w-full py-3 bg-purple-600 hover:bg-purple-500 disabled:opacity-60 text-white font-black uppercase text-xs tracking-wider rounded-xl flex items-center justify-center gap-2 transition shadow-lg shadow-purple-600/20"
-              >
-                {offlineLoading ? (
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <>🔑 Activate &amp; Generate Credentials <ArrowRight size={14} /></>
-                )}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => { setStep("credentials"); setOfflineError(""); }}
-                className="w-full text-center text-[10px] text-gray-500 hover:text-white transition pt-1"
-              >
-                ← Back to Online Sign In
-              </button>
-            </form>
-          )}
 
           {/* Quick links & Desktop action bar */}
           <div className="space-y-2 text-center pt-2">
@@ -587,22 +521,7 @@ function LoginContent() {
           </div>
         </div>
 
-        {/* ── OFFLINE ACTIVATION BUTTON ── */}
-        <div className="w-full max-w-md relative z-10">
-          {step !== "offline" && (
-            <button
-              type="button"
-              onClick={() => { setStep("offline"); setOfflineError(""); setErrorMessage(""); }}
-              className="w-full flex items-center justify-between text-[10px] text-gray-400 hover:text-white border border-dashed border-brand-dark-border/60 hover:border-purple-500/50 rounded-xl px-4 py-3 transition group bg-brand-dark-surface/40"
-            >
-              <span className="flex items-center gap-2">
-                <Lock size={12} className="text-purple-400" />
-                Offline ho? License Key se activate karein
-              </span>
-              <span className="text-purple-400 font-bold group-hover:translate-x-1 transition-transform">→</span>
-            </button>
-          )}
-        </div>
+
 
       </div>
 
