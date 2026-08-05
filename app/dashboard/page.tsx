@@ -25,6 +25,9 @@ import {
   BarChart3,
   Package,
   Users,
+  FileSpreadsheet,
+  Printer,
+  Download,
   Wallet,
   RotateCcw,
   X,
@@ -78,6 +81,135 @@ export default function ClientDashboardPage() {
     salesTaxRate,
     setSalesTaxRate,
   } = useGlobalContext();
+
+    const [activeReportModal, setActiveReportModal] = React.useState<"revenue" | "gross_profit" | "net_profit" | "stock_value" | "wallet" | null>(null);
+
+  // CSV Export Helper
+  const downloadCSVReport = (type: string) => {
+    let headers: string[] = [];
+    let rows: (string | number)[][] = [];
+    let filename = `MT_UniPOS_${type}_Report_${new Date().toISOString().split("T")[0]}.csv`;
+
+    if (type === "revenue") {
+      headers = ["Receipt ID", "Date", "Customer Name", "Payment Method", "Items Count", "Subtotal", "Tax", "Discount", "Grand Total", "Status"];
+      rows = sales.map(s => [
+        s.receiptNumber,
+        new Date(s.date).toLocaleString(),
+        s.customerName,
+        s.paymentMethod,
+        s.items.length,
+        s.subtotal,
+        s.tax,
+        s.discount,
+        s.status === "Returned" || s.status === "Refunded" ? -s.total : s.total,
+        s.status
+      ]);
+    } else if (type === "gross_profit") {
+      headers = ["Receipt ID", "Date", "Product Name", "Qty", "Sale Price", "Cost Price", "Revenue", "COGS Cost", "Gross Profit", "Status"];
+      sales.forEach(s => {
+        const isReturn = s.status === "Returned" || s.status === "Refunded";
+        s.items.forEach(item => {
+          const prod = products.find(p => p.id === item.productId);
+          const cost = prod ? prod.costPrice : 0;
+          const rev = isReturn ? -item.subtotal : item.subtotal;
+          const cogsCost = isReturn ? -(cost * item.qty) : (cost * item.qty);
+          const profit = rev - cogsCost;
+          rows.push([
+            s.receiptNumber,
+            new Date(s.date).toLocaleDateString(),
+            item.productName,
+            item.qty,
+            item.price,
+            cost,
+            rev,
+            cogsCost,
+            profit,
+            s.status
+          ]);
+        });
+      });
+    } else if (type === "net_profit") {
+      headers = ["Type", "Category / Description", "Date", "Payment Source", "Amount (PKR)"];
+      rows = [
+        ["Revenue", "Total Sales Revenue (Net of Returns)", new Date().toLocaleDateString(), "All Sources", totalRevenue],
+        ["Cost", "Cost of Goods Sold (COGS)", new Date().toLocaleDateString(), "Inventory Cost", -totalCOGS],
+        ["Profit", "Gross Profit", new Date().toLocaleDateString(), "Revenue - COGS", grossProfit],
+        ...expenses.map(e => ["Expense", e.category, e.date, e.paymentMethod, -e.amount]),
+        ["Net Profit", "Final Net Profit", new Date().toLocaleDateString(), "P&L Balance", netProfit]
+      ];
+    } else if (type === "stock_value") {
+      headers = ["SKU", "Barcode", "Product Name", "Category", "Brand", "Cost Price", "Sale Price", "Stock Qty", "Total Stock Value (Cost)", "Status"];
+      rows = products.map(p => [
+        p.sku,
+        p.barcode || "N/A",
+        p.name,
+        p.category,
+        p.brand,
+        p.costPrice,
+        p.salePrice,
+        p.stock,
+        p.costPrice * p.stock,
+        p.stock <= p.minStock ? "LOW STOCK" : "IN STOCK"
+      ]);
+    } else if (type === "wallet") {
+      headers = ["Customer ID", "Customer Name", "Contact Mobile", "Email", "Store Wallet Credit (Liability PKR)"];
+      rows = walletCustomers.map(c => [
+        c.customerNo || c.id,
+        c.name,
+        c.mobile,
+        c.email,
+        c.walletBalance || 0
+      ]);
+    }
+
+    const csvContent = "data:text/csv;charset=utf-8," 
+      + [headers.join(","), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(","))].join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Print Audit Report Helper
+  const printReportWindow = (title: string, headers: string[], rows: (string | number)[][]) => {
+    const win = window.open("", "_blank", "width=900,height=700");
+    if (!win) return;
+    win.document.write(`
+      <html>
+        <head>
+          <title>${title} - ${activeTenant?.businessName || "MT UniPOS"}</title>
+          <style>
+            body { font-family: monospace; padding: 20px; color: #000; }
+            h2 { margin-bottom: 4px; }
+            .meta { font-size: 11px; color: #555; margin-bottom: 16px; border-bottom: 2px solid #000; padding-bottom: 8px; }
+            table { width: 100%; border-collapse: collapse; font-size: 11px; }
+            th, td { border: 1px solid #ddd; padding: 6px 8px; text-align: left; }
+            th { background: #f2f2f2; font-weight: bold; }
+            .num { text-align: right; font-weight: bold; }
+            .footer { margin-top: 20px; text-align: center; font-size: 10px; border-top: 1px solid #aaa; padding-top: 8px; }
+          </style>
+        </head>
+        <body>
+          <h2>${activeTenant?.businessName || "MT UniPOS"} — ${title}</h2>
+          <div class="meta">Generated Date: ${new Date().toLocaleString()} | Total Records: ${rows.length}</div>
+          <table>
+            <thead>
+              <tr>${headers.map(h => `<th>${h}</th>`).join("")}</tr>
+            </thead>
+            <tbody>
+              ${rows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join("")}</tr>`).join("")}
+            </tbody>
+          </table>
+          <div class="footer">Powered by MT UniPOS ERP Engine</div>
+        </body>
+      </html>
+    `);
+    win.document.close();
+    win.print();
+  };
 
   const [showWalletModal, setShowWalletModal] = React.useState(false);
   const [selectedWalletCust, setSelectedWalletCust] = React.useState<any>(null);
@@ -836,7 +968,7 @@ export default function ClientDashboardPage() {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
 
               {/* Revenue + sparkline */}
-              <div className="bg-emerald-500/10 border border-emerald-500/25 p-4 rounded-xl space-y-2">
+              <div onClick={() => setActiveReportModal("revenue")} className="bg-emerald-500/10 border border-emerald-500/25 p-4 rounded-xl space-y-2 cursor-pointer hover:bg-emerald-500/20 transition group">
                 <div className="flex justify-between items-center">
                   <span className="text-[10px] uppercase font-bold tracking-wider text-gray-400">Revenue</span>
                   <TrendingUp size={14} className="text-emerald-400" />
@@ -847,7 +979,7 @@ export default function ClientDashboardPage() {
               </div>
 
               {/* Gross Profit */}
-              <div className="bg-brand-sky/10 border border-brand-sky/25 p-4 rounded-xl space-y-2">
+              <div onClick={() => setActiveReportModal("gross_profit")} className="bg-brand-sky/10 border border-brand-sky/25 p-4 rounded-xl space-y-2 cursor-pointer hover:bg-brand-sky/20 transition group">
                 <div className="flex justify-between items-center">
                   <span className="text-[10px] uppercase font-bold tracking-wider text-gray-400">Gross Profit</span>
                   <ArrowUpRight size={14} className="text-brand-sky" />
@@ -866,7 +998,7 @@ export default function ClientDashboardPage() {
               </div>
 
               {/* Net Profit */}
-              <div className={`border p-4 rounded-xl space-y-2 ${
+              <div onClick={() => setActiveReportModal("net_profit")} className={`border p-4 rounded-xl space-y-2 cursor-pointer hover:opacity-90 transition group ${
                 netProfit >= 0 ? 'bg-purple-500/10 border-purple-500/25' : 'bg-red-500/10 border-red-500/25'
               }`}>
                 <div className="flex justify-between items-center">
@@ -880,7 +1012,7 @@ export default function ClientDashboardPage() {
               </div>
 
               {/* Stock Valuation */}
-              <div className="bg-amber-500/10 border border-amber-500/25 p-4 rounded-xl space-y-2">
+              <div onClick={() => setActiveReportModal("stock_value")} className="bg-amber-500/10 border border-amber-500/25 p-4 rounded-xl space-y-2 cursor-pointer hover:bg-amber-500/20 transition group">
                 <div className="flex justify-between items-center">
                   <span className="text-[10px] uppercase font-bold tracking-wider text-gray-400">Stock Value</span>
                   <Database size={14} className="text-amber-400" />
@@ -1143,13 +1275,420 @@ export default function ClientDashboardPage() {
 
               {/* Footer */}
               <div className="flex justify-between items-center pt-2 border-t border-brand-dark-border/60">
-                <div className="text-[10px] text-gray-500 font-mono">
-                  Wallet credits can be used by customers at checkout or refunded in cash.
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => downloadCSVReport("wallet")}
+                    className="px-3.5 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition shadow-lg shadow-purple-600/20"
+                  >
+                    <Download size={14} /> Download CSV Liabilities Report
+                  </button>
                 </div>
                 <button
                   onClick={() => setShowWalletModal(false)}
                   className="px-4 py-2 bg-brand-dark-border hover:bg-gray-800 text-white font-bold text-xs rounded-xl transition"
                 >
+                  Close Report
+                </button>
+              </div>
+
+            </div>
+          </div>
+        )}
+
+      
+        {/* ── REVENUE AUDIT REPORT MODAL ── */}
+        {activeReportModal === "revenue" && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-brand-dark-surface border border-emerald-500/30 rounded-2xl w-full max-w-4xl p-6 space-y-5 shadow-2xl animate-fade-in-up max-h-[90vh] flex flex-col">
+              
+              <div className="flex justify-between items-start border-b border-brand-dark-border/60 pb-4">
+                <div>
+                  <h3 className="text-base font-black text-white flex items-center gap-2">
+                    <TrendingUp size={18} className="text-emerald-400" />
+                    Sales Revenue Audit &amp; Returns Breakdown Report
+                  </h3>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Complete transaction ledger detailing net sales revenue, returns deductions, and payment methods.
+                  </p>
+                </div>
+                <button onClick={() => setActiveReportModal(null)} className="p-1 text-gray-400 hover:text-white rounded-lg transition">
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* KPI Summary Banner */}
+              <div className="grid grid-cols-3 gap-3 font-mono">
+                <div className="bg-emerald-500/10 border border-emerald-500/30 p-3 rounded-xl">
+                  <div className="text-[10px] uppercase font-bold text-gray-400">Total Net Revenue</div>
+                  <div className="text-xl font-black text-emerald-400 mt-1">{currencySymbol} {totalRevenue.toLocaleString()}</div>
+                  <div className="text-[9px] text-gray-500">Gross Sales − Returns</div>
+                </div>
+                <div className="bg-brand-dark-border/40 border border-brand-dark-border p-3 rounded-xl">
+                  <div className="text-[10px] uppercase font-bold text-gray-400">Completed Transactions</div>
+                  <div className="text-xl font-black text-white mt-1">{sales.filter(s => s.status === "Completed").length} Checkouts</div>
+                  <div className="text-[9px] text-gray-500">Active sales receipts</div>
+                </div>
+                <div className="bg-red-500/10 border border-red-500/30 p-3 rounded-xl">
+                  <div className="text-[10px] uppercase font-bold text-gray-400">Returned Sales Deducted</div>
+                  <div className="text-xl font-black text-red-400 mt-1">
+                    {currencySymbol} {sales.filter(s => s.status === "Returned" || s.status === "Refunded").reduce((a, s) => a + s.total, 0).toLocaleString()}
+                  </div>
+                  <div className="text-[9px] text-red-400/80 font-bold">Subtracted from revenue</div>
+                </div>
+              </div>
+
+              {/* Sales List Table */}
+              <div className="flex-1 overflow-y-auto border border-brand-dark-border/60 rounded-xl">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-black/60 sticky top-0 border-b border-brand-dark-border text-gray-400 font-mono">
+                    <tr>
+                      <th className="p-3 font-semibold">Receipt No</th>
+                      <th className="p-3 font-semibold">Date &amp; Time</th>
+                      <th className="p-3 font-semibold">Customer</th>
+                      <th className="p-3 font-semibold">Payment Source</th>
+                      <th className="p-3 font-semibold text-right">Net Amount</th>
+                      <th className="p-3 font-semibold text-center">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-brand-dark-border/40 font-mono text-[11px]">
+                    {sales.map(s => {
+                      const isReturn = s.status === "Returned" || s.status === "Refunded";
+                      return (
+                        <tr key={s.id} className="hover:bg-brand-dark-surface/60 transition">
+                          <td className="p-3 text-brand-sky font-bold">{s.receiptNumber}</td>
+                          <td className="p-3 text-gray-400">{new Date(s.date).toLocaleString()}</td>
+                          <td className="p-3 text-white font-sans">{s.customerName}</td>
+                          <td className="p-3 text-gray-300">{s.paymentMethod}</td>
+                          <td className={`p-3 text-right font-black ${isReturn ? "text-red-400" : "text-white"}`}>
+                            {isReturn ? "-" : ""}{currencySymbol} {s.total.toLocaleString()}
+                          </td>
+                          <td className="p-3 text-center">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                              isReturn ? "bg-red-500/10 border border-red-500/30 text-red-400" : "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400"
+                            }`}>
+                              {s.status}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex justify-between items-center pt-2 border-t border-brand-dark-border/60">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => downloadCSVReport("revenue")}
+                    className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition shadow-lg shadow-emerald-600/20"
+                  >
+                    <Download size={14} /> Download CSV Report
+                  </button>
+                  <button
+                    onClick={() => printReportWindow("Sales Revenue Audit Report", ["Receipt No", "Date", "Customer", "Payment Source", "Net Amount (PKR)", "Status"], sales.map(s => [s.receiptNumber, new Date(s.date).toLocaleString(), s.customerName, s.paymentMethod, s.status === "Returned" ? -s.total : s.total, s.status]))}
+                    className="px-3 py-2 bg-brand-dark-border hover:bg-gray-800 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition"
+                  >
+                    <Printer size={14} /> Print Audit Report
+                  </button>
+                </div>
+                <button onClick={() => setActiveReportModal(null)} className="px-4 py-2 bg-brand-dark-border hover:bg-gray-800 text-white font-bold text-xs rounded-xl transition">
+                  Close Report
+                </button>
+              </div>
+
+            </div>
+          </div>
+        )}
+
+        {/* ── GROSS PROFIT AUDIT REPORT MODAL ── */}
+        {activeReportModal === "gross_profit" && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-brand-dark-surface border border-brand-sky/30 rounded-2xl w-full max-w-5xl p-6 space-y-5 shadow-2xl animate-fade-in-up max-h-[90vh] flex flex-col">
+              
+              <div className="flex justify-between items-start border-b border-brand-dark-border/60 pb-4">
+                <div>
+                  <h3 className="text-base font-black text-white flex items-center gap-2">
+                    <ArrowUpRight size={18} className="text-brand-sky" />
+                    Gross Profit &amp; Item Cost Matching Report
+                  </h3>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Real-time Product Sales Price vs Unit COGS Cost matching for exact gross profit margin calculation.
+                  </p>
+                </div>
+                <button onClick={() => setActiveReportModal(null)} className="p-1 text-gray-400 hover:text-white rounded-lg transition">
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* KPI Summary Banner */}
+              <div className="grid grid-cols-4 gap-3 font-mono">
+                <div className="bg-emerald-500/10 border border-emerald-500/30 p-3 rounded-xl">
+                  <div className="text-[10px] uppercase font-bold text-gray-400">Total Net Revenue</div>
+                  <div className="text-lg font-black text-emerald-400 mt-1">{currencySymbol} {totalRevenue.toLocaleString()}</div>
+                </div>
+                <div className="bg-red-500/10 border border-red-500/30 p-3 rounded-xl">
+                  <div className="text-[10px] uppercase font-bold text-gray-400">Total COGS Cost</div>
+                  <div className="text-lg font-black text-red-400 mt-1">{currencySymbol} {totalCOGS.toLocaleString()}</div>
+                </div>
+                <div className="bg-brand-sky/10 border border-brand-sky/30 p-3 rounded-xl">
+                  <div className="text-[10px] uppercase font-bold text-gray-400">Net Gross Profit</div>
+                  <div className="text-lg font-black text-brand-sky mt-1">{currencySymbol} {grossProfit.toLocaleString()}</div>
+                </div>
+                <div className="bg-purple-500/10 border border-purple-500/30 p-3 rounded-xl">
+                  <div className="text-[10px] uppercase font-bold text-gray-400">Gross Margin %</div>
+                  <div className="text-lg font-black text-purple-400 mt-1">{grossMarginPct.toFixed(1)}%</div>
+                </div>
+              </div>
+
+              {/* Product Cost Matching Table */}
+              <div className="flex-1 overflow-y-auto border border-brand-dark-border/60 rounded-xl">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-black/60 sticky top-0 border-b border-brand-dark-border text-gray-400 font-mono">
+                    <tr>
+                      <th className="p-3 font-semibold">Receipt ID</th>
+                      <th className="p-3 font-semibold">Product Name</th>
+                      <th className="p-3 font-semibold text-center">Qty</th>
+                      <th className="p-3 font-semibold text-right">Sale Price</th>
+                      <th className="p-3 font-semibold text-right">Unit Cost</th>
+                      <th className="p-3 font-semibold text-right">Revenue</th>
+                      <th className="p-3 font-semibold text-right">COGS Cost</th>
+                      <th className="p-3 font-semibold text-right">Gross Profit</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-brand-dark-border/40 font-mono text-[11px]">
+                    {sales.flatMap(s => {
+                      const isReturn = s.status === "Returned" || s.status === "Refunded";
+                      return s.items.map((item, idx) => {
+                        const prod = products.find(p => p.id === item.productId);
+                        const unitCost = prod ? prod.costPrice : 0;
+                        const itemRev = isReturn ? -item.subtotal : item.subtotal;
+                        const itemCost = isReturn ? -(unitCost * item.qty) : (unitCost * item.qty);
+                        const itemProfit = itemRev - itemCost;
+
+                        return (
+                          <tr key={`${s.id}-${idx}`} className="hover:bg-brand-dark-surface/60 transition">
+                            <td className="p-3 text-brand-sky font-bold">{s.receiptNumber}</td>
+                            <td className="p-3 text-white font-sans">{item.productName}</td>
+                            <td className="p-3 text-center font-bold text-gray-300">{item.qty}</td>
+                            <td className="p-3 text-right text-gray-300">{currencySymbol} {item.price}</td>
+                            <td className="p-3 text-right text-gray-400">{currencySymbol} {unitCost}</td>
+                            <td className={`p-3 text-right font-bold ${isReturn ? "text-red-400" : "text-emerald-400"}`}>{currencySymbol} {itemRev.toLocaleString()}</td>
+                            <td className="p-3 text-right text-red-400">{currencySymbol} {itemCost.toLocaleString()}</td>
+                            <td className={`p-3 text-right font-black ${itemProfit >= 0 ? "text-brand-sky" : "text-red-400"}`}>{currencySymbol} {itemProfit.toLocaleString()}</td>
+                          </tr>
+                        );
+                      });
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex justify-between items-center pt-2 border-t border-brand-dark-border/60">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => downloadCSVReport("gross_profit")}
+                    className="px-3.5 py-2 bg-brand-sky hover:bg-sky-400 text-black font-black text-xs rounded-xl flex items-center gap-1.5 transition shadow-lg shadow-sky-500/20"
+                  >
+                    <Download size={14} /> Download CSV Report
+                  </button>
+                </div>
+                <button onClick={() => setActiveReportModal(null)} className="px-4 py-2 bg-brand-dark-border hover:bg-gray-800 text-white font-bold text-xs rounded-xl transition">
+                  Close Report
+                </button>
+              </div>
+
+            </div>
+          </div>
+        )}
+
+        {/* ── NET PROFIT & LOSS STATEMENT MODAL ── */}
+        {activeReportModal === "net_profit" && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-brand-dark-surface border border-purple-500/30 rounded-2xl w-full max-w-4xl p-6 space-y-5 shadow-2xl animate-fade-in-up max-h-[90vh] flex flex-col">
+              
+              <div className="flex justify-between items-start border-b border-brand-dark-border/60 pb-4">
+                <div>
+                  <h3 className="text-base font-black text-white flex items-center gap-2">
+                    <DollarSign size={18} className="text-purple-400" />
+                    Profit &amp; Loss (P&amp;L) Statement Audit Report
+                  </h3>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Complete income statement breaking down Revenue, Cost of Goods Sold, Gross Margin, and Operating Expenses.
+                  </p>
+                </div>
+                <button onClick={() => setActiveReportModal(null)} className="p-1 text-gray-400 hover:text-white rounded-lg transition">
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* P&L Statement Table */}
+              <div className="bg-black/40 border border-brand-dark-border rounded-xl p-4 font-mono space-y-3">
+                <div className="flex justify-between items-center text-sm border-b border-brand-dark-border/60 pb-2 text-emerald-400 font-bold">
+                  <span>1. TOTAL SALES REVENUE (NET OF RETURNS)</span>
+                  <span>{currencySymbol} {totalRevenue.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between items-center text-sm border-b border-brand-dark-border/60 pb-2 text-red-400">
+                  <span>2. LESS: COST OF GOODS SOLD (COGS)</span>
+                  <span>- {currencySymbol} {totalCOGS.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between items-center text-base border-b border-brand-dark-border pb-2 text-brand-sky font-black">
+                  <span>3. GROSS PROFIT MARGIN</span>
+                  <span>{currencySymbol} {grossProfit.toLocaleString()} ({grossMarginPct.toFixed(1)}%)</span>
+                </div>
+                <div className="flex justify-between items-center text-sm border-b border-brand-dark-border/60 pb-2 text-amber-400">
+                  <span>4. LESS: OPERATING &amp; UTILITY EXPENSES</span>
+                  <span>- {currencySymbol} {totalExpenses.toLocaleString()}</span>
+                </div>
+                <div className={`flex justify-between items-center text-lg pt-1 font-black ${netProfit >= 0 ? "text-purple-400" : "text-red-400"}`}>
+                  <span>5. FINAL NET OPERATING PROFIT</span>
+                  <span>{netProfit < 0 ? "-" : ""}{currencySymbol} {Math.abs(netProfit).toLocaleString()}</span>
+                </div>
+              </div>
+
+              {/* Expenses Breakdown List */}
+              <div className="flex-1 overflow-y-auto border border-brand-dark-border/60 rounded-xl">
+                <div className="p-3 bg-black/60 font-bold text-xs text-white border-b border-brand-dark-border uppercase tracking-wider font-mono">
+                  Operating Expenses Audit Ledger ({expenses.length} Vouchers)
+                </div>
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-black/40 border-b border-brand-dark-border text-gray-400 font-mono text-[10px]">
+                    <tr>
+                      <th className="p-2.5 font-semibold">Expense ID</th>
+                      <th className="p-2.5 font-semibold">Category</th>
+                      <th className="p-2.5 font-semibold">Date</th>
+                      <th className="p-2.5 font-semibold">Description</th>
+                      <th className="p-2.5 font-semibold">Payment Source</th>
+                      <th className="p-2.5 font-semibold text-right">Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-brand-dark-border/40 font-mono text-[11px]">
+                    {expenses.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="text-center py-6 text-gray-500 italic font-sans">No operating expenses recorded yet.</td>
+                      </tr>
+                    ) : (
+                      expenses.map(exp => (
+                        <tr key={exp.id} className="hover:bg-brand-dark-surface/60 transition">
+                          <td className="p-2.5 text-purple-400 font-bold">{exp.id}</td>
+                          <td className="p-2.5 text-white font-sans">{exp.category}</td>
+                          <td className="p-2.5 text-gray-400">{exp.date}</td>
+                          <td className="p-2.5 text-gray-400 font-sans">{exp.description}</td>
+                          <td className="p-2.5 text-gray-300">{exp.paymentMethod}</td>
+                          <td className="p-2.5 text-right font-bold text-red-400">{currencySymbol} {exp.amount.toLocaleString()}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex justify-between items-center pt-2 border-t border-brand-dark-border/60">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => downloadCSVReport("net_profit")}
+                    className="px-3.5 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition shadow-lg shadow-purple-600/20"
+                  >
+                    <Download size={14} /> Download P&amp;L CSV Statement
+                  </button>
+                </div>
+                <button onClick={() => setActiveReportModal(null)} className="px-4 py-2 bg-brand-dark-border hover:bg-gray-800 text-white font-bold text-xs rounded-xl transition">
+                  Close Report
+                </button>
+              </div>
+
+            </div>
+          </div>
+        )}
+
+        {/* ── STOCK VALUATION AUDIT REPORT MODAL ── */}
+        {activeReportModal === "stock_value" && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-brand-dark-surface border border-amber-500/30 rounded-2xl w-full max-w-5xl p-6 space-y-5 shadow-2xl animate-fade-in-up max-h-[90vh] flex flex-col">
+              
+              <div className="flex justify-between items-start border-b border-brand-dark-border/60 pb-4">
+                <div>
+                  <h3 className="text-base font-black text-white flex items-center gap-2">
+                    <Database size={18} className="text-amber-400" />
+                    Inventory Stock Valuation &amp; Catalog Audit Report
+                  </h3>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Live inventory asset valuation computed as (Product Cost Price × Current Available Stock).
+                  </p>
+                </div>
+                <button onClick={() => setActiveReportModal(null)} className="p-1 text-gray-400 hover:text-white rounded-lg transition">
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* KPI Summary Banner */}
+              <div className="grid grid-cols-3 gap-3 font-mono">
+                <div className="bg-amber-500/10 border border-amber-500/30 p-3 rounded-xl">
+                  <div className="text-[10px] uppercase font-bold text-gray-400">Total Stock Value</div>
+                  <div className="text-xl font-black text-amber-400 mt-1">{currencySymbol} {totalStockValue.toLocaleString()}</div>
+                  <div className="text-[9px] text-gray-500">Asset Account 1003</div>
+                </div>
+                <div className="bg-brand-dark-border/40 border border-brand-dark-border p-3 rounded-xl">
+                  <div className="text-[10px] uppercase font-bold text-gray-400">Catalog SKUs Count</div>
+                  <div className="text-xl font-black text-white mt-1">{products.length} Products</div>
+                  <div className="text-[9px] text-gray-500">Active inventory SKUs</div>
+                </div>
+                <div className="bg-red-500/10 border border-red-500/30 p-3 rounded-xl">
+                  <div className="text-[10px] uppercase font-bold text-gray-400">Low Stock Alerts</div>
+                  <div className="text-xl font-black text-red-400 mt-1">{lowStockAlerts.length} Products</div>
+                  <div className="text-[9px] text-red-400/80 font-bold">Below minimum threshold</div>
+                </div>
+              </div>
+
+              {/* Inventory SKUs Table */}
+              <div className="flex-1 overflow-y-auto border border-brand-dark-border/60 rounded-xl">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-black/60 sticky top-0 border-b border-brand-dark-border text-gray-400 font-mono">
+                    <tr>
+                      <th className="p-3 font-semibold">SKU &amp; Barcode</th>
+                      <th className="p-3 font-semibold">Product Name</th>
+                      <th className="p-3 font-semibold">Category</th>
+                      <th className="p-3 font-semibold text-right">Cost Price</th>
+                      <th className="p-3 font-semibold text-right">Sale Price</th>
+                      <th className="p-3 font-semibold text-center">Stock Qty</th>
+                      <th className="p-3 font-semibold text-right">Valuation (Cost)</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-brand-dark-border/40 font-mono text-[11px]">
+                    {products.map(p => {
+                      const val = p.costPrice * p.stock;
+                      const isLow = p.stock <= p.minStock;
+                      return (
+                        <tr key={p.id} className="hover:bg-brand-dark-surface/60 transition">
+                          <td className="p-3 text-brand-sky font-bold">{p.sku}</td>
+                          <td className="p-3 text-white font-sans">{p.name}</td>
+                          <td className="p-3 text-gray-400">{p.category}</td>
+                          <td className="p-3 text-right text-gray-300">{currencySymbol} {p.costPrice}</td>
+                          <td className="p-3 text-right text-gray-300">{currencySymbol} {p.salePrice}</td>
+                          <td className={`p-3 text-center font-bold ${isLow ? "text-red-400 font-black" : "text-white"}`}>
+                            {p.stock} {p.unit || "Pcs"}
+                          </td>
+                          <td className="p-3 text-right font-black text-amber-400">{currencySymbol} {val.toLocaleString()}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex justify-between items-center pt-2 border-t border-brand-dark-border/60">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => downloadCSVReport("stock_value")}
+                    className="px-3.5 py-2 bg-amber-500 hover:bg-amber-400 text-black font-black text-xs rounded-xl flex items-center gap-1.5 transition shadow-lg shadow-amber-500/20"
+                  >
+                    <Download size={14} /> Download CSV Inventory Valuation
+                  </button>
+                </div>
+                <button onClick={() => setActiveReportModal(null)} className="px-4 py-2 bg-brand-dark-border hover:bg-gray-800 text-white font-bold text-xs rounded-xl transition">
                   Close Report
                 </button>
               </div>
