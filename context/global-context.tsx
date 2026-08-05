@@ -542,109 +542,150 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  // --- Supabase Offline-First Sync Injection ---
+  // --- Supabase Realtime & Offline-First Sync Engine ---
   useEffect(() => {
     if (typeof window === "undefined") return;
 
+    const mergeCollectionsData = (localArr: any[], cloudArr: any[]) => {
+      if (!Array.isArray(localArr)) localArr = [];
+      if (!Array.isArray(cloudArr)) cloudArr = [];
+
+      if (localArr.length === 0) return cloudArr;
+      if (cloudArr.length === 0) return localArr;
+
+      const map = new Map<string, any>();
+
+      // Cloud items first
+      cloudArr.forEach(item => {
+        if (!item) return;
+        const key = item.id || item.receiptNumber || item.code || item.customerNo || (typeof item === 'object' ? JSON.stringify(item) : String(item));
+        map.set(String(key), item);
+      });
+
+      // Local items override / append unique entries
+      localArr.forEach(item => {
+        if (!item) return;
+        const key = item.id || item.receiptNumber || item.code || item.customerNo || (typeof item === 'object' ? JSON.stringify(item) : String(item));
+        const keyStr = String(key);
+        if (!map.has(keyStr)) {
+          map.set(keyStr, item);
+        } else {
+          map.set(keyStr, { ...map.get(keyStr), ...item });
+        }
+      });
+
+      return Array.from(map.values());
+    };
+
     const originalSetItem = window.localStorage.setItem;
-    
+
     window.localStorage.setItem = function(key: string, value: string) {
       originalSetItem.apply(this, arguments as any);
-      
-      // Do not sync non-unipos keys or local session states
+
       if (!key.startsWith("unipos_")) return;
       if (key === "unipos_current_user") return;
 
       try {
-        const parts = key.split('_');
-        const possibleTenantId = parts[parts.length - 1];
-        
-        let parsedData;
+        const globalKeys = ["unipos_tenants", "unipos_demos", "unipos_invoices", "unipos_tickets", "unipos_blacklisted_tenants"];
+        const isGlobalKey = globalKeys.includes(key);
+
+        let parsedData: any;
         try {
           parsedData = JSON.parse(value);
         } catch {
-          parsedData = value; // Fallback
+          parsedData = value;
         }
-        
-        // Check if the last segment looks like a tenant ID (contains a dash and letters)
-        const isTenantKey = /^[A-Z]+-\d+$/.test(possibleTenantId) ||
-          possibleTenantId.startsWith('AFS-') ||
-          possibleTenantId.startsWith('DEMO-') ||
-          possibleTenantId.startsWith('MT-');
 
-        // Check if tenant has offline-only connectivity plan
-        const localTenantsRaw = localStorage.getItem("unipos_tenants");
-        if (localTenantsRaw && isTenantKey) {
-          try {
-            const parsedTenants: Tenant[] = JSON.parse(localTenantsRaw);
-            const targetTenant = parsedTenants.find(t => t.id === possibleTenantId);
-            if (targetTenant?.connectivityPlan === "offline-only") {
-              return; // Do NOT sync to Supabase for offline-only tenant!
+        if (!isGlobalKey) {
+          const lastUnderscore = key.lastIndexOf('_');
+          if (lastUnderscore === -1) return;
+          const possibleTenantId = key.substring(lastUnderscore + 1);
+          const collection = key.substring(0, lastUnderscore);
+
+          // Check if tenant has offline-only connectivity plan
+          const localTenantsRaw = localStorage.getItem("unipos_tenants");
+          if (localTenantsRaw) {
+            try {
+              const parsedTenants: Tenant[] = JSON.parse(localTenantsRaw);
+              const targetTenant = parsedTenants.find(t => t.id === possibleTenantId);
+              if (targetTenant?.connectivityPlan === "offline-only") return;
+            } catch {}
+          }
+
+          queueSyncKey(key).then(async () => {
+            if (!navigator.onLine) return;
+
+            // SAFETY GUARD: Never overwrite non-empty cloud collections with an empty array []
+            if (Array.isArray(parsedData) && parsedData.length === 0) {
+              const { data: existing } = await supabase
+                .from('unipos_collections')
+                .select('data')
+                .eq('tenant_id', possibleTenantId)
+                .eq('collection', collection)
+                .maybeSingle();
+
+              if (existing && Array.isArray(existing.data) && existing.data.length > 0) {
+                console.warn(`[SAFETY GUARD] Blocked empty array overwrite for ${collection} on tenant ${possibleTenantId}`);
+                return;
+              }
             }
-          } catch {}
-        }
-        queueSyncKey(key).then(() => {
-          if (!navigator.onLine) return;
 
-          if (isTenantKey) {
-            const collection = key.replace('_' + possibleTenantId, '');
-            supabase.from('unipos_collections').upsert({
+            const { error } = await supabase.from('unipos_collections').upsert({
               tenant_id: possibleTenantId,
               collection: collection,
               item_id: 'all',
-              data: parsedData
-            }).then(({error}) => { 
-              if (!error) dequeueItem(STORE_SYNC_KEYS, key); 
+              data: parsedData,
+              updated_at: new Date().toISOString()
             });
-          } else {
-            // Global key (e.g. unipos_tenants, unipos_demos) → save to unipos_global
-            supabase.from('unipos_global').upsert({
+
+            if (!error) dequeueItem(STORE_SYNC_KEYS, key);
+          });
+        } else {
+          // Global key (e.g. unipos_tenants)
+          queueSyncKey(key).then(async () => {
+            if (!navigator.onLine) return;
+            const { error } = await supabase.from('unipos_global').upsert({
               key: key,
-              value: parsedData
-            }).then(({error}) => { 
-              if (!error) dequeueItem(STORE_SYNC_KEYS, key); 
+              value: parsedData,
+              updated_at: new Date().toISOString()
             });
-          }
-        });
+            if (!error) dequeueItem(STORE_SYNC_KEYS, key);
+          });
+        }
       } catch (e) {
-        // Queue key if sync failed entirely
         queueSyncKey(key);
       }
     };
-    
-    // Initial fetch to sync from Supabase
+
+    // Pull down & merge data from Supabase Cloud
     const syncFromSupabase = async () => {
       let changed = false;
       try {
-        // 0. Process queued receipt images
+        // 0. Receipt images queue
         const pendingReceipts = await getQueuedItems(STORE_RECEIPTS);
         for (const receipt of pendingReceipts) {
           const { error } = await supabase.storage.from('receipts').upload(receipt.filePath, receipt.blob, {
             contentType: 'image/jpeg',
             upsert: true
           });
-          if (!error) {
-            await dequeueItem(STORE_RECEIPTS, receipt.id);
-          }
+          if (!error) await dequeueItem(STORE_RECEIPTS, receipt.id);
         }
 
-        // 1. Process local offline queue first
+        // 1. Process local offline queue
         const pendingSyncs = await getQueuedItems(STORE_SYNC_KEYS);
         const pendingKeySet = new Set(pendingSyncs.map(i => i.key));
-        
+
         for (const item of pendingSyncs) {
           const val = window.localStorage.getItem(item.key);
           if (val) {
-            // Trigger the patched setItem to push to Supabase
             window.localStorage.setItem(item.key, val);
           }
           await dequeueItem(STORE_SYNC_KEYS, item.key);
         }
 
-        // 2. Pull down global data (including unipos_tenants)
+        // 2. Global Data (Tenants, Demos, etc.)
         const { data: globalData } = await supabase.from('unipos_global').select('*');
         if (globalData) {
-          // ── Special case: Restore tenants from Supabase if localStorage is missing/empty ──
           let blacklisted: string[] = [];
           try {
             blacklisted = JSON.parse(window.localStorage.getItem("unipos_blacklisted_tenants") || "[]");
@@ -655,123 +696,129 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
             const cleanCloud = tenantsRow.value.filter((t: any) => !blacklisted.includes(t.id));
             const localTenants = window.localStorage.getItem('unipos_tenants');
             let localParsed: any[] = [];
-            try { localParsed = localTenants ? JSON.parse(localTenants) : []; } catch { localParsed = []; }
+            try { localParsed = localTenants ? JSON.parse(localTenants) : []; } catch {}
 
-            const onlySeedLocal = localParsed.every(t => PERMANENT_SEED_TENANTS.some(s => s.id === t.id));
-            if (onlySeedLocal && cleanCloud.length > localParsed.length) {
-              const merged = [...cleanCloud];
-              for (const seed of PERMANENT_SEED_TENANTS) {
-                if (!blacklisted.includes(seed.id) && !merged.some((t: any) => t.id === seed.id)) {
-                  merged.unshift(seed);
-                }
-              }
-              originalSetItem.call(window.localStorage, 'unipos_tenants', JSON.stringify(merged));
+            const mergedTenants = mergeCollectionsData(localParsed, cleanCloud);
+            const mergedStr = JSON.stringify(mergedTenants);
+            if (mergedStr !== localTenants) {
+              originalSetItem.call(window.localStorage, 'unipos_tenants', mergedStr);
               changed = true;
             }
           }
+
           globalData.forEach(row => {
-            if (pendingKeySet.has(row.key)) return; // Skip if we just pushed it
+            if (row.key === 'unipos_tenants') return;
+            if (pendingKeySet.has(row.key)) return;
             const current = window.localStorage.getItem(row.key);
             const incoming = JSON.stringify(row.value);
-            
-            // Safety check: never overwrite local data with Supabase empty arrays/objects
-            // This prevents stale empty Supabase rows from wiping local data
+
             if (current) {
               try {
                 const localParsed = JSON.parse(current);
                 const incomingParsed = row.value;
-                
-                // If both are arrays and Supabase has FEWER items, local wins
                 if (Array.isArray(localParsed) && Array.isArray(incomingParsed)) {
                   if (incomingParsed.length < localParsed.length) return;
-                  // If same length, do deep compare to detect real changes
-                  if (incomingParsed.length === localParsed.length) {
-                    const sameContent = JSON.stringify(localParsed) === JSON.stringify(incomingParsed);
-                    if (sameContent) return;
-                  }
                 }
               } catch(e) {}
             }
-            
-            // Deep compare instead of simple string equality to ignore key reordering
-            let isDifferent = current !== incoming;
-            if (isDifferent && current) {
-              try {
-                isDifferent = JSON.stringify(JSON.parse(current)) !== JSON.stringify(JSON.parse(incoming));
-              } catch(e) {}
-            }
-            
-            if (isDifferent) {
+
+            if (current !== incoming) {
               originalSetItem.call(window.localStorage, row.key, incoming);
               changed = true;
             }
           });
         }
-        
+
+        // 3. Tenant Collections Data
         const savedUser = window.localStorage.getItem("unipos_current_user");
         if (savedUser) {
           const user = JSON.parse(savedUser);
           if (user?.tenantId) {
-            const { data: tenantData } = await supabase.from('unipos_collections').select('*').eq('tenant_id', user.tenantId);
+            const { data: tenantData } = await supabase
+              .from('unipos_collections')
+              .select('*')
+              .eq('tenant_id', user.tenantId);
+
             if (tenantData) {
-              tenantData.forEach(row => {
+              for (const row of tenantData) {
                 const localKey = `${row.collection}_${row.tenant_id}`;
-                if (pendingKeySet.has(localKey)) return; // Skip if we just pushed it
+                if (pendingKeySet.has(localKey)) continue;
+
                 const current = window.localStorage.getItem(localKey);
-                const incoming = JSON.stringify(row.data);
-                
-                // Deep compare instead of simple string equality to ignore key reordering
-                let isDifferent = current !== incoming;
-                if (isDifferent && current) {
-                  try {
-                    isDifferent = JSON.stringify(JSON.parse(current)) !== JSON.stringify(JSON.parse(incoming));
-                  } catch(e) {}
+                let localParsed: any = null;
+                if (current) {
+                  try { localParsed = JSON.parse(current); } catch {}
                 }
-                
-                if (isDifferent) {
-                  originalSetItem.call(window.localStorage, localKey, incoming);
-                  changed = true;
+
+                const cloudParsed = row.data;
+
+                if (Array.isArray(cloudParsed)) {
+                  const merged = mergeCollectionsData(localParsed || [], cloudParsed);
+                  const mergedStr = JSON.stringify(merged);
+                  if (mergedStr !== current) {
+                    originalSetItem.call(window.localStorage, localKey, mergedStr);
+                    changed = true;
+
+                    // If local merged array contains items that Cloud did not have, push back to Cloud
+                    if (merged.length > cloudParsed.length) {
+                      supabase.from('unipos_collections').upsert({
+                        tenant_id: row.tenant_id,
+                        collection: row.collection,
+                        item_id: 'all',
+                        data: merged,
+                        updated_at: new Date().toISOString()
+                      });
+                    }
+                  }
+                } else if (cloudParsed && typeof cloudParsed === 'object') {
+                  const incomingStr = JSON.stringify(cloudParsed);
+                  if (incomingStr !== current) {
+                    originalSetItem.call(window.localStorage, localKey, incomingStr);
+                    changed = true;
+                  }
                 }
-              });
+              }
             }
           }
         }
-        
+
         if (changed) {
-          console.log("Supabase downloaded new data. Updating state...");
           window.dispatchEvent(new Event('unipos_sync_updated'));
         }
       } catch (e) {
         console.error("Failed to fetch from Supabase:", e);
       }
     };
-    
+
     syncFromSupabase();
 
-    // Supabase Realtime Sync
+    // Supabase Realtime Channel
     const channel = supabase
       .channel("schema-db-changes")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "unipos_global" },
-        () => syncFromSupabase()
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "unipos_collections" },
-        () => syncFromSupabase()
-      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "unipos_global" }, () => syncFromSupabase())
+      .on("postgres_changes", { event: "*", schema: "public", table: "unipos_collections" }, () => syncFromSupabase())
       .subscribe();
 
-    // Also sync whenever the internet comes back online
+    // Fast 3-second heartbeat polling fallback for rock-solid mobile sync
+    const pollInterval = setInterval(() => {
+      syncFromSupabase();
+    }, 3000);
+
+    const handleFocus = () => syncFromSupabase();
     window.addEventListener('online', syncFromSupabase);
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('visibilitychange', handleFocus);
 
     return () => {
       window.localStorage.setItem = originalSetItem;
       window.removeEventListener('online', syncFromSupabase);
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('visibilitychange', handleFocus);
+      clearInterval(pollInterval);
       supabase.removeChannel(channel);
     };
   }, []);
+
   // SaaS Admin States
   const [demoRequests, setDemoRequests] = useState<DemoRequest[]>([]);
   const [tenants, setTenants] = useState<Tenant[]>([]);
@@ -906,6 +953,41 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         
         const st = localStorage.getItem("unipos_support_tickets");
         if (st) setSupportTickets(JSON.parse(st));
+
+        // Re-hydrate active tenant React state from synced localStorage
+        const savedUserRaw = localStorage.getItem("unipos_current_user");
+        if (savedUserRaw) {
+          const u = JSON.parse(savedUserRaw);
+          if (u?.tenantId) {
+            const tid = u.tenantId;
+            const p = localStorage.getItem("unipos_products_" + tid);
+            if (p) try { setProducts(JSON.parse(p)); } catch {}
+
+            const c = localStorage.getItem("unipos_customers_" + tid);
+            if (c) try { setCustomers(JSON.parse(c)); } catch {}
+
+            const sup = localStorage.getItem("unipos_suppliers_" + tid);
+            if (sup) try { setSuppliers(JSON.parse(sup)); } catch {}
+
+            const po = localStorage.getItem("unipos_pos_" + tid);
+            if (po) try { setPurchaseOrders(JSON.parse(po)); } catch {}
+
+            const s = localStorage.getItem("unipos_sales_" + tid);
+            if (s) try { setSales(JSON.parse(s)); } catch {}
+
+            const exp = localStorage.getItem("unipos_expenses_" + tid);
+            if (exp) try { setExpenses(JSON.parse(exp)); } catch {}
+
+            const emp = localStorage.getItem("unipos_employees_" + tid);
+            if (emp) try { setEmployees(JSON.parse(emp)); } catch {}
+
+            const acc = localStorage.getItem("unipos_accounts_" + tid);
+            if (acc) try { setAccounts(JSON.parse(acc)); } catch {}
+
+            const set = localStorage.getItem("unipos_settings_" + tid);
+            if (set) try { setBusinessSettings(JSON.parse(set)); } catch {}
+          }
+        }
       } catch(e) {}
     };
 
@@ -1219,7 +1301,6 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       setProducts(initProducts);
     } else {
       // New tenant: fresh empty products list
-      saveTenantData("unipos_products", []);
       setProducts([]);
     }
 
@@ -1277,7 +1358,6 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       saveTenantData("unipos_suppliers", initSuppliers);
       setSuppliers(initSuppliers);
     } else {
-      saveTenantData("unipos_suppliers", []);
       setSuppliers([]);
     }
 
@@ -1301,7 +1381,6 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       saveTenantData("unipos_pos", initPOs);
       setPurchaseOrders(initPOs);
     } else {
-      saveTenantData("unipos_pos", []);
       setPurchaseOrders([]);
     }
 
@@ -1354,7 +1433,6 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       saveTenantData("unipos_sales", initSales);
       setSales(initSales);
     } else {
-      saveTenantData("unipos_sales", []);
       setSales([]);
     }
 
@@ -1424,7 +1502,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       ];
       saveTenantData("unipos_expenses", initExpenses);
       setExpenses(initExpenses);
-    } else { saveTenantData("unipos_expenses", []); setExpenses([]); }
+    } else { setExpenses([]); }
 
     // 10. Load Employees
     const savedEmployees = localStorage.getItem("unipos_employees_" + currentUser.tenantId);
@@ -1437,7 +1515,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       ];
       saveTenantData("unipos_employees", initEmployees);
       setEmployees(initEmployees);
-    } else { saveTenantData("unipos_employees", []); setEmployees([]); }
+    } else { setEmployees([]); }
 
     // 11. Load Restaurant Tables
     const savedTables = localStorage.getItem("unipos_tables_" + currentUser.tenantId);
@@ -1456,7 +1534,6 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       saveTenantData("unipos_tables", initTables);
       setTables(initTables);
     } else {
-      saveTenantData("unipos_tables", []);
       setTables([]);
     }
 
@@ -1469,7 +1546,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       ];
       saveTenantData("unipos_kitchen", initKitchen);
       setKitchenTickets(initKitchen);
-    } else { saveTenantData("unipos_kitchen", []); setKitchenTickets([]); }
+    } else { setKitchenTickets([]); }
 
     // 13. Load Accounting Ledgers
     const defaultInitAccounts: AccountLedger[] = [
