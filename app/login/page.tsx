@@ -187,6 +187,19 @@ function LoginContent() {
       }
     }
 
+    // Owner fallback match for Active Workspace (if email matches owner email of active tenant)
+    if (!presetMatch && activeTenant && (activeTenant.status === "Active" || activeTenant.status === "Trial")) {
+      if (activeTenant.email && activeTenant.email.toLowerCase() === email.toLowerCase()) {
+        presetMatch = {
+          id: `CRED-${activeTenant.id}`,
+          label: "Owner (Full ERP)",
+          email: activeTenant.email,
+          pass: password,
+          role: "Owner"
+        };
+      }
+    }
+
     const employeeMatch = tenantEmployees.find((emp: any) => emp.email.toLowerCase() === email.toLowerCase() && emp.password === password);
 
     if (presetMatch || employeeMatch) {
