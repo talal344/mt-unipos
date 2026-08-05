@@ -14,15 +14,12 @@ import {
   Eye, 
   EyeOff, 
   Grid,
-  Braces,
-  Cloud
+  Braces
 } from "lucide-react";
-import GoogleDriveBackupModal from "@/components/google-drive-backup-modal";
 
 export default function AdminSettingsPage() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [showApiKeys, setShowApiKeys] = useState(false);
-  const [showDriveModal, setShowDriveModal] = useState(false);
 
   // Form settings states
   const [platformTitle, setPlatformTitle] = useState("MT UniPOS");
@@ -250,31 +247,6 @@ export default function AdminSettingsPage() {
           {/* Right panel - DB Maintenances & backups logs */}
           <div className="lg:col-span-1 space-y-6">
             
-            {/* Google Drive Automated Backup Section */}
-            <div className="bg-sky-500/10 border border-sky-500/30 p-6 rounded-2xl space-y-4 shadow-xl">
-              <h3 className="text-xs font-black uppercase text-sky-400 tracking-wider flex items-center gap-1.5 border-b border-sky-500/20 pb-2.5">
-                <Cloud size={16} />
-                Google Drive Auto-Backup
-              </h3>
-
-              <p className="text-[10px] text-gray-300 leading-normal">
-                Automatic daily tenant data upload into separate Google Drive folders (e.g. MT-344_Store).
-              </p>
-
-              <button
-                onClick={() => setShowDriveModal(true)}
-                className="w-full py-2.5 bg-sky-600 hover:bg-sky-500 text-white text-[11px] font-black uppercase rounded-xl flex items-center justify-center gap-2 transition shadow-lg shadow-sky-600/30"
-              >
-                <Cloud size={14} />
-                <span>Open Drive Backup Console</span>
-              </button>
-            </div>
-
-            <GoogleDriveBackupModal
-              isOpen={showDriveModal}
-              onClose={() => setShowDriveModal(false)}
-            />
-
             {/* Database backups engine */}
             <div className="bg-brand-dark-surface/50 border border-brand-dark-border p-6 rounded-2xl space-y-4">
               <h3 className="text-xs font-black uppercase text-gray-400 tracking-wider flex items-center gap-1.5 border-b border-brand-dark-border pb-2.5">

@@ -41,9 +41,7 @@ import {
   Upload,
   Cpu,
   RefreshCw,
-  Cloud,
 } from "lucide-react";
-import GoogleDriveBackupModal from "@/components/google-drive-backup-modal";
 import type { DemoRequest } from "@/context/global-context";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -661,7 +659,6 @@ export default function AdminClientsPage() {
   const [showRestoreModal, setShowRestoreModal] = useState(false);
   const [restoreTenantId, setRestoreTenantId] = useState<string | null>(null);
   const [restoreLoading, setRestoreLoading] = useState(false);
-  const [showDriveBackupModal, setShowDriveBackupModal] = useState(false);
 
   // ─── License Key State ─────────────────────────────────────────────────
   const [licenseKeyModal, setLicenseKeyModal] = useState<{
@@ -1552,15 +1549,6 @@ export default function AdminClientsPage() {
                 </select>
 
                 <button
-                  onClick={() => setShowDriveBackupModal(true)}
-                  className="flex items-center gap-1.5 bg-sky-500/15 hover:bg-sky-500/30 border border-sky-500/40 px-3 py-2 rounded-lg text-[10px] font-bold text-sky-300 hover:text-white transition shadow-sm shadow-sky-500/10"
-                  title="Configure & Trigger Automated Google Drive Backup for all Tenants"
-                >
-                  <Cloud size={13} className="text-sky-400" />
-                  <span>Google Drive Auto-Backup</span>
-                </button>
-
-                <button
                   onClick={handleExportRegistry}
                   className="flex items-center gap-1 bg-brand-dark-surface hover:bg-brand-dark-border border border-brand-dark-border px-3 py-2 rounded-lg text-[10px] text-gray-300 hover:text-white transition"
                   title="Export sharding registry configuration metadata to JSON"
@@ -1929,13 +1917,6 @@ export default function AdminClientsPage() {
       )}
 
       {/* ══════════════════════════════════════════════════════════════════════ */}
-      {/* GOOGLE DRIVE BACKUP MODAL                                              */}
-      {/* ═══════════════════════════════════════════════════════════════════════ */}
-      <GoogleDriveBackupModal
-        isOpen={showDriveBackupModal}
-        onClose={() => setShowDriveBackupModal(false)}
-      />
-
       {/* ══════════════════════════════════════════════════════════════════════ */}
       {/* RESTORE BACKUP MODAL                                                   */}
       {/* ═══════════════════════════════════════════════════════════════════════ */}
