@@ -747,10 +747,7 @@ export default function AdminClientsPage() {
     const paymentStatus = tenant.status === "Active" ? "PAID & ACTIVATED" : (inv?.status || "PENDING PAYMENT");
     
     // Generate License Key
-    let keyString = "UNIPOS-V1.ey...";
-    try {
-      keyString = await generateLicenseKey(tenant as any, tenant.email, -1, tenant.connectivityPlan || "hybrid");
-    } catch {}
+    let keyString = "WEB-VERSION-NO-KEY-REQUIRED";
 
     const html = `<!DOCTYPE html>
 <html>
