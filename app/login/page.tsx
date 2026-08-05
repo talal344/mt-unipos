@@ -530,4 +530,12 @@ function LoginContent() {
   );
 }
 
+function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-black flex items-center justify-center text-white">Loading...</div>}>
+      <LoginContent />
+    </Suspense>
+  );
+}
+
 export default LoginPage;
