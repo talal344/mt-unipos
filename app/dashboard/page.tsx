@@ -24,7 +24,12 @@ import {
   TrendingDown,
   BarChart3,
   Package,
-  Users
+  Users,
+  Wallet,
+  RotateCcw,
+  X,
+  CheckCircle2,
+  Eye
 } from "lucide-react";
 import Link from "next/link";
 import { 
@@ -67,10 +72,35 @@ export default function ClientDashboardPage() {
     tables, 
     kitchenTickets, 
     customers,
+    updateCustomerWalletBalance,
+    addJournalEntry,
     setCurrencySymbol,
     salesTaxRate,
     setSalesTaxRate,
   } = useGlobalContext();
+
+  const [showWalletModal, setShowWalletModal] = React.useState(false);
+  const [selectedWalletCust, setSelectedWalletCust] = React.useState<any>(null);
+
+  const totalWalletLiability = useMemo(() => {
+    return customers.reduce((acc, c) => acc + (c.walletBalance || 0), 0);
+  }, [customers]);
+
+  const walletCustomers = useMemo(() => {
+    return customers.filter(c => (c.walletBalance || 0) > 0);
+  }, [customers]);
+
+  const handleSettleWalletLiability = (cust: any) => {
+    if (!cust || !cust.walletBalance) return;
+    const refundAmt = cust.walletBalance;
+    updateCustomerWalletBalance(cust.id, -refundAmt);
+    addJournalEntry(
+      `Refunded Store Wallet Liability (${cust.name}) in Cash`,
+      [{ accountCode: "2003", amount: refundAmt }],
+      [{ accountCode: "1001", amount: refundAmt }]
+    );
+    setSelectedWalletCust(null);
+  };
 
   const sym = currencySymbol || "PKR";
   const formatAmt = (val: number) => {
@@ -96,7 +126,11 @@ export default function ClientDashboardPage() {
 
   // 2. Compute General Statistics
   const totalSalesCount = sales.length;
-  const totalRevenue = sales.reduce((acc, s) => acc + s.total, 0);
+  const totalRevenue = sales.reduce((acc, s) => {
+    if (s.status === "Returned" || s.status === "Refunded") return acc - s.total;
+    if ((s as any).status === "Dues_Recovery") return acc;
+    return acc + s.total;
+  }, 0);
   const totalExpenses = expenses.reduce((acc, e) => acc + e.amount, 0);
   const totalStockValue = products.reduce((acc, p) => acc + (p.costPrice * p.stock), 0);
   const lowStockAlerts = products.filter(p => p.stock <= p.minStock);
@@ -104,10 +138,16 @@ export default function ClientDashboardPage() {
   // Real P&L: COGS from actual sale items × product cost prices
   const totalCOGS = useMemo(() => {
     let cogs = 0;
-    sales.forEach(s => s.items.forEach(item => {
-      const prod = products.find(p => p.id === item.productId);
-      if (prod) cogs += prod.costPrice * item.qty;
-    }));
+    sales.forEach(s => {
+      const isReturn = s.status === "Returned" || s.status === "Refunded";
+      if ((s as any).status === "Dues_Recovery") return;
+      s.items.forEach(item => {
+        const prod = products.find(p => p.id === item.productId);
+        const cost = prod ? prod.costPrice * item.qty : 0;
+        if (isReturn) cogs -= cost;
+        else cogs += cost;
+      });
+    });
     return cogs;
   }, [sales, products]);
   const grossProfit = totalRevenue - totalCOGS;
@@ -135,7 +175,13 @@ export default function ClientDashboardPage() {
     for (let i = 6; i >= 0; i--) {
       const d = new Date(); d.setDate(d.getDate() - i);
       const key = d.toDateString();
-      days.push(sales.filter(s => new Date(s.date).toDateString() === key).reduce((a, s) => a + s.total, 0));
+      const daySales = sales.filter(s => new Date(s.date).toDateString() === key);
+      const dayRev = daySales.reduce((a, s) => {
+        if (s.status === "Returned" || s.status === "Refunded") return a - s.total;
+        if ((s as any).status === "Dues_Recovery") return a;
+        return a + s.total;
+      }, 0);
+      days.push(dayRev);
     }
     return days;
   }, [sales]);
@@ -147,12 +193,22 @@ export default function ClientDashboardPage() {
       const d = new Date(); d.setDate(d.getDate() - i);
       const key = d.toDateString();
       const daySales = sales.filter(s => new Date(s.date).toDateString() === key);
-      const revenue = daySales.reduce((a, s) => a + s.total, 0);
+      const revenue = daySales.reduce((a, s) => {
+        if (s.status === "Returned" || s.status === "Refunded") return a - s.total;
+        if ((s as any).status === "Dues_Recovery") return a;
+        return a + s.total;
+      }, 0);
       let cost = 0;
-      daySales.forEach(s => s.items.forEach(item => {
-        const prod = products.find(p => p.id === item.productId);
-        if (prod) cost += prod.costPrice * item.qty;
-      }));
+      daySales.forEach(s => {
+        const isReturn = s.status === "Returned" || s.status === "Refunded";
+        if ((s as any).status === "Dues_Recovery") return;
+        s.items.forEach(item => {
+          const prod = products.find(p => p.id === item.productId);
+          const c = prod ? prod.costPrice * item.qty : 0;
+          if (isReturn) cost -= c;
+          else cost += c;
+        });
+      });
       data.push({
         name: d.toLocaleDateString("en-US", { weekday: "short" }),
         Revenue: revenue,
@@ -832,6 +888,19 @@ export default function ClientDashboardPage() {
                 <div className="text-xl font-black text-amber-400 font-mono">{currencySymbol} {totalStockValue.toLocaleString(undefined,{maximumFractionDigits:0})}</div>
                 <p className="text-[9px] text-gray-500">{products.length} SKUs in catalog</p>
               </div>
+
+              {/* Customer Wallet Liabilities */}
+              <div 
+                onClick={() => setShowWalletModal(true)}
+                className="bg-purple-500/10 border border-purple-500/25 p-4 rounded-xl space-y-2 cursor-pointer hover:bg-purple-500/15 transition group"
+              >
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] uppercase font-bold tracking-wider text-gray-400">Wallet Liabilities</span>
+                  <Wallet size={14} className="text-purple-400 group-hover:scale-110 transition-transform" />
+                </div>
+                <div className="text-xl font-black text-purple-400 font-mono">{currencySymbol} {totalWalletLiability.toLocaleString(undefined,{maximumFractionDigits:0})}</div>
+                <p className="text-[9px] text-purple-400/80 font-bold">{walletCustomers.length} customers with store credit &rarr;</p>
+              </div>
             </div>
 
             {/* 3-panel: Top Products | Low Stock | Overdue Dues */}
@@ -955,6 +1024,139 @@ export default function ClientDashboardPage() {
             </table>
           </div>
         </div>
+
+      
+        {/* ── CUSTOMER WALLET LIABILITIES REPORT MODAL ── */}
+        {showWalletModal && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-brand-dark-surface border border-purple-500/30 rounded-2xl w-full max-w-4xl p-6 space-y-5 shadow-2xl animate-fade-in-up max-h-[90vh] flex flex-col">
+              
+              {/* Header */}
+              <div className="flex justify-between items-start border-b border-brand-dark-border/60 pb-4">
+                <div>
+                  <h3 className="text-base font-black text-white flex items-center gap-2">
+                    <Wallet size={18} className="text-purple-400" />
+                    Customer Store Wallet Liabilities &amp; Returns Report
+                  </h3>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Store liabilities owed to customers from returned sales or prepayments.
+                  </p>
+                </div>
+                <button 
+                  onClick={() => setShowWalletModal(false)}
+                  className="p-1 text-gray-400 hover:text-white rounded-lg transition"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* KPI Banner */}
+              <div className="grid grid-cols-2 gap-4 font-mono">
+                <div className="bg-purple-500/10 border border-purple-500/30 p-3.5 rounded-xl">
+                  <div className="text-[10px] uppercase font-bold text-gray-400">Total Wallet Liability</div>
+                  <div className="text-2xl font-black text-purple-400 mt-1">{currencySymbol} {totalWalletLiability.toLocaleString()}</div>
+                  <div className="text-[9px] text-gray-500 mt-0.5">Account 2003 (Customer Wallet Payable)</div>
+                </div>
+                <div className="bg-brand-dark-border/40 border border-brand-dark-border p-3.5 rounded-xl">
+                  <div className="text-[10px] uppercase font-bold text-gray-400">Customers with Balance</div>
+                  <div className="text-2xl font-black text-white mt-1">{walletCustomers.length} Customers</div>
+                  <div className="text-[9px] text-gray-500 mt-0.5">Holding active wallet credit</div>
+                </div>
+              </div>
+
+              {/* Customers List Table */}
+              <div className="flex-1 overflow-y-auto border border-brand-dark-border/60 rounded-xl">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-black/60 sticky top-0 border-b border-brand-dark-border text-gray-400 font-mono">
+                    <tr>
+                      <th className="p-3 font-semibold">Customer Details</th>
+                      <th className="p-3 font-semibold">Source Return Receipts</th>
+                      <th className="p-3 font-semibold text-right">Wallet Credit Balance</th>
+                      <th className="p-3 font-semibold text-center">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-brand-dark-border/40 font-mono text-[11px]">
+                    {walletCustomers.length === 0 ? (
+                      <tr>
+                        <td colSpan={4} className="text-center py-8 text-gray-500 italic font-sans">
+                          No active customer wallet liabilities. All returns refunded or settled.
+                        </td>
+                      </tr>
+                    ) : (
+                      walletCustomers.map(cust => {
+                        const custReturns = sales.filter(s => 
+                          (s.status === "Returned" || s.status === "Refunded") &&
+                          (s.paymentMethod === "Store Wallet Credit" || s.paymentMethod === "Wallet" || (s.splitPayments && (s.splitPayments["Store Wallet Credit"] || s.splitPayments["Wallet"]))) &&
+                          ((s.customerName || "").toLowerCase().trim() === (cust.name || "").toLowerCase().trim() || s.customerNo === cust.customerNo)
+                        );
+
+                        return (
+                          <tr key={cust.id} className="hover:bg-brand-dark-surface/60 transition">
+                            <td className="p-3 font-sans">
+                              <div className="font-bold text-white text-xs">{cust.name}</div>
+                              <div className="text-[10px] text-gray-400 font-mono">{cust.mobile || cust.email}</div>
+                              <div className="text-[9px] text-purple-400 font-mono mt-0.5">ID: {cust.customerNo || cust.id}</div>
+                            </td>
+
+                            <td className="p-3 font-sans">
+                              {custReturns.length > 0 ? (
+                                <div className="space-y-1">
+                                  {custReturns.map(ret => (
+                                    <div key={ret.id} className="bg-purple-500/10 border border-purple-500/20 px-2 py-1 rounded text-[10px] font-mono flex items-center justify-between gap-2">
+                                      <span className="text-purple-300 font-bold">{ret.receiptNumber}</span>
+                                      <span className="text-gray-400 text-[9px]">{new Date(ret.date).toLocaleDateString()}</span>
+                                      <span className="text-emerald-400 font-bold">{currencySymbol} {ret.total}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <span className="text-gray-500 text-[10px] italic">Direct Deposit / Migration</span>
+                              )}
+                            </td>
+
+                            <td className="p-3 text-right">
+                              <div className="text-sm font-black text-purple-400 font-mono">
+                                {currencySymbol} {(cust.walletBalance || 0).toLocaleString()}
+                              </div>
+                              <div className="text-[9px] text-gray-500">Payable Liability</div>
+                            </td>
+
+                            <td className="p-3 text-center">
+                              <button
+                                onClick={() => {
+                                  if (confirm(`Refund ${currencySymbol} ${cust.walletBalance} cash to ${cust.name} and clear wallet liability?`)) {
+                                    handleSettleWalletLiability(cust);
+                                  }
+                                }}
+                                className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] uppercase tracking-wider rounded-lg transition shadow-md shadow-emerald-600/20"
+                              >
+                                Refund Cash
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Footer */}
+              <div className="flex justify-between items-center pt-2 border-t border-brand-dark-border/60">
+                <div className="text-[10px] text-gray-500 font-mono">
+                  Wallet credits can be used by customers at checkout or refunded in cash.
+                </div>
+                <button
+                  onClick={() => setShowWalletModal(false)}
+                  className="px-4 py-2 bg-brand-dark-border hover:bg-gray-800 text-white font-bold text-xs rounded-xl transition"
+                >
+                  Close Report
+                </button>
+              </div>
+
+            </div>
+          </div>
+        )}
 
       </main>
     </div>

@@ -212,16 +212,24 @@ export default function ReportsPage() {
   }, [filteredSales, filteredExpenses, products, customers]);
 
   // ── KPIs ──────────────────────────────────────────────────────────────────
-  const totalRevenue = filteredSales.reduce((a, s) => a + s.total, 0);
+  const totalRevenue = filteredSales.reduce((a, s) => {
+    if (s.status === "Returned" || s.status === "Refunded") return a - s.total;
+    if ((s as any).status === "Dues_Recovery") return a;
+    return a + s.total;
+  }, 0);
   const totalExpAmt  = filteredExpenses.reduce((a, e) => a + e.amount, 0);
   const totalTax     = filteredSales.reduce((a, s) => a + s.tax, 0);
   const totalDiscount= filteredSales.reduce((a, s) => a + s.discount, 0);
   const totalCOGS    = (() => {
     let cogs = 0;
     filteredSales.forEach(s => {
+      const isReturn = s.status === "Returned" || s.status === "Refunded";
+      if ((s as any).status === "Dues_Recovery") return;
       s.items.forEach(item => {
         const prod = products.find(p => p.id === item.productId);
-        if (prod) cogs += prod.costPrice * item.qty;
+        const cost = prod ? prod.costPrice * item.qty : 0;
+        if (isReturn) cogs -= cost;
+        else cogs += cost;
       });
     });
     return cogs;
