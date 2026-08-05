@@ -41,8 +41,10 @@ import {
   Upload,
   Cpu,
   RefreshCw,
+  FileText,
+  Printer,
 } from "lucide-react";
-import type { DemoRequest } from "@/context/global-context";
+import type { DemoRequest, Tenant } from "@/context/global-context";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -600,6 +602,7 @@ export default function AdminClientsPage() {
     addTenantCredential,
     updateTenantCredential,
     deleteTenantCredential,
+    saasInvoices,
   } = useGlobalContext();
 
   const [activeTab, setActiveTab] = useState<ActiveTab>("demo");
@@ -746,6 +749,130 @@ export default function AdminClientsPage() {
       setBackupLoading(prev => ({ ...prev, [tenantId]: false }));
       triggerToast(`✅ Backup downloaded for ${tenant.businessName}!`);
     }, 800);
+  };
+
+  const handlePrintA4ActivationCertificate = async (tenant: Tenant) => {
+    const inv = saasInvoices.find(i => i.tenantId === tenant.id);
+    const total = inv ? Number(inv.amount || 0) : 25000;
+    const paid = inv ? Number(inv.paidAmount ?? (inv.status === "Paid" ? total : 0)) : (tenant.status === "Active" ? total : 0);
+    const remaining = total - paid;
+    const paymentStatus = tenant.status === "Active" ? "PAID & ACTIVATED" : (inv?.status || "PENDING PAYMENT");
+    
+    // Generate License Key
+    let keyString = "UNIPOS-V1.ey...";
+    try {
+      keyString = await generateLicenseKey(tenant as any, tenant.email, -1, tenant.connectivityPlan || "hybrid");
+    } catch {}
+
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>A4 Activation Certificate & Invoice - ${tenant.id}</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap');
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: #ffffff; color: #0f172a; padding: 40px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .card { border: 2px solid #0ea5e9; border-radius: 16px; padding: 35px; background: #ffffff; box-shadow: 0 10px 30px rgba(14,165,233,0.08); position: relative; }
+    .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 25px; }
+    .brand-title { font-size: 26px; font-weight: 900; color: #0284c7; letter-spacing: -0.5px; }
+    .brand-sub { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 1px; }
+    .meta-right { text-align: right; }
+    .doc-id { font-size: 18px; font-weight: 900; color: #0f172a; font-family: 'JetBrains Mono', monospace; }
+    .badge { display: inline-block; margin-top: 6px; font-size: 10px; font-weight: 800; padding: 5px 12px; border-radius: 20px; text-transform: uppercase; letter-spacing: 1px; }
+    .badge-active { background: #dcfce7; color: #15803d; }
+    .badge-pending { background: #fee2e2; color: #b91c1c; }
+
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px; }
+    .box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; }
+    .box-title { font-size: 10px; font-weight: 800; text-transform: uppercase; color: #0284c7; letter-spacing: 1px; margin-bottom: 10px; }
+    .row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; }
+    .label { color: #64748b; font-weight: 600; }
+    .val { color: #0f172a; font-weight: 700; }
+
+    .cred-box { background: #0f172a; color: #ffffff; border-radius: 12px; padding: 20px; margin-bottom: 25px; border: 2px solid #38bdf8; }
+    .cred-title { font-size: 11px; font-weight: 800; text-transform: uppercase; color: #38bdf8; letter-spacing: 1px; margin-bottom: 12px; }
+    .key-box { background: #1e293b; border: 1px border #334155; border-radius: 8px; padding: 12px; font-family: 'JetBrains Mono', monospace; font-size: 10px; word-break: break-all; color: #4ade80; margin-top: 10px; }
+
+    .totals { background: #f1f5f9; border-radius: 12px; padding: 20px; margin-bottom: 25px; }
+    .total-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; font-weight: 700; }
+    .grand-total { border-top: 2px solid #cbd5e1; padding-top: 10px; font-size: 16px; font-weight: 900; color: #0284c7; }
+
+    .footer { border-top: 2px solid #e2e8f0; padding-top: 20px; display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #64748b; }
+    .print-btn { background: #0284c7; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-bottom: 20px; font-size: 14px; }
+    @media print { .no-print { display: none; } body { padding: 0; } .card { border: none; box-shadow: none; } }
+  </style>
+</head>
+<body>
+  <div className="no-print" style="text-align: right;">
+    <button onclick="window.print()" class="print-btn">🖨️ Print / Save as PDF Certificate</button>
+  </div>
+  <div class="card">
+    <div class="header">
+      <div>
+        <div class="brand-title">MT UniPOS</div>
+        <div class="brand-sub">Enterprise SaaS POS &amp; ERP Platform</div>
+        <div style="font-size: 12px; color: #475569; margin-top: 4px;">SuperAdmin Provider: Mian Talal (03396399895 | miantalal2@gmail.com)</div>
+      </div>
+      <div class="meta-right">
+        <div class="doc-id">${tenant.id}</div>
+        <div class="badge ${tenant.status === 'Active' ? 'badge-active' : 'badge-pending'}">
+          ${paymentStatus}
+        </div>
+        <div style="font-size:11px; color:#64748b; margin-top:6px;">Date: ${new Date().toLocaleDateString()}</div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="box">
+        <div class="box-title">Client &amp; Business Information</div>
+        <div class="row"><span class="label">Business Name:</span><span class="val">${tenant.businessName}</span></div>
+        <div class="row"><span class="label">Owner Name:</span><span class="val">${tenant.ownerName}</span></div>
+        <div class="row"><span class="label">Corporate Email:</span><span class="val">${tenant.email}</span></div>
+        <div class="row"><span class="label">Phone:</span><span class="val">${tenant.phone || 'N/A'}</span></div>
+      </div>
+      <div class="box">
+        <div class="box-title">Subscription &amp; Deployment Plan</div>
+        <div class="row"><span class="label">Plan Tier:</span><span class="val">${tenant.plan} (${tenant.billingCycle})</span></div>
+        <div class="row"><span class="label">Connectivity:</span><span class="val" style="text-transform:uppercase;">${tenant.connectivityPlan || 'Hybrid'}</span></div>
+        <div class="row"><span class="label">Default Currency:</span><span class="val">${tenant.defaultCurrency || 'PKR'}</span></div>
+        <div class="row"><span class="label">Sign-up Date:</span><span class="val">${tenant.signupDate}</span></div>
+      </div>
+    </div>
+
+    <div class="cred-box">
+      <div class="cred-title">🔑 Software Login Credentials &amp; Cryptographic License Key</div>
+      <div class="row"><span style="color:#94a3b8">Authorized Email:</span><span style="color:#ffffff;font-weight:700">${tenant.email}</span></div>
+      <div class="row"><span style="color:#94a3b8">Default Password:</span><span style="color:#4ade80;font-weight:900">owner123</span></div>
+      <div style="margin-top:10px;font-size:11px;color:#cbd5e1;font-weight:600;">Cryptographic License Key (Lifetime Activation String):</div>
+      <div class="key-box">${keyString}</div>
+    </div>
+
+    <div class="totals">
+      <div class="total-row"><span>Subscription Plan Bill:</span><span>PKR ${total.toLocaleString()}</span></div>
+      <div class="total-row" style="color:#16a34a;"><span>Amount Paid / Received:</span><span>PKR ${paid.toLocaleString()}</span></div>
+      <div class="total-row grand-total"><span>Balance Due:</span><span>PKR ${remaining.toLocaleString()}</span></div>
+    </div>
+
+    <div class="footer">
+      <div>
+        <b>Official Verification Stamp:</b> MT UniPOS Enterprise Authority<br/>
+        This document serves as an official invoice and lifetime license activation certificate.
+      </div>
+      <div style="text-align:right">
+        <b>Founder Signature:</b> Mian Talal<br/>
+        <i>Verified &amp; Sealed</i>
+      </div>
+    </div>
+  </div>
+</body>
+</html>`;
+
+    const win = window.open("", "_blank");
+    if (win) {
+      win.document.write(html);
+      win.document.close();
+    }
   };
 
   const handleRestoreDb = (tenantId: string) => {
@@ -1706,6 +1833,14 @@ export default function AdminClientsPage() {
                                 title="Upload Backup — Restore data from JSON file"
                               >
                                 <Upload size={12} />
+                              </button>
+
+                              <button
+                                onClick={() => handlePrintA4ActivationCertificate(tenant)}
+                                className="p-1.5 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-400 hover:text-white rounded transition"
+                                title="Print A4 Activation Certificate & Invoice PDF"
+                              >
+                                <FileText size={12} />
                               </button>
 
                               <button

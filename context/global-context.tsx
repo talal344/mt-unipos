@@ -952,24 +952,6 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     let currentTenants: Tenant[] = [];
     if (savedTenants) {
       currentTenants = JSON.parse(savedTenants);
-      let migrated = false;
-      currentTenants = currentTenants.map(t => {
-        if (t.id.startsWith("TEN-")) {
-          migrated = true;
-          const words = t.businessName.split(" ").filter(Boolean);
-          let initials = "";
-          if (words.length === 1) {
-            initials = words[0].substring(0, 3).toUpperCase();
-          } else {
-            initials = words.map(w => w[0]).join("").toUpperCase();
-          }
-          return { ...t, id: `${initials}-${t.id.split("-")[1]}` };
-        }
-        return t;
-      });
-      if (migrated) {
-        localStorage.setItem("unipos_tenants", JSON.stringify(currentTenants));
-      }
     }
 
     // Filter out blacklisted / deleted tenants strictly
@@ -1752,7 +1734,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     }
 
     const signupDateStr = new Date().toISOString().split("T")[0];
-    const statusVal = tenant.isTrial ? "Trial" : "Active";
+    const statusVal = tenant.isTrial ? "Trial" : "Pending Payment";
     let trialEndsAtVal = undefined;
     if (tenant.isTrial && tenant.trialDays) {
       const trialEnd = new Date(Date.now() + tenant.trialDays * 24 * 60 * 60 * 1000);
@@ -1763,7 +1745,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       ...tenant,
       id: finalId,
       signupDate: signupDateStr,
-      status: statusVal,
+      status: statusVal as any,
       trialEndsAt: trialEndsAtVal,
       usersCount: 1,
       monthlyRevenue: 0,
@@ -1801,6 +1783,12 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     const updatedInvs = [newInvoice, ...saasInvoices];
     setSaasInvoices(updatedInvs);
     localStorage.setItem("unipos_invoices", JSON.stringify(updatedInvs));
+
+    // Immediate Supabase Cloud Persistence
+    try {
+      supabase.from('unipos_global').upsert({ key: 'unipos_tenants', value: updated }).then(() => {});
+      supabase.from('unipos_global').upsert({ key: 'unipos_invoices', value: updatedInvs }).then(() => {});
+    } catch {}
 
     return finalId;
   };
