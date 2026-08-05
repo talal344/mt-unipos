@@ -4,6 +4,7 @@ import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useGlobalContext } from "@/context/global-context";
+import { supabase } from "@/lib/supabase";
 import {
   Laptop, ArrowRight, CheckCircle2, AlertCircle, Eye, EyeOff, Building2, Lock, Download, ShieldCheck
 } from "lucide-react";
@@ -92,11 +93,47 @@ function LoginContent() {
     }
   }, [tenants]);
 
-  const handleCredentialsSubmit = (e: React.FormEvent) => {
+  const handleCredentialsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) { setErrorMessage("Please enter both email and password."); return; }
 
     const cleanTenantId = inputTenantId.trim().toUpperCase();
+
+    // ─── Real-Time Supabase Cloud Verification ───
+    try {
+      const { data: globalData } = await supabase.from('unipos_global').select('*');
+      if (globalData) {
+        const blacklistRow = globalData.find((r: any) => r.key === 'unipos_blacklisted_tenants');
+        if (blacklistRow && Array.isArray(blacklistRow.value)) {
+          localStorage.setItem("unipos_blacklisted_tenants", JSON.stringify(blacklistRow.value));
+          if (blacklistRow.value.includes(cleanTenantId)) {
+            if (typeof window !== "undefined") {
+              localStorage.removeItem("unipos_offline_activated_system");
+              localStorage.removeItem("unipos_last_activated_tenant");
+              localStorage.removeItem("unipos_current_user");
+            }
+            setErrorMessage(`⛔ ACCESS DENIED: Workspace "${cleanTenantId}" has been deleted by Super Admin. Access revoked!`);
+            return;
+          }
+        }
+
+        const tenantsRow = globalData.find((r: any) => r.key === 'unipos_tenants');
+        if (tenantsRow && Array.isArray(tenantsRow.value)) {
+          localStorage.setItem("unipos_tenants", JSON.stringify(tenantsRow.value));
+          const cloudTenant = tenantsRow.value.find((t: any) => t.id.toUpperCase() === cleanTenantId);
+          if (!cloudTenant) {
+            setErrorMessage(`⛔ ACCESS DENIED: Workspace ID "${cleanTenantId}" not found or deleted by Super Admin.`);
+            return;
+          }
+          if (cloudTenant.status === "Suspended" || cloudTenant.status === "Inactive" || cloudTenant.status === "Pending Payment") {
+            setErrorMessage(`⛔ ACCESS DENIED: Workspace status is "${cloudTenant.status}". Login blocked.`);
+            return;
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("Real-time cloud verification fallback to local storage:", e);
+    }
 
     let blacklisted: string[] = [];
     try {

@@ -902,11 +902,20 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const handleStateRefresh = () => {
       try {
+        let blacklisted: string[] = [];
+        try {
+          blacklisted = JSON.parse(localStorage.getItem("unipos_blacklisted_tenants") || "[]");
+        } catch {}
+
         const d = localStorage.getItem("unipos_demos");
         if (d) setDemoRequests(JSON.parse(d));
         
         const t = localStorage.getItem("unipos_tenants");
-        if (t) setTenants(JSON.parse(t));
+        if (t) {
+          const parsed: Tenant[] = JSON.parse(t);
+          const clean = parsed.filter(item => !blacklisted.includes(item.id));
+          setTenants(clean);
+        }
         
         const i = localStorage.getItem("unipos_saas_invoices");
         if (i) setSaasInvoices(JSON.parse(i));
