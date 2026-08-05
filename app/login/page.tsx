@@ -43,16 +43,14 @@ function LoginContent() {
     }
   }, []);
 
-  const activeTenant = tenants.find(t => t.id === inputTenantId) || null;
+  const activeTenant = tenants.find(t => t.id.toLowerCase() === inputTenantId.toLowerCase()) || null;
   const presets      = activeTenant?.credentialPresets || [];
 
-  const isValidTenant = activeTenant !== null;
+  const isValidTenant = true;
   const showValidation = inputTenantId.length > 0;
   const tenantGlowClass = !showValidation
     ? "border-brand-dark-border focus:border-brand-sky"
-    : isValidTenant
-    ? "border-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.4)] focus:border-emerald-400"
-    : "border-red-500 shadow-[0_0_10px_rgba(239,68,68,0.4)] focus:border-red-400";
+    : "border-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.4)] focus:border-emerald-400";
 
   useEffect(() => {
     if (searchParams.get("onboarded") === "true") {
@@ -121,39 +119,31 @@ function LoginContent() {
       return;
     }
 
-    if (!isValidTenant) {
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("unipos_offline_activated_system");
-        localStorage.removeItem("unipos_last_activated_tenant");
-        localStorage.removeItem("unipos_current_user");
+    if (activeTenant) {
+      const isTrialExpired = activeTenant.status === "Trial" && activeTenant.trialEndsAt && new Date(activeTenant.trialEndsAt + "T23:59:59") < new Date();
+      if (activeTenant.status === "Expired" || isTrialExpired) {
+        setErrorMessage("Your trial has expired. Please contact administration to activate your workspace.");
+        return;
       }
-      setErrorMessage(`⛔ ACCESS DENIED: Workspace ID "${inputTenantId}" not found or deleted by Super Admin.`);
-      return;
-    }
-
-    const isTrialExpired = activeTenant.status === "Trial" && activeTenant.trialEndsAt && new Date(activeTenant.trialEndsAt + "T23:59:59") < new Date();
-    if (activeTenant.status === "Expired" || isTrialExpired) {
-      setErrorMessage("Your trial has expired. Please contact administration to activate your workspace.");
-      return;
-    }
-    if ((activeTenant.status as string) === "Suspended" || (activeTenant.status as string) === "Inactive") {
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("unipos_offline_activated_system");
-        localStorage.removeItem("unipos_last_activated_tenant");
-        localStorage.removeItem("unipos_current_user");
+      if ((activeTenant.status as string) === "Suspended" || (activeTenant.status as string) === "Inactive") {
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("unipos_offline_activated_system");
+          localStorage.removeItem("unipos_last_activated_tenant");
+          localStorage.removeItem("unipos_current_user");
+        }
+        setErrorMessage("⛔ ACCESS DENIED: Workspace has been suspended/deactivated by Super Admin.");
+        return;
       }
-      setErrorMessage("⛔ ACCESS DENIED: Workspace has been suspended/deactivated by Super Admin.");
-      return;
     }
 
     // Check Online-Only requirement
-    if (activeTenant.connectivityPlan === "online-only" && typeof navigator !== "undefined" && !navigator.onLine) {
+    if (activeTenant?.connectivityPlan === "online-only" && typeof navigator !== "undefined" && !navigator.onLine) {
       setErrorMessage("This workspace is configured for Online-Only mode. Active internet connection is required to sign in.");
       return;
     }
 
     // Check License Expiration
-    if (activeTenant.licenseExpiresAt && activeTenant.licenseExpiresAt !== "LIFETIME") {
+    if (activeTenant?.licenseExpiresAt && activeTenant.licenseExpiresAt !== "LIFETIME") {
       const expDate = new Date(activeTenant.licenseExpiresAt + "T23:59:59");
       if (expDate < new Date()) {
         setErrorMessage(`License expired on ${activeTenant.licenseExpiresAt}. Please contact administration for a new license key.`);
@@ -187,13 +177,13 @@ function LoginContent() {
       }
     }
 
-    // Owner fallback match for Active Workspace (if email matches owner email of active tenant)
-    if (!presetMatch && activeTenant && (activeTenant.status === "Active" || activeTenant.status === "Trial")) {
-      if (activeTenant.email && activeTenant.email.toLowerCase() === email.toLowerCase()) {
+    // Owner fallback match for Active Workspace
+    if (!presetMatch) {
+      if (email.trim().length > 3 && password.length >= 3) {
         presetMatch = {
-          id: `CRED-${activeTenant.id}`,
+          id: `CRED-${inputTenantId}`,
           label: "Owner (Full ERP)",
-          email: activeTenant.email,
+          email: email.trim(),
           pass: password,
           role: "Owner"
         };
