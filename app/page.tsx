@@ -85,12 +85,7 @@ const howItWorks = [
 ];
 
 export default function HomePage() {
-  useEffect(() => {
-    // If running inside Desktop Electron App, redirect root "/" directly to "/login"
-    if (typeof window !== "undefined" && ((window as any).electronAPI || navigator.userAgent.includes("Electron"))) {
-      window.location.replace("/login");
-    }
-  }, []);
+
   const { addDemoRequest } = useGlobalContext();
   const [billingCycle, setBillingCycle]         = useState<"monthly"|"yearly">("yearly");
   const [selectedIndustry, setSelectedIndustry]   = useState("Super Markets");

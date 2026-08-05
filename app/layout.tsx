@@ -4,7 +4,6 @@ import "./globals.css";
 import { GlobalProvider } from "@/context/global-context";
 import AuthGuard from "@/components/auth-guard";
 import AutoUpdaterBanner from "@/components/auto-updater-banner";
-import MacTitlebar from "@/components/mac-titlebar";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -29,7 +28,6 @@ export default function RootLayout({
       </head>
       <body suppressHydrationWarning className="bg-black text-gray-100 min-h-full flex flex-col font-sans">
         <GlobalProvider>
-          <MacTitlebar />
           <AutoUpdaterBanner />
           <AuthGuard>
             {children}

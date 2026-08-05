@@ -32,17 +32,10 @@ function LoginContent() {
   const [offlineLoading, setOfflineLoading] = useState(false);
   const [offlineError, setOfflineError] = useState("");
   const [offlineSuccess, setOfflineSuccess] = useState("");
-  const [isDesktopApp, setIsDesktopApp] = useState(false);
-
   // Activation Modal State
   const [showActivationModal, setShowActivationModal] = useState(false);
   const [activatedCredentials, setActivatedCredentials] = useState<{ tenantId: string; email: string; pass: string; businessName: string } | null>(null);
 
-  useEffect(() => {
-    if (typeof window !== "undefined" && ((window as any).electronAPI || navigator.userAgent.includes("Electron"))) {
-      setIsDesktopApp(true);
-    }
-  }, []);
 
   const activeTenant = tenants.find(t => t.id.toLowerCase() === inputTenantId.trim().toLowerCase()) || null;
   const presets      = activeTenant?.credentialPresets || [];
@@ -630,11 +623,9 @@ function LoginContent() {
                 ✨ Features
               </Link>
             </div>
-            {!isDesktopApp && (
               <p className="text-[9px] text-gray-600">
                 <Link href="/" className="text-gray-500 hover:text-white">← Back to Website</Link>
               </p>
-            )}
           </div>
         </div>
 
