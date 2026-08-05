@@ -2799,11 +2799,6 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       customerNo
     };
 
-    // 1. Save Sale record
-    const updatedSales = [newSale, ...sales];
-    setSales(updatedSales);
-    saveTenantData("unipos_sales", updatedSales);
-
     // 2. Adjust products inventory & compute COGS
     const isReturn = sale.status === "Returned" || sale.status === "Refunded";
     const isDuesRecovery = (sale as any).status === "Dues_Recovery";
@@ -2929,6 +2924,14 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
+      const prevCredit = matchCust.creditBalance || 0;
+      const newCredit = Math.max(0, prevCredit + creditChange);
+      newSale.previousCreditBalance = prevCredit;
+      newSale.totalCreditBalance = newCredit;
+      newSale.loyaltyPointsEarned = addedPoints;
+      newSale.loyaltyPointsBalance = Math.max(0, matchCust.loyaltyPoints + addedPoints - deductPoints);
+      newSale.redeemLoyalty = sale.redeemLoyalty;
+
       const updatedCusts = customers.map(c => {
         if (c.id === matchCust.id || c.name.toLowerCase().trim() === matchCust.name.toLowerCase().trim() || (c.customerNo && c.customerNo === matchCust.customerNo)) {
           const finalPoints = Math.max(0, c.loyaltyPoints + addedPoints - deductPoints);
@@ -2936,7 +2939,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
           return {
             ...c,
             loyaltyPoints: finalPoints,
-            creditBalance: Math.max(0, c.creditBalance + creditChange),
+            creditBalance: newCredit,
             walletBalance: finalWallet
           };
         }
@@ -2944,12 +2947,12 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       });
       setCustomers(updatedCusts);
       saveTenantData("unipos_customers", updatedCusts);
-
-      // Append state to transaction for printed invoices
-      newSale.loyaltyPointsEarned = addedPoints;
-      newSale.loyaltyPointsBalance = Math.max(0, matchCust.loyaltyPoints + addedPoints - deductPoints);
-      newSale.redeemLoyalty = sale.redeemLoyalty;
     }
+
+    // 1. Save Sale record (with attached credit statement balances)
+    const updatedSales = [newSale, ...sales];
+    setSales(updatedSales);
+    saveTenantData("unipos_sales", updatedSales);
 
     // 4. Fire Double-Entry Accounting Journal Vouchers
     if (isReturn) {
