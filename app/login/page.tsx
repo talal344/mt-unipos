@@ -6,8 +6,9 @@ import Link from "next/link";
 import { useGlobalContext } from "@/context/global-context";
 import { supabase } from "@/lib/supabase";
 import {
-  Laptop, ArrowRight, CheckCircle2, AlertCircle, Eye, EyeOff, Building2
+  Laptop, ArrowRight, CheckCircle2, AlertCircle, Eye, EyeOff, Building2, Lock
 } from "lucide-react";
+
 
 function LoginContent() {
   const router       = useRouter();
