@@ -1849,16 +1849,6 @@ export default function PosPage() {
                     document.body.removeChild(tempDiv);
                     const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
 
-                    // Save to Documents\MT UniPOS\Sale Receipts
-                    await fetch("/api/save-file", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({
-                        category: "sale-receipt",
-                        fileName: `${successReceipt.receiptNumber}.jpg`,
-                        fileBase64: dataUrl,
-                      }),
-                    });
 
                     // Open print window
                     const printWin = window.open("", "_blank", "width=420,height=600");

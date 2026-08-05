@@ -428,19 +428,13 @@ export default function ReportsPage() {
     fileBase64: string
   ) => {
     try {
-      const res = await fetch("/api/save-file", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ category, fileName, fileBase64 }),
-      });
-
-      const json = await res.json();
-      if (json.success && json.filePath) {
-        triggerToast(`📁 Saved: ${json.filePath}`);
-      } else {
-        const folderLabel = category === "report-pdf" ? "Reports/PDF" : category === "report-excel" ? "Reports/Excel" : "Reports/JPG";
-        triggerToast(`📁 Saved to MT UniPOS/${folderLabel}/${fileName}`);
-      }
+      const link = document.createElement("a");
+      link.href = fileBase64;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      triggerToast(`📁 Downloaded: ${fileName}`);
     } catch (err) {
       console.error("Local save error:", err);
       triggerToast(`⚠️ Save failed. Check if app server is running locally.`);
