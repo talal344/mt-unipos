@@ -961,7 +961,12 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       }
     }
     if (seedChanged || !savedTenants) {
-      localStorage.setItem("unipos_tenants", JSON.stringify(currentTenants));
+      // FIX: Use originalSetItem to prevent wiping Supabase with empty array on first load race-condition!
+      const originalSetItem = window.localStorage.setItem.name === 'setItem' ? window.localStorage.setItem : Object.getPrototypeOf(window.localStorage).setItem;
+      
+      if (typeof originalSetItem === 'function') {
+        originalSetItem.call(window.localStorage, "unipos_tenants", JSON.stringify(currentTenants));
+      }
     }
     // ─────────────────────────────────────────────────────────────────────────
 
