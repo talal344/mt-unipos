@@ -105,7 +105,13 @@ function LoginContent() {
       blacklisted = JSON.parse(localStorage.getItem("unipos_blacklisted_tenants") || "[]");
     } catch {}
 
-    if (blacklisted.includes(inputTenantId)) {
+    const tenantInReg = tenants.find(t => t.id === inputTenantId);
+    if (tenantInReg && tenantInReg.status === "Active") {
+      if (blacklisted.includes(inputTenantId)) {
+        blacklisted = blacklisted.filter(b => b !== inputTenantId);
+        localStorage.setItem("unipos_blacklisted_tenants", JSON.stringify(blacklisted));
+      }
+    } else if (blacklisted.includes(inputTenantId)) {
       if (typeof window !== "undefined") {
         localStorage.removeItem("unipos_offline_activated_system");
         localStorage.removeItem("unipos_last_activated_tenant");

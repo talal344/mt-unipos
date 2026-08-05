@@ -1805,12 +1805,28 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     return finalId;
   };
 
-  const updateTenantStatus = (id: string, status: Tenant["status"]) => {
+  const updateTenantStatus = async (id: string, status: Tenant["status"]) => {
     const updated = tenants.map(t => t.id === id ? { ...t, status } : t);
     setTenants(updated);
     localStorage.setItem("unipos_tenants", JSON.stringify(updated));
 
-    if ((status as string) === "Suspended" || (status as string) === "Inactive" || status === "Expired") {
+    let blacklisted: string[] = [];
+    try {
+      blacklisted = JSON.parse(localStorage.getItem("unipos_blacklisted_tenants") || "[]");
+    } catch {}
+
+    if (status === "Active" || status === "Trial") {
+      if (blacklisted.includes(id)) {
+        blacklisted = blacklisted.filter(b => b !== id);
+        localStorage.setItem("unipos_blacklisted_tenants", JSON.stringify(blacklisted));
+        try {
+          await supabase.from('unipos_global').upsert({
+            key: 'unipos_blacklisted_tenants',
+            value: blacklisted
+          });
+        } catch {}
+      }
+    } else if ((status as string) === "Suspended" || (status as string) === "Inactive" || status === "Expired") {
       const activeOfflineTenant = localStorage.getItem("unipos_offline_activated_tenant");
       if (activeOfflineTenant === id) {
         localStorage.removeItem("unipos_offline_activated_system");
@@ -1821,6 +1837,13 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         localStorage.removeItem("unipos_current_user");
       }
     }
+
+    try {
+      await supabase.from('unipos_global').upsert({
+        key: 'unipos_tenants',
+        value: updated
+      });
+    } catch {}
   };
 
   // ─── ALL localStorage keys that store per-tenant data ───────────────────────
@@ -3125,15 +3148,28 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         blacklisted = JSON.parse(localStorage.getItem("unipos_blacklisted_tenants") || "[]");
       } catch {}
 
-      if (blacklisted.includes(targetTenantId)) {
+      // Check existing status in tenants registry
+      const existingTenant = tenants.find(t => t.id === targetTenantId);
+
+      // If tenant currently exists and is Active in tenants registry, auto-unblacklist it!
+      if (existingTenant && existingTenant.status === "Active") {
+        if (blacklisted.includes(targetTenantId)) {
+          blacklisted = blacklisted.filter((b: string) => b !== targetTenantId);
+          localStorage.setItem("unipos_blacklisted_tenants", JSON.stringify(blacklisted));
+          try {
+            await supabase.from('unipos_global').upsert({
+              key: 'unipos_blacklisted_tenants',
+              value: blacklisted
+            });
+          } catch {}
+        }
+      } else if (blacklisted.includes(targetTenantId)) {
         return {
           success: false,
           error: `⛔ ACCESS DENIED: Workspace "${targetTenantId}" Super Admin se DELETE kar diya gaya hai. License key is permanently revoked!`
         };
       }
 
-      // Check existing status in tenants registry
-      const existingTenant = tenants.find(t => t.id === targetTenantId);
       if (existingTenant && ((existingTenant.status as string) === "Suspended" || (existingTenant.status as string) === "Inactive")) {
         return {
           success: false,
