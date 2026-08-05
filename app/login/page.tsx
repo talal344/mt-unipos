@@ -43,14 +43,16 @@ function LoginContent() {
     }
   }, []);
 
-  const activeTenant = tenants.find(t => t.id.toLowerCase() === inputTenantId.toLowerCase()) || null;
+  const activeTenant = tenants.find(t => t.id.toLowerCase() === inputTenantId.trim().toLowerCase()) || null;
   const presets      = activeTenant?.credentialPresets || [];
 
-  const isValidTenant = true;
-  const showValidation = inputTenantId.length > 0;
+  const isValidTenant = activeTenant !== null;
+  const showValidation = inputTenantId.trim().length > 0;
   const tenantGlowClass = !showValidation
     ? "border-brand-dark-border focus:border-brand-sky"
-    : "border-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.4)] focus:border-emerald-400";
+    : isValidTenant
+    ? "border-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.4)] focus:border-emerald-400"
+    : "border-red-500 shadow-[0_0_10px_rgba(239,68,68,0.4)] focus:border-red-400";
 
   useEffect(() => {
     if (searchParams.get("onboarded") === "true") {
@@ -67,6 +69,7 @@ function LoginContent() {
     }
   }, [searchParams]);
 
+  // Clean stale activation markers without triggering false banner on load
   useEffect(() => {
     if (typeof window !== "undefined") {
       const activatedTenantId = localStorage.getItem("unipos_last_activated_tenant");
@@ -84,11 +87,6 @@ function LoginContent() {
           localStorage.removeItem("unipos_offline_activated_system");
           localStorage.removeItem("unipos_last_activated_tenant");
           localStorage.removeItem("unipos_current_user");
-          setErrorMessage(
-            isDeleted
-              ? `⛔ ACCESS DENIED: Workspace "${activatedTenantId}" Super Admin se DELETE ho chuka hai. License access stopped!`
-              : `⛔ ACCESS DENIED: Workspace "${activatedTenantId}" Super Admin se SUSPEND ho chuka hai. License access stopped!`
-          );
         }
       }
     }
@@ -98,42 +96,41 @@ function LoginContent() {
     e.preventDefault();
     if (!email || !password) { setErrorMessage("Please enter both email and password."); return; }
 
+    const cleanTenantId = inputTenantId.trim().toUpperCase();
+
     let blacklisted: string[] = [];
     try {
       blacklisted = JSON.parse(localStorage.getItem("unipos_blacklisted_tenants") || "[]");
     } catch {}
 
-    const tenantInReg = tenants.find(t => t.id === inputTenantId);
-    if (tenantInReg && tenantInReg.status === "Active") {
-      if (blacklisted.includes(inputTenantId)) {
-        blacklisted = blacklisted.filter(b => b !== inputTenantId);
-        localStorage.setItem("unipos_blacklisted_tenants", JSON.stringify(blacklisted));
-      }
-    } else if (blacklisted.includes(inputTenantId)) {
+    if (blacklisted.includes(cleanTenantId)) {
       if (typeof window !== "undefined") {
         localStorage.removeItem("unipos_offline_activated_system");
         localStorage.removeItem("unipos_last_activated_tenant");
         localStorage.removeItem("unipos_current_user");
       }
-      setErrorMessage(`⛔ ACCESS DENIED: Workspace "${inputTenantId}" has been deleted by Super Admin. Login rejected.`);
+      setErrorMessage(`⛔ ACCESS DENIED: Workspace "${cleanTenantId}" has been deleted by Super Admin. Login rejected.`);
       return;
     }
 
-    if (activeTenant) {
-      const isTrialExpired = activeTenant.status === "Trial" && activeTenant.trialEndsAt && new Date(activeTenant.trialEndsAt + "T23:59:59") < new Date();
-      if (activeTenant.status === "Expired" || isTrialExpired) {
-        setErrorMessage("Your trial has expired. Please contact administration to activate your workspace.");
-        return;
+    if (!activeTenant) {
+      setErrorMessage(`⛔ ACCESS DENIED: Workspace ID "${cleanTenantId}" not found in system.`);
+      return;
+    }
+
+    const isTrialExpired = activeTenant.status === "Trial" && activeTenant.trialEndsAt && new Date(activeTenant.trialEndsAt + "T23:59:59") < new Date();
+    if (activeTenant.status === "Expired" || isTrialExpired) {
+      setErrorMessage("Your trial has expired. Please contact administration to activate your workspace.");
+      return;
+    }
+    if ((activeTenant.status as string) === "Suspended" || (activeTenant.status as string) === "Inactive" || (activeTenant.status as string) === "Pending Payment") {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("unipos_offline_activated_system");
+        localStorage.removeItem("unipos_last_activated_tenant");
+        localStorage.removeItem("unipos_current_user");
       }
-      if ((activeTenant.status as string) === "Suspended" || (activeTenant.status as string) === "Inactive") {
-        if (typeof window !== "undefined") {
-          localStorage.removeItem("unipos_offline_activated_system");
-          localStorage.removeItem("unipos_last_activated_tenant");
-          localStorage.removeItem("unipos_current_user");
-        }
-        setErrorMessage("⛔ ACCESS DENIED: Workspace has been suspended/deactivated by Super Admin.");
-        return;
-      }
+      setErrorMessage(`⛔ ACCESS DENIED: Workspace status is "${activeTenant.status}". Please contact Super Admin.`);
+      return;
     }
 
     // Check Online-Only requirement
@@ -155,7 +152,7 @@ function LoginContent() {
     const tenantEmployees = typeof window !== "undefined"
       ? (() => {
           try {
-            const data = localStorage.getItem(`unipos_employees_${inputTenantId}`);
+            const data = localStorage.getItem(`unipos_employees_${cleanTenantId}`);
             return data ? JSON.parse(data) : [];
           } catch {
             return [];
@@ -163,12 +160,12 @@ function LoginContent() {
         })()
       : [];
 
-    // Search preset in active tenant OR across all workspace tenants as fallback
-    let presetMatch = presets.find(p => p.email.toLowerCase() === email.toLowerCase() && p.pass === password);
+    // STRICT PRESET MATCHING (Email AND Password MUST match exactly)
+    let presetMatch = presets.find(p => p.email.toLowerCase() === email.trim().toLowerCase() && p.pass === password);
 
     if (!presetMatch) {
       for (const t of tenants) {
-        const found = (t.credentialPresets || []).find(p => p.email.toLowerCase() === email.toLowerCase() && p.pass === password);
+        const found = (t.credentialPresets || []).find(p => p.email.toLowerCase() === email.trim().toLowerCase() && p.pass === password);
         if (found) {
           presetMatch = found;
           setInputTenantId(t.id);
@@ -177,20 +174,20 @@ function LoginContent() {
       }
     }
 
-    // Owner fallback match for Active Workspace
-    if (!presetMatch) {
-      if (email.trim().length > 3 && password.length >= 3) {
+    // Owner fallback (Only if email matches owner email AND password matches "owner123")
+    if (!presetMatch && activeTenant && (activeTenant.status === "Active" || activeTenant.status === "Trial")) {
+      if (activeTenant.email && activeTenant.email.toLowerCase() === email.trim().toLowerCase() && password === "owner123") {
         presetMatch = {
-          id: `CRED-${inputTenantId}`,
+          id: `CRED-${activeTenant.id}`,
           label: "Owner (Full ERP)",
-          email: email.trim(),
-          pass: password,
+          email: activeTenant.email,
+          pass: "owner123",
           role: "Owner"
         };
       }
     }
 
-    const employeeMatch = tenantEmployees.find((emp: any) => emp.email.toLowerCase() === email.toLowerCase() && emp.password === password);
+    const employeeMatch = tenantEmployees.find((emp: any) => emp.email.toLowerCase() === email.trim().toLowerCase() && emp.password === password);
 
     if (presetMatch || employeeMatch) {
       if (employeeMatch && employeeMatch.status === "Inactive") {
@@ -201,7 +198,7 @@ function LoginContent() {
       setLoading(true);
       setTimeout(() => { setLoading(false); setStep("otp"); }, 700);
     } else {
-      setErrorMessage("Invalid credentials. Please double-check your email and password.");
+      setErrorMessage("Invalid credentials. Incorrect email or password.");
     }
   };
 
