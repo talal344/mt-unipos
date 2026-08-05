@@ -609,3 +609,5 @@ function LoginContent() {
     </div>
   );
 }
+
+export default LoginPage;
