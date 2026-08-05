@@ -1478,6 +1478,8 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       { code: "1003", name: "Product Stock Valuation", type: "Asset", balance: 0 },
       { code: "1004", name: "Accounts Receivable (Customer Due)", type: "Asset", balance: 0 },
       { code: "2001", name: "Accounts Payable (Supplier Debt)", type: "Liability", balance: 0 },
+      { code: "2002", name: "Sales Tax Payable", type: "Liability", balance: 0 },
+      { code: "2003", name: "Customer Wallet Payable", type: "Liability", balance: 0 },
       { code: "3001", name: "Owner Capital & Retained Earnings", type: "Equity", balance: 0 },
       { code: "4001", name: "POS & Retail Sales Revenue", type: "Revenue", balance: 0 },
       { code: "5001", name: "Cost of Goods Sold (COGS)", type: "Expense", balance: 0 },
@@ -2873,45 +2875,78 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     }
 
     // 4. Fire Double-Entry Accounting Journal Vouchers
-    // Cash/Receivables Debit, Sales Revenue Credit
-    const debits: Array<{ accountCode: string; amount: number }> = [];
-    if (sale.splitPayments) {
-      Object.entries(sale.splitPayments).forEach(([method, amt]) => {
-        if (amt > 0) {
-          let accountCode = "1002";
-          if (method === "Cash") {
-            accountCode = "1001";
-          } else if (method === "On Credit") {
-            accountCode = "1004";
-          }
-          debits.push({ accountCode, amount: amt });
-        }
-      });
-    } else {
-      let paymentAccount = "1002";
-      if (sale.paymentMethod === "Cash") {
-        paymentAccount = "1001";
-      } else if (sale.paymentMethod === "On Credit") {
-        paymentAccount = "1004";
+    if (isReturn) {
+      // ── RETURN SALE ACCOUNTING ─────────────────────────────────────────────
+      // The returned sale REVERSES revenue — it is NOT new income.
+      //
+      // Scenario A: Cash Refund
+      //   Dr. Sales Returns & Allowances (4001)  ← Revenue reduced
+      //   Cr. Cash (1001)                         ← Cash paid out
+      //
+      // Scenario B: Store Wallet Credit
+      //   Dr. Sales Returns & Allowances (4001)  ← Revenue reduced
+      //   Cr. Customer Wallet Payable (2003)      ← Liability: we OWE customer
+      //
+      // COGS Reversal (stock is returned, cost is reversed):
+      //   Dr. Inventory Asset (1003)              ← Stock comes back
+      //   Cr. COGS (5001)                         ← Expense reduced
+
+      const isWalletReturn = sale.paymentMethod === "Store Wallet Credit" || sale.paymentMethod === "Wallet";
+      const creditAccount = isWalletReturn ? "2003" : "1001"; // Wallet Liability OR Cash
+
+      addJournalEntry(
+        `Sales Return receipt ${receiptNumber}`,
+        [{ accountCode: "4001", amount: sale.total }],  // Debit: Sales Returns (reduces revenue)
+        [{ accountCode: creditAccount, amount: sale.total }] // Credit: Cash out OR Wallet Liability
+      );
+
+      // COGS Reversal — inventory is restored so cost goes back
+      if (totalCogs > 0) {
+        addJournalEntry(
+          `COGS Reversal for return ${receiptNumber}`,
+          [{ accountCode: "1003", amount: totalCogs }], // Debit: Inventory Asset (stock restored)
+          [{ accountCode: "5001", amount: totalCogs }]  // Credit: COGS (expense reduced)
+        );
       }
-      debits.push({ accountCode: paymentAccount, amount: sale.total });
+
+    } else {
+      // ── NORMAL SALE ACCOUNTING ─────────────────────────────────────────────
+      // Cash/Bank/Receivables Debit, Sales Revenue Credit
+      const debits: Array<{ accountCode: string; amount: number }> = [];
+      if (sale.splitPayments) {
+        Object.entries(sale.splitPayments).forEach(([method, amt]) => {
+          if ((amt as number) > 0) {
+            let accountCode = "1002";
+            if (method === "Cash") accountCode = "1001";
+            else if (method === "On Credit") accountCode = "1004";
+            else if (method === "Store Wallet Credit" || method === "Wallet") accountCode = "2003";
+            debits.push({ accountCode, amount: amt as number });
+          }
+        });
+      } else {
+        let paymentAccount = "1002";
+        if (sale.paymentMethod === "Cash") paymentAccount = "1001";
+        else if (sale.paymentMethod === "On Credit") paymentAccount = "1004";
+        else if (sale.paymentMethod === "Store Wallet Credit" || sale.paymentMethod === "Wallet") paymentAccount = "2003";
+        debits.push({ accountCode: paymentAccount, amount: sale.total });
+      }
+
+      addJournalEntry(
+        `Sales Checkout receipt ${receiptNumber}`,
+        debits,
+        [
+          { accountCode: "4001", amount: sale.subtotal - sale.discount }, // Revenue Credit
+          { accountCode: "2001", amount: sale.tax }                        // Tax Payable
+        ]
+      );
+
+      // COGS Debit, Stock Valuation Credit
+      addJournalEntry(
+        `Inventory Cost matching receipt ${receiptNumber}`,
+        [{ accountCode: "5001", amount: totalCogs }], // COGS Expense Debit
+        [{ accountCode: "1003", amount: totalCogs }]  // Product Asset Credit
+      );
     }
-
-    addJournalEntry(
-      `Sales Checkout receipt ${receiptNumber}`,
-      debits,
-      [
-        { accountCode: "4001", amount: sale.subtotal - sale.discount }, // Revenue
-        { accountCode: "2001", amount: sale.tax } // Tax Payable liability
-      ]
-    );
-
-    // COGS Debit, Stock Valuation Credit
-    addJournalEntry(
-      `Inventory Cost matching receipt ${receiptNumber}`,
-      [{ accountCode: "5001", amount: totalCogs }], // COGS Expense Debit
-      [{ accountCode: "1003", amount: totalCogs }]  // Product Asset Credit
-    );
 
     return newSale;
   };

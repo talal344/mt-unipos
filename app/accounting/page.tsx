@@ -68,6 +68,8 @@ export default function AccountingPage() {
     { code: "1003", name: "Product Stock Valuation", type: "Asset" },
     { code: "1004", name: "Accounts Receivable (Customer Dues)", type: "Asset" },
     { code: "2001", name: "Accounts Payable (Supplier Debt)", type: "Liability" },
+    { code: "2002", name: "Sales Tax Payable", type: "Liability" },
+    { code: "2003", name: "Customer Wallet Payable", type: "Liability" },
     { code: "3001", name: "Owner Capital & Retained Earnings", type: "Equity" },
     { code: "4001", name: "POS & Retail Sales Revenue", type: "Revenue" },
     { code: "5001", name: "Cost of Goods Sold (COGS)", type: "Expense" },
