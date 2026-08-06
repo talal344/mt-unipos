@@ -1455,26 +1455,9 @@ export default function AdminClientsPage() {
                             </div>
                           </td>
                           <td className="p-4">
-                            <div className="space-y-1">
-                              <span className="bg-purple-500/10 border border-purple-500/20 text-purple-400 font-bold px-2 py-0.5 rounded text-[10px] block w-fit">
-                                {tenant.plan} ({tenant.billingCycle})
-                              </span>
-                              <span
-                                className={`px-2 py-0.5 rounded text-[9px] font-bold block w-fit border ${
-                                  tenant.connectivityPlan === "offline-only"
-                                    ? "bg-amber-500/10 border-amber-500/30 text-amber-400"
-                                    : tenant.connectivityPlan === "online-only"
-                                    ? "bg-sky-500/10 border-sky-500/30 text-sky-400"
-                                    : "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
-                                }`}
-                              >
-                                {tenant.connectivityPlan === "offline-only"
-                                  ? "📴 Offline Only"
-                                  : tenant.connectivityPlan === "online-only"
-                                  ? "🌐 Online Only"
-                                  : "🔄 Hybrid Sync"}
-                              </span>
-                            </div>
+                            <span className="bg-purple-500/10 border border-purple-500/20 text-purple-400 font-bold px-2 py-0.5 rounded text-[10px] block w-fit">
+                              {tenant.plan} ({tenant.billingCycle})
+                            </span>
                           </td>
                           <td className="p-4 font-bold text-white">
                             {tenant.defaultCurrency || "PKR"}
@@ -1494,7 +1477,45 @@ export default function AdminClientsPage() {
                           </td>
                           <td className="p-4">
                             <div className="flex gap-1.5 justify-center flex-wrap">
-
+                              <button
+                                onClick={() => handleOpenEdit(tenant)}
+                                className="p-1.5 bg-brand-sky/10 hover:bg-brand-sky text-brand-sky hover:text-black rounded transition"
+                                title="Edit Tenant Shard & Plan Configuration"
+                              >
+                                <Edit2 size={12} />
+                              </button>
+                              <button
+                                onClick={() => handleOpenPresets(tenant)}
+                                className="p-1.5 bg-purple-500/10 hover:bg-purple-500 text-purple-400 hover:text-white rounded transition"
+                                title="Manage Login Credentials & Staff Presets"
+                              >
+                                <Key size={12} />
+                              </button>
+                              <button
+                                onClick={() => handlePrintA4ActivationCertificate(tenant)}
+                                className="p-1.5 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-400 hover:text-white rounded transition"
+                                title="Print A4 Activation Certificate & Tax Invoice"
+                              >
+                                <Printer size={12} />
+                              </button>
+                              <button
+                                onClick={() => handleRestoreDb(tenant.id)}
+                                className="p-1.5 bg-amber-500/10 hover:bg-amber-500 text-amber-400 hover:text-black rounded transition"
+                                title="Restore Tenant Backup JSON"
+                              >
+                                <Upload size={12} />
+                              </button>
+                              <button
+                                onClick={() => handleToggleStatus(tenant.id, tenant.status)}
+                                className={`p-1.5 rounded transition ${
+                                  tenant.status === "Active"
+                                    ? "bg-amber-500/10 hover:bg-amber-500 text-amber-400 hover:text-black"
+                                    : "bg-emerald-500/10 hover:bg-emerald-500 text-emerald-400 hover:text-white"
+                                }`}
+                                title={tenant.status === "Active" ? "Suspend Tenant Shard" : "Activate Tenant Shard"}
+                              >
+                                {tenant.status === "Active" ? <ToggleRight size={12} /> : <ToggleLeft size={12} />}
+                              </button>
                               <button
                                 onClick={() => handleDeleteTenant(tenant.id, tenant.businessName)}
                                 className="p-1.5 bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white rounded transition"
