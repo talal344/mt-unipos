@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { BrowserMultiFormatReader } from '@zxing/browser';
 import { autoSaveReceiptToDisk } from "@/lib/receipt-saver";
-import { selectAndInitRootFolder } from "@/lib/local-storage-folder";
+import { selectAndInitRootFolder, getStoredDirectoryHandle } from "@/lib/local-storage-folder";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface HeldCart {
@@ -65,6 +65,35 @@ export default function PosPage() {
   const [showHeldCartsPanel, setShowHeldCartsPanel] = useState(false);
   const [holdLabel, setHoldLabel] = useState('');
   const [showHoldModal, setShowHoldModal] = useState(false);
+
+  // ── Local Save Folder State
+  const [hasSavedFolder, setHasSavedFolder] = useState<boolean>(false);
+  const [folderName, setFolderName] = useState<string>("");
+
+  useEffect(() => {
+    let isMounted = true;
+    const checkFolderState = async () => {
+      try {
+        const handle = await getStoredDirectoryHandle();
+        const storedName = typeof window !== "undefined" ? localStorage.getItem("unipos_selected_folder_name") : null;
+        if (handle || localReceiptsDirHandle || storedName) {
+          if (isMounted) {
+            setHasSavedFolder(true);
+            setFolderName(storedName || handle?.name || localReceiptsDirHandle?.name || "Connected");
+          }
+        } else {
+          if (isMounted) {
+            setHasSavedFolder(false);
+            setFolderName("");
+          }
+        }
+      } catch {
+        if (isMounted) setHasSavedFolder(false);
+      }
+    };
+    checkFolderState();
+    return () => { isMounted = false; };
+  }, [localReceiptsDirHandle]);
 
   // ── Camera Scanner State
   const [showCameraScanner, setShowCameraScanner] = useState(false);
@@ -944,17 +973,35 @@ export default function PosPage() {
                   </div>
                 )}
               </div>
-              <button onClick={async () => {
-                const res = await selectAndInitRootFolder();
-                if (res.success && res.folderName) {
-                  triggerToast(`✅ Save Folder Connected: "${res.folderName}"! Subfolders created.`);
-                } else if (res.error && res.error !== "Folder selection cancelled") {
-                  triggerToast(`⚠️ ${res.error}`);
-                }
-              }}
-              className="flex items-center gap-1.5 text-[9px] font-black uppercase px-2.5 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/20 rounded transition cursor-pointer">
-                <Download size={10} />
-                Set Save Folder
+              <button 
+                onClick={async () => {
+                  const res = await selectAndInitRootFolder();
+                  if (res.success && res.folderName) {
+                    setHasSavedFolder(true);
+                    setFolderName(res.folderName);
+                    triggerToast(`✅ Save Folder Connected: "${res.folderName}"! Subfolders created.`);
+                  } else if (res.error && res.error !== "Folder selection cancelled") {
+                    triggerToast(`⚠️ ${res.error}`);
+                  }
+                }}
+                className={`flex items-center gap-1.5 text-[9px] font-black uppercase px-2.5 py-1 rounded transition cursor-pointer ${
+                  hasSavedFolder 
+                    ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/20" 
+                    : "bg-red-500/20 text-red-400 border-2 border-red-500/60 animate-pulse hover:bg-red-500/30 shadow-lg shadow-red-500/30"
+                }`}
+                title={hasSavedFolder ? `Save folder connected: ${folderName}` : "Click to set local save folder for auto-saving receipts"}
+              >
+                {hasSavedFolder ? (
+                  <>
+                    <CheckCircle2 size={11} className="text-emerald-400" />
+                    <span>✓ {folderName ? `FOLDER: ${folderName}` : "SAVE FOLDER SET"}</span>
+                  </>
+                ) : (
+                  <>
+                    <Download size={11} className="animate-bounce text-red-400" />
+                    <span>⚠️ SET SAVE FOLDER</span>
+                  </>
+                )}
               </button>
             </div>
             <button
