@@ -864,7 +864,29 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
 
   const saveTenantData = (key: string, data: any) => {
     if (currentUser?.tenantId) {
-      localStorage.setItem(`${key}_${currentUser.tenantId}`, JSON.stringify(data));
+      const fullKey = `${key}_${currentUser.tenantId}`;
+      localStorage.setItem(fullKey, JSON.stringify(data));
+      
+      if (typeof window !== "undefined") {
+        try {
+          queueSyncKey(fullKey);
+        } catch (e) {}
+
+        if (navigator.onLine && supabase && currentUser.tenantId) {
+          (async () => {
+            try {
+              const { error } = await supabase.from('unipos_collections').upsert({
+                tenant_id: currentUser.tenantId,
+                collection: key,
+                item_id: 'all',
+                data: data,
+                updated_at: new Date().toISOString()
+              });
+              if (!error) await dequeueItem(STORE_SYNC_KEYS, fullKey);
+            } catch (err) {}
+          })();
+        }
+      }
     }
   };
 
