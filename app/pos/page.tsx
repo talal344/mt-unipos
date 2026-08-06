@@ -1059,7 +1059,11 @@ export default function PosPage() {
                   if (res.success && res.folderName) {
                     setHasSavedFolder(true);
                     setFolderName(res.folderName);
-                    triggerToast(`✅ Save Folder Connected: "${res.folderName}"! Subfolders created.`);
+                    if (res.isSafari) {
+                      triggerToast(`ℹ️ Safari Mode (${res.folderName}): Set Safari -> Settings -> File Download Location to "${res.folderName}" for direct folder saving!`);
+                    } else {
+                      triggerToast(`✅ Save Folder Connected: "${res.folderName}"! Subfolders created.`);
+                    }
                   } else if (res.error && res.error !== "Folder selection cancelled") {
                     triggerToast(`⚠️ ${res.error}`);
                   }

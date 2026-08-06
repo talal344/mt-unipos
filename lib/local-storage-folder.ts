@@ -78,7 +78,16 @@ export async function verifyDirectoryPermission(handle: FileSystemDirectoryHandl
  * Let user pick a root folder on their computer (e.g. Documents or custom folder).
  * Automatically creates subfolders inside it.
  */
-export async function selectAndInitRootFolder(): Promise<{ success: boolean; folderName?: string; error?: string }> {
+export function isSafariBrowser(): boolean {
+  if (typeof window === "undefined") return false;
+  return !("showDirectoryPicker" in window);
+}
+
+/**
+ * Let user pick a root folder on their computer (e.g. Documents or custom folder).
+ * Automatically creates subfolders inside it.
+ */
+export async function selectAndInitRootFolder(): Promise<{ success: boolean; folderName?: string; isSafari?: boolean; error?: string }> {
   try {
     if (typeof window === "undefined") {
       return { success: false, error: "Window is undefined" };
@@ -113,7 +122,7 @@ export async function selectAndInitRootFolder(): Promise<{ success: boolean; fol
 
         await setStoredDirectoryHandle(rootHandle);
 
-        return { success: true, folderName: rootHandle.name };
+        return { success: true, folderName: rootHandle.name, isSafari: false };
       } catch (err: any) {
         if (err?.name === "AbortError") {
           return { success: false, error: "Folder selection cancelled" };
@@ -137,7 +146,7 @@ export async function selectAndInitRootFolder(): Promise<{ success: boolean; fol
           if (resolved) return;
           resolved = true;
           const files = e.target.files;
-          let folderName = "MT POS (Documents/Downloads)";
+          let folderName = "MT UNIPOS";
           if (files && files.length > 0 && files[0].webkitRelativePath) {
             const topDir = files[0].webkitRelativePath.split("/")[0];
             if (topDir) folderName = topDir;
@@ -145,7 +154,7 @@ export async function selectAndInitRootFolder(): Promise<{ success: boolean; fol
           localStorage.setItem("unipos_selected_folder_name", folderName);
           localStorage.setItem("unipos_safari_mode", "true");
           if (document.body.contains(input)) document.body.removeChild(input);
-          resolve({ success: true, folderName });
+          resolve({ success: true, folderName, isSafari: true });
         };
 
         const onFocus = () => {
@@ -153,11 +162,11 @@ export async function selectAndInitRootFolder(): Promise<{ success: boolean; fol
           setTimeout(() => {
             if (!resolved) {
               resolved = true;
-              const saved = localStorage.getItem("unipos_selected_folder_name") || "MT POS (Documents/Downloads)";
+              const saved = localStorage.getItem("unipos_selected_folder_name") || "MT UNIPOS";
               localStorage.setItem("unipos_selected_folder_name", saved);
               localStorage.setItem("unipos_safari_mode", "true");
               if (document.body.contains(input)) document.body.removeChild(input);
-              resolve({ success: true, folderName: saved });
+              resolve({ success: true, folderName: saved, isSafari: true });
             }
           }, 400);
         };
@@ -166,10 +175,10 @@ export async function selectAndInitRootFolder(): Promise<{ success: boolean; fol
         window.addEventListener("focus", onFocus, { once: true });
         input.click();
       } catch (err: any) {
-        const folderName = "MT POS (Documents/Downloads)";
+        const folderName = "MT UNIPOS";
         localStorage.setItem("unipos_selected_folder_name", folderName);
         localStorage.setItem("unipos_safari_mode", "true");
-        resolve({ success: true, folderName });
+        resolve({ success: true, folderName, isSafari: true });
       }
     });
   } catch (err: any) {
