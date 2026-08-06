@@ -89,6 +89,7 @@ export default function ClientDashboardPage() {
     setCurrencySymbol,
     salesTaxRate,
     setSalesTaxRate,
+    businessSettings,
   } = useGlobalContext();
 
     const [activeReportModal, setActiveReportModal] = React.useState<"revenue" | "gross_profit" | "net_profit" | "stock_value" | "wallet" | "cash_drawers" | null>(null);
@@ -255,14 +256,15 @@ export default function ClientDashboardPage() {
 
   const staffList = useMemo(() => {
     const list: string[] = [];
-    if (currentUser?.name) list.push(`${currentUser.name} (Owner / Active User)`);
+    const ownerName = businessSettings?.ownerName || currentUser?.name || "Ahmad Raza";
+    if (ownerName) list.push(`${ownerName} (Owner / Active User)`);
     employees.forEach(e => {
       const label = `${e.name} (${e.role || "Cashier"})`;
       if (!list.includes(label)) list.push(label);
     });
-    if (list.length === 0) list.push("Talal Ahmad (Owner)");
+    if (list.length === 0) list.push(`${ownerName} (Owner)`);
     return list;
-  }, [currentUser, employees]);
+  }, [currentUser, employees, businessSettings]);
 
   const [assignFormCounter, setAssignFormCounter] = React.useState("Main Counter");
   const [assignFormCashier, setAssignFormCashier] = React.useState("");
@@ -1241,7 +1243,7 @@ export default function ClientDashboardPage() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => {
-                  setAssignFormCashier(staffList[0] || "Talal Ahmad (Owner)");
+                  setAssignFormCashier(staffList[0] || "Ahmad Raza (Owner)");
                   setAssignFormFloat("5000");
                   setShowAssignCounterModal(true);
                 }}
@@ -1381,7 +1383,7 @@ export default function ClientDashboardPage() {
                       <button
                         onClick={() => {
                           setAssignFormCounter(counter.name);
-                          setAssignFormCashier(counter.assignedCashierName !== "Unassigned" ? counter.assignedCashierName : (staffList[0] || "Talal Ahmad (Owner)"));
+                          setAssignFormCashier(counter.assignedCashierName !== "Unassigned" ? counter.assignedCashierName : (staffList[0] || "Ahmad Raza (Owner)"));
                           setAssignFormFloat(String(counter.openingFloat || 5000));
                           setShowAssignCounterModal(true);
                         }}

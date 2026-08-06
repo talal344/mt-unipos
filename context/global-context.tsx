@@ -898,7 +898,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     {
       id: "counter-1",
       name: "Main Counter",
-      assignedCashierName: "Talal Ahmad (Owner / Active User)",
+      assignedCashierName: "Ahmad Raza (Owner / Active User)",
       assignedCashierEmail: "owner@unipos.com",
       openingFloat: 0,
       status: "Active",
