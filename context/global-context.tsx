@@ -1,3 +1,18 @@
+export interface POSShift {
+  id: string;
+  counterId: string;
+  cashierName: string;
+  cashierEmail: string;
+  openingFloat: number;
+  startTime: string;
+  endTime?: string;
+  status: "Open" | "Closed";
+  closingCash?: number;
+  expectedCash?: number;
+  discrepancy?: number;
+  notes?: string;
+}
+
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
@@ -469,6 +484,9 @@ interface GlobalContextType {
   previewFIFO: (productId: string, qty: number) => BatchConsumption[];
   getProductBatches: (productId: string) => ProductBatch[];
 
+  posShifts: POSShift[];
+  startPOSShift: (counterId: string, openingFloat: number) => POSShift;
+  closePOSShift: (shiftId: string, actualClosingCash: number, notes?: string) => void;
   sales: SaleTransaction[];
   addSale: (sale: Omit<SaleTransaction, "id" | "receiptNumber" | "date">) => SaleTransaction;
   
@@ -861,6 +879,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([]);
   const [batches, setBatches] = useState<ProductBatch[]>([]);  // FIFO batch ledger
+  const [posShifts, setPosShifts] = useState<POSShift[]>([]);
   const [sales, setSales] = useState<SaleTransaction[]>([]);
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
   const [payrollRecords, setPayrollRecords] = useState<PayrollRecord[]>([]);
@@ -2780,6 +2799,39 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Complete Retail & Wholesale Sales Engine with Live Inventory Reduction & Double-Entry Accounting Sync
+  const startPOSShift = (counterId: string, openingFloat: number): POSShift => {
+    const newShift: POSShift = {
+      id: `SHIFT-${Date.now()}`,
+      counterId: counterId || "Counter 1",
+      cashierName: currentUser?.name || "Cashier",
+      cashierEmail: currentUser?.email || "cashier@store.com",
+      openingFloat: Number(openingFloat) || 0,
+      startTime: new Date().toISOString(),
+      status: "Open"
+    };
+    const updated = [newShift, ...posShifts];
+    setPosShifts(updated);
+    saveTenantData("unipos_shifts", updated);
+    return newShift;
+  };
+
+  const closePOSShift = (shiftId: string, actualClosingCash: number, notes?: string) => {
+    const updated = posShifts.map(s => {
+      if (s.id === shiftId) {
+        return {
+          ...s,
+          status: "Closed" as const,
+          endTime: new Date().toISOString(),
+          closingCash: actualClosingCash,
+          notes: notes || ""
+        };
+      }
+      return s;
+    });
+    setPosShifts(updated);
+    saveTenantData("unipos_shifts", updated);
+  };
+
   const addSale = (sale: Omit<SaleTransaction, "id" | "receiptNumber" | "date">) => {
     const now = new Date();
     const dd = String(now.getDate()).padStart(2, "0");
@@ -3272,6 +3324,9 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         previewFIFO,
         getProductBatches,
         sales,
+        posShifts,
+        startPOSShift,
+        closePOSShift,
         addSale,
         expenses,
         addExpense,

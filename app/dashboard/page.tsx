@@ -75,6 +75,8 @@ export default function ClientDashboardPage() {
     tables, 
     kitchenTickets, 
     customers,
+    posShifts,
+    closePOSShift,
     updateCustomerWalletBalance,
     addJournalEntry,
     setCurrencySymbol,
@@ -959,6 +961,98 @@ export default function ClientDashboardPage() {
 
           </div>
         )}
+
+        
+        {/* -------------------- LIVE POS COUNTERS & CASH DRAWERS MONITOR -------------------- */}
+        <section className="bg-brand-dark-surface/40 border border-brand-dark-border p-5 rounded-2xl space-y-4">
+          <div className="flex justify-between items-center border-b border-brand-dark-border pb-3">
+            <div>
+              <h3 className="text-xs uppercase font-bold text-white tracking-wide flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                Live POS Counters &amp; Cash Drawers Monitor
+              </h3>
+              <p className="text-[10px] text-gray-500 font-mono mt-0.5">
+                Real-time cash float, cash sales inflow, and expected drawer balances per cashier counter.
+              </p>
+            </div>
+            <span className="text-[10px] text-emerald-400 font-mono font-bold bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-1 rounded-full">
+              {posShifts.filter(s => s.status === "Open").length} Counters Active
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {posShifts.length === 0 ? (
+              <div className="col-span-full py-8 text-center text-gray-500 italic text-xs">
+                No active POS shift sessions logged. Cashiers will appear here as soon as they open a counter shift.
+              </div>
+            ) : (
+              posShifts.map(shift => {
+                const shiftSalesList = sales.filter(s => new Date(s.date) >= new Date(shift.startTime));
+                const shiftCashInflow = shiftSalesList.reduce((acc, s) => {
+                  if (s.status === "Returned" || s.status === "Refunded") {
+                    return acc - (s.paymentMethod === "Cash" ? s.total : 0);
+                  }
+                  if (s.splitPayments) return acc + (s.splitPayments["Cash"] || 0);
+                  return acc + (s.paymentMethod === "Cash" ? s.total : 0);
+                }, 0);
+                const expectedDrawer = (shift.openingFloat || 0) + shiftCashInflow;
+                const isOpen = shift.status === "Open";
+
+                return (
+                  <div key={shift.id} className={`p-4 rounded-xl border space-y-3 font-sans transition ${
+                    isOpen ? "bg-black/50 border-emerald-500/30 hover:border-emerald-500/60" : "bg-black/20 border-brand-dark-border opacity-70"
+                  }`}>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <span className={`w-2 h-2 rounded-full ${isOpen ? "bg-emerald-400 animate-pulse" : "bg-gray-600"}`} />
+                          <span className="font-black text-white text-sm">{shift.counterId}</span>
+                        </div>
+                        <p className="text-[10px] text-gray-400 mt-0.5 font-mono">Cashier: <strong className="text-white">{shift.cashierName}</strong></p>
+                      </div>
+                      <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase font-mono ${
+                        isOpen ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400" : "bg-gray-800 text-gray-400"
+                      }`}>
+                        {shift.status}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-[10px] font-mono border-t border-b border-brand-dark-border/40 py-2.5">
+                      <div>
+                        <span className="text-gray-500 block">Opening Float</span>
+                        <span className="text-white font-bold">{currencySymbol} {(shift.openingFloat || 0).toLocaleString()}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-500 block">Cash Sales Inflow</span>
+                        <span className="text-emerald-400 font-bold">+{currencySymbol} {shiftCashInflow.toLocaleString()}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-between items-center pt-1 font-mono">
+                      <div>
+                        <div className="text-[9px] uppercase font-bold text-gray-400">Current Expected Drawer</div>
+                        <div className="text-lg font-black text-emerald-400">{currencySymbol} {expectedDrawer.toLocaleString()}</div>
+                      </div>
+                      {isOpen && (
+                        <button
+                          onClick={() => {
+                            if (confirm(`Audit & Close shift for ${shift.counterId} (${shift.cashierName})? Expected Cash: ${currencySymbol} ${expectedDrawer}`)) {
+                              closePOSShift(shift.id, expectedDrawer, "Audit Closed by Owner");
+                            }
+                          }}
+                          className="px-3 py-1.5 bg-red-600/20 hover:bg-red-600 border border-red-500/40 text-red-300 hover:text-white font-bold text-[9px] uppercase tracking-wider rounded-lg transition"
+                        >
+                          Audit &amp; Close
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </section>
+
 
         {/* SECTION 4: DEPARTMENTAL / SUPER MARKETS / GENERAL RETAIL VERTICAL */}
         {vertical === "Retail" && (

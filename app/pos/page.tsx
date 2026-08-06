@@ -57,8 +57,14 @@ export default function PosPage() {
     products, customers, addCustomer, addSale, updateProduct, sales,
     currencySymbol, currentBranch, currentUser, businessSettings, recordDueRecovery,
     localReceiptsDirHandle, setLocalReceiptsDirHandle, isOffline, previewFIFO, updateCustomerBalance,
-    updateCustomerWalletBalance, settleDuesWithWallet
+    updateCustomerWalletBalance, settleDuesWithWallet,
+    posShifts, startPOSShift, closePOSShift
   } = useGlobalContext();
+
+  // ── Shift Management State
+  const [selectedCounter, setSelectedCounter] = useState<string>("Counter 1");
+  const [closingCashCount, setClosingCashCount] = useState<string>("0");
+  const [closeShiftNotes, setCloseShiftNotes] = useState<string>("");
 
   // ── Held Cart State
   const [heldCarts, setHeldCarts] = useState<HeldCart[]>([]);
@@ -216,19 +222,28 @@ export default function PosPage() {
 
   // ── Shift handlers
   const handleOpenShift = () => {
+    const floatNum = parseFloat(openingCash) || 0;
+    startPOSShift(selectedCounter, floatNum);
+    localStorage.setItem('unipos_active_counter', selectedCounter);
     localStorage.setItem('unipos_shift_open', 'true');
     localStorage.setItem('unipos_shift_start', new Date().toISOString());
+    localStorage.setItem('unipos_shift_opening_cash', floatNum.toString());
     setShiftOpen(true);
     setShowOpenShiftModal(false);
-    triggerToast('✅ Shift opened! Cash drawer balance recorded.');
+    triggerToast(`✅ Shift started at ${selectedCounter} with Opening Float ${currencySymbol} ${floatNum}!`);
   };
 
   const handleCloseShift = () => {
+    const activeShiftObj = posShifts.find(s => s.status === "Open" && (s.cashierEmail === currentUser?.email || s.cashierName === currentUser?.name));
+    if (activeShiftObj) {
+      closePOSShift(activeShiftObj.id, parseFloat(closingCashCount) || 0, closeShiftNotes);
+    }
     localStorage.removeItem('unipos_shift_open');
     localStorage.removeItem('unipos_shift_start');
+    localStorage.removeItem('unipos_shift_opening_cash');
     setShiftOpen(false);
     setShowCloseShiftModal(false);
-    triggerToast('🔒 Shift closed. Z-Report generated.');
+    triggerToast('🔒 Shift closed & Z-Report generated.');
   };
 
   // ── Shift sales computed
@@ -869,9 +884,25 @@ export default function PosPage() {
                 </div>
               </div>
 
+              {/* Select Counter */}
+              <div>
+                <label className="block text-[9px] uppercase font-bold text-gray-400 mb-1">Select Checkout Counter / Terminal</label>
+                <select
+                  value={selectedCounter}
+                  onChange={e => setSelectedCounter(e.target.value)}
+                  className="w-full bg-black border border-brand-dark-border p-3 rounded-xl text-white font-bold text-xs focus:outline-none mb-3"
+                >
+                  <option value="Counter 1">Counter 1 (Main Checkout)</option>
+                  <option value="Counter 2">Counter 2 (Secondary)</option>
+                  <option value="Counter 3">Counter 3 (Express)</option>
+                  <option value="Mobile POS">Mobile POS Checkout</option>
+                  <option value="Delivery Desk">Delivery Desk</option>
+                </select>
+              </div>
+
               {/* Opening Cash Input */}
               <div>
-                <label className="block text-[9px] uppercase font-bold text-gray-400 mb-2">Opening Cash Balance ({currencySymbol})</label>
+                <label className="block text-[9px] uppercase font-bold text-gray-400 mb-2">Opening Cash Float Balance ({currencySymbol})</label>
                 <div className="relative">
                   <DollarSign className="absolute left-3 top-3.5 text-brand-sky" size={15} />
                   <input
@@ -909,9 +940,13 @@ export default function PosPage() {
         {shiftOpen && (
           <div className="lg:col-span-12 flex items-center justify-between bg-brand-dark-surface/80 border border-brand-dark-border rounded-xl px-4 py-2 shrink-0">
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-1 rounded-lg">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-[10px] font-black text-emerald-400 uppercase">Shift Open</span>
+                <span className="text-[10px] font-black text-emerald-400 uppercase">{selectedCounter} · SHIFT OPEN</span>
+              </div>
+              <div className="hidden sm:flex items-center gap-1.5 bg-brand-dark-surface border border-brand-dark-border px-2.5 py-1 rounded-lg text-[10px] font-mono">
+                <span className="text-gray-400 font-bold">DRAWER CASH:</span>
+                <span className="text-emerald-400 font-black">{currencySymbol} {((parseFloat(localStorage.getItem('unipos_shift_opening_cash') || openingCash) || 0) + shiftCashSales).toLocaleString()}</span>
               </div>
               {isOffline && (
                 <div className="flex items-center gap-1.5 bg-red-500/20 px-2 py-1 rounded">
