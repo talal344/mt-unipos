@@ -169,6 +169,24 @@ function LoginContent() {
       }
     }
 
+    // Real-time Cloud Employee Sync for cross-device multi-terminal login
+    try {
+      if (typeof navigator !== "undefined" && navigator.onLine && supabase) {
+        const { data: empRow } = await supabase
+          .from('unipos_collections')
+          .select('data')
+          .eq('tenant_id', cleanTenantId)
+          .eq('collection', 'unipos_employees')
+          .maybeSingle();
+
+        if (empRow && Array.isArray(empRow.data) && empRow.data.length > 0) {
+          localStorage.setItem(`unipos_employees_${cleanTenantId}`, JSON.stringify(empRow.data));
+        }
+      }
+    } catch (e) {
+      console.warn("Real-time cloud employee sync error:", e);
+    }
+
     // Load custom employees registered under this specific tenant ID
     const tenantEmployees = typeof window !== "undefined"
       ? (() => {
@@ -251,8 +269,9 @@ function LoginContent() {
           })()
         : [];
 
-      const presetMatch = presets.find(p => p.email.toLowerCase() === email.toLowerCase());
-      const employeeMatch = tenantEmployees.find((emp: any) => emp.email.toLowerCase() === email.toLowerCase());
+      const cleanEmail = email.trim().toLowerCase();
+      const presetMatch = presets.find(p => p.email.trim().toLowerCase() === cleanEmail);
+      const employeeMatch = tenantEmployees.find((emp: any) => (emp.email || "").trim().toLowerCase() === cleanEmail);
 
       const role = presetMatch?.role || employeeMatch?.role || "Owner";
       const name = presetMatch
