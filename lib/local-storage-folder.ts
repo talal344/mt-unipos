@@ -64,8 +64,10 @@ export async function getStoredDirectoryHandle(): Promise<FileSystemDirectoryHan
 export async function verifyDirectoryPermission(handle: FileSystemDirectoryHandle): Promise<boolean> {
   try {
     const opts = { mode: "readwrite" as const };
-    if (typeof (handle as any).queryPermission === "function" && (await (handle as any).queryPermission(opts)) === "granted") return true;
-    if (typeof (handle as any).requestPermission === "function" && (await (handle as any).requestPermission(opts)) === "granted") return true;
+    if (typeof (handle as any).queryPermission === "function") {
+      const status = await (handle as any).queryPermission(opts);
+      if (status === "granted") return true;
+    }
   } catch (err) {
     console.warn("Directory permission check failed:", err);
   }

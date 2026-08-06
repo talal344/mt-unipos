@@ -92,11 +92,17 @@ export default function PosPage() {
     const checkFolderState = async () => {
       try {
         const handle = await getStoredDirectoryHandle();
-        const storedName = typeof window !== "undefined" ? localStorage.getItem("unipos_selected_folder_name") : null;
-        if (handle || localReceiptsDirHandle || storedName) {
+        let valid = false;
+        if (handle) {
+          try {
+            const perm = await (handle as any).queryPermission?.({ mode: "readwrite" });
+            if (perm === "granted") valid = true;
+          } catch {}
+        }
+        if (valid && handle) {
           if (isMounted) {
             setHasSavedFolder(true);
-            setFolderName(storedName || handle?.name || localReceiptsDirHandle?.name || "Connected");
+            setFolderName(handle.name);
           }
         } else {
           if (isMounted) {
@@ -108,6 +114,7 @@ export default function PosPage() {
         if (isMounted) setHasSavedFolder(false);
       }
     };
+
     checkFolderState();
     return () => { isMounted = false; };
   }, [localReceiptsDirHandle]);
