@@ -25,6 +25,7 @@ import {
   BarChart3,
   Package,
   Users,
+  Banknote,
   FileSpreadsheet,
   Printer,
   Download,
@@ -88,7 +89,7 @@ export default function ClientDashboardPage() {
     setSalesTaxRate,
   } = useGlobalContext();
 
-    const [activeReportModal, setActiveReportModal] = React.useState<"revenue" | "gross_profit" | "net_profit" | "stock_value" | "wallet" | null>(null);
+    const [activeReportModal, setActiveReportModal] = React.useState<"revenue" | "gross_profit" | "net_profit" | "stock_value" | "wallet" | "cash_drawers" | null>(null);
 
   // CSV Export Helper
   const downloadCSVReport = (type: string) => {
@@ -157,6 +158,36 @@ export default function ClientDashboardPage() {
         p.costPrice * p.stock,
         p.stock <= p.minStock ? "LOW STOCK" : "IN STOCK"
       ]);
+    } else if (type === "wallet") {
+          } else if (type === "cash_drawers") {
+      headers = ["Counter Name", "Assigned Cashier", "Status", "Initial Float (PKR)", "Net Cash Sales (PKR)", "Total Drawer Cash (PKR)"];
+      rows = posCounters.map(c => {
+        const cleanCashier = (c.assignedCashierName || "").replace(/\s*\([^)]*\)/, "").trim().toLowerCase();
+        const cSales = sales.filter(s => {
+          if (c.status !== "Active" || !cleanCashier || cleanCashier === "unassigned") return false;
+          if (s.counterId && (s.counterId.toLowerCase() === c.name.toLowerCase() || s.counterId.toLowerCase() === c.id.toLowerCase())) return true;
+          const sCashier = (s.cashierName || "").trim().toLowerCase();
+          return sCashier && (sCashier.includes(cleanCashier) || cleanCashier.includes(sCashier));
+        });
+        let netCash = 0;
+        cSales.forEach(s => {
+          if (s.status === "Returned" || s.status === "Refunded") {
+            if (s.paymentMethod === "Cash") netCash -= s.total;
+          } else {
+            if (s.splitPayments) netCash += (s.splitPayments["Cash"] || 0);
+            else if (s.paymentMethod === "Cash") netCash += s.total;
+          }
+        });
+        const drawerCash = c.status === "Active" ? ((c.openingFloat || 0) + netCash) : 0;
+        return [
+          c.name,
+          c.assignedCashierName || "Unassigned",
+          c.status,
+          c.openingFloat || 0,
+          netCash,
+          drawerCash
+        ];
+      });
     } else if (type === "wallet") {
       headers = ["Customer ID", "Customer Name", "Contact Mobile", "Email", "Store Wallet Credit (Liability PKR)"];
       rows = walletCustomers.map(c => [
@@ -234,6 +265,36 @@ export default function ClientDashboardPage() {
   const [assignFormCounter, setAssignFormCounter] = React.useState("Counter 1 (Main Checkout)");
   const [assignFormCashier, setAssignFormCashier] = React.useState("");
   const [assignFormFloat, setAssignFormFloat] = React.useState("5000");
+
+  
+  const totalStoreDrawerCash = useMemo(() => {
+    return posCounters.reduce((acc, counter) => {
+      if (counter.status !== "Active") return acc;
+      const cleanCashier = (counter.assignedCashierName || "").replace(/\s*\([^)]*\)/, "").trim().toLowerCase();
+      const counterSales = sales.filter(s => {
+        if (!cleanCashier || cleanCashier === "unassigned") return false;
+        if (s.counterId && (s.counterId.toLowerCase() === counter.name.toLowerCase() || s.counterId.toLowerCase() === counter.id.toLowerCase())) return true;
+        const sCashier = (s.cashierName || "").trim().toLowerCase();
+        if (sCashier && (sCashier.includes(cleanCashier) || cleanCashier.includes(sCashier))) {
+          if (counter.startedAt) return new Date(s.date) >= new Date(counter.startedAt);
+          return true;
+        }
+        return false;
+      });
+      let grossCash = 0;
+      let refunds = 0;
+      counterSales.forEach(s => {
+        if (s.status === "Returned" || s.status === "Refunded") {
+          if (s.paymentMethod === "Cash") refunds += s.total;
+        } else {
+          if (s.splitPayments) grossCash += (s.splitPayments["Cash"] || 0);
+          else if (s.paymentMethod === "Cash") grossCash += s.total;
+        }
+      });
+      const netCash = grossCash - refunds;
+      return acc + (counter.openingFloat || 0) + netCash;
+    }, 0);
+  }, [posCounters, sales]);
 
   const handleSaveCounterAssignment = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1337,6 +1398,19 @@ export default function ClientDashboardPage() {
                 <div className="text-xl font-black text-purple-400 font-mono">{currencySymbol} {totalWalletLiability.toLocaleString(undefined,{maximumFractionDigits:0})}</div>
                 <p className="text-[9px] text-purple-400/80 font-bold">{walletCustomers.length} customers with store credit &rarr;</p>
               </div>
+
+              {/* Total Cash in Drawer (All Counters) */}
+              <div 
+                onClick={() => setActiveReportModal("cash_drawers")}
+                className="bg-emerald-500/10 border border-emerald-500/25 p-4 rounded-xl space-y-2 cursor-pointer hover:bg-emerald-500/20 transition group"
+              >
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] uppercase font-bold tracking-wider text-gray-400">Total Drawer Cash</span>
+                  <Banknote size={14} className="text-emerald-400 group-hover:scale-110 transition-transform" />
+                </div>
+                <div className="text-xl font-black text-emerald-400 font-mono">{currencySymbol} {totalStoreDrawerCash.toLocaleString(undefined,{maximumFractionDigits:0})}</div>
+                <p className="text-[9px] text-emerald-400/80 font-bold">{posCounters.filter(c => c.status === "Active").length} active counter drawers &rarr;</p>
+              </div>
             </div>
 
             {/* 3-panel: Top Products | Low Stock | Overdue Dues */}
@@ -1990,6 +2064,129 @@ export default function ClientDashboardPage() {
                     className="px-3.5 py-2 bg-amber-500 hover:bg-amber-400 text-black font-black text-xs rounded-xl flex items-center gap-1.5 transition shadow-lg shadow-amber-500/20"
                   >
                     <Download size={14} /> Download CSV Inventory Valuation
+                  </button>
+                </div>
+                <button onClick={() => setActiveReportModal(null)} className="px-4 py-2 bg-brand-dark-border hover:bg-gray-800 text-white font-bold text-xs rounded-xl transition">
+                  Close Report
+                </button>
+              </div>
+
+            </div>
+          </div>
+        )}
+
+      
+        {/* ── CASH DRAWERS AUDIT REPORT MODAL ── */}
+        {activeReportModal === "cash_drawers" && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-brand-dark-surface border border-emerald-500/30 rounded-2xl w-full max-w-5xl p-6 space-y-5 shadow-2xl animate-fade-in-up max-h-[90vh] flex flex-col">
+              
+              <div className="flex justify-between items-start border-b border-brand-dark-border/60 pb-4">
+                <div>
+                  <h3 className="text-base font-black text-white flex items-center gap-2">
+                    <Banknote size={18} className="text-emerald-400" />
+                    Store Cash Drawers &amp; Counters Audit Report
+                  </h3>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Complete audit breakdown of cash float, net sales inflow, and live drawer cash sitting at each counter.
+                  </p>
+                </div>
+                <button onClick={() => setActiveReportModal(null)} className="p-1 text-gray-400 hover:text-white rounded-lg transition">
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* KPI Summary Banner */}
+              <div className="grid grid-cols-3 gap-3 font-mono">
+                <div className="bg-emerald-500/10 border border-emerald-500/30 p-3 rounded-xl">
+                  <div className="text-[10px] uppercase font-bold text-gray-400">Total Cash In Store Drawers</div>
+                  <div className="text-xl font-black text-emerald-400 mt-1">{currencySymbol} {totalStoreDrawerCash.toLocaleString()}</div>
+                  <div className="text-[9px] text-gray-500">Across all active cashier counters</div>
+                </div>
+                <div className="bg-brand-dark-border/40 border border-brand-dark-border p-3 rounded-xl">
+                  <div className="text-[10px] uppercase font-bold text-gray-400">Active Counters Count</div>
+                  <div className="text-xl font-black text-white mt-1">{posCounters.filter(c => c.status === "Active").length} Counters</div>
+                  <div className="text-[9px] text-gray-500">Currently active sessions</div>
+                </div>
+                <div className="bg-amber-500/10 border border-amber-500/30 p-3 rounded-xl">
+                  <div className="text-[10px] uppercase font-bold text-gray-400">Combined Initial Floats</div>
+                  <div className="text-xl font-black text-amber-400 mt-1">
+                    {currencySymbol} {posCounters.filter(c => c.status === "Active").reduce((a, c) => a + (c.openingFloat || 0), 0).toLocaleString()}
+                  </div>
+                  <div className="text-[9px] text-amber-400/80 font-bold">Owner float capital</div>
+                </div>
+              </div>
+
+              {/* Counter Drawers List Table */}
+              <div className="flex-1 overflow-y-auto border border-brand-dark-border/60 rounded-xl">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-black/60 sticky top-0 border-b border-brand-dark-border text-gray-400 font-mono">
+                    <tr>
+                      <th className="p-3 font-semibold">Counter Terminal</th>
+                      <th className="p-3 font-semibold">Assigned Cashier</th>
+                      <th className="p-3 font-semibold text-right">Initial Float</th>
+                      <th className="p-3 font-semibold text-right">Net Cash Sales</th>
+                      <th className="p-3 font-semibold text-right">Total Drawer Cash</th>
+                      <th className="p-3 font-semibold text-center">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-brand-dark-border/40 font-mono text-[11px]">
+                    {posCounters.map(c => {
+                      const isActive = c.status === "Active";
+                      const cleanCashier = (c.assignedCashierName || "").replace(/\s*\([^)]*\)/, "").trim().toLowerCase();
+                      const cSales = sales.filter(s => {
+                        if (!isActive || !cleanCashier || cleanCashier === "unassigned") return false;
+                        if (s.counterId && (s.counterId.toLowerCase() === c.name.toLowerCase() || s.counterId.toLowerCase() === c.id.toLowerCase())) return true;
+                        const sCashier = (s.cashierName || "").trim().toLowerCase();
+                        return sCashier && (sCashier.includes(cleanCashier) || cleanCashier.includes(sCashier));
+                      });
+
+                      let netCash = 0;
+                      cSales.forEach(s => {
+                        if (s.status === "Returned" || s.status === "Refunded") {
+                          if (s.paymentMethod === "Cash") netCash -= s.total;
+                        } else {
+                          if (s.splitPayments) netCash += (s.splitPayments["Cash"] || 0);
+                          else if (s.paymentMethod === "Cash") netCash += s.total;
+                        }
+                      });
+                      const drawerCash = isActive ? ((c.openingFloat || 0) + netCash) : 0;
+
+                      return (
+                        <tr key={c.id} className="hover:bg-brand-dark-surface/60 transition">
+                          <td className="p-3 text-white font-bold font-sans">{c.name}</td>
+                          <td className="p-3 text-emerald-300 font-sans">{c.assignedCashierName || "Unassigned"}</td>
+                          <td className="p-3 text-right text-gray-300">{currencySymbol} {isActive ? (c.openingFloat || 0).toLocaleString() : 0}</td>
+                          <td className="p-3 text-right text-emerald-400">+{currencySymbol} {netCash.toLocaleString()}</td>
+                          <td className="p-3 text-right font-black text-emerald-400 font-mono">{currencySymbol} {drawerCash.toLocaleString()}</td>
+                          <td className="p-3 text-center">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                              isActive ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400" : "bg-gray-800 text-gray-400"
+                            }`}>
+                              {c.status}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex justify-between items-center pt-2 border-t border-brand-dark-border/60">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => downloadCSVReport("cash_drawers")}
+                    className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition shadow-lg shadow-emerald-600/20"
+                  >
+                    <Download size={14} /> Download CSV Cash Drawers Report
+                  </button>
+                  <button
+                    onClick={() => printReportWindow("Store Cash Drawers Audit", ["Counter Name", "Assigned Cashier", "Status", "Initial Float (PKR)", "Net Cash Sales (PKR)", "Total Drawer Cash (PKR)"], posCounters.map(c => [c.name, c.assignedCashierName || "Unassigned", c.status, c.openingFloat || 0, 0, c.openingFloat || 0]))}
+                    className="px-3 py-2 bg-brand-dark-border hover:bg-gray-800 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition"
+                  >
+                    <Printer size={14} /> Print Drawers Audit
                   </button>
                 </div>
                 <button onClick={() => setActiveReportModal(null)} className="px-4 py-2 bg-brand-dark-border hover:bg-gray-800 text-white font-bold text-xs rounded-xl transition">
