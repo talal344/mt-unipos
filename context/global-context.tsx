@@ -1347,6 +1347,12 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       setBusinessSettings(initSettings);
     }
 
+    // 4.5 Load POS Counters Shard State
+    const savedCounters = getTenantData("unipos_counters", currentUser.tenantId);
+    if (savedCounters && savedCounters.length > 0) {
+      setPosCounters(savedCounters);
+    }
+
     // 5. Load Products (with SKU and Barcodes)
     const savedProducts = getTenantData("unipos_products", currentUser.tenantId);
     if (savedProducts && savedProducts.length > 0) {
@@ -1971,7 +1977,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     "unipos_expenses", "unipos_employees", "unipos_settings", "unipos_pos",
     "unipos_batches", "unipos_tables", "unipos_kitchen", "unipos_accounts",
     "unipos_journal", "unipos_attendance", "unipos_payroll", "unipos_transfers",
-    "unipos_folders_init"
+    "unipos_counters", "unipos_folders_init"
   ];
 
   const deleteTenant = async (id: string) => {
