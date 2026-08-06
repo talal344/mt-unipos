@@ -75,6 +75,7 @@ export default function ClientDashboardPage() {
     tables, 
     kitchenTickets, 
     customers,
+    employees,
     posCounters,
     assignCounterCashier,
     closeCounterSession,
@@ -217,6 +218,19 @@ export default function ClientDashboardPage() {
   };
 
     const [showAssignCounterModal, setShowAssignCounterModal] = React.useState(false);
+    const [staffSearchQuery, setStaffSearchQuery] = React.useState("");
+
+  const staffList = useMemo(() => {
+    const list: string[] = [];
+    if (currentUser?.name) list.push(`${currentUser.name} (Owner / Active User)`);
+    employees.forEach(e => {
+      const label = `${e.name} (${e.role || "Cashier"})`;
+      if (!list.includes(label)) list.push(label);
+    });
+    if (list.length === 0) list.push("Talal Ahmad (Owner)");
+    return list;
+  }, [currentUser, employees]);
+
   const [assignFormCounter, setAssignFormCounter] = React.useState("Counter 1 (Main Checkout)");
   const [assignFormCashier, setAssignFormCashier] = React.useState("");
   const [assignFormFloat, setAssignFormFloat] = React.useState("5000");
@@ -990,13 +1004,17 @@ export default function ClientDashboardPage() {
                 Live POS Counters &amp; Cash Drawers Monitor
               </h3>
               <p className="text-[10px] text-gray-500 font-mono mt-0.5">
-                Owner &amp; Manager Control Panel: Assign cashiers, opening floats, and monitor live counter cash drawers.
+                Owner &amp; Manager Control Panel: Assign staff, opening floats, and monitor live counter drawer cash, sales, credit &amp; profits.
               </p>
             </div>
             
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setShowAssignCounterModal(true)}
+                onClick={() => {
+                  setAssignFormCashier(staffList[0] || "Talal Ahmad (Owner)");
+                  setAssignFormFloat("5000");
+                  setShowAssignCounterModal(true);
+                }}
                 className="px-3.5 py-1.5 bg-brand-sky hover:bg-sky-400 text-black font-black text-[10px] uppercase tracking-wider rounded-xl transition flex items-center gap-1.5 shadow-lg shadow-sky-500/20"
               >
                 + Assign Counter &amp; Cash Float
@@ -1008,29 +1026,68 @@ export default function ClientDashboardPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {posCounters.map((counter, idx) => {
-              // Calculate cash sales inflow for this counter or assigned cashier
+            {posCounters.map((counter) => {
+              const isActive = counter.status === "Active";
+              const cleanCashier = (counter.assignedCashierName || "").replace(/\s*\([^)]*\)/, "").trim().toLowerCase();
+
+              // Calculate strict counter metrics ONLY for this counter/assigned cashier when Active
               const counterSales = sales.filter(s => {
-                if (s.counterId && s.counterId.toLowerCase() === counter.name.toLowerCase()) return true;
-                if (counter.assignedCashierName && counter.assignedCashierName !== "Unassigned" && s.customerName) return true;
-                return idx === 0; // Default all cash sales to counter 1 if unassigned
+                if (!isActive || !cleanCashier || cleanCashier === "unassigned") return false;
+                
+                if (s.counterId && (s.counterId.toLowerCase() === counter.name.toLowerCase() || s.counterId.toLowerCase() === counter.id.toLowerCase())) {
+                  return true;
+                }
+
+                const sCashier = (s.cashierName || "").trim().toLowerCase();
+                if (sCashier && (sCashier.includes(cleanCashier) || cleanCashier.includes(sCashier))) {
+                  if (counter.startedAt) {
+                    return new Date(s.date) >= new Date(counter.startedAt);
+                  }
+                  return true;
+                }
+                return false;
               });
 
-              const cashSalesInflow = counterSales.reduce((acc, s) => {
-                if (s.status === "Returned" || s.status === "Refunded") {
-                  return acc - (s.paymentMethod === "Cash" ? s.total : 0);
-                }
-                if (s.splitPayments) return acc + (s.splitPayments["Cash"] || 0);
-                return acc + (s.paymentMethod === "Cash" ? s.total : 0);
-              }, 0);
+              let grossCashSales = 0;
+              let creditSalesIssued = 0;
+              let cashRefundsDeducted = 0;
+              let counterCogs = 0;
 
-              const expectedDrawer = (counter.openingFloat || 0) + cashSalesInflow;
-              const isActive = counter.status === "Active";
+              counterSales.forEach(s => {
+                const isReturn = s.status === "Returned" || s.status === "Refunded";
+                if (isReturn) {
+                  if (s.paymentMethod === "Cash") cashRefundsDeducted += s.total;
+                  s.items.forEach(item => {
+                    const prod = products.find(p => p.id === item.productId);
+                    if (prod) counterCogs -= prod.costPrice * item.qty;
+                  });
+                } else {
+                  if (s.splitPayments) {
+                    grossCashSales += (s.splitPayments["Cash"] || 0);
+                    creditSalesIssued += (s.splitPayments["On Credit"] || 0);
+                  } else if (s.paymentMethod === "Cash") {
+                    grossCashSales += s.total;
+                  } else if (s.paymentMethod === "On Credit") {
+                    creditSalesIssued += s.total;
+                  }
+
+                  s.items.forEach(item => {
+                    const prod = products.find(p => p.id === item.productId);
+                    if (prod) counterCogs += prod.costPrice * item.qty;
+                  });
+                }
+              });
+
+              const netCashSalesInflow = grossCashSales - cashRefundsDeducted;
+              const counterNetRevenue = counterSales.reduce((acc, s) => (s.status === "Returned" || s.status === "Refunded") ? acc - s.total : acc + s.total, 0);
+              const counterGrossProfit = counterNetRevenue - counterCogs;
+              const expectedDrawerCash = isActive ? ((counter.openingFloat || 0) + netCashSalesInflow) : 0;
 
               return (
                 <div key={counter.id} className={`p-4 rounded-xl border space-y-3 font-sans transition ${
-                  isActive ? "bg-black/60 border-emerald-500/40 hover:border-emerald-500/70" : "bg-black/30 border-brand-dark-border/60 opacity-60"
+                  isActive ? "bg-black/60 border-emerald-500/40 hover:border-emerald-500/70 shadow-lg shadow-emerald-500/5" : "bg-black/30 border-brand-dark-border/60 opacity-60"
                 }`}>
+                  {/* Header */}
                   <div className="flex justify-between items-start">
                     <div>
                       <div className="flex items-center gap-1.5">
@@ -1038,7 +1095,7 @@ export default function ClientDashboardPage() {
                         <span className="font-black text-white text-sm">{counter.name}</span>
                       </div>
                       <p className="text-[10px] text-gray-400 mt-0.5 font-mono">
-                        Cashier: <strong className="text-emerald-300 font-bold">{counter.assignedCashierName || "Unassigned"}</strong>
+                        Assigned Cashier: <strong className="text-emerald-300 font-bold">{counter.assignedCashierName || "Unassigned"}</strong>
                       </p>
                     </div>
                     <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase font-mono ${
@@ -1048,28 +1105,40 @@ export default function ClientDashboardPage() {
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 text-[10px] font-mono border-t border-b border-brand-dark-border/40 py-2.5">
+                  {/* Full Owner Financial Breakdown Grid */}
+                  <div className="grid grid-cols-2 gap-2 text-[10px] font-mono border-t border-b border-brand-dark-border/40 py-2.5 space-y-1">
                     <div>
-                      <span className="text-gray-500 block">Initial Cash Float</span>
-                      <span className="text-white font-bold">{currencySymbol} {(counter.openingFloat || 0).toLocaleString()}</span>
+                      <span className="text-gray-500 block">Initial Float</span>
+                      <span className="text-white font-bold">{currencySymbol} {isActive ? (counter.openingFloat || 0).toLocaleString() : 0}</span>
                     </div>
                     <div>
                       <span className="text-gray-500 block">Cash Sales Inflow</span>
-                      <span className="text-emerald-400 font-bold">+{currencySymbol} {cashSalesInflow.toLocaleString()}</span>
+                      <span className="text-emerald-400 font-bold">+{currencySymbol} {netCashSalesInflow.toLocaleString()}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 block">Credit Sales (Dues)</span>
+                      <span className="text-amber-400 font-bold">{currencySymbol} {creditSalesIssued.toLocaleString()}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 block">Counter Gross Profit</span>
+                      <span className={`font-black ${counterGrossProfit >= 0 ? "text-brand-sky" : "text-red-400"}`}>
+                        {currencySymbol} {counterGrossProfit.toLocaleString()}
+                      </span>
                     </div>
                   </div>
 
+                  {/* Drawer Cash & Actions */}
                   <div className="flex justify-between items-center pt-1 font-mono">
                     <div>
                       <div className="text-[9px] uppercase font-bold text-gray-400">Total Drawer Cash</div>
-                      <div className="text-lg font-black text-emerald-400">{currencySymbol} {expectedDrawer.toLocaleString()}</div>
+                      <div className="text-xl font-black text-emerald-400">{currencySymbol} {expectedDrawerCash.toLocaleString()}</div>
                     </div>
 
                     <div className="flex items-center gap-1.5">
                       <button
                         onClick={() => {
                           setAssignFormCounter(counter.name);
-                          setAssignFormCashier(counter.assignedCashierName !== "Unassigned" ? counter.assignedCashierName : currentUser?.name || "Talal Ahmad");
+                          setAssignFormCashier(counter.assignedCashierName !== "Unassigned" ? counter.assignedCashierName : (staffList[0] || "Talal Ahmad (Owner)"));
                           setAssignFormFloat(String(counter.openingFloat || 5000));
                           setShowAssignCounterModal(true);
                         }}
@@ -1080,8 +1149,8 @@ export default function ClientDashboardPage() {
                       {isActive && (
                         <button
                           onClick={() => {
-                            if (confirm(`Close & Audit counter ${counter.name}? Total Drawer Cash: ${currencySymbol} ${expectedDrawer}`)) {
-                              closeCounterSession(counter.id, expectedDrawer);
+                            if (confirm(`Close & Audit counter ${counter.name}? Total Drawer Cash: ${currencySymbol} ${expectedDrawerCash}`)) {
+                              closeCounterSession(counter.id, expectedDrawerCash);
                             }
                           }}
                           className="px-2.5 py-1 bg-red-600/20 hover:bg-red-600 border border-red-500/40 text-red-300 hover:text-white font-bold text-[9px] uppercase tracking-wider rounded-lg transition"
@@ -1097,7 +1166,7 @@ export default function ClientDashboardPage() {
           </div>
         </section>
 
-        {/* ── OWNER/MANAGER ASSIGN COUNTER MODAL ── */}
+        {/* ── OWNER/MANAGER ASSIGN COUNTER MODAL (With Dropdown + Searchable Staff List) ── */}
         {showAssignCounterModal && (
           <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-brand-dark-surface border border-brand-sky/40 rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl animate-fade-in-up">
@@ -1105,7 +1174,7 @@ export default function ClientDashboardPage() {
               <div className="flex justify-between items-center border-b border-brand-dark-border pb-3">
                 <h3 className="text-sm font-black text-white flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-brand-sky animate-ping" />
-                  Owner Control: Assign Counter &amp; Opening Cash Float
+                  Owner Control: Assign Counter &amp; Cash Float
                 </h3>
                 <button onClick={() => setShowAssignCounterModal(false)} className="text-gray-400 hover:text-white">
                   <X size={16} />
@@ -1115,26 +1184,46 @@ export default function ClientDashboardPage() {
               <form onSubmit={handleSaveCounterAssignment} className="space-y-4 text-xs font-sans">
                 <div>
                   <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Select / Name Counter Terminal</label>
-                  <input
-                    type="text"
-                    required
+                  <select
                     value={assignFormCounter}
                     onChange={e => setAssignFormCounter(e.target.value)}
-                    placeholder="e.g. Counter 1 (Main Checkout)"
                     className="w-full bg-black border border-brand-dark-border p-3 rounded-xl text-white font-bold focus:border-brand-sky focus:outline-none"
-                  />
+                  >
+                    <option value="Counter 1 (Main Checkout)">Counter 1 (Main Checkout)</option>
+                    <option value="Counter 2 (Secondary)">Counter 2 (Secondary)</option>
+                    <option value="Counter 3 (Express)">Counter 3 (Express)</option>
+                    <option value="Mobile POS Terminal">Mobile POS Terminal</option>
+                  </select>
                 </div>
 
                 <div>
-                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Assign Cashier Name</label>
-                  <input
-                    type="text"
-                    required
-                    value={assignFormCashier}
-                    onChange={e => setAssignFormCashier(e.target.value)}
-                    placeholder="e.g. Talal Ahmad"
-                    className="w-full bg-black border border-brand-dark-border p-3 rounded-xl text-white font-bold focus:border-brand-sky focus:outline-none"
-                  />
+                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Assign Cashier / Staff Member</label>
+                  <div className="space-y-2">
+                    {/* Search Input for Staff List */}
+                    <div className="relative">
+                      <input
+                        type="text"
+                        placeholder="🔍 Search or filter staff list..."
+                        value={staffSearchQuery}
+                        onChange={e => setStaffSearchQuery(e.target.value)}
+                        className="w-full bg-black/60 border border-brand-dark-border px-3 py-1.5 rounded-lg text-white text-[11px] focus:outline-none"
+                      />
+                    </div>
+                    {/* Dropdown Select */}
+                    <select
+                      required
+                      value={assignFormCashier}
+                      onChange={e => setAssignFormCashier(e.target.value)}
+                      className="w-full bg-black border border-brand-sky/40 p-3 rounded-xl text-white font-bold focus:border-brand-sky focus:outline-none"
+                    >
+                      {staffList
+                        .filter(s => s.toLowerCase().includes(staffSearchQuery.toLowerCase()))
+                        .map(staff => (
+                          <option key={staff} value={staff}>{staff}</option>
+                        ))
+                      }
+                    </select>
+                  </div>
                 </div>
 
                 <div>
@@ -1149,7 +1238,7 @@ export default function ClientDashboardPage() {
                     placeholder="e.g. 5000"
                     className="w-full bg-black border border-brand-sky/40 p-3 rounded-xl text-brand-sky font-mono font-black text-base focus:outline-none"
                   />
-                  <p className="text-[9px] text-gray-500 mt-1">Starting cash float provided to cashier in drawer at start of day.</p>
+                  <p className="text-[9px] text-gray-500 mt-1">Starting cash float provided by Owner/Manager into cashier's drawer.</p>
                 </div>
 
                 <div className="flex justify-end gap-2 pt-2 border-t border-brand-dark-border">

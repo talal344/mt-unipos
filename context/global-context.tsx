@@ -898,10 +898,10 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     {
       id: "counter-1",
       name: "Counter 1 (Main Checkout)",
-      assignedCashierName: "Talal Ahmad",
-      assignedCashierEmail: "talal@unipos.com",
-      openingFloat: 5000,
-      status: "Active",
+      assignedCashierName: "Unassigned",
+      assignedCashierEmail: "",
+      openingFloat: 0,
+      status: "Unassigned",
       startedAt: new Date().toISOString()
     },
     {
