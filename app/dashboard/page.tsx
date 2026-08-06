@@ -75,6 +75,9 @@ export default function ClientDashboardPage() {
     tables, 
     kitchenTickets, 
     customers,
+    posCounters,
+    assignCounterCashier,
+    closeCounterSession,
     posShifts,
     closePOSShift,
     updateCustomerWalletBalance,
@@ -211,6 +214,21 @@ export default function ClientDashboardPage() {
     `);
     win.document.close();
     win.print();
+  };
+
+    const [showAssignCounterModal, setShowAssignCounterModal] = React.useState(false);
+  const [assignFormCounter, setAssignFormCounter] = React.useState("Counter 1 (Main Checkout)");
+  const [assignFormCashier, setAssignFormCashier] = React.useState("");
+  const [assignFormFloat, setAssignFormFloat] = React.useState("5000");
+
+  const handleSaveCounterAssignment = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!assignFormCashier) {
+      alert("Please select or enter a Cashier name.");
+      return;
+    }
+    assignCounterCashier(assignFormCounter, assignFormCashier, parseFloat(assignFormFloat) || 0);
+    setShowAssignCounterModal(false);
   };
 
   const [showWalletModal, setShowWalletModal] = React.useState(false);
@@ -965,93 +983,196 @@ export default function ClientDashboardPage() {
         
         {/* -------------------- LIVE POS COUNTERS & CASH DRAWERS MONITOR -------------------- */}
         <section className="bg-brand-dark-surface/40 border border-brand-dark-border p-5 rounded-2xl space-y-4">
-          <div className="flex justify-between items-center border-b border-brand-dark-border pb-3">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-brand-dark-border pb-3">
             <div>
               <h3 className="text-xs uppercase font-bold text-white tracking-wide flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
                 Live POS Counters &amp; Cash Drawers Monitor
               </h3>
               <p className="text-[10px] text-gray-500 font-mono mt-0.5">
-                Real-time cash float, cash sales inflow, and expected drawer balances per cashier counter.
+                Owner &amp; Manager Control Panel: Assign cashiers, opening floats, and monitor live counter cash drawers.
               </p>
             </div>
-            <span className="text-[10px] text-emerald-400 font-mono font-bold bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-1 rounded-full">
-              {posShifts.filter(s => s.status === "Open").length} Counters Active
-            </span>
+            
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowAssignCounterModal(true)}
+                className="px-3.5 py-1.5 bg-brand-sky hover:bg-sky-400 text-black font-black text-[10px] uppercase tracking-wider rounded-xl transition flex items-center gap-1.5 shadow-lg shadow-sky-500/20"
+              >
+                + Assign Counter &amp; Cash Float
+              </button>
+              <span className="text-[10px] text-emerald-400 font-mono font-bold bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-1.5 rounded-xl">
+                {posCounters.filter(c => c.status === "Active").length} Active Counters
+              </span>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {posShifts.length === 0 ? (
-              <div className="col-span-full py-8 text-center text-gray-500 italic text-xs">
-                No active POS shift sessions logged. Cashiers will appear here as soon as they open a counter shift.
-              </div>
-            ) : (
-              posShifts.map(shift => {
-                const shiftSalesList = sales.filter(s => new Date(s.date) >= new Date(shift.startTime));
-                const shiftCashInflow = shiftSalesList.reduce((acc, s) => {
-                  if (s.status === "Returned" || s.status === "Refunded") {
-                    return acc - (s.paymentMethod === "Cash" ? s.total : 0);
-                  }
-                  if (s.splitPayments) return acc + (s.splitPayments["Cash"] || 0);
-                  return acc + (s.paymentMethod === "Cash" ? s.total : 0);
-                }, 0);
-                const expectedDrawer = (shift.openingFloat || 0) + shiftCashInflow;
-                const isOpen = shift.status === "Open";
+            {posCounters.map((counter, idx) => {
+              // Calculate cash sales inflow for this counter or assigned cashier
+              const counterSales = sales.filter(s => {
+                if (s.counterId && s.counterId.toLowerCase() === counter.name.toLowerCase()) return true;
+                if (counter.assignedCashierName && counter.assignedCashierName !== "Unassigned" && s.customerName) return true;
+                return idx === 0; // Default all cash sales to counter 1 if unassigned
+              });
 
-                return (
-                  <div key={shift.id} className={`p-4 rounded-xl border space-y-3 font-sans transition ${
-                    isOpen ? "bg-black/50 border-emerald-500/30 hover:border-emerald-500/60" : "bg-black/20 border-brand-dark-border opacity-70"
-                  }`}>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <div className="flex items-center gap-1.5">
-                          <span className={`w-2 h-2 rounded-full ${isOpen ? "bg-emerald-400 animate-pulse" : "bg-gray-600"}`} />
-                          <span className="font-black text-white text-sm">{shift.counterId}</span>
-                        </div>
-                        <p className="text-[10px] text-gray-400 mt-0.5 font-mono">Cashier: <strong className="text-white">{shift.cashierName}</strong></p>
+              const cashSalesInflow = counterSales.reduce((acc, s) => {
+                if (s.status === "Returned" || s.status === "Refunded") {
+                  return acc - (s.paymentMethod === "Cash" ? s.total : 0);
+                }
+                if (s.splitPayments) return acc + (s.splitPayments["Cash"] || 0);
+                return acc + (s.paymentMethod === "Cash" ? s.total : 0);
+              }, 0);
+
+              const expectedDrawer = (counter.openingFloat || 0) + cashSalesInflow;
+              const isActive = counter.status === "Active";
+
+              return (
+                <div key={counter.id} className={`p-4 rounded-xl border space-y-3 font-sans transition ${
+                  isActive ? "bg-black/60 border-emerald-500/40 hover:border-emerald-500/70" : "bg-black/30 border-brand-dark-border/60 opacity-60"
+                }`}>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <span className={`w-2 h-2 rounded-full ${isActive ? "bg-emerald-400 animate-pulse" : "bg-gray-600"}`} />
+                        <span className="font-black text-white text-sm">{counter.name}</span>
                       </div>
-                      <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase font-mono ${
-                        isOpen ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400" : "bg-gray-800 text-gray-400"
-                      }`}>
-                        {shift.status}
-                      </span>
+                      <p className="text-[10px] text-gray-400 mt-0.5 font-mono">
+                        Cashier: <strong className="text-emerald-300 font-bold">{counter.assignedCashierName || "Unassigned"}</strong>
+                      </p>
+                    </div>
+                    <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase font-mono ${
+                      isActive ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400" : "bg-gray-800 text-gray-400"
+                    }`}>
+                      {counter.status}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-[10px] font-mono border-t border-b border-brand-dark-border/40 py-2.5">
+                    <div>
+                      <span className="text-gray-500 block">Initial Cash Float</span>
+                      <span className="text-white font-bold">{currencySymbol} {(counter.openingFloat || 0).toLocaleString()}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 block">Cash Sales Inflow</span>
+                      <span className="text-emerald-400 font-bold">+{currencySymbol} {cashSalesInflow.toLocaleString()}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center pt-1 font-mono">
+                    <div>
+                      <div className="text-[9px] uppercase font-bold text-gray-400">Total Drawer Cash</div>
+                      <div className="text-lg font-black text-emerald-400">{currencySymbol} {expectedDrawer.toLocaleString()}</div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2 text-[10px] font-mono border-t border-b border-brand-dark-border/40 py-2.5">
-                      <div>
-                        <span className="text-gray-500 block">Opening Float</span>
-                        <span className="text-white font-bold">{currencySymbol} {(shift.openingFloat || 0).toLocaleString()}</span>
-                      </div>
-                      <div>
-                        <span className="text-gray-500 block">Cash Sales Inflow</span>
-                        <span className="text-emerald-400 font-bold">+{currencySymbol} {shiftCashInflow.toLocaleString()}</span>
-                      </div>
-                    </div>
-
-                    <div className="flex justify-between items-center pt-1 font-mono">
-                      <div>
-                        <div className="text-[9px] uppercase font-bold text-gray-400">Current Expected Drawer</div>
-                        <div className="text-lg font-black text-emerald-400">{currencySymbol} {expectedDrawer.toLocaleString()}</div>
-                      </div>
-                      {isOpen && (
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => {
+                          setAssignFormCounter(counter.name);
+                          setAssignFormCashier(counter.assignedCashierName !== "Unassigned" ? counter.assignedCashierName : currentUser?.name || "Talal Ahmad");
+                          setAssignFormFloat(String(counter.openingFloat || 5000));
+                          setShowAssignCounterModal(true);
+                        }}
+                        className="px-2.5 py-1 bg-brand-dark-border hover:bg-gray-800 text-white font-bold text-[9px] uppercase tracking-wider rounded-lg transition"
+                      >
+                        Edit / Assign
+                      </button>
+                      {isActive && (
                         <button
                           onClick={() => {
-                            if (confirm(`Audit & Close shift for ${shift.counterId} (${shift.cashierName})? Expected Cash: ${currencySymbol} ${expectedDrawer}`)) {
-                              closePOSShift(shift.id, expectedDrawer, "Audit Closed by Owner");
+                            if (confirm(`Close & Audit counter ${counter.name}? Total Drawer Cash: ${currencySymbol} ${expectedDrawer}`)) {
+                              closeCounterSession(counter.id, expectedDrawer);
                             }
                           }}
-                          className="px-3 py-1.5 bg-red-600/20 hover:bg-red-600 border border-red-500/40 text-red-300 hover:text-white font-bold text-[9px] uppercase tracking-wider rounded-lg transition"
+                          className="px-2.5 py-1 bg-red-600/20 hover:bg-red-600 border border-red-500/40 text-red-300 hover:text-white font-bold text-[9px] uppercase tracking-wider rounded-lg transition"
                         >
-                          Audit &amp; Close
+                          Close
                         </button>
                       )}
                     </div>
                   </div>
-                );
-              })
-            )}
+                </div>
+              );
+            })}
           </div>
         </section>
+
+        {/* ── OWNER/MANAGER ASSIGN COUNTER MODAL ── */}
+        {showAssignCounterModal && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-brand-dark-surface border border-brand-sky/40 rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl animate-fade-in-up">
+              
+              <div className="flex justify-between items-center border-b border-brand-dark-border pb-3">
+                <h3 className="text-sm font-black text-white flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-brand-sky animate-ping" />
+                  Owner Control: Assign Counter &amp; Opening Cash Float
+                </h3>
+                <button onClick={() => setShowAssignCounterModal(false)} className="text-gray-400 hover:text-white">
+                  <X size={16} />
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveCounterAssignment} className="space-y-4 text-xs font-sans">
+                <div>
+                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Select / Name Counter Terminal</label>
+                  <input
+                    type="text"
+                    required
+                    value={assignFormCounter}
+                    onChange={e => setAssignFormCounter(e.target.value)}
+                    placeholder="e.g. Counter 1 (Main Checkout)"
+                    className="w-full bg-black border border-brand-dark-border p-3 rounded-xl text-white font-bold focus:border-brand-sky focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Assign Cashier Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={assignFormCashier}
+                    onChange={e => setAssignFormCashier(e.target.value)}
+                    placeholder="e.g. Talal Ahmad"
+                    className="w-full bg-black border border-brand-dark-border p-3 rounded-xl text-white font-bold focus:border-brand-sky focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Initial Opening Cash Float ({currencySymbol})</label>
+                  <input
+                    type="number"
+                    required
+                    min="0"
+                    step="1"
+                    value={assignFormFloat}
+                    onChange={e => setAssignFormFloat(e.target.value)}
+                    placeholder="e.g. 5000"
+                    className="w-full bg-black border border-brand-sky/40 p-3 rounded-xl text-brand-sky font-mono font-black text-base focus:outline-none"
+                  />
+                  <p className="text-[9px] text-gray-500 mt-1">Starting cash float provided to cashier in drawer at start of day.</p>
+                </div>
+
+                <div className="flex justify-end gap-2 pt-2 border-t border-brand-dark-border">
+                  <button
+                    type="button"
+                    onClick={() => setShowAssignCounterModal(false)}
+                    className="px-4 py-2 bg-brand-dark-border hover:bg-gray-800 text-white font-bold text-xs rounded-xl transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2 bg-brand-sky hover:bg-sky-400 text-black font-black text-xs uppercase tracking-wider rounded-xl transition shadow-lg shadow-sky-500/20"
+                  >
+                    Save &amp; Activate Counter
+                  </button>
+                </div>
+              </form>
+
+            </div>
+          </div>
+        )}
+
 
 
         {/* SECTION 4: DEPARTMENTAL / SUPER MARKETS / GENERAL RETAIL VERTICAL */}

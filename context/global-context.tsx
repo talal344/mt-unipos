@@ -1,5 +1,16 @@
 "use client";
 
+export interface POSCounter {
+  id: string;
+  name: string;
+  assignedCashierName: string;
+  assignedCashierEmail: string;
+  openingFloat: number;
+  status: "Active" | "Closed" | "Unassigned";
+  startedAt: string;
+  notes?: string;
+}
+
 export interface POSShift {
   id: string;
   counterId: string;
@@ -265,6 +276,7 @@ export interface SaleTransaction {
   date: string;
   branch: string;
   cashierName: string;
+  counterId?: string;
   customerName: string;
   customerNo?: string;
   items: Array<{
@@ -484,6 +496,9 @@ interface GlobalContextType {
   previewFIFO: (productId: string, qty: number) => BatchConsumption[];
   getProductBatches: (productId: string) => ProductBatch[];
 
+  posCounters: POSCounter[];
+  assignCounterCashier: (counterId: string, cashierName: string, openingFloat: number) => void;
+  closeCounterSession: (counterId: string, closingCash: number) => void;
   posShifts: POSShift[];
   startPOSShift: (counterId: string, openingFloat: number) => POSShift;
   closePOSShift: (shiftId: string, actualClosingCash: number, notes?: string) => void;
@@ -879,6 +894,36 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([]);
   const [batches, setBatches] = useState<ProductBatch[]>([]);  // FIFO batch ledger
+  const [posCounters, setPosCounters] = useState<POSCounter[]>([
+    {
+      id: "counter-1",
+      name: "Counter 1 (Main Checkout)",
+      assignedCashierName: "Talal Ahmad",
+      assignedCashierEmail: "talal@unipos.com",
+      openingFloat: 5000,
+      status: "Active",
+      startedAt: new Date().toISOString()
+    },
+    {
+      id: "counter-2",
+      name: "Counter 2 (Secondary)",
+      assignedCashierName: "Unassigned",
+      assignedCashierEmail: "",
+      openingFloat: 0,
+      status: "Unassigned",
+      startedAt: new Date().toISOString()
+    },
+    {
+      id: "counter-3",
+      name: "Counter 3 (Express)",
+      assignedCashierName: "Unassigned",
+      assignedCashierEmail: "",
+      openingFloat: 0,
+      status: "Unassigned",
+      startedAt: new Date().toISOString()
+    }
+  ]);
+
   const [posShifts, setPosShifts] = useState<POSShift[]>([]);
   const [sales, setSales] = useState<SaleTransaction[]>([]);
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
@@ -2799,6 +2844,51 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Complete Retail & Wholesale Sales Engine with Live Inventory Reduction & Double-Entry Accounting Sync
+  const assignCounterCashier = (counterId: string, cashierName: string, openingFloat: number) => {
+    const updated = posCounters.map(c => {
+      if (c.id === counterId || c.name.toLowerCase().includes(counterId.toLowerCase())) {
+        return {
+          ...c,
+          assignedCashierName: cashierName,
+          openingFloat: Number(openingFloat) || 0,
+          status: "Active" as const,
+          startedAt: new Date().toISOString()
+        };
+      }
+      return c;
+    });
+    // If custom counter name passed
+    const exists = updated.some(c => c.id === counterId || c.name.toLowerCase().includes(counterId.toLowerCase()));
+    if (!exists) {
+      updated.push({
+        id: `counter-${Date.now()}`,
+        name: counterId,
+        assignedCashierName: cashierName,
+        assignedCashierEmail: "",
+        openingFloat: Number(openingFloat) || 0,
+        status: "Active",
+        startedAt: new Date().toISOString()
+      });
+    }
+    setPosCounters(updated);
+    saveTenantData("unipos_counters", updated);
+  };
+
+  const closeCounterSession = (counterId: string, closingCash: number) => {
+    const updated = posCounters.map(c => {
+      if (c.id === counterId || c.name.toLowerCase().includes(counterId.toLowerCase())) {
+        return {
+          ...c,
+          status: "Closed" as const,
+          notes: `Closed with ${closingCash} cash`
+        };
+      }
+      return c;
+    });
+    setPosCounters(updated);
+    saveTenantData("unipos_counters", updated);
+  };
+
   const startPOSShift = (counterId: string, openingFloat: number): POSShift => {
     const newShift: POSShift = {
       id: `SHIFT-${Date.now()}`,
@@ -3324,6 +3414,9 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         previewFIFO,
         getProductBatches,
         sales,
+        posCounters,
+        assignCounterCashier,
+        closeCounterSession,
         posShifts,
         startPOSShift,
         closePOSShift,

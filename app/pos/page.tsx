@@ -58,7 +58,7 @@ export default function PosPage() {
     currencySymbol, currentBranch, currentUser, businessSettings, recordDueRecovery,
     localReceiptsDirHandle, setLocalReceiptsDirHandle, isOffline, previewFIFO, updateCustomerBalance,
     updateCustomerWalletBalance, settleDuesWithWallet,
-    posShifts, startPOSShift, closePOSShift
+    posCounters, posShifts, startPOSShift, closePOSShift
   } = useGlobalContext();
 
   // ── Shift Management State
@@ -942,11 +942,15 @@ export default function PosPage() {
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-1 rounded-lg">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-[10px] font-black text-emerald-400 uppercase">{selectedCounter} · SHIFT OPEN</span>
+                <span className="text-[10px] font-black text-emerald-400 uppercase">
+                  {posCounters.find(c => c.status === "Active" && (c.assignedCashierName === currentUser?.name || c.assignedCashierEmail === currentUser?.email))?.name || selectedCounter} · SHIFT ACTIVE
+                </span>
               </div>
               <div className="hidden sm:flex items-center gap-1.5 bg-brand-dark-surface border border-brand-dark-border px-2.5 py-1 rounded-lg text-[10px] font-mono">
                 <span className="text-gray-400 font-bold">DRAWER CASH:</span>
-                <span className="text-emerald-400 font-black">{currencySymbol} {((parseFloat(localStorage.getItem('unipos_shift_opening_cash') || openingCash) || 0) + shiftCashSales).toLocaleString()}</span>
+                <span className="text-emerald-400 font-black">
+                  {currencySymbol} {((posCounters.find(c => c.status === "Active" && (c.assignedCashierName === currentUser?.name || c.assignedCashierEmail === currentUser?.email))?.openingFloat || parseFloat(localStorage.getItem('unipos_shift_opening_cash') || openingCash) || 5000) + shiftCashSales).toLocaleString()}
+                </span>
               </div>
               {isOffline && (
                 <div className="flex items-center gap-1.5 bg-red-500/20 px-2 py-1 rounded">
