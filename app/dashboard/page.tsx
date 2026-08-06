@@ -1282,6 +1282,83 @@ export default function ClientDashboardPage() {
           </div>
         </section>
 
+        {/* -------------------- STORE CONSOLIDATED FINANCIAL & REVENUE STATEMENT -------------------- */}
+        <section className="bg-gradient-to-br from-brand-dark-surface/90 via-black to-brand-dark-surface/70 border border-brand-sky/20 p-6 rounded-2xl space-y-5 shadow-2xl">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-brand-dark-border/60 pb-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-brand-sky/15 border border-brand-sky/30 flex items-center justify-center">
+                  <BarChart3 size={16} className="text-brand-sky" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-white uppercase tracking-wider">
+                    Store Consolidated Financial &amp; Revenue Statement
+                  </h3>
+                  <p className="text-[10px] text-gray-400 font-mono mt-0.5">
+                    Combined multi-counter revenue summary: Realized Cash, Dues Recovered, Online/Bank, and Pending Credit Dues across all users.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-brand-sky/10 border border-brand-sky/30 px-4 py-2 rounded-xl text-right font-mono">
+              <span className="text-[9px] uppercase font-bold text-gray-400 block">Total Realized Revenue Collected</span>
+              <span className="text-xl font-black text-emerald-400">
+                {currencySymbol} {consolidatedFinancials.totalCollectedRealizedRevenue.toLocaleString()}
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 font-mono">
+            {/* Direct Cash Sales */}
+            <div className="bg-emerald-500/10 border border-emerald-500/30 p-4 rounded-xl space-y-1">
+              <div className="flex justify-between items-center text-emerald-400">
+                <span className="text-[10px] uppercase font-bold text-gray-400">💵 Direct POS Cash Collected</span>
+                <Banknote size={14} />
+              </div>
+              <div className="text-lg font-black text-emerald-400">
+                +{currencySymbol} {consolidatedFinancials.directCashSales.toLocaleString()}
+              </div>
+              <p className="text-[9px] text-gray-500">Net cash checkout receipts across all counters</p>
+            </div>
+
+            {/* Dues Recovered Cash */}
+            <div className="bg-sky-500/10 border border-sky-500/30 p-4 rounded-xl space-y-1">
+              <div className="flex justify-between items-center text-sky-400">
+                <span className="text-[10px] uppercase font-bold text-gray-400">🤝 Customer Dues Recovered</span>
+                <RotateCcw size={14} />
+              </div>
+              <div className="text-lg font-black text-sky-400">
+                +{currencySymbol} {consolidatedFinancials.duesRecoveredCash.toLocaleString()}
+              </div>
+              <p className="text-[9px] text-gray-500">Collected cash/bank payments against previous credit dues</p>
+            </div>
+
+            {/* Digital & Bank Payments */}
+            <div className="bg-purple-500/10 border border-purple-500/30 p-4 rounded-xl space-y-1">
+              <div className="flex justify-between items-center text-purple-400">
+                <span className="text-[10px] uppercase font-bold text-gray-400">💳 Card, Bank &amp; Online Inflow</span>
+                <Landmark size={14} />
+              </div>
+              <div className="text-lg font-black text-purple-400">
+                +{currencySymbol} {consolidatedFinancials.digitalBankSales.toLocaleString()}
+              </div>
+              <p className="text-[9px] text-gray-500">Digital card, bank transfers, EasyPaisa &amp; JazzCash</p>
+            </div>
+
+            {/* Pending Uncollected Credit Dues */}
+            <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-xl space-y-1">
+              <div className="flex justify-between items-center text-amber-400">
+                <span className="text-[10px] uppercase font-bold text-gray-400">📜 Outstanding Credit Dues</span>
+                <AlertTriangle size={14} />
+              </div>
+              <div className="text-lg font-black text-amber-400">
+                {currencySymbol} {totalOutstandingDues.toLocaleString()}
+              </div>
+              <p className="text-[9px] text-gray-500">Uncollected credit sales (Excluded from Net Cash Profit)</p>
+            </div>
+          </div>
+        </section>
+
         {/* -------------------- LIVE POS COUNTERS & CASH DRAWERS MONITOR -------------------- */}
         <section className="bg-brand-dark-surface/40 border border-brand-dark-border p-5 rounded-2xl space-y-4">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-brand-dark-border pb-3">
@@ -1473,83 +1550,6 @@ export default function ClientDashboardPage() {
                 </div>
               );
             })}
-          </div>
-        </section>
-
-        {/* -------------------- STORE CONSOLIDATED FINANCIAL & REVENUE STATEMENT -------------------- */}
-        <section className="bg-gradient-to-br from-brand-dark-surface/90 via-black to-brand-dark-surface/70 border border-brand-sky/20 p-6 rounded-2xl space-y-5 shadow-2xl">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-brand-dark-border/60 pb-4">
-            <div>
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-brand-sky/15 border border-brand-sky/30 flex items-center justify-center">
-                  <BarChart3 size={16} className="text-brand-sky" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-black text-white uppercase tracking-wider">
-                    Store Consolidated Financial &amp; Revenue Statement
-                  </h3>
-                  <p className="text-[10px] text-gray-400 font-mono mt-0.5">
-                    Combined multi-counter revenue summary: Realized Cash, Dues Recovered, Online/Bank, and Pending Credit Dues across all users.
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="bg-brand-sky/10 border border-brand-sky/30 px-4 py-2 rounded-xl text-right font-mono">
-              <span className="text-[9px] uppercase font-bold text-gray-400 block">Total Realized Revenue Collected</span>
-              <span className="text-xl font-black text-emerald-400">
-                {currencySymbol} {consolidatedFinancials.totalCollectedRealizedRevenue.toLocaleString()}
-              </span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 font-mono">
-            {/* Direct Cash Sales */}
-            <div className="bg-emerald-500/10 border border-emerald-500/30 p-4 rounded-xl space-y-1">
-              <div className="flex justify-between items-center text-emerald-400">
-                <span className="text-[10px] uppercase font-bold text-gray-400">💵 Direct POS Cash Collected</span>
-                <Banknote size={14} />
-              </div>
-              <div className="text-lg font-black text-emerald-400">
-                +{currencySymbol} {consolidatedFinancials.directCashSales.toLocaleString()}
-              </div>
-              <p className="text-[9px] text-gray-500">Net cash checkout receipts across all counters</p>
-            </div>
-
-            {/* Dues Recovered Cash */}
-            <div className="bg-sky-500/10 border border-sky-500/30 p-4 rounded-xl space-y-1">
-              <div className="flex justify-between items-center text-sky-400">
-                <span className="text-[10px] uppercase font-bold text-gray-400">🤝 Customer Dues Recovered</span>
-                <RotateCcw size={14} />
-              </div>
-              <div className="text-lg font-black text-sky-400">
-                +{currencySymbol} {consolidatedFinancials.duesRecoveredCash.toLocaleString()}
-              </div>
-              <p className="text-[9px] text-gray-500">Collected cash/bank payments against previous credit dues</p>
-            </div>
-
-            {/* Digital & Bank Payments */}
-            <div className="bg-purple-500/10 border border-purple-500/30 p-4 rounded-xl space-y-1">
-              <div className="flex justify-between items-center text-purple-400">
-                <span className="text-[10px] uppercase font-bold text-gray-400">💳 Card, Bank &amp; Online Inflow</span>
-                <Landmark size={14} />
-              </div>
-              <div className="text-lg font-black text-purple-400">
-                +{currencySymbol} {consolidatedFinancials.digitalBankSales.toLocaleString()}
-              </div>
-              <p className="text-[9px] text-gray-500">Digital card, bank transfers, EasyPaisa &amp; JazzCash</p>
-            </div>
-
-            {/* Pending Uncollected Credit Dues */}
-            <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-xl space-y-1">
-              <div className="flex justify-between items-center text-amber-400">
-                <span className="text-[10px] uppercase font-bold text-gray-400">📜 Outstanding Credit Dues</span>
-                <AlertTriangle size={14} />
-              </div>
-              <div className="text-lg font-black text-amber-400">
-                {currencySymbol} {totalOutstandingDues.toLocaleString()}
-              </div>
-              <p className="text-[9px] text-gray-500">Uncollected credit sales (Excluded from Net Cash Profit)</p>
-            </div>
           </div>
         </section>
 
