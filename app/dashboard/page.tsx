@@ -256,7 +256,7 @@ export default function ClientDashboardPage() {
 
   const staffList = useMemo(() => {
     const list: string[] = [];
-    const ownerName = businessSettings?.ownerName || currentUser?.name || "Ahmad Raza";
+    const ownerName = businessSettings?.ownerName || currentUser?.name || "Mian Talal";
     if (ownerName) list.push(`${ownerName} (Owner / Active User)`);
     employees.forEach(e => {
       const label = `${e.name} (${e.role || "Cashier"})`;
@@ -1327,7 +1327,12 @@ export default function ClientDashboardPage() {
                         <span className="font-black text-white text-sm">{counter.name}</span>
                       </div>
                       <p className="text-[10px] text-gray-400 mt-0.5 font-mono">
-                        Assigned Cashier: <strong className="text-emerald-300 font-bold">{counter.assignedCashierName || "Unassigned"}</strong>
+                        Assigned Cashier: <strong className="text-emerald-300 font-bold">
+                          {(counter.id === "counter-1" || counter.name.toLowerCase().includes("main counter")) && (counter.assignedCashierName.includes("Owner") || counter.assignedCashierName.includes("Ahmad") || counter.assignedCashierName.includes("Talal"))
+                            ? `${businessSettings?.ownerName || currentUser?.name || "Mian Talal"} (Owner / Active User)`
+                            : (counter.assignedCashierName || "Unassigned")
+                          }
+                        </strong>
                       </p>
                     </div>
                     <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase font-mono ${
