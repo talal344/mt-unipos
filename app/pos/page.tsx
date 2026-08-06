@@ -52,13 +52,24 @@ const WEIGHT_UNITS = ["Kg", "Gram", "Liter", "ml", "Meter"];
 const QUICK_AMOUNTS = [50, 100, 200, 500, 1000];
 const QUICK_FRACS  = [0.25, 0.5, 0.75, 1, 1.5, 2];
 
+function isUserAssignedToCounter(counter: any, user: any): boolean {
+  if (!counter || !user) return false;
+  if (counter.assignedCashierEmail && user.email && counter.assignedCashierEmail.toLowerCase() === user.email.toLowerCase()) return true;
+  const cleanAssigned = (counter.assignedCashierName || "").replace(/\s*\([^)]*\)/, "").trim().toLowerCase();
+  const cleanUser = (user.name || "").replace(/\s*\([^)]*\)/, "").trim().toLowerCase();
+  if (cleanAssigned && cleanUser && (cleanAssigned === cleanUser || cleanAssigned.includes(cleanUser) || cleanUser.includes(cleanAssigned))) {
+    return true;
+  }
+  return false;
+}
+
 export default function PosPage() {
   const {
     products, customers, addCustomer, addSale, updateProduct, sales,
     currencySymbol, currentBranch, currentUser, businessSettings, recordDueRecovery,
     localReceiptsDirHandle, setLocalReceiptsDirHandle, isOffline, previewFIFO, updateCustomerBalance,
     updateCustomerWalletBalance, settleDuesWithWallet,
-    posCounters, posShifts, startPOSShift, closePOSShift
+    posCounters, assignCounterCashier, posShifts, startPOSShift, closePOSShift
   } = useGlobalContext();
 
   // ── Shift Management State
@@ -181,11 +192,23 @@ export default function PosPage() {
 
   useEffect(() => {
     setMounted(true);
-    const isOpen = localStorage.getItem('unipos_shift_open') === 'true';
-    setShiftOpen(isOpen);
-    setShowOpenShiftModal(!isOpen);
-    setShiftStartTime(localStorage.getItem('unipos_shift_start') || new Date().toISOString());
-  }, []);
+    const assignedCounter = posCounters.find(c => c.status === "Active" && isUserAssignedToCounter(c, currentUser));
+    if (assignedCounter) {
+      setSelectedCounter(assignedCounter.name);
+      setOpeningCash(String(assignedCounter.openingFloat ?? 0));
+      setShiftOpen(true);
+      setShowOpenShiftModal(false);
+      localStorage.setItem('unipos_shift_open', 'true');
+      localStorage.setItem('unipos_shift_opening_cash', String(assignedCounter.openingFloat ?? 0));
+      localStorage.setItem('unipos_active_counter', assignedCounter.name);
+      setShiftStartTime(assignedCounter.startedAt || new Date().toISOString());
+    } else {
+      const isOpen = localStorage.getItem('unipos_shift_open') === 'true';
+      setShiftOpen(isOpen);
+      setShowOpenShiftModal(!isOpen);
+      setShiftStartTime(localStorage.getItem('unipos_shift_start') || new Date().toISOString());
+    }
+  }, [posCounters, currentUser]);
 
   const customerDropdownRef = useRef<HTMLDivElement>(null);
 
@@ -223,6 +246,7 @@ export default function PosPage() {
   // ── Shift handlers
   const handleOpenShift = () => {
     const floatNum = parseFloat(openingCash) || 0;
+    assignCounterCashier(selectedCounter, currentUser?.name || "Cashier", floatNum);
     startPOSShift(selectedCounter, floatNum);
     localStorage.setItem('unipos_active_counter', selectedCounter);
     localStorage.setItem('unipos_shift_open', 'true');
@@ -710,6 +734,7 @@ export default function PosPage() {
 
       const finalSale = addSale({
         branch: currentBranch,
+        counterId: (posCounters.find(c => c.status === "Active" && isUserAssignedToCounter(c, currentUser))?.name) || selectedCounter,
         cashierName: currentUser?.name || "Cashier",
         customerName: selectedCustomer,
         items: cart.map(i => ({ productId: i.productId, productName: i.name, price: i.price, qty: i.qty, subtotal: i.subtotal })),
@@ -769,6 +794,7 @@ export default function PosPage() {
 
       const finalSale = addSale({
         branch: currentBranch,
+        counterId: (posCounters.find(c => c.status === "Active" && isUserAssignedToCounter(c, currentUser))?.name) || selectedCounter,
         cashierName: currentUser?.name || "Cashier",
         customerName: selectedCustomer,
         items: cart.map(i => ({ productId: i.productId, productName: i.name, price: i.price, qty: i.qty, subtotal: i.subtotal })),
@@ -943,13 +969,13 @@ export default function PosPage() {
               <div className="flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-1 rounded-lg">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                 <span className="text-[10px] font-black text-emerald-400 uppercase">
-                  {posCounters.find(c => c.status === "Active" && (c.assignedCashierName === currentUser?.name || c.assignedCashierEmail === currentUser?.email))?.name || selectedCounter} · SHIFT ACTIVE
+                  {posCounters.find(c => c.status === "Active" && isUserAssignedToCounter(c, currentUser))?.name || selectedCounter} · SHIFT ACTIVE
                 </span>
               </div>
               <div className="hidden sm:flex items-center gap-1.5 bg-brand-dark-surface border border-brand-dark-border px-2.5 py-1 rounded-lg text-[10px] font-mono">
                 <span className="text-gray-400 font-bold">DRAWER CASH:</span>
                 <span className="text-emerald-400 font-black">
-                  {currencySymbol} {((posCounters.find(c => c.status === "Active" && (c.assignedCashierName === currentUser?.name || c.assignedCashierEmail === currentUser?.email))?.openingFloat || parseFloat(localStorage.getItem('unipos_shift_opening_cash') || openingCash) || 5000) + shiftCashSales).toLocaleString()}
+                  {currencySymbol} {(((posCounters.find(c => c.status === "Active" && isUserAssignedToCounter(c, currentUser))?.openingFloat ?? parseFloat(localStorage.getItem('unipos_shift_opening_cash') || openingCash || '0')) || 0) + shiftCashSales).toLocaleString()}
                 </span>
               </div>
               {isOffline && (
