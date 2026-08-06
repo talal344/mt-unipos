@@ -897,11 +897,11 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
   const [posCounters, setPosCounters] = useState<POSCounter[]>([
     {
       id: "counter-1",
-      name: "Counter 1 (Main Checkout)",
-      assignedCashierName: "Unassigned",
-      assignedCashierEmail: "",
+      name: "Main Counter",
+      assignedCashierName: "Talal Ahmad (Owner / Active User)",
+      assignedCashierEmail: "owner@unipos.com",
       openingFloat: 0,
-      status: "Unassigned",
+      status: "Active",
       startedAt: new Date().toISOString()
     },
     {

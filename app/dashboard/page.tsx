@@ -26,6 +26,7 @@ import {
   Package,
   Users,
   Banknote,
+  Landmark,
   FileSpreadsheet,
   Printer,
   Download,
@@ -84,6 +85,7 @@ export default function ClientDashboardPage() {
     closePOSShift,
     updateCustomerWalletBalance,
     addJournalEntry,
+    journalEntries,
     setCurrencySymbol,
     salesTaxRate,
     setSalesTaxRate,
@@ -262,7 +264,7 @@ export default function ClientDashboardPage() {
     return list;
   }, [currentUser, employees]);
 
-  const [assignFormCounter, setAssignFormCounter] = React.useState("Counter 1 (Main Checkout)");
+  const [assignFormCounter, setAssignFormCounter] = React.useState("Main Counter");
   const [assignFormCashier, setAssignFormCashier] = React.useState("");
   const [assignFormFloat, setAssignFormFloat] = React.useState("5000");
 
@@ -295,6 +297,109 @@ export default function ClientDashboardPage() {
       return acc + (counter.openingFloat || 0) + netCash;
     }, 0);
   }, [posCounters, sales]);
+
+  
+  // ── Cash Collection & Vault Deposit States
+  const [showCollectCashModal, setShowCollectCashModal] = React.useState(false);
+  const [collectTargetCounter, setCollectTargetCounter] = React.useState<any>(null);
+  const [collectAmount, setCollectAmount] = React.useState("");
+  const [collectDestination, setCollectDestination] = React.useState<"1001" | "1002" | "3002">("1001");
+  const [collectNotes, setCollectNotes] = React.useState("");
+
+  // ── Owner Vault / Bank Transfer States
+  const [showVaultModal, setShowVaultModal] = React.useState(false);
+  const [vaultActionType, setVaultActionType] = React.useState<"drawings" | "bank_transfer" | "expense">("drawings");
+  const [vaultActionAmount, setVaultActionAmount] = React.useState("");
+  const [vaultActionNotes, setVaultActionNotes] = React.useState("");
+
+  // Compute Live Treasury Vault & Bank Balances from Journal & Sales
+  const mainVaultBalance = useMemo(() => {
+    let vault = 0;
+    // Calculate from journal entries
+    (journalEntries || []).forEach((j: any) => {
+      (j.debits || []).forEach((d: any) => { if (d.accountCode === "1001") vault += d.amount; });
+      (j.credits || []).forEach((c: any) => { if (c.accountCode === "1001") vault -= c.amount; });
+    });
+    return Math.max(0, vault);
+  }, [journalEntries]);
+
+  const bankAccountBalance = useMemo(() => {
+    let bank = 0;
+    (journalEntries || []).forEach((j: any) => {
+      (j.debits || []).forEach((d: any) => { if (d.accountCode === "1002") bank += d.amount; });
+      (j.credits || []).forEach((c: any) => { if (c.accountCode === "1002") bank -= c.amount; });
+    });
+    sales.forEach(s => {
+      if (s.status !== "Returned" && s.status !== "Refunded") {
+        if (s.paymentMethod === "Bank Transfer" || s.paymentMethod === "Card" || s.paymentMethod === "EasyPaisa / JazzCash") {
+          bank += s.total;
+        } else if (s.splitPayments) {
+          bank += (s.splitPayments["Bank Transfer"] || 0) + (s.splitPayments["Card"] || 0);
+        }
+      }
+    });
+    return Math.max(0, bank);
+  }, [journalEntries, sales]);
+
+  const ownerDrawingsTotal = useMemo(() => {
+    let drawings = 0;
+    (journalEntries || []).forEach((j: any) => {
+      (j.debits || []).forEach((d: any) => { if (d.accountCode === "3002") drawings += d.amount; });
+    });
+    return drawings;
+  }, [journalEntries]);
+
+  const handleCollectCashSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!collectTargetCounter) return;
+    const amt = parseFloat(collectAmount) || 0;
+    if (amt <= 0) {
+      alert("Please enter a valid cash amount to collect.");
+      return;
+    }
+
+    const destName = collectDestination === "1001" ? "Main Cash Vault (1001)" : collectDestination === "1002" ? "Bank Account (1002)" : "Owner Drawings (3002)";
+
+    // Record double entry: Debit Destination, Credit Till/Counter
+    addJournalEntry(
+      `Collected cash from ${collectTargetCounter.name} (${collectTargetCounter.assignedCashierName}) to ${destName}. ${collectNotes}`,
+      [{ accountCode: collectDestination, amount: amt }],
+      [{ accountCode: "1003", amount: amt }]
+    );
+
+    // Update counter opening float or close session
+    closeCounterSession(collectTargetCounter.id, Math.max(0, (collectTargetCounter.openingFloat || 0) - amt));
+    setShowCollectCashModal(false);
+    alert(`✅ ${currencySymbol} ${amt.toLocaleString()} collected from ${collectTargetCounter.name} and deposited into ${destName}!`);
+  };
+
+  const handleVaultActionSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const amt = parseFloat(vaultActionAmount) || 0;
+    if (amt <= 0) {
+      alert("Please enter a valid amount.");
+      return;
+    }
+
+    if (vaultActionType === "drawings") {
+      // Owner takes cash for personal use / emergency
+      addJournalEntry(
+        `Owner Cash Withdrawal / Drawings: ${vaultActionNotes}`,
+        [{ accountCode: "3002", amount: amt }],
+        [{ accountCode: "1001", amount: amt }]
+      );
+      alert(`✅ PKR ${amt.toLocaleString()} owner cash withdrawal recorded cleanly.`);
+    } else if (vaultActionType === "bank_transfer") {
+      // Transfer cash from Vault to Bank Account
+      addJournalEntry(
+        `Transferred Cash Vault to Bank Account: ${vaultActionNotes}`,
+        [{ accountCode: "1002", amount: amt }],
+        [{ accountCode: "1001", amount: amt }]
+      );
+      alert(`✅ PKR ${amt.toLocaleString()} transferred from Main Cash Vault to Bank Account.`);
+    }
+    setShowVaultModal(false);
+  };
 
   const handleSaveCounterAssignment = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1056,6 +1161,70 @@ export default function ClientDashboardPage() {
         )}
 
         
+        
+        {/* -------------------- MAIN TREASURY & LIQUID CASH VAULT (OWNER CONTROL) -------------------- */}
+        <section className="bg-gradient-to-r from-emerald-950/40 via-brand-dark-surface/60 to-black border border-emerald-500/30 p-5 rounded-2xl space-y-4 shadow-xl">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-brand-dark-border pb-3">
+            <div>
+              <h3 className="text-xs uppercase font-bold text-white tracking-wide flex items-center gap-2">
+                <Landmark size={16} className="text-emerald-400" />
+                Store Main Treasury &amp; Liquid Cash Vault
+              </h3>
+              <p className="text-[10px] text-gray-400 font-mono mt-0.5">
+                Central safe vault holding all collected cash from counters. Owner can withdraw, transfer to bank, or pay supplier bills.
+              </p>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  setVaultActionType("drawings");
+                  setVaultActionAmount("");
+                  setVaultActionNotes("");
+                  setShowVaultModal(true);
+                }}
+                className="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-400 text-black font-black text-[10px] uppercase tracking-wider rounded-xl transition flex items-center gap-1.5 shadow-lg shadow-amber-500/20"
+              >
+                💸 Owner Cash Withdrawal
+              </button>
+              <button
+                onClick={() => {
+                  setVaultActionType("bank_transfer");
+                  setVaultActionAmount("");
+                  setVaultActionNotes("");
+                  setShowVaultModal(true);
+                }}
+                className="px-3.5 py-1.5 bg-brand-sky hover:bg-sky-400 text-black font-black text-[10px] uppercase tracking-wider rounded-xl transition flex items-center gap-1.5 shadow-lg shadow-sky-500/20"
+              >
+                🏦 Transfer Vault &rarr; Bank
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 font-mono">
+            {/* Main Cash Vault */}
+            <div className="bg-black/60 border border-emerald-500/40 p-4 rounded-xl space-y-1">
+              <span className="text-[10px] text-gray-400 uppercase font-bold block">🏛️ Main Cash Vault (Safe)</span>
+              <div className="text-2xl font-black text-emerald-400">{currencySymbol} {mainVaultBalance.toLocaleString()}</div>
+              <p className="text-[9px] text-gray-500">Collected cash ready for purchases or use</p>
+            </div>
+
+            {/* Bank Account */}
+            <div className="bg-black/60 border border-brand-sky/40 p-4 rounded-xl space-y-1">
+              <span className="text-[10px] text-gray-400 uppercase font-bold block">🏦 Bank Account Balance</span>
+              <div className="text-2xl font-black text-brand-sky">{currencySymbol} {bankAccountBalance.toLocaleString()}</div>
+              <p className="text-[9px] text-gray-500">Digital card, bank &amp; online sales</p>
+            </div>
+
+            {/* Owner Drawings */}
+            <div className="bg-black/60 border border-amber-500/40 p-4 rounded-xl space-y-1">
+              <span className="text-[10px] text-gray-400 uppercase font-bold block">👤 Total Owner Drawings</span>
+              <div className="text-2xl font-black text-amber-400">{currencySymbol} {ownerDrawingsTotal.toLocaleString()}</div>
+              <p className="text-[9px] text-gray-500">Total cash taken by Owner for personal use</p>
+            </div>
+          </div>
+        </section>
+
         {/* -------------------- LIVE POS COUNTERS & CASH DRAWERS MONITOR -------------------- */}
         <section className="bg-brand-dark-surface/40 border border-brand-dark-border p-5 rounded-2xl space-y-4">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-brand-dark-border pb-3">
@@ -1196,6 +1365,19 @@ export default function ClientDashboardPage() {
                     </div>
 
                     <div className="flex items-center gap-1.5">
+                      {expectedDrawerCash > 0 && (
+                        <button
+                          onClick={() => {
+                            setCollectTargetCounter(counter);
+                            setCollectAmount(String(expectedDrawerCash));
+                            setCollectNotes(`Shift end cash handover from ${counter.name} (${counter.assignedCashierName})`);
+                            setShowCollectCashModal(true);
+                          }}
+                          className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[9px] uppercase tracking-wider rounded-lg transition shadow-md shadow-emerald-600/20 flex items-center gap-1"
+                        >
+                          📥 Collect Cash
+                        </button>
+                      )}
                       <button
                         onClick={() => {
                           setAssignFormCounter(counter.name);
@@ -1250,7 +1432,7 @@ export default function ClientDashboardPage() {
                     onChange={e => setAssignFormCounter(e.target.value)}
                     className="w-full bg-black border border-brand-dark-border p-3 rounded-xl text-white font-bold focus:border-brand-sky focus:outline-none"
                   >
-                    <option value="Counter 1 (Main Checkout)">Counter 1 (Main Checkout)</option>
+                    <option value="Main Counter">Main Counter</option>
                     <option value="Counter 2 (Secondary)">Counter 2 (Secondary)</option>
                     <option value="Counter 3 (Express)">Counter 3 (Express)</option>
                     <option value="Mobile POS Terminal">Mobile POS Terminal</option>
@@ -2194,6 +2376,146 @@ export default function ClientDashboardPage() {
                 </button>
               </div>
 
+            </div>
+          </div>
+        )}
+
+      
+        {/* ── CASH COLLECTION & VAULT DEPOSIT MODAL ── */}
+        {showCollectCashModal && collectTargetCounter && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-brand-dark-surface border border-emerald-500/40 rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl animate-fade-in-up font-sans">
+              <div className="flex justify-between items-center border-b border-brand-dark-border pb-3">
+                <h3 className="text-sm font-black text-white flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  Collect Cash from {collectTargetCounter.name}
+                </h3>
+                <button onClick={() => setShowCollectCashModal(false)} className="text-gray-400 hover:text-white">
+                  <X size={16} />
+                </button>
+              </div>
+
+              <form onSubmit={handleCollectCashSubmit} className="space-y-4 text-xs">
+                <div className="bg-black/60 border border-brand-dark-border p-3 rounded-xl space-y-1">
+                  <span className="text-[10px] text-gray-400 uppercase font-bold block">Assigned Cashier</span>
+                  <span className="text-white font-bold text-sm block">{collectTargetCounter.assignedCashierName}</span>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Collected Cash Amount ({currencySymbol})</label>
+                  <input
+                    type="number"
+                    required
+                    min="1"
+                    step="1"
+                    value={collectAmount}
+                    onChange={e => setCollectAmount(e.target.value)}
+                    placeholder="Enter cash collected"
+                    className="w-full bg-black border border-emerald-500/40 p-3 rounded-xl text-emerald-400 font-mono font-black text-lg focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Deposit Target Account</label>
+                  <select
+                    value={collectDestination}
+                    onChange={e => setCollectDestination(e.target.value as any)}
+                    className="w-full bg-black border border-brand-dark-border p-3 rounded-xl text-white font-bold focus:border-brand-sky focus:outline-none"
+                  >
+                    <option value="1001">🏛️ Main Cash Vault / Treasury (1001)</option>
+                    <option value="1002">🏦 Bank Account (1002)</option>
+                    <option value="3002">👤 Owner Personal Withdrawal / Drawings (3002)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Handover Notes / Memo</label>
+                  <input
+                    type="text"
+                    value={collectNotes}
+                    onChange={e => setCollectNotes(e.target.value)}
+                    placeholder="e.g. End of shift cash handover to Owner"
+                    className="w-full bg-black border border-brand-dark-border p-2.5 rounded-xl text-white text-xs focus:outline-none"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-2 pt-2 border-t border-brand-dark-border">
+                  <button
+                    type="button"
+                    onClick={() => setShowCollectCashModal(false)}
+                    className="px-4 py-2 bg-brand-dark-border hover:bg-gray-800 text-white font-bold text-xs rounded-xl transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase tracking-wider rounded-xl transition shadow-lg shadow-emerald-600/20"
+                  >
+                    Confirm Collection &amp; Deposit
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* ── OWNER VAULT ACTION / DRAWINGS MODAL ── */}
+        {showVaultModal && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-brand-dark-surface border border-amber-500/40 rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl animate-fade-in-up font-sans">
+              <div className="flex justify-between items-center border-b border-brand-dark-border pb-3">
+                <h3 className="text-sm font-black text-white flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+                  {vaultActionType === "drawings" ? "Owner Cash Withdrawal (Drawings)" : "Transfer Cash Vault to Bank"}
+                </h3>
+                <button onClick={() => setShowVaultModal(false)} className="text-gray-400 hover:text-white">
+                  <X size={16} />
+                </button>
+              </div>
+
+              <form onSubmit={handleVaultActionSubmit} className="space-y-4 text-xs">
+                <div>
+                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Amount ({currencySymbol})</label>
+                  <input
+                    type="number"
+                    required
+                    min="1"
+                    step="1"
+                    value={vaultActionAmount}
+                    onChange={e => setVaultActionAmount(e.target.value)}
+                    placeholder="Enter amount"
+                    className="w-full bg-black border border-amber-500/40 p-3 rounded-xl text-amber-400 font-mono font-black text-lg focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Reason / Notes</label>
+                  <input
+                    type="text"
+                    required
+                    value={vaultActionNotes}
+                    onChange={e => setVaultActionNotes(e.target.value)}
+                    placeholder={vaultActionType === "drawings" ? "e.g. Owner personal use cash" : "e.g. Deposit cash into Meezan Bank"}
+                    className="w-full bg-black border border-brand-dark-border p-2.5 rounded-xl text-white text-xs focus:outline-none"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-2 pt-2 border-t border-brand-dark-border">
+                  <button
+                    type="button"
+                    onClick={() => setShowVaultModal(false)}
+                    className="px-4 py-2 bg-brand-dark-border hover:bg-gray-800 text-white font-bold text-xs rounded-xl transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-black font-black text-xs uppercase tracking-wider rounded-xl transition shadow-lg shadow-amber-500/20"
+                  >
+                    Record Transaction
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}
