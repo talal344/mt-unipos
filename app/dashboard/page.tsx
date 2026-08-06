@@ -395,7 +395,13 @@ export default function ClientDashboardPage() {
         [{ accountCode: "3002", amount: amt }],
         [{ accountCode: "1001", amount: amt }]
       );
-      alert(`✅ PKR ${amt.toLocaleString()} owner cash withdrawal recorded cleanly.`);
+      addExpense({
+        category: "Owner Personal Drawing (مالک کی ذاتی برداشت)",
+        amount: amt,
+        description: vaultActionNotes || "Owner Personal Cash Withdrawal",
+        paymentMethod: "Cash"
+      });
+      alert(`✅ ${currencySymbol} ${amt.toLocaleString()} Owner Cash Withdrawal recorded cleanly! Cash deducted from store drawer.`);
     } else if (vaultActionType === "bank_transfer") {
       // Transfer cash from Vault to Bank Account
       addJournalEntry(
@@ -1899,15 +1905,29 @@ export default function ClientDashboardPage() {
 
               {/* Total Cash in Drawer (All Counters) */}
               <div 
-                onClick={() => setActiveReportModal("cash_drawers")}
-                className="bg-emerald-500/10 border border-emerald-500/25 p-4 rounded-xl space-y-2 cursor-pointer hover:bg-emerald-500/20 transition group"
+                className="bg-emerald-500/10 border border-emerald-500/25 p-4 rounded-xl space-y-2 cursor-pointer hover:bg-emerald-500/20 transition group relative"
               >
                 <div className="flex justify-between items-center">
                   <span className="text-[10px] uppercase font-bold tracking-wider text-gray-400">Total Drawer Cash</span>
-                  <Banknote size={14} className="text-emerald-400 group-hover:scale-110 transition-transform" />
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setVaultActionType("drawings");
+                        setVaultActionAmount("");
+                        setVaultActionNotes("");
+                        setShowVaultModal(true);
+                      }}
+                      className="px-2 py-0.5 bg-amber-500 hover:bg-amber-400 text-black font-black text-[8px] uppercase tracking-wider rounded-md transition shadow"
+                      title="Click to record owner cash withdrawal from shop"
+                    >
+                      💸 Cash Out
+                    </button>
+                    <Banknote size={14} className="text-emerald-400 group-hover:scale-110 transition-transform" />
+                  </div>
                 </div>
-                <div className="text-xl font-black text-emerald-400 font-mono">{currencySymbol} {totalStoreDrawerCash.toLocaleString(undefined,{maximumFractionDigits:0})}</div>
-                <p className="text-[9px] text-emerald-400/80 font-bold">{posCounters.filter(c => c.status === "Active").length} active counter drawers &rarr;</p>
+                <div onClick={() => setActiveReportModal("cash_drawers")} className="text-xl font-black text-emerald-400 font-mono">{currencySymbol} {totalStoreDrawerCash.toLocaleString(undefined,{maximumFractionDigits:0})}</div>
+                <p onClick={() => setActiveReportModal("cash_drawers")} className="text-[9px] text-emerald-400/80 font-bold">{posCounters.filter(c => c.status === "Active").length} active counter drawers &rarr;</p>
               </div>
             </div>
 
