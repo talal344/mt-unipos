@@ -1,3 +1,5 @@
+"use client";
+
 export interface POSShift {
   id: string;
   counterId: string;
@@ -12,8 +14,6 @@ export interface POSShift {
   discrepancy?: number;
   notes?: string;
 }
-
-"use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
