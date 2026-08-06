@@ -2,6 +2,8 @@
 // Stores user-selected directory handle in IndexedDB and manages subfolder creation
 // (Sale Receipts, Dues Clear Receipts, Sale or Purchase Return Receipts, Reports)
 
+import { supabase } from "@/lib/supabase";
+
 const DB_NAME = "mt_unipos_fs_db";
 const STORE_NAME = "handles";
 
@@ -202,6 +204,29 @@ export async function saveFileToSelectedFolder(
       } catch (dlErr) {
         console.warn("Browser download trigger failed:", dlErr);
       }
+    }
+
+    // ── METHOD 4: Sync receipt image to Supabase Storage Bucket ('receipts') ──
+    if (typeof window !== "undefined" && navigator.onLine && supabase) {
+      (async () => {
+        try {
+          const blobRes = await fetch(cleanBase64);
+          const blob = await blobRes.blob();
+          const cloudFilePath = `${category}/${fileName}`;
+          
+          const { error } = await supabase.storage.from("receipts").upload(cloudFilePath, blob, {
+            contentType: "image/jpeg",
+            upsert: true
+          });
+          if (error) {
+            console.warn("Supabase Storage receipt image upload error:", error);
+          } else {
+            console.log("✅ Receipt image uploaded to Supabase Storage bucket 'receipts':", cloudFilePath);
+          }
+        } catch (sErr) {
+          console.warn("Supabase Storage receipt upload exception:", sErr);
+        }
+      })();
     }
 
     return {
