@@ -297,11 +297,15 @@ export default function ClientDashboardPage() {
         }
       });
       const netCash = grossCash - refunds;
-      return acc + (counter.openingFloat || 0) + netCash;
+      const collectedDeduction = counter.collectedCashDeduction || 0;
+      return acc + Math.max(0, ((counter.openingFloat || 0) + netCash) - collectedDeduction);
     }, 0);
   }, [posCounters, sales]);
 
   
+  // ── Cashier / Counter Audit Modal State
+  const [auditTargetCounter, setAuditTargetCounter] = React.useState<any>(null);
+
   // ── Cash Collection & Vault Deposit States
   const [showCollectCashModal, setShowCollectCashModal] = React.useState(false);
   const [collectTargetCounter, setCollectTargetCounter] = React.useState<any>(null);
@@ -1364,18 +1368,20 @@ export default function ClientDashboardPage() {
               const netCashSalesInflow = grossCashSales - cashRefundsDeducted;
               const counterNetRevenue = counterSales.reduce((acc, s) => (s.status === "Returned" || s.status === "Refunded") ? acc - s.total : acc + s.total, 0);
               const counterGrossProfit = counterNetRevenue - counterCogs;
-              const expectedDrawerCash = isActive ? ((counter.openingFloat || 0) + netCashSalesInflow) : 0;
+              const collectedDeduction = counter.collectedCashDeduction || 0;
+              const expectedDrawerCash = isActive ? Math.max(0, ((counter.openingFloat || 0) + netCashSalesInflow) - collectedDeduction) : 0;
 
               return (
                 <div key={counter.id} className={`p-4 rounded-xl border space-y-3 font-sans transition ${
                   isActive ? "bg-black/60 border-emerald-500/40 hover:border-emerald-500/70 shadow-lg shadow-emerald-500/5" : "bg-black/30 border-brand-dark-border/60 opacity-60"
                 }`}>
                   {/* Header */}
-                  <div className="flex justify-between items-start">
+                  <div className="flex justify-between items-start cursor-pointer group/title" onClick={() => setAuditTargetCounter(counter)}>
                     <div>
                       <div className="flex items-center gap-1.5">
                         <span className={`w-2 h-2 rounded-full ${isActive ? "bg-emerald-400 animate-pulse" : "bg-gray-600"}`} />
-                        <span className="font-black text-white text-sm">{counter.name}</span>
+                        <span className="font-black text-white text-sm group-hover/title:text-brand-sky transition">{counter.name}</span>
+                        <span className="text-[9px] bg-brand-sky/10 text-brand-sky px-1.5 py-0.5 rounded font-bold">🔍 View Audit</span>
                       </div>
                       <p className="text-[10px] text-gray-400 mt-0.5 font-mono">
                         Assigned Cashier: <strong className="text-emerald-300 font-bold">
@@ -1420,6 +1426,9 @@ export default function ClientDashboardPage() {
                     <div>
                       <div className="text-[9px] uppercase font-bold text-gray-400">Total Drawer Cash</div>
                       <div className="text-xl font-black text-emerald-400">{currencySymbol} {expectedDrawerCash.toLocaleString()}</div>
+                      {collectedDeduction > 0 && (
+                        <div className="text-[8px] text-amber-400 font-bold">({currencySymbol} {collectedDeduction.toLocaleString()} collected)</div>
+                      )}
                     </div>
 
                     <div className="flex items-center gap-1.5">
@@ -1428,7 +1437,7 @@ export default function ClientDashboardPage() {
                           onClick={() => {
                             setCollectTargetCounter(counter);
                             setCollectAmount(String(expectedDrawerCash));
-                            setCollectNotes(`Shift end cash handover from ${counter.name} (${counter.assignedCashierName})`);
+                            setCollectNotes(`Shift cash handover from ${counter.name} (${counter.assignedCashierName})`);
                             setShowCollectCashModal(true);
                           }}
                           className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[9px] uppercase tracking-wider rounded-lg transition shadow-md shadow-emerald-600/20 flex items-center gap-1"
@@ -1543,6 +1552,178 @@ export default function ClientDashboardPage() {
             </div>
           </div>
         </section>
+
+        {/* ── COUNTER & CASHIER DETAILED AUDIT REPORT MODAL ── */}
+        {auditTargetCounter && (() => {
+          const counter = auditTargetCounter;
+          const cleanCashier = (counter.assignedCashierName || "").replace(/\s*\([^)]*\)/, "").trim().toLowerCase();
+          
+          const cashierSales = sales.filter(s => {
+            if (s.counterId && (s.counterId.toLowerCase() === counter.name.toLowerCase() || s.counterId.toLowerCase() === counter.id.toLowerCase())) {
+              return true;
+            }
+            const sCashier = (s.cashierName || "").trim().toLowerCase();
+            if (sCashier && cleanCashier && cleanCashier !== "unassigned" && (sCashier.includes(cleanCashier) || cleanCashier.includes(sCashier))) {
+              if (counter.startedAt) return new Date(s.date) >= new Date(counter.startedAt);
+              return true;
+            }
+            return false;
+          });
+
+          let totalCashInflow = 0;
+          let totalCreditDuesIssued = 0;
+          let totalDigitalBankSales = 0;
+          let totalReturnsDeducted = 0;
+          let totalCogs = 0;
+
+          cashierSales.forEach(s => {
+            const isReturn = s.status === "Returned" || s.status === "Refunded";
+            if (isReturn) {
+              totalReturnsDeducted += s.total;
+              s.items.forEach(item => {
+                const prod = products.find(p => p.id === item.productId);
+                if (prod) totalCogs -= prod.costPrice * item.qty;
+              });
+            } else {
+              if (s.splitPayments) {
+                totalCashInflow += (s.splitPayments["Cash"] || 0);
+                totalCreditDuesIssued += (s.splitPayments["On Credit"] || 0);
+                totalDigitalBankSales += Math.max(0, s.total - (s.splitPayments["Cash"] || 0) - (s.splitPayments["On Credit"] || 0));
+              } else if (s.paymentMethod === "Cash") {
+                totalCashInflow += s.total;
+              } else if (s.paymentMethod === "On Credit") {
+                totalCreditDuesIssued += s.total;
+              } else {
+                totalDigitalBankSales += s.total;
+              }
+
+              s.items.forEach(item => {
+                const prod = products.find(p => p.id === item.productId);
+                if (prod) totalCogs += prod.costPrice * item.qty;
+              });
+            }
+          });
+
+          const totalGrossRevenue = cashierSales.reduce((acc, s) => (s.status === "Returned" || s.status === "Refunded") ? acc - s.total : acc + s.total, 0);
+          const grossProfit = totalGrossRevenue - totalCogs;
+          const collectedDeduction = counter.collectedCashDeduction || 0;
+          const currentDrawerCash = Math.max(0, ((counter.openingFloat || 0) + totalCashInflow - totalReturnsDeducted) - collectedDeduction);
+
+          return (
+            <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
+              <div className="bg-brand-dark-surface border border-brand-sky/40 rounded-2xl w-full max-w-4xl p-6 space-y-5 shadow-2xl animate-fade-in-up max-h-[90vh] overflow-y-auto">
+                
+                {/* Header */}
+                <div className="flex justify-between items-start border-b border-brand-dark-border/60 pb-4">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className={`w-3 h-3 rounded-full ${counter.status === "Active" ? "bg-emerald-400 animate-pulse" : "bg-gray-600"}`} />
+                      <h2 className="text-lg font-black text-white">{counter.name} — Cashier Audit Statement</h2>
+                    </div>
+                    <p className="text-xs text-brand-sky font-mono mt-0.5 font-bold">
+                      Assigned Cashier: {counter.assignedCashierName} | Shift Started: {counter.startedAt ? new Date(counter.startedAt).toLocaleString() : "N/A"}
+                    </p>
+                  </div>
+                  <button onClick={() => setAuditTargetCounter(null)} className="text-gray-400 hover:text-white p-1">
+                    <X size={20} />
+                  </button>
+                </div>
+
+                {/* Financial KPI Summary Cards */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 font-mono text-xs">
+                  <div className="bg-black/50 border border-emerald-500/30 p-3 rounded-xl">
+                    <span className="text-gray-400 text-[9px] uppercase font-bold block">Cash Sales Inflow</span>
+                    <span className="text-emerald-400 font-black text-base">+{currencySymbol} {totalCashInflow.toLocaleString()}</span>
+                  </div>
+                  <div className="bg-black/50 border border-amber-500/30 p-3 rounded-xl">
+                    <span className="text-gray-400 text-[9px] uppercase font-bold block">Credit Sales Issued</span>
+                    <span className="text-amber-400 font-black text-base">{currencySymbol} {totalCreditDuesIssued.toLocaleString()}</span>
+                  </div>
+                  <div className="bg-black/50 border border-purple-500/30 p-3 rounded-xl">
+                    <span className="text-gray-400 text-[9px] uppercase font-bold block">Digital / Card Sales</span>
+                    <span className="text-purple-400 font-black text-base">{currencySymbol} {totalDigitalBankSales.toLocaleString()}</span>
+                  </div>
+                  <div className="bg-black/50 border border-brand-sky/30 p-3 rounded-xl">
+                    <span className="text-gray-400 text-[9px] uppercase font-bold block">Gross Profit</span>
+                    <span className="text-brand-sky font-black text-base">{currencySymbol} {grossProfit.toLocaleString()}</span>
+                  </div>
+                </div>
+
+                {/* Drawer & Cash Handover Bar */}
+                <div className="bg-gradient-to-r from-emerald-500/10 via-black to-brand-dark-surface border border-emerald-500/30 p-4 rounded-xl flex justify-between items-center font-mono">
+                  <div>
+                    <span className="text-[10px] text-gray-400 uppercase font-bold block">Current Total Drawer Cash Remaining</span>
+                    <span className="text-2xl font-black text-emerald-400">{currencySymbol} {currentDrawerCash.toLocaleString()}</span>
+                    {collectedDeduction > 0 && (
+                      <span className="text-[10px] text-amber-400 block mt-0.5">
+                        (Includes {currencySymbol} {collectedDeduction.toLocaleString()} owner cash collected)
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => printReportWindow(`${counter.name} - Cashier Sales Audit Report`, 
+                      ["Receipt ID", "Date", "Customer", "Payment Source", "Total (PKR)", "Status"],
+                      cashierSales.map(s => [s.receiptNumber, new Date(s.date).toLocaleString(), s.customerName, s.paymentMethod, s.total, s.status])
+                    )}
+                    className="px-4 py-2 bg-brand-sky hover:bg-sky-400 text-black font-black text-xs uppercase tracking-wider rounded-xl transition flex items-center gap-1.5 shadow-lg shadow-sky-500/20"
+                  >
+                    <Printer size={14} /> Print Audit Statement
+                  </button>
+                </div>
+
+                {/* Sales Transactions History Table */}
+                <div className="space-y-2">
+                  <h4 className="text-xs font-bold uppercase text-gray-400 font-mono">Detailed Cashier Transactions ({cashierSales.length})</h4>
+                  <div className="border border-brand-dark-border rounded-xl overflow-x-auto max-h-60 overflow-y-auto">
+                    <table className="w-full text-left font-mono text-xs">
+                      <thead className="bg-black text-gray-400 uppercase text-[9px]">
+                        <tr>
+                          <th className="p-3">Receipt ID</th>
+                          <th className="p-3">Date &amp; Time</th>
+                          <th className="p-3">Customer</th>
+                          <th className="p-3">Payment Source</th>
+                          <th className="p-3">Items</th>
+                          <th className="p-3 text-right">Grand Total</th>
+                          <th className="p-3 text-center">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-brand-dark-border/40 text-white text-[11px]">
+                        {cashierSales.length === 0 ? (
+                          <tr><td colSpan={7} className="p-4 text-center text-gray-500">No transactions recorded for this cashier shift.</td></tr>
+                        ) : (
+                          cashierSales.map(s => (
+                            <tr key={s.id} className="hover:bg-brand-dark-surface/50 transition">
+                              <td className="p-3 font-bold text-brand-sky">{s.receiptNumber}</td>
+                              <td className="p-3 text-gray-400 text-[10px]">{new Date(s.date).toLocaleString()}</td>
+                              <td className="p-3 font-bold">{s.customerName}</td>
+                              <td className="p-3">
+                                <span className="bg-purple-500/10 border border-purple-500/20 text-purple-400 font-bold px-2 py-0.5 rounded text-[10px]">
+                                  {s.paymentMethod}
+                                </span>
+                              </td>
+                              <td className="p-3 text-gray-400">{s.items.length} lines</td>
+                              <td className="p-3 text-right font-black text-emerald-400">{currencySymbol} {s.total.toLocaleString()}</td>
+                              <td className="p-3 text-center">
+                                <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${
+                                  s.status === "Completed" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" :
+                                  s.status === "Dues_Recovery" ? "bg-sky-500/10 text-sky-400 border border-sky-500/20" :
+                                  "bg-red-500/10 text-red-400 border border-red-500/20"
+                                }`}>
+                                  {s.status}
+                                </span>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          );
+        })()}
 
         {/* ── OWNER/MANAGER ASSIGN COUNTER MODAL (With Dropdown + Searchable Staff List) ── */}
         {showAssignCounterModal && (

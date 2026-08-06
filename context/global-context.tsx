@@ -9,6 +9,7 @@ export interface POSCounter {
   status: "Active" | "Closed" | "Unassigned";
   startedAt: string;
   notes?: string;
+  collectedCashDeduction?: number;
 }
 
 export interface POSShift {
@@ -2893,7 +2894,8 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
           assignedCashierName: cashierName,
           openingFloat: Number(openingFloat) || 0,
           status: "Active" as const,
-          startedAt: new Date().toISOString()
+          startedAt: new Date().toISOString(),
+          collectedCashDeduction: 0
         };
       }
       return c;
@@ -2908,7 +2910,8 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         assignedCashierEmail: "",
         openingFloat: Number(openingFloat) || 0,
         status: "Active",
-        startedAt: new Date().toISOString()
+        startedAt: new Date().toISOString(),
+        collectedCashDeduction: 0
       });
     }
     setPosCounters(updated);
@@ -2920,7 +2923,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       if (c.id === counterId || c.name.toLowerCase().includes(counterId.toLowerCase())) {
         return {
           ...c,
-          openingFloat: Math.max(0, (c.openingFloat || 0) - collectedAmount),
+          collectedCashDeduction: (c.collectedCashDeduction || 0) + Number(collectedAmount),
         };
       }
       return c;
