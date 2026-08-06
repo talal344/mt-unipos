@@ -99,10 +99,18 @@ export default function PosPage() {
             if (perm === "granted") valid = true;
           } catch {}
         }
+
+        const savedName = typeof window !== "undefined" ? localStorage.getItem("unipos_selected_folder_name") : null;
+
         if (valid && handle) {
           if (isMounted) {
             setHasSavedFolder(true);
             setFolderName(handle.name);
+          }
+        } else if (savedName) {
+          if (isMounted) {
+            setHasSavedFolder(true);
+            setFolderName(savedName);
           }
         } else {
           if (isMounted) {

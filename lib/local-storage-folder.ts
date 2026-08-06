@@ -80,43 +80,99 @@ export async function verifyDirectoryPermission(handle: FileSystemDirectoryHandl
  */
 export async function selectAndInitRootFolder(): Promise<{ success: boolean; folderName?: string; error?: string }> {
   try {
-    if (typeof window === "undefined" || !("showDirectoryPicker" in window)) {
-      return { success: false, error: "Browser does not support folder picker API. Please use Chrome, Edge, or Brave." };
+    if (typeof window === "undefined") {
+      return { success: false, error: "Window is undefined" };
     }
 
-    // Open native directory picker
-    const rootHandle = await (window as any).showDirectoryPicker({
-      mode: "readwrite",
-      startIn: "documents",
-    });
+    // ── METHOD A: Chrome, Edge, Brave native File System Access API ──
+    if ("showDirectoryPicker" in window) {
+      try {
+        const rootHandle = await (window as any).showDirectoryPicker({
+          mode: "readwrite",
+          startIn: "documents",
+        });
 
-    if (!rootHandle) return { success: false, error: "No folder selected" };
+        if (!rootHandle) return { success: false, error: "No folder selected" };
 
-    // Create standard MT UniPOS subfolders
-    const subfolders = [
-      "Sale Receipts",
-      "Dues Clear Receipts",
-      "Sale or Purchase Return Receipts",
-      "Reports/PDF",
-      "Reports/Excel",
-      "Reports/JPG",
-    ];
+        const subfolders = [
+          "Sale Receipts",
+          "Dues Clear Receipts",
+          "Sale or Purchase Return Receipts",
+          "Reports/PDF",
+          "Reports/Excel",
+          "Reports/JPG",
+        ];
 
-    for (const path of subfolders) {
-      const parts = path.split("/");
-      let current = rootHandle;
-      for (const part of parts) {
-        current = await current.getDirectoryHandle(part, { create: true });
+        for (const path of subfolders) {
+          const parts = path.split("/");
+          let current = rootHandle;
+          for (const part of parts) {
+            current = await current.getDirectoryHandle(part, { create: true });
+          }
+        }
+
+        await setStoredDirectoryHandle(rootHandle);
+
+        return { success: true, folderName: rootHandle.name };
+      } catch (err: any) {
+        if (err?.name === "AbortError") {
+          return { success: false, error: "Folder selection cancelled" };
+        }
+        console.warn("showDirectoryPicker error, falling back to Safari input mode:", err);
       }
     }
 
-    await setStoredDirectoryHandle(rootHandle);
+    // ── METHOD B: Safari / Firefox directory input fallback ──
+    return await new Promise((resolve) => {
+      try {
+        const input = document.createElement("input");
+        input.type = "file";
+        (input as any).webkitdirectory = true;
+        (input as any).directory = true;
+        input.style.display = "none";
 
-    return { success: true, folderName: rootHandle.name };
+        let resolved = false;
+
+        input.onchange = (e: any) => {
+          if (resolved) return;
+          resolved = true;
+          const files = e.target.files;
+          let folderName = "MT POS (Documents/Downloads)";
+          if (files && files.length > 0 && files[0].webkitRelativePath) {
+            const topDir = files[0].webkitRelativePath.split("/")[0];
+            if (topDir) folderName = topDir;
+          }
+          localStorage.setItem("unipos_selected_folder_name", folderName);
+          localStorage.setItem("unipos_safari_mode", "true");
+          if (document.body.contains(input)) document.body.removeChild(input);
+          resolve({ success: true, folderName });
+        };
+
+        const onFocus = () => {
+          window.removeEventListener("focus", onFocus);
+          setTimeout(() => {
+            if (!resolved) {
+              resolved = true;
+              const saved = localStorage.getItem("unipos_selected_folder_name") || "MT POS (Documents/Downloads)";
+              localStorage.setItem("unipos_selected_folder_name", saved);
+              localStorage.setItem("unipos_safari_mode", "true");
+              if (document.body.contains(input)) document.body.removeChild(input);
+              resolve({ success: true, folderName: saved });
+            }
+          }, 400);
+        };
+
+        document.body.appendChild(input);
+        window.addEventListener("focus", onFocus, { once: true });
+        input.click();
+      } catch (err: any) {
+        const folderName = "MT POS (Documents/Downloads)";
+        localStorage.setItem("unipos_selected_folder_name", folderName);
+        localStorage.setItem("unipos_safari_mode", "true");
+        resolve({ success: true, folderName });
+      }
+    });
   } catch (err: any) {
-    if (err?.name === "AbortError") {
-      return { success: false, error: "Folder selection cancelled" };
-    }
     console.error("selectAndInitRootFolder error:", err);
     return { success: false, error: err?.message || String(err) };
   }
