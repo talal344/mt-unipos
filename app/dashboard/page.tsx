@@ -80,6 +80,7 @@ export default function ClientDashboardPage() {
     employees,
     posCounters,
     assignCounterCashier,
+    collectCounterCash,
     closeCounterSession,
     posShifts,
     closePOSShift,
@@ -369,8 +370,8 @@ export default function ClientDashboardPage() {
       [{ accountCode: "1003", amount: amt }]
     );
 
-    // Update counter opening float or close session
-    closeCounterSession(collectTargetCounter.id, Math.max(0, (collectTargetCounter.openingFloat || 0) - amt));
+    // Record drawer cash collection without closing shift/counter
+    collectCounterCash(collectTargetCounter.id, amt);
     setShowCollectCashModal(false);
     alert(`✅ ${currencySymbol} ${amt.toLocaleString()} collected from ${collectTargetCounter.name} and deposited into ${destName}!`);
   };

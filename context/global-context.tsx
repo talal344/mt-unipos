@@ -498,6 +498,7 @@ interface GlobalContextType {
 
   posCounters: POSCounter[];
   assignCounterCashier: (counterId: string, cashierName: string, openingFloat: number) => void;
+  collectCounterCash: (counterId: string, collectedAmount: number) => void;
   closeCounterSession: (counterId: string, closingCash: number) => void;
   posShifts: POSShift[];
   startPOSShift: (counterId: string, openingFloat: number) => POSShift;
@@ -2902,12 +2903,29 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     saveTenantData("unipos_counters", updated);
   };
 
+  const collectCounterCash = (counterId: string, collectedAmount: number) => {
+    const updated = posCounters.map(c => {
+      if (c.id === counterId || c.name.toLowerCase().includes(counterId.toLowerCase())) {
+        return {
+          ...c,
+          openingFloat: Math.max(0, (c.openingFloat || 0) - collectedAmount),
+        };
+      }
+      return c;
+    });
+    setPosCounters(updated);
+    saveTenantData("unipos_counters", updated);
+  };
+
   const closeCounterSession = (counterId: string, closingCash: number) => {
     const updated = posCounters.map(c => {
       if (c.id === counterId || c.name.toLowerCase().includes(counterId.toLowerCase())) {
         return {
           ...c,
           status: "Closed" as const,
+          assignedCashierName: "Unassigned",
+          assignedCashierEmail: "",
+          openingFloat: 0,
           notes: `Closed with ${closingCash} cash`
         };
       }
@@ -3444,6 +3462,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         sales,
         posCounters,
         assignCounterCashier,
+        collectCounterCash,
         closeCounterSession,
         posShifts,
         startPOSShift,
