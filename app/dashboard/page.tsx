@@ -485,9 +485,59 @@ export default function ClientDashboardPage() {
     });
     return cogs;
   }, [sales, products]);
+
+  const totalOutstandingDues = useMemo(() => {
+    return customers.reduce((acc, c) => acc + Math.max(0, c.creditBalance || 0), 0);
+  }, [customers]);
+
   const grossProfit = totalRevenue - totalCOGS;
-  const netProfit = grossProfit - totalExpenses;
+  // Realized Net Profit: Excludes uncollected customer dues & expenses
+  const netProfit = grossProfit - totalOutstandingDues - totalExpenses;
   const grossMarginPct = totalRevenue > 0 ? (grossProfit / totalRevenue) * 100 : 0;
+
+  // Store Consolidated Financials Statement
+  const consolidatedFinancials = useMemo(() => {
+    let directCashSales = 0;
+    let duesRecoveredCash = 0;
+    let digitalBankSales = 0;
+    let uncollectedCreditDues = 0;
+    let totalReturnsRefunds = 0;
+
+    sales.forEach(s => {
+      const isReturn = s.status === "Returned" || s.status === "Refunded";
+      const isDuesRec = (s as any).status === "Dues_Recovery";
+
+      if (isReturn) {
+        totalReturnsRefunds += s.total;
+      } else if (isDuesRec) {
+        if (s.paymentMethod === "Cash") duesRecoveredCash += s.total;
+        else digitalBankSales += s.total;
+      } else {
+        if (s.splitPayments) {
+          directCashSales += (s.splitPayments["Cash"] || 0);
+          uncollectedCreditDues += (s.splitPayments["On Credit"] || 0);
+          digitalBankSales += Math.max(0, s.total - (s.splitPayments["Cash"] || 0) - (s.splitPayments["On Credit"] || 0));
+        } else if (s.paymentMethod === "Cash") {
+          directCashSales += s.total;
+        } else if (s.paymentMethod === "On Credit") {
+          uncollectedCreditDues += s.total;
+        } else {
+          digitalBankSales += s.total;
+        }
+      }
+    });
+
+    const totalCollectedRealizedRevenue = directCashSales + duesRecoveredCash + digitalBankSales - totalReturnsRefunds;
+
+    return {
+      directCashSales,
+      duesRecoveredCash,
+      digitalBankSales,
+      uncollectedCreditDues,
+      totalReturnsRefunds,
+      totalCollectedRealizedRevenue,
+    };
+  }, [sales]);
 
   // Today's top products
   const todaySales = useMemo(() => {
@@ -1417,6 +1467,83 @@ export default function ClientDashboardPage() {
           </div>
         </section>
 
+        {/* -------------------- STORE CONSOLIDATED FINANCIAL & REVENUE STATEMENT -------------------- */}
+        <section className="bg-gradient-to-br from-brand-dark-surface/90 via-black to-brand-dark-surface/70 border border-brand-sky/20 p-6 rounded-2xl space-y-5 shadow-2xl">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-brand-dark-border/60 pb-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-brand-sky/15 border border-brand-sky/30 flex items-center justify-center">
+                  <BarChart3 size={16} className="text-brand-sky" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-white uppercase tracking-wider">
+                    Store Consolidated Financial &amp; Revenue Statement
+                  </h3>
+                  <p className="text-[10px] text-gray-400 font-mono mt-0.5">
+                    Combined multi-counter revenue summary: Realized Cash, Dues Recovered, Online/Bank, and Pending Credit Dues across all users.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-brand-sky/10 border border-brand-sky/30 px-4 py-2 rounded-xl text-right font-mono">
+              <span className="text-[9px] uppercase font-bold text-gray-400 block">Total Realized Revenue Collected</span>
+              <span className="text-xl font-black text-emerald-400">
+                {currencySymbol} {consolidatedFinancials.totalCollectedRealizedRevenue.toLocaleString()}
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 font-mono">
+            {/* Direct Cash Sales */}
+            <div className="bg-emerald-500/10 border border-emerald-500/30 p-4 rounded-xl space-y-1">
+              <div className="flex justify-between items-center text-emerald-400">
+                <span className="text-[10px] uppercase font-bold text-gray-400">💵 Direct POS Cash Collected</span>
+                <Banknote size={14} />
+              </div>
+              <div className="text-lg font-black text-emerald-400">
+                +{currencySymbol} {consolidatedFinancials.directCashSales.toLocaleString()}
+              </div>
+              <p className="text-[9px] text-gray-500">Net cash checkout receipts across all counters</p>
+            </div>
+
+            {/* Dues Recovered Cash */}
+            <div className="bg-sky-500/10 border border-sky-500/30 p-4 rounded-xl space-y-1">
+              <div className="flex justify-between items-center text-sky-400">
+                <span className="text-[10px] uppercase font-bold text-gray-400">🤝 Customer Dues Recovered</span>
+                <RotateCcw size={14} />
+              </div>
+              <div className="text-lg font-black text-sky-400">
+                +{currencySymbol} {consolidatedFinancials.duesRecoveredCash.toLocaleString()}
+              </div>
+              <p className="text-[9px] text-gray-500">Collected cash/bank payments against previous credit dues</p>
+            </div>
+
+            {/* Digital & Bank Payments */}
+            <div className="bg-purple-500/10 border border-purple-500/30 p-4 rounded-xl space-y-1">
+              <div className="flex justify-between items-center text-purple-400">
+                <span className="text-[10px] uppercase font-bold text-gray-400">💳 Card, Bank &amp; Online Inflow</span>
+                <Landmark size={14} />
+              </div>
+              <div className="text-lg font-black text-purple-400">
+                +{currencySymbol} {consolidatedFinancials.digitalBankSales.toLocaleString()}
+              </div>
+              <p className="text-[9px] text-gray-500">Digital card, bank transfers, EasyPaisa &amp; JazzCash</p>
+            </div>
+
+            {/* Pending Uncollected Credit Dues */}
+            <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-xl space-y-1">
+              <div className="flex justify-between items-center text-amber-400">
+                <span className="text-[10px] uppercase font-bold text-gray-400">📜 Outstanding Credit Dues</span>
+                <AlertTriangle size={14} />
+              </div>
+              <div className="text-lg font-black text-amber-400">
+                {currencySymbol} {totalOutstandingDues.toLocaleString()}
+              </div>
+              <p className="text-[9px] text-gray-500">Uncollected credit sales (Excluded from Net Cash Profit)</p>
+            </div>
+          </div>
+        </section>
+
         {/* ── OWNER/MANAGER ASSIGN COUNTER MODAL (With Dropdown + Searchable Staff List) ── */}
         {showAssignCounterModal && (
           <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -1563,7 +1690,7 @@ export default function ClientDashboardPage() {
                 <div className={`text-xl font-black font-mono ${netProfit >= 0 ? 'text-purple-400' : 'text-red-400'}`}>
                   {netProfit < 0 ? '-' : ''}{currencySymbol} {Math.abs(netProfit).toLocaleString(undefined,{maximumFractionDigits:0})}
                 </div>
-                <p className="text-[9px] text-gray-500">After expenses: {currencySymbol} {totalExpenses.toLocaleString(undefined,{maximumFractionDigits:0})}</p>
+                <p className="text-[9px] text-gray-500">Realized Cash (Excludes Dues {currencySymbol} {totalOutstandingDues.toLocaleString()} &amp; Exp {currencySymbol} {totalExpenses.toLocaleString()})</p>
               </div>
 
               {/* Stock Valuation */}

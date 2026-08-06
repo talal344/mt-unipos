@@ -478,7 +478,7 @@ interface GlobalContextType {
   updateCustomerBalance: (id: string, dueAmountChange: number) => void;
   updateCustomerWalletBalance: (id: string, amountChange: number) => void;
   settleDuesWithWallet: (id: string, amountToSettle?: number) => SaleTransaction | undefined;
-  recordDueRecovery: (id: string, amount: number, paymentMethod?: string) => SaleTransaction | undefined;
+  recordDueRecovery: (id: string, amount: number, paymentMethod?: string, counterId?: string) => SaleTransaction | undefined;
 
   suppliers: Supplier[];
   addSupplier: (supp: Omit<Supplier, "id" | "dueAmount" | "purchaseHistory">) => void;
@@ -2511,7 +2511,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     return recordDueRecovery(id, settleAmount, "Store Wallet Balance");
   };
 
-  const recordDueRecovery = (id: string, amount: number, paymentMethod?: string): SaleTransaction | undefined => {
+  const recordDueRecovery = (id: string, amount: number, paymentMethod?: string, counterId?: string): SaleTransaction | undefined => {
     const cust = customers.find(c => c.id === id);
     if (!cust) return undefined;
 
@@ -2565,12 +2565,24 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     const hh = String(now.getHours()).padStart(2, "0");
     const min = String(now.getMinutes()).padStart(2, "0");
 
+    const isUserAssignedToCounter = (c: POSCounter, user: any) => {
+      if (!c || !user) return false;
+      if (c.assignedCashierEmail && user.email && c.assignedCashierEmail.toLowerCase() === user.email.toLowerCase()) return true;
+      const cleanAssigned = (c.assignedCashierName || "").replace(/\s*\([^)]*\)/, "").trim().toLowerCase();
+      const cleanUser = (user.name || "").replace(/\s*\([^)]*\)/, "").trim().toLowerCase();
+      return cleanAssigned && cleanUser && (cleanAssigned === cleanUser || cleanAssigned.includes(cleanUser) || cleanUser.includes(cleanAssigned));
+    };
+
+    const activeCounter = posCounters.find(c => c.status === "Active" && isUserAssignedToCounter(c, currentUser));
+    const targetCounterName = counterId || activeCounter?.name || "Main Counter";
+
     const recTxn: SaleTransaction = {
       id: `S-REC-${Math.floor(1000 + Math.random() * 9000)}`,
       receiptNumber: `REC-TXN-${dd}${mm}${yy}${hh}${min}`,
       date: now.toISOString(),
       branch: currentBranch,
-      cashierName: currentUser?.name || "Cashier",
+      counterId: targetCounterName,
+      cashierName: currentUser?.name || activeCounter?.assignedCashierName || "Cashier",
       customerName: cust.name,
       customerNo: cust.customerNo,
       items: [{
