@@ -137,9 +137,9 @@ export default function AboutPage() {
             <div className="my-auto relative z-10 flex flex-col items-center justify-center p-4">
               <div className="p-4 bg-black/60 border border-brand-sky/20 rounded-2xl shadow-xl backdrop-blur-md mb-4 group-hover:scale-105 transition-transform duration-300">
                 <img
-                  src="/logo-report.png"
+                  src="/logo.png"
                   alt="MT UniPOS Logo"
-                  className="h-20 sm:h-24 w-auto object-contain drop-shadow-[0_0_20px_rgba(14,165,233,0.4)]"
+                  className="h-28 sm:h-32 w-auto object-contain drop-shadow-[0_0_24px_rgba(14,165,233,0.5)]"
                 />
               </div>
               <span className="text-[10px] font-mono font-bold tracking-widest text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full uppercase">

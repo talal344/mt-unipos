@@ -203,14 +203,15 @@ export default function AdminSidebar() {
 
       <div className="flex flex-col flex-1 min-h-0">
         {/* Brand Header */}
-        <div className="h-16 flex items-center gap-2 px-4 border-b border-brand-dark-border shrink-0">
-          <div className="bg-purple-600 p-1.5 rounded text-black font-black">
-            <Laptop size={16} />
-          </div>
-          <span className="font-black text-sm tracking-tight text-white flex-grow">
-            MT <span className="text-purple-400">UniPOS</span>
-          </span>
-          <span className="bg-purple-500/20 text-purple-400 text-[8px] px-1.5 rounded font-black tracking-widest uppercase shrink-0">
+        <div className="py-3 px-4 border-b border-brand-dark-border shrink-0 bg-black/60 flex items-center justify-between">
+          <Link href="/admin/dashboard" className="flex items-center gap-2">
+            <img 
+              src="/logo.png" 
+              alt="MT UniPOS Logo" 
+              className="h-12 w-auto max-w-[170px] object-contain drop-shadow-[0_0_12px_rgba(168,85,247,0.4)]" 
+            />
+          </Link>
+          <span className="bg-purple-500/20 text-purple-400 text-[8px] px-1.5 py-0.5 rounded font-black tracking-widest uppercase shrink-0">
             Admin
           </span>
           
