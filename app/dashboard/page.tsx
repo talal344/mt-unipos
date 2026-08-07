@@ -2811,6 +2811,42 @@ export default function ClientDashboardPage() {
               </div>
 
               <form onSubmit={handleVaultActionSubmit} className="space-y-4 text-xs">
+                {/* ── LIVE SHOP CASH BALANCE AUDIT CARD ── */}
+                <div className="bg-black/60 border border-brand-dark-border p-3.5 rounded-xl space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] uppercase font-bold text-gray-400">Total Available Cash in Shop</span>
+                    <span className="text-emerald-400 font-mono font-black text-sm">
+                      {currencySymbol} {totalStoreDrawerCash.toLocaleString()}
+                    </span>
+                  </div>
+
+                  {(() => {
+                    const withdrawAmt = parseFloat(vaultActionAmount) || 0;
+                    const remainingCash = totalStoreDrawerCash - withdrawAmt;
+                    const isOverLimit = withdrawAmt > totalStoreDrawerCash;
+
+                    return (
+                      <div className="pt-2 border-t border-brand-dark-border/60 space-y-1">
+                        <div className="flex justify-between items-center text-xs font-mono">
+                          <span className="text-gray-400">Withdrawal Amount:</span>
+                          <span className="text-amber-400 font-bold">-{currencySymbol} {withdrawAmt.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-xs font-mono">
+                          <span className="text-gray-300 font-bold">Remaining Cash Balance:</span>
+                          <span className={`font-black text-sm ${isOverLimit ? "text-red-400" : "text-emerald-400"}`}>
+                            {currencySymbol} {remainingCash.toLocaleString()}
+                          </span>
+                        </div>
+                        {isOverLimit && (
+                          <div className="bg-red-500/15 border border-red-500/30 text-red-400 text-[10px] font-bold p-2 rounded-lg mt-1">
+                            ⚠️ Warning: Entered withdrawal exceeds current shop drawer cash ({currencySymbol} {totalStoreDrawerCash.toLocaleString()})!
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+                </div>
+
                 <div>
                   <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Amount ({currencySymbol})</label>
                   <input
@@ -2820,7 +2856,7 @@ export default function ClientDashboardPage() {
                     step="1"
                     value={vaultActionAmount}
                     onChange={e => setVaultActionAmount(e.target.value)}
-                    placeholder="Enter amount"
+                    placeholder="Enter amount to withdraw"
                     className="w-full bg-black border border-amber-500/40 p-3 rounded-xl text-amber-400 font-mono font-black text-lg focus:outline-none"
                   />
                 </div>
