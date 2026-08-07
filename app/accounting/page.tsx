@@ -115,6 +115,46 @@ export default function AccountingPage() {
     });
   }, [accounts, sales, expenses, customers, suppliers, products, journalEntries]);
 
+  // Combine Manual Journal Vouchers + Real-Time POS System Sales & Expense Vouchers
+  const allJournalEntries = useMemo(() => {
+    const list: typeof journalEntries = [...journalEntries];
+
+    // Auto-generate Double-Entry Vouchers for all POS Sales
+    sales.forEach(sale => {
+      if ((sale.status as string) === "Returned") return;
+
+      const isCash = sale.paymentMethod === "Cash" || sale.splitPayments?.["Cash"];
+      const isBank = sale.paymentMethod === "Card" || sale.paymentMethod === "Bank Transfer" || sale.paymentMethod === "EasyPaisa" || sale.paymentMethod === "JazzCash";
+      const debCode = isCash ? "1001" : isBank ? "1002" : "1004";
+
+      list.push({
+        id: `JV-POS-${sale.receiptNumber || sale.id}`,
+        date: sale.date || new Date().toISOString(),
+        description: `Auto POS Sale Voucher #${sale.receiptNumber || sale.id} (${sale.customerName || "Walk-in Customer"})`,
+        debits: [{ accountCode: debCode, amount: sale.total }],
+        credits: [{ accountCode: "4001", amount: sale.total }]
+      });
+    });
+
+    // Auto-generate Double-Entry Vouchers for all Expenses & Owner Drawings
+    expenses.forEach(exp => {
+      const isCash = exp.paymentMethod === "Cash";
+      const credCode = isCash ? "1001" : "1002";
+      const isOwnerDrawing = exp.category.includes("Owner") || exp.category.includes("Drawing");
+      const debCode = isOwnerDrawing ? "3002" : "5002";
+
+      list.push({
+        id: `JV-EXP-${exp.id.slice(-6)}`,
+        date: exp.date || new Date().toISOString(),
+        description: `Auto Expense Voucher: ${exp.category} (${exp.description || exp.category})`,
+        debits: [{ accountCode: debCode, amount: exp.amount }],
+        credits: [{ accountCode: credCode, amount: exp.amount }]
+      });
+    });
+
+    return list.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [journalEntries, sales, expenses]);
+
   // Live P&L Calculations
   const grossProfit = Math.max(0, totalSalesRevenue - totalCogsAmt);
   const netOperatingProfit = totalSalesRevenue - totalCogsAmt - totalExpensesAmt;
@@ -160,86 +200,85 @@ export default function AccountingPage() {
             </p>
           </div>
           
-          {/* Tabs Swapper */}
-          <div className="bg-brand-dark-surface border border-brand-dark-border p-1 rounded-lg flex gap-1 self-start md:self-auto">
-            {[
-              { id: "chart", name: "Chart of Accounts" },
-              { id: "journal", name: "Journal Vouchers" },
-              { id: "pl", name: "Profit & Loss Sheet" }
-            ].map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
-                className={`px-3 py-1.5 rounded text-[10px] font-bold uppercase transition ${
-                  activeTab === tab.id
-                    ? "bg-brand-sky text-black font-black"
-                    : "text-gray-400 hover:text-white"
-                }`}
-              >
-                {tab.name}
-              </button>
-            ))}
+          {/* Navigation Tabs */}
+          <div className="flex bg-brand-dark-surface p-1 rounded-xl border border-brand-dark-border self-start md:self-auto">
+            <button
+              onClick={() => setActiveTab("chart")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold font-mono transition ${
+                activeTab === "chart" ? "bg-brand-sky text-black shadow-lg" : "text-gray-400 hover:text-white"
+              }`}
+            >
+              CHART OF ACCOUNTS
+            </button>
+            <button
+              onClick={() => setActiveTab("journal")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold font-mono transition ${
+                activeTab === "journal" ? "bg-brand-sky text-black shadow-lg" : "text-gray-400 hover:text-white"
+              }`}
+            >
+              JOURNAL VOUCHERS ({allJournalEntries.length})
+            </button>
+            <button
+              onClick={() => setActiveTab("pl")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold font-mono transition ${
+                activeTab === "pl" ? "bg-brand-sky text-black shadow-lg" : "text-gray-400 hover:text-white"
+              }`}
+            >
+              PROFIT &amp; LOSS SHEET
+            </button>
           </div>
         </div>
 
-        {successMsg && (
-          <div className="bg-emerald-500/10 border border-emerald-500 p-3 rounded-lg text-xs flex items-center gap-2 text-emerald-400 font-bold animate-fade-in-up">
-            <CheckCircle2 size={16} />
-            <span>{successMsg}</span>
+        {/* Info Banner */}
+        <div className="bg-gradient-to-r from-brand-sky/10 via-purple-500/10 to-emerald-500/10 border border-brand-sky/20 rounded-xl p-4 flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-brand-sky/20 border border-brand-sky/40 flex items-center justify-center text-brand-sky shrink-0">
+            <Zap size={16} />
           </div>
-        )}
-
-        {/* Banner */}
-        <div className="bg-gradient-to-r from-brand-sky/10 via-purple-500/10 to-transparent border border-brand-sky/20 rounded-2xl p-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-brand-sky/20 border border-brand-sky/40 rounded-xl flex items-center justify-center text-brand-sky">
-              <Zap size={18} />
-            </div>
-            <div>
-              <div className="text-xs font-black text-white">Automatic Real-Time Accounting Enabled</div>
-              <div className="text-[10px] text-gray-400">
-                Aap ko manual entries karne ki zaroorat nahi hai. POS sales, Expenses, Customers dues, aur Stock valuation auto-post ho kar P&amp;L calculate karti hain.
-              </div>
-            </div>
+          <div>
+            <h4 className="text-xs font-bold text-white uppercase tracking-wider">Automatic Real-Time Accounting Enabled</h4>
+            <p className="text-[10px] text-gray-400">
+              Aap ko manual entries karne ki zaroorat nahi hai. POS sales, Expenses, Customers dues, aur Stock valuation auto-post ho kar P&amp;L calculate karti hain.
+            </p>
           </div>
         </div>
 
-        {/* Tab 1: Chart of Accounts */}
+        {/* Tab 1: Chart of Accounts & Manual Journal Entry Form */}
         {activeTab === "chart" && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             
             {/* Accounts Table */}
-            <div className="lg:col-span-2 bg-brand-dark-surface/30 border border-brand-dark-border rounded-2xl overflow-hidden">
-              <div className="px-4 py-3 border-b border-brand-dark-border bg-black/40 flex justify-between items-center">
-                <span className="text-xs font-black text-white uppercase tracking-wider">General Ledger Accounts</span>
-                <span className="text-[9px] text-emerald-400 font-mono">Live Real-Time Balances</span>
-              </div>
+            <div className="lg:col-span-8 bg-brand-dark-surface/30 border border-brand-dark-border rounded-2xl p-5 space-y-4">
+              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider font-mono">General Ledger Chart of Accounts</h3>
+              
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
                     <tr className="border-b border-brand-dark-border text-gray-500 font-mono">
-                      <th className="p-4 font-semibold">Account Code</th>
-                      <th className="p-4 font-semibold">Ledger Name</th>
-                      <th className="p-4 font-semibold">Type</th>
-                      <th className="p-4 font-semibold text-right">Current Balance</th>
+                      <th className="pb-3 font-semibold">Code</th>
+                      <th className="pb-3 font-semibold">Account Title</th>
+                      <th className="pb-3 font-semibold">Classification</th>
+                      <th className="pb-3 font-semibold text-right">Live General Ledger Balance</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-brand-dark-border/40 font-mono text-[11px]">
                     {liveAccounts.map(acc => (
                       <tr key={acc.code} className="hover:bg-brand-dark-surface/60 transition">
-                        <td className="p-4 text-brand-sky font-bold">{acc.code}</td>
-                        <td className="p-4 text-white font-bold font-sans">{acc.name}</td>
-                        <td className="p-4 uppercase">
-                          <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${
+                        <td className="py-3 text-brand-sky font-bold">#{acc.code}</td>
+                        <td className="py-3 text-white font-bold font-sans">{acc.name}</td>
+                        <td className="py-3">
+                          <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${
                             acc.type === "Asset" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" :
+                            acc.type === "Liability" ? "bg-amber-500/10 text-amber-400 border border-amber-500/20" :
+                            acc.type === "Equity" ? "bg-purple-500/10 text-purple-400 border border-purple-500/20" :
                             acc.type === "Revenue" ? "bg-sky-500/10 text-sky-400 border border-sky-500/20" :
-                            acc.type === "Expense" ? "bg-red-500/10 text-red-400 border border-red-500/20" :
-                            "bg-purple-500/10 text-purple-400 border border-purple-500/20"
+                            "bg-red-500/10 text-red-400 border border-red-500/20"
                           }`}>
                             {acc.type}
                           </span>
                         </td>
-                        <td className="p-4 text-right text-white font-bold">{formatAmt(acc.balance)}</td>
+                        <td className="py-3 text-right font-black text-white text-xs">
+                          {formatAmt(acc.balance)}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -247,77 +286,89 @@ export default function AccountingPage() {
               </div>
             </div>
 
-            {/* Optional Manual Journal Voucher Form */}
-            <div className="bg-brand-dark-surface/60 border border-brand-dark-border p-5 rounded-2xl h-fit space-y-4">
+            {/* Manual Journal Entry Form */}
+            <div className="lg:col-span-4 bg-brand-dark-surface/40 border border-brand-dark-border rounded-2xl p-5 space-y-4">
               <div>
-                <h3 className="text-xs uppercase font-bold text-white tracking-wide">Manual Journal Entry (Optional)</h3>
-                <p className="text-[9px] text-gray-500 mt-0.5">Use this only for manual audit adjustments or owner capital injections.</p>
+                <h3 className="text-xs font-bold text-white uppercase tracking-wider">Post Manual Journal Entry</h3>
+                <p className="text-[10px] text-gray-500">Add custom debit &amp; credit adjustments to General Ledger.</p>
               </div>
-              
-              <form onSubmit={handleJournalSubmit} className="space-y-3.5 text-xs font-sans">
+
+              {successMsg && (
+                <div className="bg-emerald-500/10 border border-emerald-500/30 p-2.5 rounded-lg text-emerald-400 text-[10px] font-bold flex items-center gap-1.5">
+                  <CheckCircle2 size={12} /> {successMsg}
+                </div>
+              )}
+
+              <form onSubmit={handleJournalSubmit} className="space-y-3 text-xs">
                 <div>
-                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Description / Memo</label>
+                  <label className="block text-[10px] text-gray-400 uppercase font-mono mb-1">Description / Narration</label>
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Owner capital injection or manual adjustment"
                     value={desc}
-                    onChange={(e) => setDesc(e.target.value)}
-                    className="w-full bg-black border border-brand-dark-border p-2.5 rounded text-white outline-none focus:border-brand-sky"
+                    onChange={e => setDesc(e.target.value)}
+                    placeholder="e.g. Owner capital injection or adjustment"
+                    className="w-full bg-black border border-brand-dark-border p-2.5 rounded text-white focus:outline-none focus:border-brand-sky text-xs"
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Debit Account</label>
+                    <label className="block text-[10px] text-emerald-400 font-bold uppercase font-mono mb-1">Debit Account (Dr)</label>
                     <select
                       value={debAcc}
-                      onChange={(e) => setDebAcc(e.target.value)}
-                      className="w-full bg-black border border-brand-dark-border p-2.5 rounded text-white outline-none focus:border-brand-sky"
+                      onChange={e => setDebAcc(e.target.value)}
+                      className="w-full bg-black border border-brand-dark-border p-2 rounded text-white text-xs focus:outline-none"
                     >
-                      {liveAccounts.map(a => <option key={a.code} value={a.code}>{a.code} - {a.name}</option>)}
+                      {liveAccounts.map(a => (
+                        <option key={a.code} value={a.code}>#{a.code} {a.name}</option>
+                      ))}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Debit Amount</label>
+                    <label className="block text-[10px] text-emerald-400 font-bold uppercase font-mono mb-1">Debit Amount</label>
                     <input
                       type="number"
                       required
-                      placeholder="Amount"
+                      min="1"
                       value={debAmt}
-                      onChange={(e) => { setDebAmt(e.target.value); setCredAmt(e.target.value); }}
-                      className="w-full bg-black border border-brand-dark-border p-2.5 rounded text-white font-mono outline-none focus:border-brand-sky"
+                      onChange={e => setDebAmt(e.target.value)}
+                      placeholder="0.00"
+                      className="w-full bg-black border border-brand-dark-border p-2 rounded text-white font-mono text-xs focus:outline-none"
                     />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Credit Account</label>
+                    <label className="block text-[10px] text-red-400 font-bold uppercase font-mono mb-1">Credit Account (Cr)</label>
                     <select
                       value={credAcc}
-                      onChange={(e) => setCredAcc(e.target.value)}
-                      className="w-full bg-black border border-brand-dark-border p-2.5 rounded text-white outline-none focus:border-brand-sky"
+                      onChange={e => setCredAcc(e.target.value)}
+                      className="w-full bg-black border border-brand-dark-border p-2 rounded text-white text-xs focus:outline-none"
                     >
-                      {liveAccounts.map(a => <option key={a.code} value={a.code}>{a.code} - {a.name}</option>)}
+                      {liveAccounts.map(a => (
+                        <option key={a.code} value={a.code}>#{a.code} {a.name}</option>
+                      ))}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Credit Amount</label>
+                    <label className="block text-[10px] text-red-400 font-bold uppercase font-mono mb-1">Credit Amount</label>
                     <input
                       type="number"
                       required
-                      placeholder="Amount"
+                      min="1"
                       value={credAmt}
-                      onChange={(e) => setCredAmt(e.target.value)}
-                      className="w-full bg-black border border-brand-dark-border p-2.5 rounded text-white font-mono outline-none focus:border-brand-sky"
+                      onChange={e => setCredAmt(e.target.value)}
+                      placeholder="0.00"
+                      className="w-full bg-black border border-brand-dark-border p-2 rounded text-white font-mono text-xs focus:outline-none"
                     />
                   </div>
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full py-3 bg-brand-sky hover:bg-brand-sky-light text-black font-black uppercase tracking-wider rounded transition text-xs"
+                  className="w-full py-3 bg-brand-sky text-black font-black uppercase tracking-wider rounded-lg text-xs hover:bg-brand-sky-light transition mt-2"
                 >
                   Post Journal Voucher
                 </button>
@@ -329,35 +380,44 @@ export default function AccountingPage() {
 
         {/* Tab 2: Journal Entries logs */}
         {activeTab === "journal" && (
-          <div className="bg-brand-dark-surface/30 border border-brand-dark-border rounded-2xl overflow-hidden">
-            <div className="overflow-x-auto">
+          <div className="bg-brand-dark-surface/30 border border-brand-dark-border rounded-2xl overflow-hidden space-y-3 p-4">
+            <div className="flex justify-between items-center px-2">
+              <h3 className="text-xs font-bold text-white uppercase tracking-wider font-mono">
+                Double-Entry Audit Journal Vouchers ({allJournalEntries.length} Records)
+              </h3>
+              <span className="text-[10px] text-emerald-400 font-mono bg-emerald-500/10 border border-emerald-500/30 px-2 py-1 rounded">
+                ✓ Auto-Posted from Sales, Expenses &amp; Vouchers
+              </span>
+            </div>
+
+            <div className="overflow-x-auto rounded-xl border border-brand-dark-border">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="border-b border-brand-dark-border text-gray-500 font-mono">
-                    <th className="p-4 font-semibold">JV ID</th>
-                    <th className="p-4 font-semibold">Date &amp; Time</th>
-                    <th className="p-4 font-semibold">Description / Memo</th>
-                    <th className="p-4 font-semibold">Debits (Dr)</th>
-                    <th className="p-4 font-semibold">Credits (Cr)</th>
+                  <tr className="border-b border-brand-dark-border bg-black/60 text-gray-400 font-mono">
+                    <th className="p-3 font-semibold">JV ID</th>
+                    <th className="p-3 font-semibold">Date &amp; Time</th>
+                    <th className="p-3 font-semibold">Description / Memo</th>
+                    <th className="p-3 font-semibold">Debits (Dr)</th>
+                    <th className="p-3 font-semibold">Credits (Cr)</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-brand-dark-border/40 font-mono text-[11px] leading-relaxed">
-                  {journalEntries.map(entry => (
+                  {allJournalEntries.map(entry => (
                     <tr key={entry.id} className="hover:bg-brand-dark-surface/60 transition">
-                      <td className="p-4 text-purple-400 font-bold">{entry.id}</td>
-                      <td className="p-4 text-gray-400">{new Date(entry.date).toLocaleString()}</td>
-                      <td className="p-4 text-white font-bold font-sans">{entry.description}</td>
-                      <td className="p-4">
+                      <td className="p-3 text-purple-400 font-bold">{entry.id}</td>
+                      <td className="p-3 text-gray-400 whitespace-nowrap">{new Date(entry.date).toLocaleString()}</td>
+                      <td className="p-3 text-white font-bold font-sans">{entry.description}</td>
+                      <td className="p-3">
                         {entry.debits.map((d, idx) => (
-                          <div key={idx} className="flex justify-between w-32 border-b border-brand-dark-border/20 py-0.5">
+                          <div key={idx} className="flex justify-between w-36 border-b border-brand-dark-border/20 py-0.5">
                             <span className="text-gray-500">#{d.accountCode}:</span>
                             <span className="text-emerald-400 font-bold">{formatAmt(d.amount)}</span>
                           </div>
                         ))}
                       </td>
-                      <td className="p-4">
+                      <td className="p-3">
                         {entry.credits.map((c, idx) => (
-                          <div key={idx} className="flex justify-between w-32 border-b border-brand-dark-border/20 py-0.5">
+                          <div key={idx} className="flex justify-between w-36 border-b border-brand-dark-border/20 py-0.5">
                             <span className="text-gray-500">#{c.accountCode}:</span>
                             <span className="text-red-400 font-bold">{formatAmt(c.amount)}</span>
                           </div>
@@ -365,10 +425,10 @@ export default function AccountingPage() {
                       </td>
                     </tr>
                   ))}
-                  {journalEntries.length === 0 && (
+                  {allJournalEntries.length === 0 && (
                     <tr>
                       <td colSpan={5} className="text-center py-10 text-gray-500 italic font-sans">
-                        No manual journal vouchers posted yet. System transactions are auto-calculated live.
+                        No journal vouchers recorded yet. POS sales and expense transactions will automatically appear here.
                       </td>
                     </tr>
                   )}
