@@ -1851,7 +1851,7 @@ export default function ReportsPage() {
               {/* Header Logo 2 */}
               <div className="flex justify-between items-center border-b-2 border-gray-200 pb-5 mb-6">
                 <div className="flex items-center gap-3">
-                  <img src="/logo.png" style={{ height: "75px", width: "auto", objectFit: "contain" }} alt="MT UniPOS Logo" />
+                  <img src="/logo.png" style={{ height: "50px", width: "auto", objectFit: "contain" }} alt="MT UniPOS Logo" />
                   <div>
                     <h1 className="text-xl font-black uppercase tracking-tight text-gray-900">
                       MT UniPOS - {activeTab.toUpperCase()} REPORT

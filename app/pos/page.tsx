@@ -903,7 +903,7 @@ export default function PosPage() {
                 <DollarSign size={26} className="text-brand-sky" />
               </div>
               <div className="flex items-center gap-2 justify-center">
-                <img src="/logo.png" alt="MT UniPOS Logo" className="h-12 w-auto object-contain drop-shadow-[0_0_12px_rgba(14,165,233,0.4)]" />
+                <img src="/logo.png" alt="MT UniPOS Logo" className="h-9 w-auto object-contain drop-shadow-[0_0_10px_rgba(14,165,233,0.35)]" />
               </div>
               <p className="text-[10px] text-brand-sky uppercase tracking-widest font-bold mt-0.5">Point of Sale — Shift Control</p>
             </div>

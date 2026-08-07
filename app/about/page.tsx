@@ -139,7 +139,7 @@ export default function AboutPage() {
                 <img
                   src="/logo.png"
                   alt="MT UniPOS Logo"
-                  className="h-28 sm:h-32 w-auto object-contain drop-shadow-[0_0_24px_rgba(14,165,233,0.5)]"
+                  className="h-16 sm:h-20 w-auto object-contain drop-shadow-[0_0_16px_rgba(14,165,233,0.4)]"
                 />
               </div>
               <span className="text-[10px] font-mono font-bold tracking-widest text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full uppercase">
