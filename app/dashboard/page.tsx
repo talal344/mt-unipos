@@ -1466,6 +1466,7 @@ export default function ClientDashboardPage() {
               const netCashSalesInflow = grossCashSales - cashRefundsDeducted;
               const counterNetRevenue = counterSales.reduce((acc, s) => (s.status === "Returned" || s.status === "Refunded") ? acc - s.total : acc + s.total, 0);
               const counterGrossProfit = counterNetRevenue - counterCogs;
+              const collectedDeduction = counter.collectedCashDeduction || 0;
               const totalCashExpenses = expenses
                 .filter(e => e.paymentMethod === "Cash" || e.paymentMethod === "Drawer Cash" || !e.paymentMethod)
                 .reduce((sum, e) => sum + e.amount, 0);
