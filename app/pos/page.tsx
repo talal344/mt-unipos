@@ -994,7 +994,7 @@ export default function PosPage() {
               <div className="hidden sm:flex items-center gap-1.5 bg-brand-dark-surface border border-brand-dark-border px-2.5 py-1 rounded-lg text-[10px] font-mono">
                 <span className="text-gray-400 font-bold">DRAWER CASH:</span>
                 <span className="text-emerald-400 font-black">
-                  {currencySymbol} {(((posCounters.find(c => c.status === "Active" && isUserAssignedToCounter(c, currentUser))?.openingFloat ?? parseFloat(localStorage.getItem('unipos_shift_opening_cash') || openingCash || '0')) || 0) + shiftCashSales).toLocaleString()}
+                  {currencySymbol} {Math.max(0, (((posCounters.find(c => c.status === "Active" && isUserAssignedToCounter(c, currentUser))?.openingFloat ?? parseFloat(localStorage.getItem('unipos_shift_opening_cash') || openingCash || '0')) || 0) + shiftCashSales) - expenses.filter(e => e.paymentMethod === "Cash" || e.paymentMethod === "Drawer Cash" || !e.paymentMethod).reduce((a, e) => a + e.amount, 0)).toLocaleString()}
                 </span>
               </div>
               {isOffline && (

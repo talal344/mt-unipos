@@ -274,7 +274,11 @@ export default function ClientDashboardPage() {
 
   
   const totalStoreDrawerCash = useMemo(() => {
-    return posCounters.reduce((acc, counter) => {
+    const totalCashExpenses = expenses
+      .filter(e => e.paymentMethod === "Cash" || e.paymentMethod === "Drawer Cash" || !e.paymentMethod)
+      .reduce((sum, e) => sum + e.amount, 0);
+
+    const rawTotalDrawerCash = posCounters.reduce((acc, counter) => {
       if (counter.status !== "Active") return acc;
       const cleanCashier = (counter.assignedCashierName || "").replace(/\s*\([^)]*\)/, "").trim().toLowerCase();
       const counterSales = sales.filter(s => {
@@ -292,6 +296,8 @@ export default function ClientDashboardPage() {
       counterSales.forEach(s => {
         if (s.status === "Returned" || s.status === "Refunded") {
           if (s.paymentMethod === "Cash") refunds += s.total;
+        } else if ((s as any).status === "Dues_Recovery") {
+          if (s.paymentMethod === "Cash") grossCash += s.total;
         } else {
           if (s.splitPayments) grossCash += (s.splitPayments["Cash"] || 0);
           else if (s.paymentMethod === "Cash") grossCash += s.total;
@@ -301,7 +307,9 @@ export default function ClientDashboardPage() {
       const collectedDeduction = counter.collectedCashDeduction || 0;
       return acc + Math.max(0, ((counter.openingFloat || 0) + netCash) - collectedDeduction);
     }, 0);
-  }, [posCounters, sales]);
+
+    return Math.max(0, rawTotalDrawerCash - totalCashExpenses);
+  }, [posCounters, sales, expenses]);
 
   
   // ── Cashier / Counter Audit Modal State
@@ -1458,8 +1466,12 @@ export default function ClientDashboardPage() {
               const netCashSalesInflow = grossCashSales - cashRefundsDeducted;
               const counterNetRevenue = counterSales.reduce((acc, s) => (s.status === "Returned" || s.status === "Refunded") ? acc - s.total : acc + s.total, 0);
               const counterGrossProfit = counterNetRevenue - counterCogs;
-              const collectedDeduction = counter.collectedCashDeduction || 0;
-              const expectedDrawerCash = isActive ? Math.max(0, ((counter.openingFloat || 0) + netCashSalesInflow) - collectedDeduction) : 0;
+              const totalCashExpenses = expenses
+                .filter(e => e.paymentMethod === "Cash" || e.paymentMethod === "Drawer Cash" || !e.paymentMethod)
+                .reduce((sum, e) => sum + e.amount, 0);
+              const activeCountersCount = posCounters.filter(c => c.status === "Active").length || 1;
+              const counterExpenseShare = totalCashExpenses / activeCountersCount;
+              const expectedDrawerCash = isActive ? Math.max(0, ((counter.openingFloat || 0) + netCashSalesInflow) - collectedDeduction - counterExpenseShare) : 0;
 
               return (
                 <div key={counter.id} className={`p-4 rounded-xl border space-y-3 font-sans transition ${
