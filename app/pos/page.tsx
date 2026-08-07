@@ -69,7 +69,7 @@ export default function PosPage() {
     currencySymbol, currentBranch, currentUser, businessSettings, recordDueRecovery,
     localReceiptsDirHandle, setLocalReceiptsDirHandle, isOffline, previewFIFO, updateCustomerBalance,
     updateCustomerWalletBalance, settleDuesWithWallet,
-    posCounters, assignCounterCashier, posShifts, startPOSShift, closePOSShift
+    posCounters, assignCounterCashier, closeCounterSession, posShifts, startPOSShift, closePOSShift
   } = useGlobalContext();
 
   // ── Shift Management State
