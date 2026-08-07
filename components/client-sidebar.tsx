@@ -185,7 +185,7 @@ export default function ClientSidebar() {
             <img 
               src="/logo.png" 
               alt="MT UniPOS Logo" 
-              className="h-16 w-full max-w-[240px] object-contain drop-shadow-[0_0_16px_rgba(14,165,233,0.4)] transition-transform duration-300 hover:scale-105" 
+              className="h-20 w-full max-w-[260px] object-contain drop-shadow-[0_0_20px_rgba(14,165,233,0.5)] transition-transform duration-300 hover:scale-105" 
             />
           </Link>
         </div>

@@ -78,7 +78,7 @@ export default function SiteHeader() {
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center cursor-pointer select-none" onClick={handleLogoTap}>
             <Link href="/" className="flex items-center gap-2 group">
-              <img src="/logo.png" alt="MT UniPOS" className="h-14 sm:h-16 w-auto max-w-[280px] object-contain transition-all duration-300 group-hover:scale-105 drop-shadow-[0_0_16px_rgba(14,165,233,0.4)]" />
+              <img src="/logo.png" alt="MT UniPOS" className="h-16 sm:h-20 w-auto max-w-[320px] object-contain transition-all duration-300 group-hover:scale-105 drop-shadow-[0_0_20px_rgba(14,165,233,0.45)]" />
             </Link>
           </div>
 
