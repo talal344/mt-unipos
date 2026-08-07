@@ -274,15 +274,19 @@ export default function PosPage() {
 
   const handleCloseShift = () => {
     const activeShiftObj = posShifts.find(s => s.status === "Open" && (s.cashierEmail === currentUser?.email || s.cashierName === currentUser?.name));
+    const closingVal = parseFloat(closingCashCount) || 0;
     if (activeShiftObj) {
-      closePOSShift(activeShiftObj.id, parseFloat(closingCashCount) || 0, closeShiftNotes);
+      closePOSShift(activeShiftObj.id, closingVal, closeShiftNotes);
+      closeCounterSession(activeShiftObj.counterId, closingVal);
+    } else if (selectedCounter) {
+      closeCounterSession(selectedCounter, closingVal);
     }
     localStorage.removeItem('unipos_shift_open');
     localStorage.removeItem('unipos_shift_start');
     localStorage.removeItem('unipos_shift_opening_cash');
     setShiftOpen(false);
     setShowCloseShiftModal(false);
-    triggerToast('🔒 Shift closed & Z-Report generated.');
+    triggerToast('🔒 Shift closed & Z-Report generated. Counter set to Offline.');
   };
 
   // ── Shift sales computed

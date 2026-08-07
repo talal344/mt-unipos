@@ -2967,8 +2967,13 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
   };
 
   const closePOSShift = (shiftId: string, actualClosingCash: number, notes?: string) => {
-    const updated = posShifts.map(s => {
+    let closedCounterId = "";
+    let closedCashierName = "";
+
+    const updatedShifts = posShifts.map(s => {
       if (s.id === shiftId) {
+        closedCounterId = s.counterId;
+        closedCashierName = s.cashierName;
         return {
           ...s,
           status: "Closed" as const,
@@ -2979,8 +2984,27 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       }
       return s;
     });
-    setPosShifts(updated);
-    saveTenantData("unipos_shifts", updated);
+    setPosShifts(updatedShifts);
+    saveTenantData("unipos_shifts", updatedShifts);
+
+    // Auto-update counter status to Closed / Offline
+    if (closedCounterId || closedCashierName) {
+      const updatedCounters = posCounters.map(c => {
+        const matchesCounter = closedCounterId && (c.id.toLowerCase() === closedCounterId.toLowerCase() || c.name.toLowerCase().includes(closedCounterId.toLowerCase()));
+        const matchesCashier = closedCashierName && c.assignedCashierName && c.assignedCashierName.toLowerCase().includes(closedCashierName.toLowerCase().replace(/\s*\([^)]*\)/, "").trim());
+
+        if (matchesCounter || matchesCashier) {
+          return {
+            ...c,
+            status: "Closed" as const,
+            notes: `Shift closed & cashier checked out at ${new Date().toLocaleTimeString()}`
+          };
+        }
+        return c;
+      });
+      setPosCounters(updatedCounters);
+      saveTenantData("unipos_counters", updatedCounters);
+    }
   };
 
   const addSale = (sale: Omit<SaleTransaction, "id" | "receiptNumber" | "date">) => {

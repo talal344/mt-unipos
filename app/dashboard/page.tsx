@@ -1398,7 +1398,13 @@ export default function ClientDashboardPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {posCounters.map((counter) => {
-              const isActive = counter.status === "Active";
+              const openShiftForCounter = posShifts.find(s => 
+                s.status === "Open" && (
+                  (s.counterId && (s.counterId.toLowerCase() === counter.id.toLowerCase() || s.counterId.toLowerCase() === counter.name.toLowerCase())) ||
+                  (s.cashierName && counter.assignedCashierName && s.cashierName.toLowerCase().includes(counter.assignedCashierName.toLowerCase().replace(/\s*\([^)]*\)/, "").trim()))
+                )
+              );
+              const isActive = counter.status === "Active" && (posShifts.length === 0 || !!openShiftForCounter);
               const cleanCashier = (counter.assignedCashierName || "").replace(/\s*\([^)]*\)/, "").trim().toLowerCase();
 
               // Calculate strict counter metrics ONLY for this counter/assigned cashier when Active
@@ -1457,29 +1463,30 @@ export default function ClientDashboardPage() {
 
               return (
                 <div key={counter.id} className={`p-4 rounded-xl border space-y-3 font-sans transition ${
-                  isActive ? "bg-black/60 border-emerald-500/40 hover:border-emerald-500/70 shadow-lg shadow-emerald-500/5" : "bg-black/30 border-brand-dark-border/60 opacity-60"
+                  isActive ? "bg-black/60 border-emerald-500/40 hover:border-emerald-500/70 shadow-lg shadow-emerald-500/5" : "bg-black/30 border-red-500/20 opacity-75"
                 }`}>
                   {/* Header */}
                   <div className="flex justify-between items-start cursor-pointer group/title" onClick={() => setAuditTargetCounter(counter)}>
                     <div>
                       <div className="flex items-center gap-1.5">
-                        <span className={`w-2 h-2 rounded-full ${isActive ? "bg-emerald-400 animate-pulse" : "bg-gray-600"}`} />
+                        <span className={`w-2 h-2 rounded-full ${isActive ? "bg-emerald-400 animate-pulse" : "bg-red-500"}`} />
                         <span className="font-black text-white text-sm group-hover/title:text-brand-sky transition">{counter.name}</span>
                         <span className="text-[9px] bg-brand-sky/10 text-brand-sky px-1.5 py-0.5 rounded font-bold">🔍 View Audit</span>
                       </div>
                       <p className="text-[10px] text-gray-400 mt-0.5 font-mono">
-                        Assigned Cashier: <strong className="text-emerald-300 font-bold">
+                        Assigned Cashier: <strong className={isActive ? "text-emerald-300 font-bold" : "text-gray-400"}>
                           {(counter.id === "counter-1" || counter.name.toLowerCase().includes("main counter")) && (counter.assignedCashierName.includes("Owner") || counter.assignedCashierName.includes("Ahmad") || counter.assignedCashierName.includes("Talal"))
                             ? `${businessSettings?.ownerName || currentUser?.name || "Mian Talal"} (Owner / Active User)`
                             : (counter.assignedCashierName || "Unassigned")
                           }
+                          {!isActive && " (Shift Closed / Offline)"}
                         </strong>
                       </p>
                     </div>
                     <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase font-mono ${
-                      isActive ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400" : "bg-gray-800 text-gray-400"
+                      isActive ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400" : "bg-red-500/10 border border-red-500/30 text-red-400"
                     }`}>
-                      {counter.status}
+                      {isActive ? "ACTIVE" : "OFFLINE"}
                     </span>
                   </div>
 
