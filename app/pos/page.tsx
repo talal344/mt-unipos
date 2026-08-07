@@ -65,7 +65,7 @@ function isUserAssignedToCounter(counter: any, user: any): boolean {
 
 export default function PosPage() {
   const {
-    products, customers, addCustomer, addSale, updateProduct, sales,
+    products, customers, addCustomer, addSale, updateProduct, sales, expenses,
     currencySymbol, currentBranch, currentUser, businessSettings, recordDueRecovery,
     localReceiptsDirHandle, setLocalReceiptsDirHandle, isOffline, previewFIFO, updateCustomerBalance,
     updateCustomerWalletBalance, settleDuesWithWallet,
