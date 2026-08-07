@@ -69,7 +69,8 @@ export default function ClientDashboardPage() {
   const { 
     sales, 
     products, 
-    expenses, 
+    expenses,
+    addExpense, 
     currencySymbol, 
     currentBranch, 
     tenants, 
