@@ -208,7 +208,7 @@ export default function AdminSidebar() {
             <img 
               src="/logo.png" 
               alt="MT UniPOS Logo" 
-              className="h-16 w-auto max-w-[220px] object-contain drop-shadow-[0_0_16px_rgba(168,85,247,0.45)]" 
+              className="h-10 w-auto max-w-[150px] object-contain drop-shadow-[0_0_12px_rgba(168,85,247,0.4)]" 
             />
           </Link>
           <span className="bg-purple-500/20 text-purple-400 text-[8px] px-1.5 py-0.5 rounded font-black tracking-widest uppercase shrink-0">
