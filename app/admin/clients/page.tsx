@@ -1517,6 +1517,13 @@ export default function AdminClientsPage() {
                                 <Printer size={12} />
                               </button>
                               <button
+                                onClick={() => handleBackupDb(tenant.id)}
+                                className="p-1.5 bg-sky-500/10 hover:bg-sky-500 text-sky-400 hover:text-white rounded transition"
+                                title="Download Complete Tenant JSON Database Backup"
+                              >
+                                <Download size={12} />
+                              </button>
+                              <button
                                 onClick={() => handleRestoreDb(tenant.id)}
                                 className="p-1.5 bg-amber-500/10 hover:bg-amber-500 text-amber-400 hover:text-black rounded transition"
                                 title="Restore Tenant Backup JSON"

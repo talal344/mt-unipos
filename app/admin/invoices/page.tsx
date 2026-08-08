@@ -513,6 +513,50 @@ export default function AdminInvoicesPage() {
     setTimeout(() => setSuccessMsg(""), 4500);
   };
 
+  const handleBackupDb = (tenantId: string) => {
+    const tenant = tenants.find(t => t.id === tenantId);
+    const tenantName = tenant?.businessName || tenantId;
+
+    const TENANT_DATA_KEYS = [
+      "unipos_products", "unipos_customers", "unipos_suppliers", "unipos_sales",
+      "unipos_expenses", "unipos_employees", "unipos_settings", "unipos_pos",
+      "unipos_batches", "unipos_tables", "unipos_kitchen", "unipos_accounts",
+      "unipos_journal", "unipos_attendance", "unipos_payroll", "unipos_transfers",
+    ];
+
+    const backup: Record<string, any> = {
+      _meta: {
+        tenantId,
+        businessName: tenantName,
+        exportedAt: new Date().toISOString(),
+        version: "unipos-v1",
+      },
+      tenantMeta: tenant,
+      data: {} as Record<string, any>,
+    };
+
+    TENANT_DATA_KEYS.forEach(key => {
+      const val = localStorage.getItem(`${key}_${tenantId}`);
+      if (val) {
+        try { backup.data[key] = JSON.parse(val); } catch { backup.data[key] = val; }
+      }
+    });
+
+    const json = JSON.stringify(backup, null, 2);
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `unipos_backup_${tenantId}_${new Date().toISOString().split("T")[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+
+    setSuccessMsg(`✅ Full Database JSON Backup downloaded for ${tenantName}!`);
+    setTimeout(() => setSuccessMsg(""), 3500);
+  };
+
   const handleDownloadPdf = async (id: string) => {
     const inv = saasInvoices.find(i => i.id === id);
     if (!inv) return;
@@ -813,6 +857,9 @@ export default function AdminInvoicesPage() {
                     const total = Number(inv.amount || 0);
                     const paid = Number(inv.paidAmount ?? (inv.status === "Paid" ? total : 0));
                     const remaining = Math.max(0, total - paid);
+                    const linkedTenant = tenants.find(t => t.id === inv.tenantId);
+                    const isTenantActive = linkedTenant ? linkedTenant.status === "Active" : inv.status === "Paid";
+                    const isFullyPaid = inv.status === "Paid" && remaining <= 0;
 
                     return (
                       <tr key={inv.id} className="hover:bg-brand-dark-surface/60 transition">
@@ -834,13 +881,33 @@ export default function AdminInvoicesPage() {
                         <td className="p-4 text-center">
                           <div className="flex gap-2 justify-center items-center">
                             {/* Payment Gate & Activation */}
+                            {isFullyPaid || isTenantActive ? (
+                              <button
+                                onClick={() => handleOpenPaymentModal(inv)}
+                                className="px-2.5 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-bold text-[10px] rounded-lg transition flex items-center gap-1"
+                                title="View Payment Receipts & Ledger"
+                              >
+                                <CheckCircle2 size={11} className="text-emerald-400" />
+                                <span>Paid &amp; Active</span>
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => handleOpenPaymentModal(inv)}
+                                className="px-2.5 py-1 bg-amber-600/20 hover:bg-amber-600/40 border border-amber-500/40 text-amber-300 font-bold text-[10px] rounded-lg transition flex items-center gap-1"
+                                title="Enter Amount Received & Activate Tenant Workspace"
+                              >
+                                <CreditCard size={11} />
+                                <span>Payment &amp; Activate</span>
+                              </button>
+                            )}
+
+                            {/* Download JSON Backup */}
                             <button
-                              onClick={() => handleOpenPaymentModal(inv)}
-                              className="px-2.5 py-1 bg-emerald-600/20 hover:bg-emerald-600/40 border border-emerald-500/40 text-emerald-300 font-bold text-[10px] rounded-lg transition flex items-center gap-1"
-                              title="Enter Amount Received & Activate Tenant Workspace"
+                              onClick={() => handleBackupDb(inv.tenantId)}
+                              className="p-1.5 bg-emerald-500/20 hover:bg-emerald-500/40 text-emerald-300 rounded-lg border border-emerald-500/30 transition"
+                              title="Download Full Tenant JSON Database Backup"
                             >
-                              <CreditCard size={11} />
-                              <span>Payment &amp; Activate</span>
+                              <Download size={12} />
                             </button>
 
                             {/* Print Executive A4 PDF */}
