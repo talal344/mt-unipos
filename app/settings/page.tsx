@@ -5,7 +5,8 @@ import { useGlobalContext } from "@/context/global-context";
 import ClientSidebar from "@/components/client-sidebar";
 import {
   Settings, Building, DollarSign, Award, CreditCard, Save, Check,
-  Sliders, ShieldAlert, RotateCcw, AlertTriangle, FileText, Image, HelpCircle, HardDrive, Folder
+  Sliders, ShieldAlert, RotateCcw, AlertTriangle, FileText, Image, HelpCircle, HardDrive, Folder,
+  Download, Upload, Database, RefreshCw
 } from "lucide-react";
 import { selectAndInitRootFolder } from "@/lib/local-storage-folder";
 
@@ -14,7 +15,12 @@ export default function SettingsPage() {
     currentUser,
     businessSettings, updateBusinessSettings,
     currencySymbol, setCurrencySymbol,
-    salesTaxRate, setSalesTaxRate
+    salesTaxRate, setSalesTaxRate,
+    products, customers, suppliers, purchaseOrders, batches,
+    posCounters, posShifts, sales, expenses, employees,
+    attendanceRecords, payrollRecords, stockTransfers, tables,
+    kitchenTickets, accounts, journalEntries, saasInvoices,
+    supportTickets, demoRequests, tenants
   } = useGlobalContext();
 
   const [form, setForm] = useState({
@@ -139,59 +145,106 @@ export default function SettingsPage() {
   };
 
   const handleBackup = () => {
-    const tid = currentUser?.tenantId;
-    if (!tid) return;
-    const keysToBackup = [
-      "unipos_products", "unipos_customers", "unipos_suppliers", 
-      "unipos_pos", "unipos_sales", "unipos_expenses", 
-      "unipos_employees", "unipos_tables", "unipos_kitchen", 
-      "unipos_accounts", "unipos_settings"
-    ];
+    const tid = currentUser?.tenantId || "default";
     
-    const backupData: Record<string, any> = {};
-    keysToBackup.forEach(k => {
-      const data = localStorage.getItem(`${k}_${tid}`);
-      if (data) {
-        try {
-          backupData[k] = JSON.parse(data);
-        } catch(e) {}
-      }
-    });
+    // Everything Backup Payload
+    const backupData = {
+      backupMeta: {
+        appName: "MT UniPOS ERP",
+        version: "1.2",
+        exportedAt: new Date().toISOString(),
+        exportedBy: currentUser?.name || "Store Owner",
+        tenantId: tid,
+      },
+      businessSettings,
+      products,
+      customers,
+      suppliers,
+      purchaseOrders,
+      batches,
+      posCounters,
+      posShifts,
+      sales,
+      expenses,
+      employees,
+      attendanceRecords,
+      payrollRecords,
+      stockTransfers,
+      tables,
+      kitchenTickets,
+      accounts,
+      journalEntries,
+      saasInvoices,
+      supportTickets,
+      demoRequests,
+      tenants,
+      rawLocalStorage: typeof window !== "undefined" ? { ...localStorage } : {},
+    };
 
-    const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: "application/json" });
+    const jsonStr = JSON.stringify(backupData, null, 2);
+    const blob = new Blob([jsonStr], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
+    const safeName = (businessSettings?.businessName || "store").replace(/\s+/g, '-').toLowerCase();
+    const dateStr = new Date().toISOString().split('T')[0];
     a.href = url;
-    a.download = `unipos-backup-${form.businessName.replace(/\\s+/g, '-').toLowerCase()}-${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `MT-UniPOS-Full-Backup-${safeName}-${dateStr}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    triggerToast("Backup downloaded successfully!");
+
+    triggerToast("✅ Everything Backup exported & downloaded successfully!");
   };
 
   const handleRestore = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const tid = currentUser?.tenantId;
-    if (!tid) return;
-
     const reader = new FileReader();
     reader.onload = (event) => {
       try {
-        const data = JSON.parse(event.target?.result as string);
-        if (confirm("WARNING: Restoring from backup will overwrite all current store data. Are you sure you want to proceed?")) {
-          Object.keys(data).forEach(k => {
-            if (k.startsWith("unipos_")) {
-              localStorage.setItem(`${k}_${tid}`, JSON.stringify(data[k]));
-            }
-          });
-          triggerToast("Backup restored successfully! Reloading...");
-          setTimeout(() => window.location.reload(), 1500);
+        const jsonText = event.target?.result as string;
+        const data = JSON.parse(jsonText);
+
+        const prodCount = Array.isArray(data.products) ? data.products.length : 0;
+        const salesCount = Array.isArray(data.sales) ? data.sales.length : 0;
+        const custCount = Array.isArray(data.customers) ? data.customers.length : 0;
+        const expCount = Array.isArray(data.expenses) ? data.expenses.length : 0;
+        const bName = data.businessSettings?.businessName || data.backupMeta?.appName || "MT UniPOS Store";
+
+        const confirmMsg = `Are you sure you want to RESTORE this full system backup?\n\n` +
+          `🏢 Store Name: ${bName}\n` +
+          `📅 Backup Created: ${data.backupMeta?.exportedAt ? new Date(data.backupMeta.exportedAt).toLocaleString() : "Unknown"}\n` +
+          `🏷️ Products: ${prodCount}\n` +
+          `🧾 Sales Transactions: ${salesCount}\n` +
+          `👤 Customers: ${custCount}\n` +
+          `💸 Expenses: ${expCount}\n\n` +
+          `WARNING: This will replace current local database records with the backup data. Do you wish to proceed?`;
+
+        if (confirm(confirmMsg)) {
+          const tid = currentUser?.tenantId || "default";
+
+          if (data.rawLocalStorage && typeof window !== "undefined") {
+            Object.entries(data.rawLocalStorage).forEach(([k, v]) => {
+              if (typeof v === "string" && (k.startsWith("unipos_") || k.includes(tid))) {
+                localStorage.setItem(k, v);
+              }
+            });
+          }
+
+          if (data.businessSettings) localStorage.setItem(`unipos_settings_${tid}`, JSON.stringify(data.businessSettings));
+          if (data.products) localStorage.setItem(`unipos_products_${tid}`, JSON.stringify(data.products));
+          if (data.customers) localStorage.setItem(`unipos_customers_${tid}`, JSON.stringify(data.customers));
+          if (data.suppliers) localStorage.setItem(`unipos_suppliers_${tid}`, JSON.stringify(data.suppliers));
+          if (data.sales) localStorage.setItem(`unipos_sales_${tid}`, JSON.stringify(data.sales));
+          if (data.expenses) localStorage.setItem(`unipos_expenses_${tid}`, JSON.stringify(data.expenses));
+
+          triggerToast("✅ Full Database Backup Restored! Reloading system...");
+          setTimeout(() => window.location.reload(), 1200);
         }
       } catch (error) {
-        alert("Invalid backup file. Could not parse JSON.");
+        alert("⚠️ Invalid backup file format! Could not parse JSON data.");
       }
     };
     reader.readAsText(file);
@@ -541,6 +594,49 @@ export default function SettingsPage() {
                     >
                       <Folder size={13} /> {selectedFolderName ? "Change Folder" : "Select Storage Folder"}
                     </button>
+                  </div>
+                </div>
+
+                {/* EVERYTHING BACKUP & RESTORE SECTION */}
+                <div className="bg-brand-dark-surface/40 border border-brand-sky/30 rounded-xl p-5 space-y-4 shadow-xl">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-brand-dark-border/60 pb-3">
+                    <div>
+                      <h4 className="text-xs font-black text-white flex items-center gap-2">
+                        <Database size={16} className="text-brand-sky" /> Full System Database Backup &amp; Restore (Everything Backup)
+                      </h4>
+                      <p className="text-[10px] text-gray-400 mt-1">
+                        Export a 100% complete JSON backup containing all products, inventory, sales transactions, customer ledgers, double-entry accounting, expenses, staff, and business settings.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Export Card */}
+                    <div className="bg-black/50 border border-brand-dark-border/80 p-4 rounded-xl space-y-3">
+                      <div>
+                        <span className="text-xs font-bold text-emerald-400 block">📥 Export Everything Backup</span>
+                        <p className="text-[10px] text-gray-400 mt-1">Download a single-file complete system backup JSON to your computer or USB drive for safety.</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleBackup}
+                        className="w-full flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xs py-2.5 rounded-lg transition uppercase tracking-wider shadow-lg shadow-emerald-500/20"
+                      >
+                        <Download size={14} /> Export Complete Backup (.json)
+                      </button>
+                    </div>
+
+                    {/* Import / Restore Card */}
+                    <div className="bg-black/50 border border-brand-dark-border/80 p-4 rounded-xl space-y-3">
+                      <div>
+                        <span className="text-xs font-bold text-brand-sky block">📤 Import &amp; Restore Backup</span>
+                        <p className="text-[10px] text-gray-400 mt-1">Select a previously exported `.json` backup file from your computer to restore all store records.</p>
+                      </div>
+                      <label className="w-full flex items-center justify-center gap-2 bg-brand-sky hover:bg-brand-sky-light text-black font-black text-xs py-2.5 rounded-lg transition uppercase tracking-wider shadow-lg shadow-sky-500/20 cursor-pointer">
+                        <Upload size={14} /> Select Backup File to Restore
+                        <input type="file" accept=".json" onChange={handleRestore} className="hidden" />
+                      </label>
+                    </div>
                   </div>
                 </div>
 
