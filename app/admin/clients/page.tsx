@@ -127,11 +127,13 @@ function ApproveModal({
 }: {
   req: DemoRequest;
   onClose: () => void;
-  approveDemoRequest: (id: string, days: number) => void;
+  approveDemoRequest: (id: string, days: number, customDealAmount?: number, customCurrency?: "PKR" | "USD") => void;
 }) {
   const [trialDays, setTrialDays] = useState(14);
   const [customDays, setCustomDays] = useState("");
   const [useCustom, setUseCustom] = useState(false);
+  const [dealAmount, setDealAmount] = useState("0");
+  const [dealCurrency, setDealCurrency] = useState<"PKR" | "USD">("PKR");
   const [done, setDone] = useState(false);
   const [generatedCreds, setGeneratedCreds] = useState<{
     email: string;
@@ -140,15 +142,14 @@ function ApproveModal({
 
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // We need the updated request to grab generated creds — we'll mirror what the
-  // context does so we can show them immediately without re-reading context.
   const handleApprove = () => {
     setErrorMsg(null);
     try {
       const days = useCustom ? parseInt(customDays, 10) || 14 : trialDays;
-      const email = req.email;  // Use the requester's actual email
+      const amt = parseFloat(dealAmount) || 0;
+      const email = req.email;
       const password = `Demo@${Math.floor(1000 + Math.random() * 9000)}`;
-      approveDemoRequest(req.id, days);
+      approveDemoRequest(req.id, days, amt, dealCurrency);
       setGeneratedCreds({ email, password });
       setDone(true);
     } catch (err: any) {
@@ -249,6 +250,38 @@ function ApproveModal({
                   className="w-full bg-black border border-brand-dark-border p-2.5 rounded text-white text-xs focus:outline-none focus:border-emerald-500"
                 />
               )}
+            </div>
+
+            {/* Custom Negotiated Price & Currency */}
+            <div className="mb-5 p-3 bg-black/40 border border-brand-dark-border rounded-xl space-y-2">
+              <label className="block text-[10px] uppercase font-bold text-emerald-400">
+                Negotiated Deal Rate / SaaS Invoice Amount
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-[9px] text-gray-500 mb-1">Currency</label>
+                  <select
+                    value={dealCurrency}
+                    onChange={(e) => setDealCurrency(e.target.value as "PKR" | "USD")}
+                    className="w-full bg-black border border-brand-dark-border p-2 rounded text-white text-xs font-bold"
+                  >
+                    <option value="PKR">PKR (Rs)</option>
+                    <option value="USD">USD ($)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[9px] text-gray-500 mb-1">Price ({dealCurrency})</label>
+                  <input
+                    type="number"
+                    min={0}
+                    placeholder={dealCurrency === "USD" ? "e.g. 150" : "e.g. 25000"}
+                    value={dealAmount}
+                    onChange={(e) => setDealAmount(e.target.value)}
+                    className="w-full bg-black border border-brand-dark-border p-2 rounded text-white text-xs font-bold focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+              </div>
+              <p className="text-[9px] text-gray-500 italic">Enter 0 for Free Trial, or any negotiated rate (e.g. 15,000 PKR, 25,000 PKR, $150).</p>
             </div>
 
             <button
@@ -954,6 +987,8 @@ export default function AdminClientsPage() {
     isTrial: false,
     trialDays: 7,
     connectivityPlan: "hybrid" as "offline-only" | "online-only" | "hybrid",
+    customDealAmount: "",
+    customCurrency: "PKR" as "PKR" | "USD",
   });
 
   const [editForm, setEditForm] = useState({
@@ -984,7 +1019,13 @@ export default function AdminClientsPage() {
     e.preventDefault();
     if (!addForm.businessName || !addForm.ownerName || !addForm.email) return;
     try {
-      registerTenant(addForm);
+      const dealAmt = addForm.customDealAmount !== "" ? parseFloat(addForm.customDealAmount) : undefined;
+      registerTenant({
+        ...addForm,
+        customDealAmount: dealAmt,
+        customCurrency: addForm.customCurrency,
+        defaultCurrency: addForm.customCurrency
+      });
       setShowAddModal(false);
       setAddForm({
         id: "",
@@ -998,6 +1039,8 @@ export default function AdminClientsPage() {
         isTrial: false,
         trialDays: 7,
         connectivityPlan: "hybrid",
+        customDealAmount: "",
+        customCurrency: "PKR",
       });
       triggerToast("Provisioned new Tenant database sharding successfully!");
     } catch (err: any) {
@@ -1859,6 +1902,36 @@ export default function AdminClientsPage() {
                     <option>monthly</option>
                     <option>yearly</option>
                   </select>
+                </div>
+              </div>
+
+              {/* Negotiated Custom Deal Rate & Currency */}
+              <div className="grid grid-cols-2 gap-3 p-3 bg-black/40 border border-brand-dark-border rounded-xl">
+                <div>
+                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
+                    Invoice Currency
+                  </label>
+                  <select
+                    value={addForm.customCurrency}
+                    onChange={(e) => setAddForm({ ...addForm, customCurrency: e.target.value as "PKR" | "USD" })}
+                    className="w-full bg-black border border-brand-dark-border p-2 rounded text-white font-bold"
+                  >
+                    <option value="PKR">PKR (Rs)</option>
+                    <option value="USD">USD ($)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] uppercase font-bold text-purple-400 mb-1">
+                    Custom Deal Price
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    placeholder={addForm.customCurrency === "USD" ? "e.g. 150" : "e.g. 25000"}
+                    value={addForm.customDealAmount}
+                    onChange={(e) => setAddForm({ ...addForm, customDealAmount: e.target.value })}
+                    className="w-full bg-black border border-brand-dark-border p-2 rounded text-white font-bold focus:outline-none focus:border-purple-500"
+                  />
                 </div>
               </div>
 

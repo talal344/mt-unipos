@@ -424,11 +424,11 @@ interface GlobalContextType {
   supportTickets: SupportTicket[];
   addDemoRequest: (req: Omit<DemoRequest, "id" | "ticketNumber" | "date" | "status" | "messages">) => string;
   updateDemoStatus: (id: string, status: DemoRequest["status"]) => void;
-  approveDemoRequest: (id: string, trialDays: number) => void;
+  approveDemoRequest: (id: string, trialDays: number, customDealAmount?: number, customCurrency?: "PKR" | "USD") => void;
   rejectDemoRequest: (id: string, reason: string) => void;
   addDemoMessage: (ticketNumber: string, message: string, sender: "Client" | "Admin") => void;
   deleteDemoRequest: (id: string) => void;
-  registerTenant: (tenant: Omit<Tenant, "id" | "signupDate" | "status" | "usersCount" | "monthlyRevenue" | "branches"> & { id?: string }) => string;
+  registerTenant: (tenant: Omit<Tenant, "id" | "signupDate" | "status" | "usersCount" | "monthlyRevenue" | "branches"> & { id?: string; customDealAmount?: number; customCurrency?: "PKR" | "USD" }) => string;
   updateTenantStatus: (id: string, status: Tenant["status"]) => void;
   deleteTenant: (id: string) => Promise<void>;
   setTenantCurrency: (id: string, currency: string) => void;
@@ -1817,7 +1817,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem("unipos_demos", JSON.stringify(updated));
   };
 
-  const approveDemoRequest = (id: string, trialDays: number) => {
+  const approveDemoRequest = (id: string, trialDays: number, customDealAmount?: number, customCurrency?: "PKR" | "USD") => {
     const req = demoRequests.find(r => r.id === id);
     if (!req) return;
 
@@ -1851,6 +1851,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem("unipos_demos", JSON.stringify(updated));
 
     // Also auto-register a Trial Tenant so the user can actually log in
+    const dealCurrency = customCurrency || "PKR";
     const newTenant: Tenant = {
       id: `TEN-${Math.floor(100 + Math.random() * 900)}`,
       businessName: req.businessName,
@@ -1865,7 +1866,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       usersCount: 1,
       monthlyRevenue: 0,
       branches: ["Main Branch"],
-      defaultCurrency: "PKR",
+      defaultCurrency: dealCurrency,
       credentialPresets: [
         { id: `CRED-${Math.floor(1000 + Math.random() * 9000)}`, label: "Demo Owner", email: demoEmail, pass: demoPassword, role: "Owner" }
       ],
@@ -1880,16 +1881,22 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       return updatedTenants;
     });
 
-    // Auto generate onboarding SaaS Invoice
+    // Auto generate onboarding SaaS Invoice (Custom rate if specified)
+    const dealPrice = customDealAmount !== undefined ? customDealAmount : 0;
     const newInvoice: SaaSInvoice = {
       id: `INV-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
       tenantId: newTenant.id,
       tenantName: newTenant.businessName,
-      amount: 0,
+      amount: dealPrice,
+      currency: dealCurrency,
+      paidAmount: dealPrice === 0 ? 0 : 0,
+      remainingBalance: dealPrice,
       date: new Date().toISOString().split("T")[0],
       dueDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-      status: "Paid",
-      plan: "Trial"
+      status: dealPrice === 0 ? "Paid" : "Unpaid",
+      plan: dealPrice === 0 ? "Trial Access (0 PKR)" : `Negotiated Plan (${dealCurrency} ${dealPrice.toLocaleString()})`,
+      paymentMethod: dealPrice === 0 ? "Free Trial" : "Pending Payment",
+      notes: `Demo account approved for ${trialDays} days trial.`
     };
     setSaasInvoices(prev => {
       const updatedInvs = [newInvoice, ...prev];
@@ -1908,7 +1915,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         rejectedAt: now.toISOString(),
         messages: [
           ...(r.messages || []),
-          { sender: "Admin" as const, message: `Your request has been declined. Reason: ${reason}`, date: now.toISOString() }
+          { sender: "Admin" as const, message: `Your demo request has been rejected. Reason: ${reason}`, date: now.toISOString() }
         ]
       } : r
     );
@@ -1927,7 +1934,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     const updated = demoRequests.map(r =>
       r.ticketNumber === ticketNumber ? {
         ...r,
-        messages: [...r.messages, { sender, message, date: now.toISOString() }]
+        messages: [...(r.messages || []), { sender, message, date: now.toISOString() }]
       } : r
     );
     setDemoRequests(updated);
@@ -1972,7 +1979,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
   };
 
 
-  const registerTenant = (tenant: Omit<Tenant, "id" | "signupDate" | "status" | "usersCount" | "monthlyRevenue" | "branches"> & { id?: string }) => {
+  const registerTenant = (tenant: Omit<Tenant, "id" | "signupDate" | "status" | "usersCount" | "monthlyRevenue" | "branches"> & { id?: string; customDealAmount?: number; customCurrency?: "PKR" | "USD" }) => {
     let finalId = tenant.id;
     if (!finalId) {
       // Generate initials from businessName
@@ -1999,6 +2006,8 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       trialEndsAtVal = trialEnd.toISOString().split("T")[0];
     }
 
+    const dealCurrency = tenant.customCurrency || tenant.defaultCurrency || "PKR";
+
     const newTenant: Tenant = {
       ...tenant,
       id: finalId,
@@ -2008,7 +2017,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       usersCount: 1,
       monthlyRevenue: 0,
       branches: ["Main Branch"],
-      defaultCurrency: "PKR",
+      defaultCurrency: dealCurrency,
       credentialPresets: [
         { id: `CRED-${Math.floor(1000 + Math.random() * 9000)}`, label: "Owner (Full ERP)", email: tenant.email, pass: "owner123", role: "Owner" }
       ]
@@ -2017,18 +2026,21 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     setTenants(updated);
     localStorage.setItem("unipos_tenants", JSON.stringify(updated));
 
-    // Auto generate onboarding SaaS Invoice
+    // Auto generate onboarding SaaS Invoice (Custom deal amount if provided)
     const isYearly = tenant.billingCycle === "yearly";
     let baseAmountPKR = 25000; // Professional Plan
     if (tenant.plan === "Starter") baseAmountPKR = 15000;
     if (tenant.plan === "Enterprise") baseAmountPKR = 45000;
-    const finalAmount = tenant.isTrial ? 0 : (isYearly ? baseAmountPKR * 10 : baseAmountPKR);
+    
+    const calculatedAmount = tenant.isTrial ? 0 : (isYearly ? baseAmountPKR * 10 : baseAmountPKR);
+    const finalAmount = tenant.customDealAmount !== undefined ? tenant.customDealAmount : calculatedAmount;
 
     const newInvoice: SaaSInvoice = {
       id: `INV-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
       tenantId: newTenant.id,
       tenantName: newTenant.businessName,
       amount: finalAmount,
+      currency: dealCurrency,
       paidAmount: tenant.isTrial ? 0 : 0,
       remainingBalance: tenant.isTrial ? 0 : finalAmount,
       date: new Date().toISOString().split("T")[0],
