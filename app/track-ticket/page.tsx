@@ -395,7 +395,7 @@ export default function TrackTicketPage() {
         </head>
         <body>
           <div class="center">
-            <h2 style="margin:0;">${businessSettings?.storeName || "MT UNIPOS STORE"}</h2>
+            <h2 style="margin:0;">${businessSettings?.businessName || "MT UNIPOS STORE"}</h2>
             <p style="margin:2px 0;font-size:10px;">${businessSettings?.address || "Official Retail Outlet"}</p>
             <p style="margin:2px 0;font-size:9px;">Ph: ${businessSettings?.phone || "0300-1234567"}</p>
             <div class="line"></div>
