@@ -65,6 +65,7 @@ function StatusBadge({ status }: { status: DemoRequest["status"] }) {
     Reviewed: { label: "REVIEWED", cls: "bg-blue-500/15 text-blue-400 border-blue-500/40"       },
     Approved: { label: "APPROVED", cls: "bg-emerald-500/15 text-emerald-400 border-emerald-500/40" },
     Rejected: { label: "REJECTED", cls: "bg-red-500/15 text-red-400 border-red-500/40"         },
+    Converted: { label: "ACTIVE PAID", cls: "bg-emerald-500/20 text-emerald-300 border-emerald-500/60 font-black" },
   };
   const { label, cls } = map[status] || { label: status, cls: "bg-gray-800 text-gray-300 border-gray-700" };
   return (

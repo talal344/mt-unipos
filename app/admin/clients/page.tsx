@@ -42,6 +42,8 @@ import {
   RefreshCw,
   FileText,
   Printer,
+  Zap,
+  CreditCard,
 } from "lucide-react";
 import type { DemoRequest, Tenant } from "@/context/global-context";
 
@@ -78,12 +80,14 @@ function DemoStatusBadge({ status }: { status: DemoRequest["status"] }) {
       "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400",
     Rejected:
       "bg-red-500/10 border border-red-500/30 text-red-400",
+    Converted:
+      "bg-emerald-600/20 border border-emerald-500/60 text-emerald-300 font-black",
   };
   return (
     <span
       className={`px-2 py-0.5 rounded text-[10px] font-bold ${cfg[status] ?? ""}`}
     >
-      {status}
+      {status === "Converted" ? "Converted & Active Paid" : status}
     </span>
   );
 }
@@ -324,6 +328,206 @@ function ApproveModal({
             </button>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  ACTIVATE DEMO TO PAID CLIENT MODAL
+// ─────────────────────────────────────────────────────────────────────────────
+
+function ActivateDemoModal({
+  req,
+  onClose,
+  convertDemoToActivePaid,
+  triggerToast,
+}: {
+  req: DemoRequest;
+  onClose: () => void;
+  convertDemoToActivePaid: (id: string, options: any) => void;
+  triggerToast: (msg: string) => void;
+}) {
+  const [form, setForm] = useState({
+    amount: "25000",
+    currency: "PKR" as "PKR" | "USD",
+    plan: "Professional",
+    billingCycle: "monthly" as "monthly" | "yearly",
+    durationDays: "30",
+    paymentMethod: "Bank Transfer (HBL / Meezan)",
+    notes: "Payment received & verified by SuperAdmin",
+  });
+
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const amt = parseFloat(form.amount) || 0;
+      const days = parseInt(form.durationDays, 10) || 30;
+      convertDemoToActivePaid(req.id, {
+        amount: amt,
+        currency: form.currency,
+        plan: form.plan,
+        billingCycle: form.billingCycle,
+        durationDays: days,
+        paymentMethod: form.paymentMethod,
+        notes: form.notes,
+      });
+      triggerToast(`✅ Client ${req.businessName} ACTIVATED & Paid Invoice generated (${form.currency} ${amt.toLocaleString()})!`);
+      onClose();
+    } catch (err: any) {
+      triggerToast(err.message || "Failed to activate client.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 font-sans">
+      <div className="bg-[#0b0f17] border border-emerald-500/40 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-fade-in-up">
+        {/* Header */}
+        <div className="p-5 border-b border-gray-800 flex justify-between items-center bg-black/40">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-400">
+              <Zap size={20} />
+            </div>
+            <div>
+              <h3 className="font-black text-white text-base">Activate Client &amp; Clear Paid Invoice</h3>
+              <p className="text-xs text-gray-400">Client: <span className="text-emerald-400 font-bold">{req.businessName}</span> ({req.name})</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-white p-1 rounded">
+            <X size={18} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-4 text-xs">
+          <div className="bg-emerald-500/10 border border-emerald-500/30 p-3 rounded-xl text-emerald-300 text-xs font-bold flex items-center gap-2">
+            <CheckCircle2 size={16} className="shrink-0 text-emerald-400" />
+            <span>Form submit hotay hi Demo account section sy khatm ho kar <b>FULLY ACTIVE Paid Tenant</b> ban jaye ga aur Cleared Invoice generate ho jaye gi!</span>
+          </div>
+
+          {/* Amount & Currency */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[11px] uppercase font-bold text-gray-400 mb-1">
+                Currency
+              </label>
+              <select
+                value={form.currency}
+                onChange={(e) => setForm({ ...form, currency: e.target.value as "PKR" | "USD" })}
+                className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-bold focus:outline-none focus:border-emerald-500"
+              >
+                <option value="PKR">PKR - Pakistani Rupee (Rs)</option>
+                <option value="USD">USD - US Dollar ($)</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-[11px] uppercase font-bold text-emerald-400 mb-1">
+                Payment Amount Received ({form.currency === "USD" ? "$ USD" : "PKR"})
+              </label>
+              <input
+                type="number"
+                required
+                min="0"
+                placeholder={form.currency === "USD" ? "e.g. 150" : "e.g. 25000"}
+                value={form.amount}
+                onChange={(e) => setForm({ ...form, amount: e.target.value })}
+                className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-emerald-400 font-black text-sm focus:outline-none focus:border-emerald-500"
+              />
+            </div>
+          </div>
+
+          {/* Plan & Billing Cycle */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[11px] uppercase font-bold text-gray-400 mb-1">
+                Subscription Plan Tier
+              </label>
+              <select
+                value={form.plan}
+                onChange={(e) => setForm({ ...form, plan: e.target.value })}
+                className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-bold focus:outline-none focus:border-emerald-500"
+              >
+                <option value="Starter">Starter Plan</option>
+                <option value="Professional">Professional Plan</option>
+                <option value="Enterprise">Enterprise Plan</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-[11px] uppercase font-bold text-gray-400 mb-1">
+                Billing Cycle
+              </label>
+              <select
+                value={form.billingCycle}
+                onChange={(e) => setForm({ ...form, billingCycle: e.target.value as any })}
+                className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-bold focus:outline-none focus:border-emerald-500"
+              >
+                <option value="monthly">Monthly Subscription</option>
+                <option value="yearly">Yearly Subscription</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Duration in Days & Payment Method */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[11px] uppercase font-bold text-gray-400 mb-1">
+                Subscription Validity (Days)
+              </label>
+              <input
+                type="number"
+                required
+                min="1"
+                placeholder="e.g. 30 or 365"
+                value={form.durationDays}
+                onChange={(e) => setForm({ ...form, durationDays: e.target.value })}
+                className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-bold focus:outline-none focus:border-emerald-500"
+              />
+            </div>
+            <div>
+              <label className="block text-[11px] uppercase font-bold text-gray-400 mb-1">
+                Payment Received Via
+              </label>
+              <select
+                value={form.paymentMethod}
+                onChange={(e) => setForm({ ...form, paymentMethod: e.target.value })}
+                className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-bold focus:outline-none focus:border-emerald-500"
+              >
+                <option value="Bank Transfer (HBL / Meezan)">Bank Transfer (HBL / Meezan)</option>
+                <option value="Cash Payment">Cash Payment</option>
+                <option value="EasyPaisa / JazzCash">EasyPaisa / JazzCash</option>
+                <option value="Credit / Debit Card">Credit / Debit Card</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Notes */}
+          <div>
+            <label className="block text-[11px] uppercase font-bold text-gray-400 mb-1">
+              Audit Payment Notes
+            </label>
+            <input
+              type="text"
+              placeholder="e.g. Payment verified via bank slip #9821..."
+              value={form.notes}
+              onChange={(e) => setForm({ ...form, notes: e.target.value })}
+              className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white focus:outline-none focus:border-emerald-500"
+            />
+          </div>
+
+          {/* Submit */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase tracking-wider rounded-xl transition flex items-center justify-center gap-2 text-xs shadow-lg shadow-emerald-600/20"
+          >
+            <CheckCircle2 size={16} />
+            <span>Confirm Payment &amp; Activate Tenant Account</span>
+          </button>
+        </form>
       </div>
     </div>
   );
@@ -637,6 +841,7 @@ export default function AdminClientsPage() {
     demoRequests,
     updateDemoStatus,
     approveDemoRequest,
+    convertDemoToActivePaid,
     rejectDemoRequest,
     addDemoMessage,
     deleteDemoRequest,
@@ -658,6 +863,7 @@ export default function AdminClientsPage() {
   const [demoSearch, setDemoSearch] = useState("");
   const [demoStatusFilter, setDemoStatusFilter] = useState<DemoRequest["status"] | "All">("All");
   const [approveTarget, setApproveTarget] = useState<DemoRequest | null>(null);
+  const [activateDemoTarget, setActivateDemoTarget] = useState<DemoRequest | null>(null);
   const [rejectTarget, setRejectTarget]   = useState<DemoRequest | null>(null);
   const [detailTarget, setDetailTarget]   = useState<DemoRequest | null>(null);
   const [deleteTarget, setDeleteTarget]   = useState<DemoRequest | null>(null);
@@ -1365,6 +1571,16 @@ export default function AdminClientsPage() {
                                     </button>
                                   </>
                                 )}
+                                {req.status !== "Converted" && (
+                                  <button
+                                    onClick={() => setActivateDemoTarget(req)}
+                                    className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-500/40 rounded-lg text-[10px] font-bold transition shadow-sm"
+                                    title="Convert demo lead into fully ACTIVE Paid Client & Issue Cleared Invoice"
+                                  >
+                                    <CreditCard size={10} />
+                                    Activate &amp; Bill
+                                  </button>
+                                )}
                                 <button
                                   onClick={() => setDetailTarget(req)}
                                   className="flex items-center gap-1 px-2.5 py-1.5 bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/20 rounded-lg text-[10px] font-bold transition"
@@ -1680,6 +1896,15 @@ export default function AdminClientsPage() {
           req={approveTarget}
           onClose={() => setApproveTarget(null)}
           approveDemoRequest={approveDemoRequest}
+        />
+      )}
+
+      {activateDemoTarget && (
+        <ActivateDemoModal
+          req={activateDemoTarget}
+          onClose={() => setActivateDemoTarget(null)}
+          convertDemoToActivePaid={convertDemoToActivePaid}
+          triggerToast={triggerToast}
         />
       )}
 

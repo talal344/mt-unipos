@@ -49,11 +49,12 @@ export interface DemoRequest {
   country: string;
   businessType: string;
   date: string;
-  status: "Pending" | "Reviewed" | "Under Review" | "Approved" | "Rejected";
+  status: "Pending" | "Reviewed" | "Under Review" | "Approved" | "Rejected" | "Converted";
   // Approval fields
   trialDays?: number;
   trialEndsAt?: string;
   approvedAt?: string;
+  convertedAt?: string;
   demoEmail?: string;
   demoPassword?: string;
   // Rejection fields
@@ -425,6 +426,15 @@ interface GlobalContextType {
   addDemoRequest: (req: Omit<DemoRequest, "id" | "ticketNumber" | "date" | "status" | "messages">) => string;
   updateDemoStatus: (id: string, status: DemoRequest["status"]) => void;
   approveDemoRequest: (id: string, trialDays: number, customDealAmount?: number, customCurrency?: "PKR" | "USD") => void;
+  convertDemoToActivePaid: (id: string, options: {
+    amount: number;
+    currency: "PKR" | "USD";
+    plan: string;
+    billingCycle: "monthly" | "yearly";
+    durationDays: number;
+    paymentMethod: string;
+    notes?: string;
+  }) => void;
   rejectDemoRequest: (id: string, reason: string) => void;
   addDemoMessage: (ticketNumber: string, message: string, sender: "Client" | "Admin") => void;
   deleteDemoRequest: (id: string) => void;
@@ -1903,6 +1913,120 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem("unipos_invoices", JSON.stringify(updatedInvs));
       return updatedInvs;
     });
+  };
+
+  const convertDemoToActivePaid = (id: string, options: {
+    amount: number;
+    currency: "PKR" | "USD";
+    plan: string;
+    billingCycle: "monthly" | "yearly";
+    durationDays: number;
+    paymentMethod: string;
+    notes?: string;
+  }) => {
+    const req = demoRequests.find(r => r.id === id);
+    if (!req) return;
+
+    const now = new Date();
+    const expiryDate = new Date(now.getTime() + options.durationDays * 24 * 60 * 60 * 1000);
+    const expiryStr = expiryDate.toISOString().split("T")[0];
+
+    // 1. Mark Demo Request as "Converted"
+    const updatedDemos = demoRequests.map(r =>
+      r.id === id ? {
+        ...r,
+        status: "Converted" as const,
+        convertedAt: now.toISOString(),
+        messages: [
+          ...(r.messages || []),
+          { sender: "Admin" as const, message: `Account converted to FULLY ACTIVE Paid Client under ${options.plan} (${options.currency} ${options.amount.toLocaleString()}). Subscription valid until ${expiryStr}.`, date: now.toISOString() }
+        ]
+      } : r
+    );
+    setDemoRequests(updatedDemos);
+    localStorage.setItem("unipos_demos", JSON.stringify(updatedDemos));
+
+    // 2. Find or Register Tenant
+    const existingTenant = tenants.find(t => t.email.toLowerCase() === req.email.toLowerCase() || t.businessName.toLowerCase() === req.businessName.toLowerCase());
+    let targetTenantId = existingTenant?.id;
+
+    if (existingTenant) {
+      // Upgrade existing tenant to Active Paid!
+      const updatedTenants = tenants.map(t =>
+        t.id === existingTenant.id ? {
+          ...t,
+          status: "Active" as const,
+          isTrial: false,
+          plan: options.plan as any,
+          billingCycle: options.billingCycle,
+          defaultCurrency: options.currency,
+          trialEndsAt: expiryStr,
+        } : t
+      );
+      setTenants(updatedTenants);
+      localStorage.setItem("unipos_tenants", JSON.stringify(updatedTenants));
+    } else {
+      // Create new active tenant
+      const demoEmail = req.email;
+      const demoPassword = `Pass@${Math.floor(1000 + Math.random() * 9000)}`;
+      targetTenantId = `TEN-${Math.floor(100 + Math.random() * 900)}`;
+      const newTenant: Tenant = {
+        id: targetTenantId,
+        businessName: req.businessName,
+        ownerName: req.name,
+        email: demoEmail,
+        phone: req.phone || "",
+        businessType: req.businessType || "Super Markets",
+        plan: options.plan as any,
+        billingCycle: options.billingCycle,
+        signupDate: now.toISOString().split("T")[0],
+        status: "Active",
+        usersCount: 1,
+        monthlyRevenue: 0,
+        branches: ["Main Branch"],
+        defaultCurrency: options.currency,
+        credentialPresets: [
+          { id: `CRED-${Math.floor(1000 + Math.random() * 9000)}`, label: "Owner (Full ERP)", email: demoEmail, pass: demoPassword, role: "Owner" }
+        ],
+        isTrial: false,
+        trialEndsAt: expiryStr,
+      };
+      setTenants(prev => {
+        const next = [newTenant, ...prev];
+        localStorage.setItem("unipos_tenants", JSON.stringify(next));
+        return next;
+      });
+    }
+
+    // 3. Issue Cleared Paid SaaS Invoice
+    const newInvoice: SaaSInvoice = {
+      id: `INV-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
+      tenantId: targetTenantId || `TEN-ACTIVE`,
+      tenantName: req.businessName,
+      amount: options.amount,
+      currency: options.currency,
+      paidAmount: options.amount,
+      remainingBalance: 0,
+      date: now.toISOString().split("T")[0],
+      dueDate: now.toISOString().split("T")[0],
+      status: "Paid",
+      plan: `${options.plan} (${options.billingCycle})`,
+      paymentMethod: options.paymentMethod,
+      notes: options.notes || `Demo Account converted to Paid Client (${options.durationDays} Days Duration). Payment Received & Cleared.`
+    };
+
+    setSaasInvoices(prev => {
+      const next = [newInvoice, ...prev];
+      localStorage.setItem("unipos_invoices", JSON.stringify(next));
+      return next;
+    });
+
+    // Supabase Cloud Sync
+    try {
+      supabase.from('unipos_global').upsert({ key: 'unipos_demos', value: updatedDemos }).then(() => {});
+      supabase.from('unipos_global').upsert({ key: 'unipos_tenants', value: tenants }).then(() => {});
+      supabase.from('unipos_global').upsert({ key: 'unipos_invoices', value: saasInvoices }).then(() => {});
+    } catch {}
   };
 
   const rejectDemoRequest = (id: string, reason: string) => {
@@ -3573,6 +3697,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         addDemoRequest,
         updateDemoStatus,
         approveDemoRequest,
+        convertDemoToActivePaid,
         rejectDemoRequest,
         addDemoMessage,
         deleteDemoRequest,
