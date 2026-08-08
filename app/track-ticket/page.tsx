@@ -284,7 +284,7 @@ export default function TrackTicketPage() {
       if (!query) return;
       const demoMatch = demoRequests.find((r) => r.ticketNumber.toLowerCase() === query.toLowerCase());
       const suppMatch = supportTickets.find(
-        (r) => r.ticketNumber.toLowerCase() === query.toLowerCase() || r.id.toLowerCase() === query.toLowerCase()
+        (r) => (r.ticketNumber && r.ticketNumber.toLowerCase() === query.toLowerCase()) || r.id.toLowerCase() === query.toLowerCase()
       );
 
       if (demoMatch) {
@@ -324,7 +324,7 @@ export default function TrackTicketPage() {
       setTicketInput(sampleTkt);
       setTimeout(() => {
         const demoMatch = demoRequests.find((r) => r.ticketNumber.toLowerCase() === sampleTkt.toLowerCase());
-        const suppMatch = supportTickets.find((r) => r.ticketNumber.toLowerCase() === sampleTkt.toLowerCase());
+        const suppMatch = supportTickets.find((r) => (r.ticketNumber && r.ticketNumber.toLowerCase() === sampleTkt.toLowerCase()) || r.id.toLowerCase() === sampleTkt.toLowerCase());
         if (demoMatch) {
           setFoundTicket(demoMatch);
           setFoundTicketType("demo");
