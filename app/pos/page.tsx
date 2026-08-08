@@ -993,7 +993,32 @@ export default function PosPage() {
               <div className="hidden sm:flex items-center gap-1.5 bg-brand-dark-surface border border-brand-dark-border px-2.5 py-1 rounded-lg text-[10px] font-mono">
                 <span className="text-gray-400 font-bold">DRAWER CASH:</span>
                 <span className="text-emerald-400 font-black">
-                  {currencySymbol} {Math.max(0, (((posCounters.find(c => c.status === "Active" && isUserAssignedToCounter(c, currentUser))?.openingFloat ?? parseFloat(localStorage.getItem('unipos_shift_opening_cash') || openingCash || '0')) || 0) + shiftCashSales) - expenses.filter(e => e.paymentMethod === "Cash" || e.paymentMethod === "Drawer Cash" || !e.paymentMethod).reduce((a, e) => a + e.amount, 0)).toLocaleString()}
+                  {currencySymbol} {(() => {
+                    const activeCounter = posCounters.find(c => c.status === "Active" && isUserAssignedToCounter(c, currentUser));
+                    if (!activeCounter) {
+                      const localOpening = parseFloat(localStorage.getItem('unipos_shift_opening_cash') || openingCash || '0') || 0;
+                      const totalExp = expenses.filter(e => e.paymentMethod === "Cash" || e.paymentMethod === "Drawer Cash" || !e.paymentMethod).reduce((a, e) => a + e.amount, 0);
+                      return Math.max(0, localOpening + shiftCashSales - totalExp);
+                    }
+                    const counterSales = sales.filter(s => s.counterId === activeCounter.id || s.counterName === activeCounter.name);
+                    let grossCash = 0;
+                    let refunds = 0;
+                    counterSales.forEach(s => {
+                      if (s.status === "Returned" || s.status === "Refunded") {
+                        refunds += s.total;
+                      } else if (s.splitPayments) {
+                        grossCash += (s.splitPayments["Cash"] || 0);
+                      } else if (s.paymentMethod === "Cash") {
+                        grossCash += s.total;
+                      }
+                    });
+                    const netCash = grossCash - refunds;
+                    const collectedDeduction = activeCounter.collectedCashDeduction || 0;
+                    const totalCashExpenses = expenses.filter(e => e.paymentMethod === "Cash" || e.paymentMethod === "Drawer Cash" || !e.paymentMethod).reduce((a, e) => a + e.amount, 0);
+                    const activeCount = posCounters.filter(c => c.status === "Active").length || 1;
+                    const expShare = totalCashExpenses / activeCount;
+                    return Math.max(0, (activeCounter.openingFloat || 0) + netCash - collectedDeduction - expShare);
+                  })().toLocaleString()}
                 </span>
               </div>
               {isOffline && (
