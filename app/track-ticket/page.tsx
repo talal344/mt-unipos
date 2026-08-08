@@ -297,45 +297,7 @@ export default function TrackTicketPage() {
     }
   };
 
-  // Preset Quick Demo Chips
-  const handleQuickDemo = (mode: "receipt" | "customer" | "ticket") => {
-    setSearchMode(mode);
-    if (mode === "receipt") {
-      const sampleSale = sales[0];
-      const rNo = sampleSale ? sampleSale.receiptNumber : "MT-TXN-0908260005";
-      setReceiptInput(rNo);
-      setTimeout(() => {
-        const match = sales.find((s) => s.receiptNumber.toLowerCase() === rNo.toLowerCase() || s.id.toLowerCase() === rNo.toLowerCase()) || sampleSale;
-        setFoundReceipt(match || null);
-        setHasSearched(true);
-      }, 50);
-    } else if (mode === "customer") {
-      const sampleCust = customers.find(c => c.customerNo && c.customerNo !== "N/A") || customers[0];
-      if (sampleCust) {
-        setCustNoInput(sampleCust.customerNo || "CUST-7294");
-        setPhoneInput(sampleCust.mobile || "03215550100");
-        setTimeout(() => {
-          setFoundCustomer(sampleCust);
-          setHasSearched(true);
-        }, 50);
-      }
-    } else if (mode === "ticket") {
-      const sampleTkt = demoRequests[0] ? demoRequests[0].ticketNumber : "TKT-991001-11";
-      setTicketInput(sampleTkt);
-      setTimeout(() => {
-        const demoMatch = demoRequests.find((r) => r.ticketNumber.toLowerCase() === sampleTkt.toLowerCase());
-        const suppMatch = supportTickets.find((r) => (r.ticketNumber && r.ticketNumber.toLowerCase() === sampleTkt.toLowerCase()) || r.id.toLowerCase() === sampleTkt.toLowerCase());
-        if (demoMatch) {
-          setFoundTicket(demoMatch);
-          setFoundTicketType("demo");
-        } else if (suppMatch) {
-          setFoundTicket(suppMatch);
-          setFoundTicketType("support");
-        }
-        setHasSearched(true);
-      }, 50);
-    }
-  };
+
 
   // Ticket Message Sender
   const handleSendMessage = () => {
@@ -585,31 +547,7 @@ export default function TrackTicketPage() {
             )}
           </form>
 
-          {/* Quick Demo Test Chips */}
-          <div className="flex flex-wrap items-center justify-center gap-2 mt-6">
-            <span className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Quick 1-Click Demo:</span>
-            <button
-              type="button"
-              onClick={() => handleQuickDemo("receipt")}
-              className="text-[10px] bg-brand-dark-surface border border-brand-dark-border hover:border-brand-sky text-gray-300 hover:text-brand-sky px-2.5 py-1 rounded-lg font-mono transition"
-            >
-              🧾 Demo Receipt
-            </button>
-            <button
-              type="button"
-              onClick={() => handleQuickDemo("customer")}
-              className="text-[10px] bg-brand-dark-surface border border-brand-dark-border hover:border-brand-sky text-gray-300 hover:text-brand-sky px-2.5 py-1 rounded-lg font-mono transition"
-            >
-              👤 Demo Customer (Talal Ahmad)
-            </button>
-            <button
-              type="button"
-              onClick={() => handleQuickDemo("ticket")}
-              className="text-[10px] bg-brand-dark-surface border border-brand-dark-border hover:border-brand-sky text-gray-300 hover:text-brand-sky px-2.5 py-1 rounded-lg font-mono transition"
-            >
-              🎫 Demo Ticket
-            </button>
-          </div>
+
 
         </div>
       </section>
