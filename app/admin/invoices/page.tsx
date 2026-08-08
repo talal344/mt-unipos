@@ -28,6 +28,8 @@ function buildThermalInvoiceHTML(invoice: any, tenantEmail: string): string {
   const total = Number(invoice.amount || 0);
   const paid = Number(invoice.paidAmount ?? (invoice.status === "Paid" ? total : 0));
   const remaining = Number(invoice.remainingBalance ?? (total - paid));
+  const curr = invoice.currency || (invoice.plan?.toLowerCase().includes("usd") || invoice.plan?.includes("$") ? "USD" : "PKR");
+  const sym = curr === "USD" || curr === "$" ? "$" : "PKR ";
 
   return `<!DOCTYPE html>
 <html>
@@ -78,15 +80,15 @@ function buildThermalInvoiceHTML(invoice: any, tenantEmail: string): string {
   <div class="divider-dash"></div>
   <div class="row" style="font-size:11px;font-weight:700;">
     <span>TOTAL BILL:</span>
-    <span>PKR ${total.toLocaleString()}</span>
+    <span>${sym}${total.toLocaleString()}</span>
   </div>
   <div class="row" style="font-size:11px;font-weight:700;color:green;">
     <span>PAID RECEIVED:</span>
-    <span>PKR ${paid.toLocaleString()}</span>
+    <span>${sym}${paid.toLocaleString()}</span>
   </div>
-  <div class="row" style="font-size:12px;font-weight:900;color:${remaining > 0 ? 'red' : 'black'};margin-top:4px;">
-    <span>BALANCE DUE:</span>
-    <span>PKR ${remaining.toLocaleString()}</span>
+  <div class="row" style="font-size:11px;font-weight:700;color:red;">
+    <span>REMAINING DUES:</span>
+    <span>${sym}${remaining.toLocaleString()}</span>
   </div>
   <div class="divider-dash"></div>
   <div class="row" style="font-size:10px;font-weight:700;margin-bottom:6px">
@@ -109,6 +111,8 @@ function buildA4ExecutiveInvoiceHTML(invoice: any, tenant: any): string {
   const total = Number(invoice.amount || 0);
   const paid = Number(invoice.paidAmount ?? (invoice.status === "Paid" ? total : 0));
   const remaining = Number(invoice.remainingBalance ?? (total - paid));
+  const curr = invoice.currency || (invoice.plan?.toLowerCase().includes("usd") || invoice.plan?.includes("$") ? "USD" : (tenant?.defaultCurrency || "PKR"));
+  const sym = curr === "USD" || curr === "$" ? "$" : "PKR ";
   const tenantEmail = tenant?.email || "owner@tenant.com";
   const ownerName = tenant?.ownerName || invoice.tenantName;
   const businessName = tenant?.businessName || invoice.tenantName;
@@ -335,7 +339,7 @@ function buildA4ExecutiveInvoiceHTML(invoice: any, tenant: any): string {
           <tr>
             <th>Billed Package / Description</th>
             <th>Billing Cycle</th>
-            <th>Total Bill (PKR)</th>
+            <th>Total Bill (${curr})</th>
           </tr>
         </thead>
         <tbody>
@@ -345,7 +349,7 @@ function buildA4ExecutiveInvoiceHTML(invoice: any, tenant: any): string {
               <span style="font-size:10px;color:#64748b;">Enterprise Sharding Access &amp; Cloud Backup Sync</span>
             </td>
             <td>${invoice.plan.includes('yearly') ? 'Annual' : 'Monthly'}</td>
-            <td><b>PKR ${total.toLocaleString()}</b></td>
+            <td><b>${sym}${total.toLocaleString()}</b></td>
           </tr>
         </tbody>
       </table>
@@ -354,15 +358,15 @@ function buildA4ExecutiveInvoiceHTML(invoice: any, tenant: any): string {
     <div class="summary-box">
       <div class="summary-row">
         <span>Total Bill Amount:</span>
-        <b>PKR ${total.toLocaleString()}</b>
+        <b>${sym}${total.toLocaleString()}</b>
       </div>
       <div class="summary-row" style="color:#16a34a;">
         <span>Amount Received / Paid:</span>
-        <b>PKR ${paid.toLocaleString()}</b>
+        <b>${sym}${paid.toLocaleString()}</b>
       </div>
       <div class="summary-row summary-total" style="color: ${remaining > 0 ? '#b91c1c' : '#0284c7'};">
         <span>Remaining Balance Due:</span>
-        <span>PKR ${remaining.toLocaleString()}</span>
+        <span>${sym}${remaining.toLocaleString()}</span>
       </div>
     </div>
 
@@ -406,22 +410,32 @@ export default function AdminInvoicesPage() {
   const [editForm, setEditForm] = useState({
     amount: "",
     plan: "",
+    currency: "PKR" as "PKR" | "USD",
     status: "Unpaid" as "Paid" | "Unpaid"
   });
-  
+
   // Search & Filter States
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"All" | "Paid" | "Unpaid">("All");
   const [planFilter, setPlanFilter] = useState<"All" | "Starter" | "Professional" | "Enterprise">("All");
-  
+
   // Manual Invoice Form State
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newInvoiceForm, setNewInvoiceForm] = useState({
     tenantId: "",
     amount: "",
     plan: "Professional Monthly",
+    currency: "PKR" as "PKR" | "USD",
     status: "Unpaid" as "Paid" | "Unpaid"
   });
+
+  const formatCurrency = (amt: number, curr?: string, plan?: string, tenantCurrency?: string) => {
+    const c = curr || (plan?.toLowerCase().includes("usd") || plan?.includes("$") ? "USD" : (tenantCurrency || "PKR"));
+    if (c === "USD" || c === "$") {
+      return `$${amt.toLocaleString()}`;
+    }
+    return `PKR ${amt.toLocaleString()}`;
+  };
 
   const handleOpenPaymentModal = (inv: any) => {
     setPaymentModalInvoice(inv);
@@ -443,6 +457,8 @@ export default function AdminInvoicesPage() {
     const paid = parseFloat(paymentForm.paidAmount) || 0;
     const remaining = Math.max(0, total - paid);
     const finalStatus = remaining <= 0 ? "Paid" : paid > 0 ? "Partial" : "Unpaid";
+    const curr = paymentModalInvoice.currency || (paymentModalInvoice.plan?.toLowerCase().includes("usd") || paymentModalInvoice.plan?.includes("$") ? "USD" : "PKR");
+    const formattedPaid = formatCurrency(paid, curr);
 
     updateSaasInvoice(paymentModalInvoice.id, {
       amount: total,
@@ -459,7 +475,7 @@ export default function AdminInvoicesPage() {
     }
 
     setPaymentModalInvoice(null);
-    setSuccessMsg(`✅ Payment of PKR ${paid.toLocaleString()} confirmed! Workspace ${paymentModalInvoice.tenantName} (${paymentModalInvoice.tenantId}) is now FULLY ACTIVE!`);
+    setSuccessMsg(`✅ Payment of ${formattedPaid} confirmed! Workspace ${paymentModalInvoice.tenantName} (${paymentModalInvoice.tenantId}) is now FULLY ACTIVE!`);
     setTimeout(() => setSuccessMsg(""), 5000);
   };
 
@@ -484,13 +500,34 @@ export default function AdminInvoicesPage() {
     }
   };
 
-  // KPI Calculations
+  // KPI Calculations (Multi-Currency Support: PKR & USD)
   const stats = useMemo(() => {
-    const total = saasInvoices.reduce((acc, inv) => acc + inv.amount, 0);
-    const paid = saasInvoices.filter(i => i.status === "Paid").reduce((acc, inv) => acc + inv.amount, 0);
-    const unpaid = saasInvoices.filter(i => i.status === "Unpaid").reduce((acc, inv) => acc + inv.amount, 0);
-    const rate = total > 0 ? (paid / total) * 100 : 0;
-    return { total, paid, unpaid, rate };
+    let totalPKR = 0, totalUSD = 0;
+    let paidPKR = 0, paidUSD = 0;
+    let unpaidPKR = 0, unpaidUSD = 0;
+
+    saasInvoices.forEach(inv => {
+      const isUSD = inv.currency === "USD" || inv.currency === "$" || inv.plan.toLowerCase().includes("usd") || inv.plan.includes("$");
+      const amt = Number(inv.amount || 0);
+      const paidAmt = Number(inv.paidAmount ?? (inv.status === "Paid" ? amt : 0));
+      const unpaidAmt = Math.max(0, amt - paidAmt);
+
+      if (isUSD) {
+        totalUSD += amt;
+        paidUSD += paidAmt;
+        unpaidUSD += unpaidAmt;
+      } else {
+        totalPKR += amt;
+        paidPKR += paidAmt;
+        unpaidPKR += unpaidAmt;
+      }
+    });
+
+    const totalCount = saasInvoices.length;
+    const paidCount = saasInvoices.filter(i => i.status === "Paid").length;
+    const rate = totalCount > 0 ? (paidCount / totalCount) * 100 : 0;
+
+    return { totalPKR, totalUSD, paidPKR, paidUSD, unpaidPKR, unpaidUSD, rate };
   }, [saasInvoices]);
 
   // Filter Invoices
@@ -645,10 +682,12 @@ export default function AdminInvoicesPage() {
 
   const handleEditClick = (inv: any) => {
     setEditingInvoice(inv);
+    const curr = inv.currency || (inv.plan?.toLowerCase().includes("usd") || inv.plan?.includes("$") ? "USD" : "PKR");
     setEditForm({
-      amount: inv.amount.toString(),
-      plan: inv.plan,
-      status: inv.status
+      amount: inv.amount ? inv.amount.toString() : "0",
+      plan: inv.plan || "",
+      currency: curr as "PKR" | "USD",
+      status: inv.status || "Unpaid"
     });
   };
 
@@ -658,6 +697,7 @@ export default function AdminInvoicesPage() {
     updateSaasInvoice(editingInvoice.id, {
       amount: parseFloat(editForm.amount) || 0,
       plan: editForm.plan,
+      currency: editForm.currency,
       status: editForm.status
     });
     setEditingInvoice(null);
@@ -684,7 +724,7 @@ export default function AdminInvoicesPage() {
   // Submit manual invoice creation
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const { tenantId, amount, plan, status } = newInvoiceForm;
+    const { tenantId, amount, plan, currency, status } = newInvoiceForm;
     if (!tenantId || !amount) return;
 
     // Find tenant name
@@ -695,6 +735,7 @@ export default function AdminInvoicesPage() {
       tenantId,
       tenantName,
       amount: parseFloat(amount) || 0,
+      currency,
       plan,
       status
     });
@@ -704,6 +745,7 @@ export default function AdminInvoicesPage() {
       tenantId: "",
       amount: "",
       plan: "Professional Monthly",
+      currency: "PKR",
       status: "Unpaid"
     });
     setSuccessMsg(`Manually issued new SaaS invoice for ${tenantName}!`);
@@ -755,21 +797,27 @@ export default function AdminInvoicesPage() {
           </div>
         )}
 
-        {/* Dynamic Invoices Statistics summary */}
+        {/* Dynamic Invoices Statistics summary (PKR & USD) */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-brand-dark-surface/40 border border-brand-dark-border rounded-xl p-4 space-y-1">
             <div className="text-[9px] text-gray-500 uppercase font-bold tracking-wider">Total Invoiced</div>
-            <div className="text-xl font-black text-white">${stats.total.toLocaleString()}</div>
+            <div className="text-lg font-black text-white">
+              PKR {stats.totalPKR.toLocaleString()} <span className="text-xs text-gray-400 font-normal">/ ${stats.totalUSD.toLocaleString()}</span>
+            </div>
             <div className="text-[9px] text-purple-400 font-mono">Gross platform revenue</div>
           </div>
           <div className="bg-brand-dark-surface/40 border border-brand-dark-border rounded-xl p-4 space-y-1">
             <div className="text-[9px] text-gray-500 uppercase font-bold tracking-wider">Total Collected</div>
-            <div className="text-xl font-black text-emerald-400">${stats.paid.toLocaleString()}</div>
+            <div className="text-lg font-black text-emerald-400">
+              PKR {stats.paidPKR.toLocaleString()} <span className="text-xs text-emerald-600/80 font-normal">/ ${stats.paidUSD.toLocaleString()}</span>
+            </div>
             <div className="text-[9px] text-emerald-500/80 font-mono">Paid clear status</div>
           </div>
           <div className="bg-brand-dark-surface/40 border border-brand-dark-border rounded-xl p-4 space-y-1">
             <div className="text-[9px] text-gray-500 uppercase font-bold tracking-wider">Outstanding Receivables</div>
-            <div className="text-xl font-black text-amber-500">${stats.unpaid.toLocaleString()}</div>
+            <div className="text-lg font-black text-amber-500">
+              PKR {stats.unpaidPKR.toLocaleString()} <span className="text-xs text-amber-600/80 font-normal">/ ${stats.unpaidUSD.toLocaleString()}</span>
+            </div>
             <div className="text-[9px] text-amber-500/80 font-mono">Unpaid pending standing</div>
           </div>
           <div className="bg-brand-dark-surface/40 border border-brand-dark-border rounded-xl p-4 space-y-1">
@@ -838,7 +886,7 @@ export default function AdminInvoicesPage() {
                   <th className="p-4 font-semibold">Invoice No</th>
                   <th className="p-4 font-semibold">Tenant Client Name</th>
                   <th className="p-4 font-semibold">Deploy Plan</th>
-                  <th className="p-4 font-semibold">Total Bill (PKR)</th>
+                  <th className="p-4 font-semibold">Total Bill (Currency)</th>
                   <th className="p-4 font-semibold">Paid Amount</th>
                   <th className="p-4 font-semibold">Remaining Dues</th>
                   <th className="p-4 font-semibold">Status</th>
@@ -866,9 +914,9 @@ export default function AdminInvoicesPage() {
                         <td className="p-4 text-purple-400 font-bold">{inv.id}</td>
                         <td className="p-4 text-white font-bold">{inv.tenantName}</td>
                         <td className="p-4 text-gray-400">{inv.plan}</td>
-                        <td className="p-4 text-white font-bold">PKR {total.toLocaleString()}</td>
-                        <td className="p-4 text-emerald-400 font-bold">PKR {paid.toLocaleString()}</td>
-                        <td className="p-4 text-amber-400 font-bold">PKR {remaining.toLocaleString()}</td>
+                        <td className="p-4 text-white font-bold">{formatCurrency(total, inv.currency, inv.plan, linkedTenant?.defaultCurrency)}</td>
+                        <td className="p-4 text-emerald-400 font-bold">{formatCurrency(paid, inv.currency, inv.plan, linkedTenant?.defaultCurrency)}</td>
+                        <td className="p-4 text-amber-400 font-bold">{formatCurrency(remaining, inv.currency, inv.plan, linkedTenant?.defaultCurrency)}</td>
                         <td className="p-4">
                           <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                             inv.status === "Paid" ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400" :
@@ -982,7 +1030,7 @@ export default function AdminInvoicesPage() {
 
                 <div>
                   <label className="block text-[11px] uppercase font-bold text-gray-400 mb-1">
-                    Total Plan Bill Amount (PKR)
+                    Total Plan Bill Amount ({paymentModalInvoice.currency === "USD" ? "$ USD" : "PKR"})
                   </label>
                   <input
                     type="number"
@@ -995,7 +1043,7 @@ export default function AdminInvoicesPage() {
 
                 <div>
                   <label className="block text-[11px] uppercase font-bold text-gray-400 mb-1">
-                    Amount Received / Paid by Client (PKR)
+                    Amount Received / Paid by Client ({paymentModalInvoice.currency === "USD" ? "$ USD" : "PKR"})
                   </label>
                   <input
                     type="number"
@@ -1011,7 +1059,7 @@ export default function AdminInvoicesPage() {
                   <span className={`font-black text-sm ${
                     (parseFloat(paymentForm.amount) || 0) - (parseFloat(paymentForm.paidAmount) || 0) > 0 ? "text-amber-400" : "text-emerald-400"
                   }`}>
-                    PKR {Math.max(0, (parseFloat(paymentForm.amount) || 0) - (parseFloat(paymentForm.paidAmount) || 0)).toLocaleString()}
+                    {formatCurrency(Math.max(0, (parseFloat(paymentForm.amount) || 0) - (parseFloat(paymentForm.paidAmount) || 0)), paymentModalInvoice.currency, paymentModalInvoice.plan)}
                   </span>
                 </div>
 
@@ -1223,17 +1271,30 @@ export default function AdminInvoicesPage() {
                 <div><span className="text-gray-500">Client:</span> <span className="text-white font-bold">{editingInvoice.tenantName}</span></div>
               </div>
 
+              {/* Currency Selector */}
+              <div className="space-y-1">
+                <label className="block text-[10px] uppercase font-bold text-gray-400">Invoice Currency</label>
+                <select
+                  value={editForm.currency}
+                  onChange={(e) => setEditForm({ ...editForm, currency: e.target.value as "PKR" | "USD" })}
+                  className="w-full bg-black border border-brand-dark-border p-2.5 rounded text-white font-bold"
+                >
+                  <option value="PKR">PKR - Pakistani Rupee (Rs)</option>
+                  <option value="USD">USD - US Dollar ($)</option>
+                </select>
+              </div>
+
               {/* Amount */}
               <div className="space-y-1">
-                <label className="block text-[10px] uppercase font-bold text-gray-400">Invoice Amount ($ USD)</label>
+                <label className="block text-[10px] uppercase font-bold text-gray-400">Invoice Amount ({editForm.currency === "USD" ? "$ USD" : "PKR"})</label>
                 <input 
                   type="number"
                   required
                   min="1"
-                  placeholder="e.g. 49"
+                  placeholder={editForm.currency === "USD" ? "e.g. 150" : "e.g. 25000"}
                   value={editForm.amount}
                   onChange={(e) => setEditForm({ ...editForm, amount: e.target.value })}
-                  className="w-full bg-black border border-brand-dark-border p-2.5 rounded text-white"
+                  className="w-full bg-black border border-brand-dark-border p-2.5 rounded text-white font-bold"
                 />
               </div>
 
@@ -1328,17 +1389,30 @@ export default function AdminInvoicesPage() {
                 )}
               </div>
 
+              {/* Currency Selector */}
+              <div className="space-y-1">
+                <label className="block text-[10px] uppercase font-bold text-gray-400">Invoice Currency</label>
+                <select
+                  value={newInvoiceForm.currency}
+                  onChange={(e) => setNewInvoiceForm({ ...newInvoiceForm, currency: e.target.value as "PKR" | "USD" })}
+                  className="w-full bg-black border border-brand-dark-border p-2.5 rounded text-white font-bold"
+                >
+                  <option value="PKR">PKR - Pakistani Rupee (Rs)</option>
+                  <option value="USD">USD - US Dollar ($)</option>
+                </select>
+              </div>
+
               {/* Amount */}
               <div className="space-y-1">
-                <label className="block text-[10px] uppercase font-bold text-gray-400">Invoice Amount ($ USD)</label>
+                <label className="block text-[10px] uppercase font-bold text-gray-400">Invoice Amount ({newInvoiceForm.currency === "USD" ? "$ USD" : "PKR"})</label>
                 <input 
                   type="number"
                   required
                   min="1"
-                  placeholder="e.g. 49"
+                  placeholder={newInvoiceForm.currency === "USD" ? "e.g. 150" : "e.g. 25000"}
                   value={newInvoiceForm.amount}
                   onChange={(e) => setNewInvoiceForm({ ...newInvoiceForm, amount: e.target.value })}
-                  className="w-full bg-black border border-brand-dark-border p-2.5 rounded text-white"
+                  className="w-full bg-black border border-brand-dark-border p-2.5 rounded text-white font-bold"
                 />
               </div>
 

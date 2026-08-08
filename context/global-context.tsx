@@ -108,6 +108,7 @@ export interface SaaSInvoice {
   amount: number;
   paidAmount?: number;
   remainingBalance?: number;
+  currency?: "PKR" | "USD" | string;
   date: string;
   dueDate: string;
   status: "Paid" | "Unpaid" | "Overdue" | "Partial" | "Pending";
