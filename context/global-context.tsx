@@ -1141,13 +1141,17 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     // ─────────────────────────────────────────────────────────────────────────
 
 
-    // MIGRATION: Ensure all Approved demos have a corresponding Tenant so they can log in
+    // MIGRATION: Ensure all Approved demos have a corresponding Tenant so they can log in (Skip duplicates)
     const savedDemosForMigration = localStorage.getItem("unipos_demos");
     if (savedDemosForMigration) {
       const parsedDemos: DemoRequest[] = JSON.parse(savedDemosForMigration);
       let tenantsChanged = false;
       parsedDemos.filter(d => d.status === "Approved").forEach(req => {
-        const exists = currentTenants.some(t => t.credentialPresets?.some(c => c.email === req.demoEmail));
+        const exists = currentTenants.some(t => 
+          (t.email && t.email.trim().toLowerCase() === (req.demoEmail || req.email || "").trim().toLowerCase()) ||
+          (t.businessName && t.businessName.trim().toLowerCase() === (req.businessName || "").trim().toLowerCase()) ||
+          t.credentialPresets?.some(c => (c.email || "").trim().toLowerCase() === (req.demoEmail || "").trim().toLowerCase())
+        );
         if (!exists && req.demoEmail && req.demoPassword) {
           tenantsChanged = true;
           currentTenants.push({
@@ -1174,6 +1178,30 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       if (tenantsChanged) {
         localStorage.setItem("unipos_tenants", JSON.stringify(currentTenants));
       }
+    }
+
+    // Automatic Deduplication: Remove any duplicate tenants matching Email or Business Name
+    const uniqueTenantsList: Tenant[] = [];
+    const seenEmails = new Set<string>();
+    const seenBusinesses = new Set<string>();
+
+    for (const t of currentTenants) {
+      const eKey = (t.email || "").trim().toLowerCase();
+      const bKey = (t.businessName || "").trim().toLowerCase();
+
+      const isDupEmail = eKey && seenEmails.has(eKey);
+      const isDupBiz = bKey && seenBusinesses.has(bKey);
+
+      if (!isDupEmail && !isDupBiz) {
+        if (eKey) seenEmails.add(eKey);
+        if (bKey) seenBusinesses.add(bKey);
+        uniqueTenantsList.push(t);
+      }
+    }
+
+    if (uniqueTenantsList.length !== currentTenants.length) {
+      currentTenants = uniqueTenantsList;
+      localStorage.setItem("unipos_tenants", JSON.stringify(currentTenants));
     }
 
     // Check for expired trials in loaded tenants
@@ -1681,8 +1709,92 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
   }, [currentUser?.tenantId]);
 
 
+  // ── Strict Multi-Tenant Duplicate Verification Helper ─────────────────────
+  const checkTenantDuplicate = (
+    newBusinessName: string,
+    newEmail: string,
+    newPhone: string,
+    excludeTenantId?: string
+  ) => {
+    const normEmail = (newEmail || "").trim().toLowerCase();
+    const normBusiness = (newBusinessName || "").trim().toLowerCase();
+    const cleanPhone = (newPhone || "").replace(/\D/g, "");
+
+    for (const t of tenants) {
+      if (excludeTenantId && t.id === excludeTenantId) continue;
+
+      // 1. Check Email Match
+      const tEmail = (t.email || "").trim().toLowerCase();
+      const hasPresetEmail = t.credentialPresets?.some(c => (c.email || "").trim().toLowerCase() === normEmail);
+      if ((normEmail && tEmail === normEmail) || hasPresetEmail) {
+        return {
+          isDuplicate: true,
+          field: "Email Address",
+          value: newEmail,
+          message: `⚠️ Duplicate Trial Blocked: Email address '${newEmail}' is ALREADY REGISTERED to Tenant '${t.businessName}' (${t.id})!`
+        };
+      }
+
+      // 2. Check Business Name Match
+      const tBusiness = (t.businessName || "").trim().toLowerCase();
+      if (normBusiness && tBusiness === normBusiness) {
+        return {
+          isDuplicate: true,
+          field: "Business Name",
+          value: newBusinessName,
+          message: `⚠️ Duplicate Trial Blocked: Business Name '${newBusinessName}' is ALREADY REGISTERED to Tenant ID '${t.id}'!`
+        };
+      }
+
+      // 3. Check Phone Match
+      const tPhone = (t.phone || "").replace(/\D/g, "");
+      if (cleanPhone && cleanPhone.length >= 7 && tPhone && tPhone === cleanPhone) {
+        return {
+          isDuplicate: true,
+          field: "Phone Number",
+          value: newPhone,
+          message: `⚠️ Duplicate Trial Blocked: Phone number '${newPhone}' is ALREADY REGISTERED to Tenant '${t.businessName}' (${t.id})!`
+        };
+      }
+    }
+
+    return { isDuplicate: false, field: "", value: "", message: "" };
+  };
+
   // SaaS Website & Admin Actions
   const addDemoRequest = (req: Omit<DemoRequest, "id" | "ticketNumber" | "date" | "status" | "messages">) => {
+    // 1. Check if already registered in Tenants
+    const dupCheck = checkTenantDuplicate(req.businessName, req.email, req.phone || "");
+    if (dupCheck.isDuplicate) {
+      throw new Error(dupCheck.message);
+    }
+
+    // 2. Check if already submitted in Demo Requests (Pending or Approved)
+    const normEmail = (req.email || "").trim().toLowerCase();
+    const normBusiness = (req.businessName || "").trim().toLowerCase();
+    const cleanPhone = (req.phone || "").replace(/\D/g, "");
+
+    const pendingDup = demoRequests.find(d => {
+      if (d.status === "Rejected") return false;
+      const dEmail = (d.email || "").trim().toLowerCase();
+      const dBusiness = (d.businessName || "").trim().toLowerCase();
+      const dPhone = (d.phone || "").replace(/\D/g, "");
+
+      if (normEmail && dEmail === normEmail) return true;
+      if (normBusiness && dBusiness === normBusiness) return true;
+      if (cleanPhone && cleanPhone.length >= 7 && dPhone && dPhone === cleanPhone) return true;
+      return false;
+    });
+
+    if (pendingDup) {
+      const matchField = (pendingDup.email || "").trim().toLowerCase() === normEmail
+        ? `Email '${req.email}'`
+        : ((pendingDup.businessName || "").trim().toLowerCase() === normBusiness
+          ? `Business Name '${req.businessName}'`
+          : `Phone Number '${req.phone}'`);
+      throw new Error(`⚠️ Demo Request Blocked: A trial demo request matching ${matchField} already exists! (Ticket: ${pendingDup.ticketNumber})`);
+    }
+
     const ticketNumber = `TKT-${Date.now().toString().slice(-6)}-${Math.floor(10 + Math.random() * 90)}`;
     const newReq: DemoRequest = {
       ...req,
@@ -1705,12 +1817,18 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
   };
 
   const approveDemoRequest = (id: string, trialDays: number) => {
-    const now = new Date();
-    const trialEnd = new Date(now.getTime() + trialDays * 24 * 60 * 60 * 1000);
     const req = demoRequests.find(r => r.id === id);
     if (!req) return;
-    const slug = req.businessName.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 8);
-    const demoEmail = req.email;  // Use the requester's actual email
+
+    // Strict duplicate check before approving & creating trial tenant
+    const dupCheck = checkTenantDuplicate(req.businessName, req.email, req.phone || "");
+    if (dupCheck.isDuplicate) {
+      throw new Error(dupCheck.message);
+    }
+
+    const now = new Date();
+    const trialEnd = new Date(now.getTime() + trialDays * 24 * 60 * 60 * 1000);
+    const demoEmail = req.email;
     const demoPassword = `Demo@${Math.floor(1000 + Math.random() * 9000)}`;
 
     const updated = demoRequests.map(r =>

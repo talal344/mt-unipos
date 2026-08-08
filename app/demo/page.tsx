@@ -12,6 +12,7 @@ import {
   Printer,
   ExternalLink,
   X,
+  AlertTriangle,
 } from "lucide-react";
 
 export default function DemoPage() {
@@ -34,29 +35,37 @@ export default function DemoPage() {
   // Keep a snapshot of the form data for the receipt (since form resets after submit)
   const [snapshot, setSnapshot] = useState(demoForm);
 
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!demoForm.name || !demoForm.email || !demoForm.businessName) return;
+    setErrorMsg(null);
 
-    const no = addDemoRequest(demoForm);
-    setSnapshot({ ...demoForm });
-    setTicketNo(no);
-    setTicketTime(
-      new Date().toLocaleString("en-PK", {
-        year: "numeric",
-        month: "short",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-      })
-    );
-    setSubmitted(true);
-    setShowReceiptModal(true);
+    try {
+      const no = addDemoRequest(demoForm);
+      setSnapshot({ ...demoForm });
+      setTicketNo(no);
+      setTicketTime(
+        new Date().toLocaleString("en-PK", {
+          year: "numeric",
+          month: "short",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        })
+      );
+      setSubmitted(true);
+      setShowReceiptModal(true);
+    } catch (err: any) {
+      setErrorMsg(err.message || "Failed to submit demo request.");
+    }
   };
 
   const handleReset = () => {
     setSubmitted(false);
+    setErrorMsg(null);
     setTicketNo("");
     setDemoForm({
       name: "",
@@ -142,6 +151,12 @@ export default function DemoPage() {
             ) : (
               /* ── Form ── */
               <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+                {errorMsg && (
+                  <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-3 rounded-xl text-xs font-bold flex items-center gap-2">
+                    <AlertTriangle size={16} className="shrink-0 text-red-400" />
+                    <span>{errorMsg}</span>
+                  </div>
+                )}
                 <div>
                   <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
                     Your Full Name

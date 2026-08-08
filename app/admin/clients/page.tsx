@@ -138,15 +138,22 @@ function ApproveModal({
     password: string;
   } | null>(null);
 
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
   // We need the updated request to grab generated creds — we'll mirror what the
   // context does so we can show them immediately without re-reading context.
   const handleApprove = () => {
-    const days = useCustom ? parseInt(customDays, 10) || 14 : trialDays;
-    const email = req.email;  // Use the requester's actual email
-    const password = `Demo@${Math.floor(1000 + Math.random() * 9000)}`;
-    setGeneratedCreds({ email, password });
-    approveDemoRequest(req.id, days);
-    setDone(true);
+    setErrorMsg(null);
+    try {
+      const days = useCustom ? parseInt(customDays, 10) || 14 : trialDays;
+      const email = req.email;  // Use the requester's actual email
+      const password = `Demo@${Math.floor(1000 + Math.random() * 9000)}`;
+      approveDemoRequest(req.id, days);
+      setGeneratedCreds({ email, password });
+      setDone(true);
+    } catch (err: any) {
+      setErrorMsg(err.message || "Failed to approve demo request.");
+    }
   };
 
   const presets = [14, 30, 60];
@@ -164,6 +171,13 @@ function ApproveModal({
             <X size={16} />
           </button>
         </div>
+
+        {errorMsg && (
+          <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-3 rounded-xl text-xs font-bold mb-4 flex items-center gap-2">
+            <AlertTriangle size={16} className="shrink-0 text-red-400" />
+            <span>{errorMsg}</span>
+          </div>
+        )}
 
         {/* Info */}
         <div className="bg-black/30 border border-brand-dark-border rounded-xl p-3 mb-4 space-y-1 text-xs font-mono">
@@ -969,22 +983,26 @@ export default function AdminClientsPage() {
   const handleAddSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!addForm.businessName || !addForm.ownerName || !addForm.email) return;
-    registerTenant(addForm);
-    setShowAddModal(false);
-    setAddForm({
-      id: "",
-      businessName: "",
-      ownerName: "",
-      email: "",
-      phone: "",
-      businessType: "Super Mart",
-      plan: "Starter",
-      billingCycle: "monthly",
-      isTrial: false,
-      trialDays: 7,
-      connectivityPlan: "hybrid",
-    });
-    triggerToast("Provisioned new Tenant database sharding successfully!");
+    try {
+      registerTenant(addForm);
+      setShowAddModal(false);
+      setAddForm({
+        id: "",
+        businessName: "",
+        ownerName: "",
+        email: "",
+        phone: "",
+        businessType: "Super Mart",
+        plan: "Starter",
+        billingCycle: "monthly",
+        isTrial: false,
+        trialDays: 7,
+        connectivityPlan: "hybrid",
+      });
+      triggerToast("Provisioned new Tenant database sharding successfully!");
+    } catch (err: any) {
+      triggerToast(err.message || "Duplicate Tenant Error!");
+    }
   };
 
   const handleOpenEdit = (tenant: any) => {
