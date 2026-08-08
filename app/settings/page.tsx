@@ -9,6 +9,7 @@ import {
   Download, Upload, Database, RefreshCw, Trash2
 } from "lucide-react";
 import { selectAndInitRootFolder } from "@/lib/local-storage-folder";
+import { supabase } from "@/lib/supabase";
 
 export default function SettingsPage() {
   const {
@@ -127,7 +128,7 @@ export default function SettingsPage() {
     triggerToast("Business settings saved and synced successfully!");
   };
 
-  const handleResetDatabase = () => {
+  const handleResetDatabase = async () => {
     const tid = currentUser?.tenantId;
     const storeName = form.businessName || currentUser?.businessName || "This Store";
 
@@ -162,8 +163,46 @@ export default function SettingsPage() {
 
     if (!confirm2) return;
 
+    triggerToast("⏳ Wiping store database from local and online cloud DB...");
+
+    // 1. Wipe Online Supabase Cloud Database records for this tenant
+    if (typeof window !== "undefined" && navigator.onLine && supabase) {
+      try {
+        // Delete all tenant collections
+        await supabase.from('unipos_collections').delete().eq('tenant_id', tid);
+        
+        // Also explicitly upsert empty arrays for all collections so cloud sync doesn't restore old rows
+        const collectionsToFlush = [
+          "unipos_products", "unipos_customers", "unipos_suppliers", 
+          "unipos_pos", "unipos_sales", "unipos_expenses", 
+          "unipos_employees", "unipos_tables", "unipos_kitchen", 
+          "unipos_accounts", "unipos_settings", "unipos_due_recovery",
+          "unipos_shifts", "unipos_batches", "unipos_transfers", "unipos_payroll", "unipos_receipts"
+        ];
+
+        for (const col of collectionsToFlush) {
+          await supabase.from('unipos_collections').upsert({
+            tenant_id: tid,
+            collection: col,
+            item_id: 'all',
+            data: [],
+            updated_at: new Date().toISOString()
+          });
+        }
+      } catch (e) {
+        console.error("Supabase cloud reset error:", e);
+      }
+    }
+
+    // 2. Clear IndexedDB offline database queue
+    if (typeof window !== "undefined" && window.indexedDB) {
+      try {
+        window.indexedDB.deleteDatabase("mt-unipos-offline-db");
+      } catch (e) {}
+    }
+
+    // 3. Clear LocalStorage keys specific to THIS tenant
     if (typeof window !== "undefined") {
-      // Keys specific to THIS store/tenant
       const tenantKeys = [
         `unipos_products_${tid}`,
         `unipos_customers_${tid}`,
@@ -185,19 +224,19 @@ export default function SettingsPage() {
         `unipos_payroll_${tid}`
       ];
 
-      // Reset specific tenant storage keys to empty arrays
+      // Set to empty arrays
       tenantKeys.forEach(k => {
         try {
           localStorage.setItem(k, "[]");
         } catch (e) {}
       });
 
-      // Remove any dynamic keys specifically suffix-matched with _${tid}
+      // Remove dynamic keys matching _${tid}
       try {
         const allKeys = Object.keys(localStorage);
         allKeys.forEach(key => {
           if (key.endsWith(`_${tid}`) && key !== "unipos_current_user" && key !== "unipos_tenants") {
-            localStorage.removeItem(key);
+            localStorage.setItem(key, "[]");
           }
         });
       } catch (e) {}
