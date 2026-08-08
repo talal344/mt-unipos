@@ -1000,7 +1000,7 @@ export default function PosPage() {
                       const totalExp = expenses.filter(e => e.paymentMethod === "Cash" || e.paymentMethod === "Drawer Cash" || !e.paymentMethod).reduce((a, e) => a + e.amount, 0);
                       return Math.max(0, localOpening + shiftCashSales - totalExp);
                     }
-                    const counterSales = sales.filter(s => s.counterId === activeCounter.id || s.counterName === activeCounter.name);
+                    const counterSales = sales.filter(s => s.counterId === activeCounter.id || (s as any).counterName === activeCounter.name);
                     let grossCash = 0;
                     let refunds = 0;
                     counterSales.forEach(s => {
