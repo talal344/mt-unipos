@@ -9,7 +9,7 @@ import {
   Tag, DollarSign, Notebook, CreditCard, CheckCircle2, Printer,
   Landmark, Wallet, PlusCircle, Star, Check, X, Scale, Hash,
   Banknote, Calculator, ChevronDown, RotateCcw, AlertTriangle, Package,
-  Clock, Timer, LogOut, Download, WifiOff, Bell, Camera, PauseCircle, Play
+  Clock, Timer, LogOut, Download, WifiOff, Bell, Camera, PauseCircle, Play, Smartphone
 } from "lucide-react";
 import { BrowserMultiFormatReader } from '@zxing/browser';
 import { autoSaveReceiptToDisk } from "@/lib/receipt-saver";
@@ -127,11 +127,32 @@ export default function PosPage() {
     return () => { isMounted = false; };
   }, [localReceiptsDirHandle]);
 
-  // ── Camera Scanner State
+  // ── Camera & Barcode Scanner State
   const [showCameraScanner, setShowCameraScanner] = useState(false);
+  const [showBarcodeHelpModal, setShowBarcodeHelpModal] = useState(false);
   const [scannerError, setScannerError] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const scannerControlsRef = useRef<{ stop: () => void } | null>(null);
+
+  // ── Audio Beep Synthesizer for Barcode Scan
+  const playScanBeep = () => {
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(1300, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(750, ctx.currentTime + 0.08);
+      gain.gain.setValueAtTime(0.2, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.08);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.08);
+    } catch (e) {}
+  };
 
   // ── Cart & Search
   const [searchQuery, setSearchQuery]   = useState("");
@@ -507,19 +528,65 @@ export default function PosPage() {
   const handleBarcodeSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!barcodeInput) return;
-    const match = products.find(p => p.barcode === barcodeInput || p.sku.toLowerCase() === barcodeInput.toLowerCase());
+    const match = products.find(p => p.barcode === barcodeInput.trim() || p.sku.toLowerCase() === barcodeInput.trim().toLowerCase());
     if (match) {
-      // Weight units → modal for qty/amount; others → direct add
+      playScanBeep();
       if (WEIGHT_UNITS.includes(match.unit)) {
         openAddModal(match);
       } else {
         directAddToCart(match);
       }
       setBarcodeInput("");
+      triggerToast(`⚡ Scanned: ${match.name}`);
     } else {
       triggerToast("SKU/Barcode not recognized in catalog.");
     }
   };
+
+  // ── Global Hands-Free Barcode Scanner Listener (Supporting 'Barcode to PC' App & External Scanners)
+  useEffect(() => {
+    let barcodeBuffer = "";
+    let lastKeyTime = 0;
+
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      // Skip if user is actively typing in another input field (unless it's the barcode scan input)
+      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) {
+        const placeholder = target.getAttribute("placeholder") || "";
+        if (!placeholder.includes("Scan Barcode")) return;
+      }
+
+      const currentTime = Date.now();
+      if (currentTime - lastKeyTime > 150) {
+        barcodeBuffer = "";
+      }
+      lastKeyTime = currentTime;
+
+      if (e.key === "Enter") {
+        if (barcodeBuffer.trim().length >= 2) {
+          const query = barcodeBuffer.trim();
+          const match = products.find(p => p.barcode === query || p.sku.toLowerCase() === query.toLowerCase());
+          if (match) {
+            e.preventDefault();
+            playScanBeep();
+            if (WEIGHT_UNITS.includes(match.unit)) {
+              openAddModal(match);
+            } else {
+              directAddToCart(match);
+            }
+            triggerToast(`⚡ Scanned via Barcode to PC: ${match.name}`);
+            setBarcodeInput("");
+          }
+        }
+        barcodeBuffer = "";
+      } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        barcodeBuffer += e.key;
+      }
+    };
+
+    window.addEventListener("keydown", handleGlobalKeyDown);
+    return () => window.removeEventListener("keydown", handleGlobalKeyDown);
+  }, [products, cart]);
 
   // ── Inline cart qty edit
   const commitQtyEdit = (prodId: string) => {
@@ -621,6 +688,7 @@ export default function PosPage() {
             const scannedCode = result.getText();
             const match = products.find(p => p.barcode === scannedCode || p.sku.toLowerCase() === scannedCode.toLowerCase());
             if (match) {
+              playScanBeep();
               controls?.stop();
               mounted = false;
               setShowCameraScanner(false);
@@ -634,6 +702,7 @@ export default function PosPage() {
               } else {
                 directAddToCart(match);
               }
+              triggerToast(`⚡ Camera Scanned: ${match.name}`);
             }
           }
         });
@@ -1155,9 +1224,17 @@ export default function PosPage() {
                 type="button"
                 onClick={startCameraScanner}
                 className="bg-brand-sky/10 border border-brand-sky/30 hover:bg-brand-sky/20 text-brand-sky p-2.5 rounded-lg transition shrink-0"
-                title="Use Camera Scanner"
+                title="Use Device Camera Scanner"
               >
                 <Camera size={15} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowBarcodeHelpModal(true)}
+                className="bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500/20 text-emerald-400 p-2.5 rounded-lg transition shrink-0"
+                title="Barcode to PC & Mobile App Setup Guide"
+              >
+                <Smartphone size={15} />
               </button>
             </form>
           </div>
@@ -2591,6 +2668,60 @@ export default function PosPage() {
                 <div className="text-brand-sky text-xs font-bold animate-pulse">Point camera at barcode</div>
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Barcode to PC & Mobile Scanner Guide Modal */}
+      {showBarcodeHelpModal && (
+        <div className="fixed inset-0 z-[65] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 print:hidden">
+          <div className="bg-brand-dark-surface border border-brand-dark-border w-full max-w-md p-6 rounded-2xl shadow-2xl space-y-4 text-left">
+            <div className="flex justify-between items-center border-b border-brand-dark-border pb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                  <Smartphone size={16} />
+                </div>
+                <div>
+                  <h3 className="text-white font-bold text-sm">Mobile Barcode Scanner Guide</h3>
+                  <p className="text-gray-400 text-[10px]">Use 'Barcode to PC' App or Phone Camera</p>
+                </div>
+              </div>
+              <button onClick={() => setShowBarcodeHelpModal(false)} className="text-gray-400 hover:text-white p-1">
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs text-gray-300">
+              <div className="p-3 bg-black/50 border border-brand-dark-border/80 rounded-xl space-y-1">
+                <span className="font-bold text-brand-sky block">📱 Method 1: Barcode to PC Mobile App</span>
+                <p className="text-[11px] text-gray-400 leading-relaxed font-sans">
+                  1. Install <strong>"Barcode to PC"</strong> app from Google Play / App Store.<br/>
+                  2. Open the app on your Phone and connect to the same Wi-Fi.<br/>
+                  3. Scan any product barcode — it will automatically send the barcode to Cashier POS and add the product to your cart with a POS audio chime!
+                </p>
+              </div>
+
+              <div className="p-3 bg-black/50 border border-brand-dark-border/80 rounded-xl space-y-1">
+                <span className="font-bold text-emerald-400 block">📷 Method 2: Live Device Camera</span>
+                <p className="text-[11px] text-gray-400 leading-relaxed font-sans">
+                  Click the <strong>📷 Camera Icon</strong> button right next to the barcode input box to scan barcodes live using your mobile phone or laptop webcam.
+                </p>
+              </div>
+
+              <div className="p-3 bg-black/50 border border-brand-dark-border/80 rounded-xl space-y-1">
+                <span className="font-bold text-amber-400 block">⚡ Hands-Free Auto Scan</span>
+                <p className="text-[11px] text-gray-400 leading-relaxed font-sans">
+                  You don't need to click inside the search box! Simply scan any barcode via your mobile app or USB wireless gun at any time, and the item will be added instantly.
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setShowBarcodeHelpModal(false)}
+              className="w-full bg-brand-sky hover:bg-brand-sky-light text-black font-black py-2.5 rounded-xl text-xs uppercase tracking-wider transition"
+            >
+              Got It! Start Scanning
+            </button>
           </div>
         </div>
       )}
