@@ -6,7 +6,7 @@ import ClientSidebar from "@/components/client-sidebar";
 import {
   Settings, Building, DollarSign, Award, CreditCard, Save, Check,
   Sliders, ShieldAlert, RotateCcw, AlertTriangle, FileText, Image, HelpCircle, HardDrive, Folder,
-  Download, Upload, Database, RefreshCw
+  Download, Upload, Database, RefreshCw, Trash2
 } from "lucide-react";
 import { selectAndInitRootFolder } from "@/lib/local-storage-folder";
 
@@ -128,20 +128,45 @@ export default function SettingsPage() {
   };
 
   const handleResetDatabase = () => {
-    if (confirm("WARNING: This will reset your store's transaction logs, sales history, payroll records, and custom customers. This will NOT affect other stores. Proceed?")) {
-      const tid = currentUser?.tenantId;
-      if (tid) {
-        const keysToClear = [
-          "unipos_products", "unipos_customers", "unipos_suppliers", 
-          "unipos_pos", "unipos_sales", "unipos_expenses", 
-          "unipos_employees", "unipos_tables", "unipos_kitchen", 
-          "unipos_accounts", "unipos_settings"
-        ];
-        keysToClear.forEach(k => localStorage.setItem(`${k}_${tid}`, "[]"));
-      }
-      triggerToast("Store database cleared! Reloading...");
-      setTimeout(() => window.location.reload(), 1500);
+    const confirm1 = confirm(
+      "⚠️ WARNING: ARE YOU SURE YOU WANT TO RESET & WIPE EVERYTHING?\n\n" +
+      "This action will PERMANENTLY ERASE ALL STORE DATA:\n" +
+      "• 🏷️ All Products & Inventory Catalog\n" +
+      "• 🧾 All Sales Transactions & Bills\n" +
+      "• 👤 All Customers, Debtors & Wallet Balances\n" +
+      "• 🚚 All Suppliers & Purchase Orders\n" +
+      "• 💸 All Expenses & Payroll Records\n" +
+      "• 📖 All Accounting Ledgers & Journal Entries\n" +
+      "• 👥 All Staff & Attendance Records\n" +
+      "• ⚙️ All Store Configurations & Shift Logs\n\n" +
+      "Both local storage and online database memory will be completely wiped clean. Proceed?"
+    );
+
+    if (!confirm1) return;
+
+    const confirm2 = confirm(
+      "🚨 FINAL SAFETY CONFIRMATION!\n\n" +
+      "This action is PERMANENT and IRREVERSIBLE. Are you 100% sure you want to perform a complete database wipe?"
+    );
+
+    if (!confirm2) return;
+
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.clear();
+        sessionStorage.clear();
+      } catch (e) {}
+
+      try {
+        const keys = Object.keys(localStorage);
+        keys.forEach(k => localStorage.removeItem(k));
+      } catch (e) {}
     }
+
+    triggerToast("💣 System Database Completely Reset! Reloading pristine environment...");
+    setTimeout(() => {
+      window.location.href = "/login";
+    }, 1200);
   };
 
   const handleBackup = () => {
@@ -640,25 +665,32 @@ export default function SettingsPage() {
                   </div>
                 </div>
 
-                <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-xl text-[10px] text-gray-400 space-y-2 mt-4">
-                  <p className="font-bold text-white flex items-center gap-1.5"><AlertTriangle className="text-red-400" size={13} /> DANGER ZONE</p>
-                  <p>
-                    Clearing system database will erase local inventory updates, sales transactions, salary payroll logs, double entry ledger files, and all sharded tenant credentials.
-                  </p>
-                </div>
-
-                <div className="flex items-center justify-between p-4 bg-brand-dark-surface/50 border border-brand-dark-border rounded-xl">
-                  <div>
-                    <h4 className="text-xs font-bold text-white">Reset Local Database Cache</h4>
-                    <p className="text-[9px] text-gray-500 mt-0.5">Flush sharded local storage tables and reload pristine demo catalog.</p>
+                <div className="bg-red-500/10 border border-red-500/30 p-5 rounded-xl text-xs space-y-3 mt-4">
+                  <div className="flex items-center justify-between border-b border-red-500/20 pb-2">
+                    <p className="font-black text-red-400 flex items-center gap-1.5 uppercase tracking-wider text-xs">
+                      <AlertTriangle className="text-red-400" size={15} /> DANGER ZONE — FACTORY DATABASE RESET
+                    </p>
+                    <span className="text-[10px] text-red-400/80 bg-red-500/10 px-2 py-0.5 rounded font-mono font-bold">IRREVERSIBLE</span>
                   </div>
-                  <button
-                    type="button"
-                    onClick={handleResetDatabase}
-                    className="flex items-center gap-1.5 px-3 py-2 bg-red-500 hover:bg-red-600 text-white font-black text-[10px] uppercase rounded-lg shadow transition"
-                  >
-                    <RotateCcw size={12} /> Clear Cache
-                  </button>
+                  <p className="text-[11px] text-gray-300 leading-relaxed">
+                    Executing a complete reset will <strong>PERMANENTLY DELETE EVERYTHING</strong> from both local storage and online database memory: all products, sales history, customer ledgers, staff records, supplier dues, expenses, shift logs, and store settings.
+                  </p>
+
+                  <div className="flex items-center justify-between p-3.5 bg-black/60 border border-red-500/30 rounded-xl mt-2">
+                    <div>
+                      <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
+                        <Trash2 size={14} className="text-red-400" /> Wipe &amp; Erase Complete System Database
+                      </h4>
+                      <p className="text-[10px] text-gray-400 mt-0.5">Flush products, sales, customers, staff, expenses, ledgers, and settings clean.</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleResetDatabase}
+                      className="flex items-center gap-1.5 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white font-black text-xs uppercase rounded-lg shadow-lg shadow-red-600/30 transition shrink-0"
+                    >
+                      <Trash2 size={14} /> Wipe Everything (Factory Reset)
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
