@@ -375,7 +375,7 @@ export default function TrackTicketPage() {
       .map(
         (it) => `
       <tr style="border-bottom:1px dashed #ccc; font-size:11px;">
-        <td style="padding:4px 0;">${it.productName}<br/><span style="font-size:9px;color:#666;">x${it.qty} @ ${currencySymbol} ${it.unitPrice.toLocaleString()}</span></td>
+        <td style="padding:4px 0;">${it.productName}<br/><span style="font-size:9px;color:#666;">x${it.qty} @ ${currencySymbol} ${it.price.toLocaleString()}</span></td>
         <td style="text-align:right;padding:4px 0;font-weight:bold;">${currencySymbol} ${it.subtotal.toLocaleString()}</td>
       </tr>`
       )
@@ -731,7 +731,7 @@ export default function TrackTicketPage() {
                           <div>
                             <p className="text-white font-bold">{item.productName}</p>
                             <p className="text-[10px] text-gray-500 font-mono mt-0.5">
-                              Qty: <span className="text-white font-bold">{item.qty}</span> × {currencySymbol} {item.unitPrice.toLocaleString()}
+                              Qty: <span className="text-white font-bold">{item.qty}</span> × {currencySymbol} {item.price.toLocaleString()}
                             </p>
                           </div>
                           <span className="font-mono font-bold text-emerald-400 text-sm">
@@ -966,7 +966,7 @@ export default function TrackTicketPage() {
                                     <div key={idx} className="py-2.5 flex justify-between items-center text-gray-300">
                                       <div>
                                         <p className="font-semibold text-white">{it.productName}</p>
-                                        <p className="text-[10px] text-gray-500 font-mono">x{it.qty} @ {currencySymbol} {it.unitPrice.toLocaleString()}</p>
+                                        <p className="text-[10px] text-gray-500 font-mono">x{it.qty} @ {currencySymbol} {it.price.toLocaleString()}</p>
                                       </div>
                                       <span className="font-mono text-white font-bold">{currencySymbol} {it.subtotal.toLocaleString()}</span>
                                     </div>
