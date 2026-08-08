@@ -265,7 +265,7 @@ export default function TrackTicketPage() {
 
       const match = customers.find((c) => {
         const matchesNo = cNo && c.customerNo && c.customerNo.toLowerCase() === cNo;
-        const cPhoneClean = (c.mobile || c.phone || "").replace(/\D/g, "");
+        const cPhoneClean = (c.mobile || "").replace(/\D/g, "");
         const matchesPhone = pNo && cPhoneClean.length >= 6 && (cPhoneClean.includes(pNo) || pNo.includes(cPhoneClean));
 
         if (cNo && pNo) return matchesNo && matchesPhone;
@@ -808,7 +808,7 @@ export default function TrackTicketPage() {
                           <Hash size={11} /> {foundCustomer.customerNo || "CUST-VERIFIED"}
                         </span>
                         <span className="flex items-center gap-1">
-                          <Phone size={12} className="text-gray-500" /> {foundCustomer.mobile || foundCustomer.phone || "0300-0000000"}
+                          <Phone size={12} className="text-gray-500" /> {foundCustomer.mobile || "0300-0000000"}
                         </span>
                       </div>
                     </div>
