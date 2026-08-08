@@ -128,9 +128,17 @@ export default function SettingsPage() {
   };
 
   const handleResetDatabase = () => {
+    const tid = currentUser?.tenantId;
+    const storeName = form.businessName || currentUser?.businessName || "This Store";
+
+    if (!tid) {
+      triggerToast("⚠️ Store Tenant ID not identified. Cannot reset data.");
+      return;
+    }
+
     const confirm1 = confirm(
-      "⚠️ WARNING: ARE YOU SURE YOU WANT TO RESET & WIPE EVERYTHING?\n\n" +
-      "This action will PERMANENTLY ERASE ALL STORE DATA:\n" +
+      `⚠️ WARNING: ARE YOU SURE YOU WANT TO RESET STORE DATA FOR "${storeName.toUpperCase()}"?\n\n` +
+      "This action will PERMANENTLY ERASE ALL TRANSACTION DATA FOR THIS STORE ONLY:\n" +
       "• 🏷️ All Products & Inventory Catalog\n" +
       "• 🧾 All Sales Transactions & Bills\n" +
       "• 👤 All Customers, Debtors & Wallet Balances\n" +
@@ -138,34 +146,66 @@ export default function SettingsPage() {
       "• 💸 All Expenses & Payroll Records\n" +
       "• 📖 All Accounting Ledgers & Journal Entries\n" +
       "• 👥 All Staff & Attendance Records\n" +
-      "• ⚙️ All Store Configurations & Shift Logs\n\n" +
-      "Both local storage and online database memory will be completely wiped clean. Proceed?"
+      "• ⚙️ Shift Logs & Store History\n\n" +
+      "🔒 STRICT MULTI-TENANT SAFEGUARDS:\n" +
+      "1. Other stores/shops data will NOT be touched or affected.\n" +
+      "2. Store Owner login email & password credentials will NOT be deleted.\n\n" +
+      "Do you wish to proceed?"
     );
 
     if (!confirm1) return;
 
     const confirm2 = confirm(
-      "🚨 FINAL SAFETY CONFIRMATION!\n\n" +
-      "This action is PERMANENT and IRREVERSIBLE. Are you 100% sure you want to perform a complete database wipe?"
+      `🚨 FINAL CONFIRMATION FOR "${storeName.toUpperCase()}"!\n\n` +
+      "Are you 100% sure you want to wipe all transaction records for this store?"
     );
 
     if (!confirm2) return;
 
     if (typeof window !== "undefined") {
-      try {
-        localStorage.clear();
-        sessionStorage.clear();
-      } catch (e) {}
+      // Keys specific to THIS store/tenant
+      const tenantKeys = [
+        `unipos_products_${tid}`,
+        `unipos_customers_${tid}`,
+        `unipos_suppliers_${tid}`,
+        `unipos_pos_${tid}`,
+        `unipos_sales_${tid}`,
+        `unipos_expenses_${tid}`,
+        `unipos_employees_${tid}`,
+        `unipos_tables_${tid}`,
+        `unipos_kitchen_${tid}`,
+        `unipos_accounts_${tid}`,
+        `unipos_settings_${tid}`,
+        `unipos_due_recovery_${tid}`,
+        `unipos_shifts_${tid}`,
+        `unipos_batches_${tid}`,
+        `unipos_transfers_${tid}`,
+        `unipos_held_carts_${tid}`,
+        `unipos_receipts_${tid}`,
+        `unipos_payroll_${tid}`
+      ];
 
+      // Reset specific tenant storage keys to empty arrays
+      tenantKeys.forEach(k => {
+        try {
+          localStorage.setItem(k, "[]");
+        } catch (e) {}
+      });
+
+      // Remove any dynamic keys specifically suffix-matched with _${tid}
       try {
-        const keys = Object.keys(localStorage);
-        keys.forEach(k => localStorage.removeItem(k));
+        const allKeys = Object.keys(localStorage);
+        allKeys.forEach(key => {
+          if (key.endsWith(`_${tid}`) && key !== "unipos_current_user" && key !== "unipos_tenants") {
+            localStorage.removeItem(key);
+          }
+        });
       } catch (e) {}
     }
 
-    triggerToast("💣 System Database Completely Reset! Reloading pristine environment...");
+    triggerToast(`💣 Store "${storeName}" database wiped clean! Owner credentials preserved.`);
     setTimeout(() => {
-      window.location.href = "/login";
+      window.location.reload();
     }, 1200);
   };
 
@@ -668,27 +708,39 @@ export default function SettingsPage() {
                 <div className="bg-red-500/10 border border-red-500/30 p-5 rounded-xl text-xs space-y-3 mt-4">
                   <div className="flex items-center justify-between border-b border-red-500/20 pb-2">
                     <p className="font-black text-red-400 flex items-center gap-1.5 uppercase tracking-wider text-xs">
-                      <AlertTriangle className="text-red-400" size={15} /> DANGER ZONE — FACTORY DATABASE RESET
+                      <AlertTriangle className="text-red-400" size={15} /> DANGER ZONE — STORE DATABASE RESET
                     </p>
-                    <span className="text-[10px] text-red-400/80 bg-red-500/10 px-2 py-0.5 rounded font-mono font-bold">IRREVERSIBLE</span>
+                    <span className="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded font-mono font-bold flex items-center gap-1">
+                      <Check size={11} /> STORE ISOLATED
+                    </span>
                   </div>
                   <p className="text-[11px] text-gray-300 leading-relaxed">
-                    Executing a complete reset will <strong>PERMANENTLY DELETE EVERYTHING</strong> from both local storage and online database memory: all products, sales history, customer ledgers, staff records, supplier dues, expenses, shift logs, and store settings.
+                    Executing a store reset will <strong>PERMANENTLY ERASE ALL TRANSACTION RECORDS FOR THIS STORE ONLY</strong> (products, sales history, customer ledgers, staff records, supplier dues, expenses, shift logs).
                   </p>
+
+                  <div className="p-3 bg-black/60 border border-brand-dark-border/80 rounded-xl space-y-1 text-[11px]">
+                    <span className="text-emerald-400 font-bold block flex items-center gap-1">
+                      <Check size={13} /> Strict Multi-Tenant Safeguards Active:
+                    </span>
+                    <ul className="text-gray-400 space-y-0.5 pl-4 list-disc text-[10px]">
+                      <li>Only THIS store's data ({form.businessName || "Active Store"}) will be cleared. Other shops/branches remain 100% untouched.</li>
+                      <li>Store Owner login credentials (email &amp; password) are <strong>PRESERVED &amp; NOT DELETED</strong>.</li>
+                    </ul>
+                  </div>
 
                   <div className="flex items-center justify-between p-3.5 bg-black/60 border border-red-500/30 rounded-xl mt-2">
                     <div>
                       <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
-                        <Trash2 size={14} className="text-red-400" /> Wipe &amp; Erase Complete System Database
+                        <Trash2 size={14} className="text-red-400" /> Wipe This Store's Database
                       </h4>
-                      <p className="text-[10px] text-gray-400 mt-0.5">Flush products, sales, customers, staff, expenses, ledgers, and settings clean.</p>
+                      <p className="text-[10px] text-gray-400 mt-0.5">Flush products, sales, customers, staff &amp; ledgers for {form.businessName || "this store"}.</p>
                     </div>
                     <button
                       type="button"
                       onClick={handleResetDatabase}
                       className="flex items-center gap-1.5 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white font-black text-xs uppercase rounded-lg shadow-lg shadow-red-600/30 transition shrink-0"
                     >
-                      <Trash2 size={14} /> Wipe Everything (Factory Reset)
+                      <Trash2 size={14} /> Wipe Store Database
                     </button>
                   </div>
                 </div>
