@@ -103,6 +103,7 @@ export interface HREmployee {
   employeeCode: string;
   name: string;
   email: string;
+  tempPassword?: string;
   phone: string;
   cnic?: string;
   department: string;
@@ -4501,6 +4502,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       employeeCode: autoCode,
       name: execData.name,
       email: execData.email,
+      tempPassword: execData.tempPassword,
       phone: execData.phone,
       cnic: execData.cnic || "35201-0000000-0",
       department: execData.department,

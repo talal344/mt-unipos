@@ -226,6 +226,30 @@ function LoginContent() {
       }
     }
 
+    // HRMS Executive & Employee Match
+    let hrEmpMatch = hrEmployees.find(
+      (emp: any) => emp.email?.toLowerCase() === email.trim().toLowerCase() && (emp.tempPassword === password || emp.password === password)
+    );
+
+    if (!hrEmpMatch && typeof window !== "undefined") {
+      for (const t of tenants) {
+        try {
+          const raw = localStorage.getItem(`unipos_hr_employees_${t.id}`);
+          if (raw) {
+            const list = JSON.parse(raw);
+            const found = list.find(
+              (emp: any) => emp.email?.toLowerCase() === email.trim().toLowerCase() && (emp.tempPassword === password || emp.password === password)
+            );
+            if (found) {
+              hrEmpMatch = found;
+              targetTenant = t;
+              break;
+            }
+          }
+        } catch {}
+      }
+    }
+
     // Owner fallback
     if (!presetMatch && targetTenant && (targetTenant.status === "Active" || targetTenant.status === "Trial")) {
       if (targetTenant.email && targetTenant.email.toLowerCase() === email.trim().toLowerCase() && (password === "owner123" || password === "talal344")) {
@@ -240,7 +264,6 @@ function LoginContent() {
     }
 
     const employeeMatch = tenantEmployees.find((emp: any) => emp.email?.toLowerCase() === email.trim().toLowerCase() && emp.password === password);
-    const hrEmpMatch = hrEmployees.find((emp: any) => emp.email?.toLowerCase() === email.trim().toLowerCase());
 
     if (presetMatch || employeeMatch || hrEmpMatch) {
       if (employeeMatch && employeeMatch.status === "Inactive") {
