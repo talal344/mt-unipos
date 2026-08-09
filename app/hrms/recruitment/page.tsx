@@ -316,7 +316,7 @@ export default function HRRecruitmentPage() {
                       </div>
                     </div>
 
-                    {c.onboardingStage && (
+                    {c.stage === "Hired" && c.onboardingStage && (
                       <div className="p-2.5 rounded-xl bg-sky-500/10 border border-sky-500/30 text-sky-400 text-[10px] font-bold flex items-center justify-between">
                         <span>Lifecycle Status:</span>
                         <span className="uppercase tracking-wider">{c.onboardingStage}</span>

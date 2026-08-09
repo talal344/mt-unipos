@@ -4359,7 +4359,8 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     const newCand: HRCandidate = {
       ...cand,
       id: `CND-${Math.floor(100 + Math.random() * 900)}`,
-      appliedDate: new Date().toISOString().split("T")[0]
+      appliedDate: new Date().toISOString().split("T")[0],
+      onboardingStage: cand.stage === "Hired" ? "Pending IT Provisioning" : undefined
     };
     const updated = [newCand, ...hrCandidates];
     setHrCandidates(updated);
@@ -4370,7 +4371,9 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     const updated = hrCandidates.map(c => {
       if (c.id === id) {
         const next = { ...c, ...updates };
-        if (updates.stage === "Hired" && !next.onboardingStage) {
+        if (updates.stage && updates.stage !== "Hired") {
+          next.onboardingStage = undefined;
+        } else if (updates.stage === "Hired" && !next.onboardingStage) {
           next.onboardingStage = "Pending IT Provisioning";
         }
         return next;
