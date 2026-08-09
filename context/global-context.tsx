@@ -4409,6 +4409,31 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
 
     setHrCandidates(updatedCands);
     saveTenantData("unipos_hr_candidates", updatedCands);
+
+    // Register credential preset for login
+    if (tempPassword && workEmail && currentUser?.tenantId) {
+      const activeTenantId = currentUser.tenantId;
+      const targetCand = hrCandidates.find((c) => c.id === candidateId);
+      setTenants((prevTenants) => {
+        const nextTenants = prevTenants.map((t) => {
+          if (t.id === activeTenantId) {
+            const existingPresets = t.credentialPresets || [];
+            const newPreset = {
+              id: `CRED-STAFF-${Math.floor(1000 + Math.random() * 9000)}`,
+              label: `${targetCand?.name || 'Staff'} (${targetCand?.appliedPosition || 'Employee'})`,
+              email: workEmail.trim().toLowerCase(),
+              pass: tempPassword,
+              role: "Cashier" as const
+            };
+            const filtered = existingPresets.filter((p) => p.email.toLowerCase() !== workEmail.trim().toLowerCase());
+            return { ...t, credentialPresets: [newPreset, ...filtered] };
+          }
+          return t;
+        });
+        localStorage.setItem("unipos_tenants", JSON.stringify(nextTenants));
+        return nextTenants;
+      });
+    }
   };
 
   // Step 3: Finance Department Confirmation & Active Directory Activation Action
@@ -4492,6 +4517,31 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     const updatedEmps = [newEmp, ...hrEmployees];
     setHrEmployees(updatedEmps);
     saveTenantData("unipos_hr_employees", updatedEmps);
+
+    // Automatically register System Credential Preset for Login Access
+    if (execData.tempPassword && currentUser?.tenantId) {
+      const activeTenantId = currentUser.tenantId;
+      setTenants((prevTenants) => {
+        const nextTenants = prevTenants.map((t) => {
+          if (t.id === activeTenantId) {
+            const existingPresets = t.credentialPresets || [];
+            const newPreset = {
+              id: `CRED-EXEC-${Math.floor(1000 + Math.random() * 9000)}`,
+              label: `${execData.name} (${execData.designation})`,
+              email: execData.email.trim().toLowerCase(),
+              pass: execData.tempPassword || "",
+              role: (execData.designation.includes("Director") || execData.designation.includes("Manager")) ? "Owner" as const : "Manager" as const
+            };
+            const filtered = existingPresets.filter((p) => p.email.toLowerCase() !== execData.email.trim().toLowerCase());
+            return { ...t, credentialPresets: [newPreset, ...filtered] };
+          }
+          return t;
+        });
+        localStorage.setItem("unipos_tenants", JSON.stringify(nextTenants));
+        return nextTenants;
+      });
+    }
+
     return newEmp;
   };
 
