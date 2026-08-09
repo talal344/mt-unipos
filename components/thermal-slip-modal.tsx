@@ -178,6 +178,7 @@ function buildSlipHTML(
     ${sale.cashierName ? `<div style="display:flex;justify-content:space-between"><span>Cashier:</span><span>${sale.cashierName}</span></div>` : ""}
     ${sale.customerName ? `<div style="display:flex;justify-content:space-between;margin-top:2px"><span>Customer Name:</span><span style="font-weight:900">${sale.customerName}</span></div>` : ""}
     ${sale.customerNo && sale.customerNo !== "N/A" ? `<div style="display:flex;justify-content:space-between"><span>Customer ID:</span><span style="font-weight:700">${sale.customerNo}</span></div>` : ""}
+    ${((sale as any).customerPhone || (sale as any).phone || (sale as any).mobile) ? `<div style="display:flex;justify-content:space-between"><span>Customer Phone:</span><span style="font-weight:700;font-family:monospace">${(() => { const p = (((sale as any).customerPhone || (sale as any).phone || (sale as any).mobile) || "").trim(); return p.length >= 7 ? p.slice(0, 4) + "****" + p.slice(-3) : p; })()}</span></div>` : ""}
   </div>
   </div>
 
@@ -223,10 +224,20 @@ function buildSlipHTML(
   ${loyaltySection}
   ${creditSection}
 
-  <!-- Thank You -->
+  <!-- Thank You & Online Self-Service Guidance -->
   <div style="text-align:center;margin-top:10px;font-size:9px">
     <div style="font-weight:900;font-size:12px">THANK YOU!</div>
     <div style="margin-top:3px;color:#333;white-space:pre-line">${receiptFooter.replace(/\./g, ".\n")}</div>
+  </div>
+
+  <!-- Online Self-Service Guidance Note -->
+  <div style="border:1px dashed #000;border-radius:6px;padding:6px 8px;margin:10px 0 6px 0;text-align:center;background:#fafafa">
+    <div style="font-weight:900;font-size:9px;text-transform:uppercase;letter-spacing:0.5px;color:#000">🌐 ONLINE LEDGER &amp; RECEIPT PORTAL</div>
+    <div style="font-size:8px;margin-top:3px;color:#333;line-height:1.4">
+      Track your past receipts, full purchase ledger &amp; credit dues 24/7 online:<br/>
+      <b style="font-size:9px;color:#0284c7;font-family:monospace">pos.mtcore.xyz/track-ticket</b><br/>
+      Search Invoice #: <b>${sale.receiptNumber}</b>${sale.customerNo ? ` or Customer ID: <b>${sale.customerNo}</b>` : ""}
+    </div>
   </div>
 
   <!-- Barcode -->

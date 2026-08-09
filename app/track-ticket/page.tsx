@@ -426,6 +426,8 @@ export default function TrackTicketPage() {
             <p style="margin:2px 0;font-size:10px;">Receipt #: ${sale.receiptNumber}</p>
             <p style="margin:2px 0;font-size:9px;">${new Date(sale.date).toLocaleString()}</p>
             <p style="margin:2px 0;font-size:9px;">Customer: ${sale.customerName || "Walk-in Customer"}</p>
+            ${sale.customerNo && sale.customerNo !== "N/A" ? `<p style="margin:2px 0;font-size:9px;">Customer ID: <b>${sale.customerNo}</b></p>` : ""}
+            ${((sale as any).customerPhone || (sale as any).phone || (sale as any).mobile) ? `<p style="margin:2px 0;font-size:9px;font-family:monospace;">Phone: <b>${(() => { const p = ((sale as any).customerPhone || (sale as any).phone || (sale as any).mobile || "").trim(); return p.length >= 7 ? p.slice(0, 4) + "****" + p.slice(-3) : p; })()}</b></p>` : ""}
           </div>
           <div class="line"></div>
           <table style="width:100%; border-collapse:collapse;">
@@ -439,6 +441,17 @@ export default function TrackTicketPage() {
           <div class="flex bold" style="font-size:13px;"><span>GRAND TOTAL:</span><span>${currencySymbol} ${sale.total.toLocaleString()}</span></div>
           <div class="flex" style="margin-top:4px;"><span>Payment Mode:</span><span class="bold">${sale.paymentMethod}</span></div>
           <div class="line"></div>
+
+          <!-- Online Self-Service Guidance Note -->
+          <div style="border:1px dashed #000;border-radius:6px;padding:6px;margin:8px 0;text-align:center;background:#fafafa">
+            <div style="font-weight:900;font-size:9px;text-transform:uppercase;letter-spacing:0.5px;">🌐 ONLINE LEDGER &amp; RECEIPT PORTAL</div>
+            <div style="font-size:8px;margin-top:3px;color:#333;line-height:1.4">
+              Track your past receipts &amp; credit dues 24/7 online:<br/>
+              <b style="font-size:9px;color:#0284c7;font-family:monospace">pos.mtcore.xyz/track-ticket</b><br/>
+              Search Invoice #: <b>${sale.receiptNumber}</b>${sale.customerNo ? ` or Customer ID: <b>${sale.customerNo}</b>` : ""}
+            </div>
+          </div>
+
           <div class="center" style="font-size:9px;margin-top:10px;">
             <p>Thank you for your business!</p>
             <p>Powered by MT UniPOS SaaS ERP</p>
