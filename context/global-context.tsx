@@ -852,111 +852,13 @@ const SEED_HR_SHIFTS: HRShift[] = [
   { id: "SHF-4", name: "Flexible Work Shift", type: "Flexible", startTime: "Flexible Check-In", endTime: "8 Hours After Check-In", requiredHours: 8, graceMinutes: 30, workDays: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] }
 ];
 
-const SEED_HR_CANDIDATES: HRCandidate[] = [
-  {
-    id: "CND-101",
-    name: "Usman Raza",
-    email: "usman.raza@gmail.com",
-    phone: "03129998877",
-    appliedPosition: "Software Engineer",
-    department: "IT & Software Operations",
-    cnic: "35201-8899776-1",
-    proposedSalary: 95000,
-    bankName: "Meezan Bank Ltd",
-    accountNumber: "01099887766",
-    stage: "Interview",
-    appliedDate: "2026-08-01"
-  },
-  {
-    id: "CND-102",
-    name: "Sara Khan",
-    email: "sara.khan@gmail.com",
-    phone: "03224445566",
-    appliedPosition: "HR Officer",
-    department: "Human Resources",
-    cnic: "35202-5544332-9",
-    proposedSalary: 60000,
-    bankName: "HBL",
-    accountNumber: "004288776655",
-    stage: "Hired",
-    onboardingStage: "Pending IT Provisioning",
-    appliedDate: "2026-08-03"
-  }
-];
-const SEED_HR_EMPLOYEES: HREmployee[] = [
-  {
-    id: "HRE-101", employeeCode: "EMP-001", name: "Waqas Ali", email: "waqas.ali@mtcore.xyz",
-    phone: "03001234567", cnic: "35202-1234567-1", department: "Operations", designation: "Store Operations Manager",
-    joiningDate: "2024-01-15", employmentType: "Full-time", basicSalary: 85000, bankName: "Meezan Bank Ltd",
-    accountNumber: "01020304050607", jazzCashNo: "03001234567", status: "Active"
-  },
-  {
-    id: "HRE-102", employeeCode: "EMP-002", name: "Ayesha Malik", email: "ayesha.malik@mtcore.xyz",
-    phone: "03219876543", cnic: "35201-9876543-2", department: "Human Resources", designation: "HR Officer",
-    joiningDate: "2024-03-01", employmentType: "Full-time", basicSalary: 65000, bankName: "HBL",
-    accountNumber: "00427900112233", jazzCashNo: "03219876543", status: "Active"
-  },
-  {
-    id: "HRE-103", employeeCode: "EMP-003", name: "Muhammad Bilal", email: "bilal.m@mtcore.xyz",
-    phone: "03334567890", cnic: "35202-4567890-3", department: "Accounts & Finance", designation: "Senior Accountant",
-    joiningDate: "2023-11-10", employmentType: "Full-time", basicSalary: 75000, bankName: "Bank Alfalah",
-    accountNumber: "551299008877", jazzCashNo: "03334567890", status: "Active"
-  },
-  {
-    id: "HRE-104", employeeCode: "EMP-004", name: "Hamza Sheikh", email: "hamza.s@mtcore.xyz",
-    phone: "03056789012", cnic: "35202-6789012-4", department: "Sales & Retail", designation: "Head Cashier",
-    joiningDate: "2024-05-20", employmentType: "Full-time", basicSalary: 45000, bankName: "MCB Bank",
-    accountNumber: "112233445566", jazzCashNo: "03056789012", status: "Active"
-  },
-  {
-    id: "HRE-105", employeeCode: "EMP-005", name: "Zainab Fatima", email: "zainab.f@mtcore.xyz",
-    phone: "03123456789", cnic: "35201-3456789-5", department: "Inventory & Warehouse", designation: "Warehouse Officer",
-    joiningDate: "2024-02-01", employmentType: "Full-time", basicSalary: 55000, bankName: "Faysal Bank",
-    accountNumber: "998877665544", jazzCashNo: "03123456789", status: "Active"
-  }
-];
-
-const SEED_HR_ATTENDANCE: HRAttendance[] = [
-  { id: "HRA-1", employeeId: "HRE-101", employeeName: "Waqas Ali", date: new Date().toISOString().split("T")[0], checkIn: "08:55 AM", checkOut: "06:05 PM", status: "Present", overtimeHours: 1, lateMinutes: 0 },
-  { id: "HRA-2", employeeId: "HRE-102", employeeName: "Ayesha Malik", date: new Date().toISOString().split("T")[0], checkIn: "09:12 AM", checkOut: "06:00 PM", status: "Late", overtimeHours: 0, lateMinutes: 12 },
-  { id: "HRA-3", employeeId: "HRE-103", employeeName: "Muhammad Bilal", date: new Date().toISOString().split("T")[0], checkIn: "09:00 AM", checkOut: "06:30 PM", status: "Present", overtimeHours: 0.5, lateMinutes: 0 },
-  { id: "HRA-4", employeeId: "HRE-104", employeeName: "Hamza Sheikh", date: new Date().toISOString().split("T")[0], checkIn: "08:50 AM", checkOut: "06:00 PM", status: "Present", overtimeHours: 0, lateMinutes: 0 },
-  { id: "HRA-5", employeeId: "HRE-105", employeeName: "Zainab Fatima", date: new Date().toISOString().split("T")[0], checkIn: "09:00 AM", checkOut: "06:00 PM", status: "Present", overtimeHours: 0, lateMinutes: 0 }
-];
-
-const SEED_HR_LEAVES: HRLeave[] = [
-  { id: "HRL-1", employeeId: "HRE-102", employeeName: "Ayesha Malik", leaveType: "Casual", startDate: "2026-08-12", endDate: "2026-08-13", totalDays: 2, reason: "Family emergency event", status: "Pending", appliedOn: "2026-08-08" },
-  { id: "HRL-2", employeeId: "HRE-104", employeeName: "Hamza Sheikh", leaveType: "Sick", startDate: "2026-08-05", endDate: "2026-08-05", totalDays: 1, reason: "Severe flu & fever", status: "Approved", appliedOn: "2026-08-04", approvedBy: "SuperAdmin / HR" }
-];
-
-const SEED_HR_PAYROLLS: HRPayrollBatch[] = [
-  {
-    id: "HRPAY-2026-07",
-    month: "2026-07",
-    processedDate: "2026-07-31",
-    totalEmployees: 5,
-    totalGross: 325000,
-    totalDeductions: 12500,
-    totalNet: 312500,
-    status: "Paid",
-    items: [
-      { employeeId: "HRE-101", employeeName: "Waqas Ali", department: "Operations", basicSalary: 85000, allowances: 5000, deductions: 2500, netSalary: 87500, status: "Paid" },
-      { employeeId: "HRE-102", employeeName: "Ayesha Malik", department: "Human Resources", basicSalary: 65000, allowances: 3000, deductions: 1500, netSalary: 66500, status: "Paid" },
-      { employeeId: "HRE-103", employeeName: "Muhammad Bilal", department: "Accounts & Finance", basicSalary: 75000, allowances: 4000, deductions: 2000, netSalary: 77000, status: "Paid" },
-      { employeeId: "HRE-104", employeeName: "Hamza Sheikh", department: "Sales & Retail", basicSalary: 45000, allowances: 2000, deductions: 1000, netSalary: 46000, status: "Paid" },
-      { employeeId: "HRE-105", employeeName: "Zainab Fatima", department: "Inventory & Warehouse", basicSalary: 55000, allowances: 2500, deductions: 2000, netSalary: 55500, status: "Paid" }
-    ]
-  }
-];
-
-const SEED_HR_JOBS: HRJobOpening[] = [
-  { id: "HRJ-1", title: "Assistant Store Manager", department: "Operations", vacancies: 2, status: "Open", applicantsCount: 14, postedDate: "2026-08-01" },
-  { id: "HRJ-2", title: "Accounts Executive", department: "Finance", vacancies: 1, status: "Open", applicantsCount: 8, postedDate: "2026-08-04" }
-];
-
-const SEED_HR_APPRAISALS: HRAppraisal[] = [
-  { id: "HRA-1", employeeId: "HRE-101", employeeName: "Waqas Ali", reviewPeriod: "Q2 2026", rating: 5, comments: "Exceptional store operational performance and team leadership.", status: "Completed", date: "2026-07-15" }
-];
+const SEED_HR_CANDIDATES: HRCandidate[] = [];
+const SEED_HR_EMPLOYEES: HREmployee[] = [];
+const SEED_HR_ATTENDANCE: HRAttendance[] = [];
+const SEED_HR_LEAVES: HRLeave[] = [];
+const SEED_HR_PAYROLLS: HRPayrollBatch[] = [];
+const SEED_HR_JOBS: HRJobOpening[] = [];
+const SEED_HR_APPRAISALS: HRAppraisal[] = [];
 
 const GlobalContext = createContext<GlobalContextType | undefined>(undefined);
 
@@ -2148,45 +2050,45 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     // 13. Load HRMS Datasets
     if (currentUser?.tenantId) {
       const savedHrEmployees = getTenantData("unipos_hr_employees", currentUser.tenantId);
-      if (savedHrEmployees && savedHrEmployees.length > 0) setHrEmployees(savedHrEmployees);
+      if (savedHrEmployees) setHrEmployees(savedHrEmployees);
       else {
-        setHrEmployees(SEED_HR_EMPLOYEES);
-        saveTenantData("unipos_hr_employees", SEED_HR_EMPLOYEES);
+        setHrEmployees([]);
+        saveTenantData("unipos_hr_employees", []);
       }
 
       const savedHrAttendance = getTenantData("unipos_hr_attendance", currentUser.tenantId);
-      if (savedHrAttendance && savedHrAttendance.length > 0) setHrAttendance(savedHrAttendance);
+      if (savedHrAttendance) setHrAttendance(savedHrAttendance);
       else {
-        setHrAttendance(SEED_HR_ATTENDANCE);
-        saveTenantData("unipos_hr_attendance", SEED_HR_ATTENDANCE);
+        setHrAttendance([]);
+        saveTenantData("unipos_hr_attendance", []);
       }
 
       const savedHrLeaves = getTenantData("unipos_hr_leaves", currentUser.tenantId);
-      if (savedHrLeaves && savedHrLeaves.length > 0) setHrLeaves(savedHrLeaves);
+      if (savedHrLeaves) setHrLeaves(savedHrLeaves);
       else {
-        setHrLeaves(SEED_HR_LEAVES);
-        saveTenantData("unipos_hr_leaves", SEED_HR_LEAVES);
+        setHrLeaves([]);
+        saveTenantData("unipos_hr_leaves", []);
       }
 
       const savedHrPayrolls = getTenantData("unipos_hr_payrolls", currentUser.tenantId);
-      if (savedHrPayrolls && savedHrPayrolls.length > 0) setHrPayrolls(savedHrPayrolls);
+      if (savedHrPayrolls) setHrPayrolls(savedHrPayrolls);
       else {
-        setHrPayrolls(SEED_HR_PAYROLLS);
-        saveTenantData("unipos_hr_payrolls", SEED_HR_PAYROLLS);
+        setHrPayrolls([]);
+        saveTenantData("unipos_hr_payrolls", []);
       }
 
       const savedHrJobs = getTenantData("unipos_hr_jobs", currentUser.tenantId);
-      if (savedHrJobs && savedHrJobs.length > 0) setHrJobs(savedHrJobs);
+      if (savedHrJobs) setHrJobs(savedHrJobs);
       else {
-        setHrJobs(SEED_HR_JOBS);
-        saveTenantData("unipos_hr_jobs", SEED_HR_JOBS);
+        setHrJobs([]);
+        saveTenantData("unipos_hr_jobs", []);
       }
 
       const savedHrAppraisals = getTenantData("unipos_hr_appraisals", currentUser.tenantId);
-      if (savedHrAppraisals && savedHrAppraisals.length > 0) setHrAppraisals(savedHrAppraisals);
+      if (savedHrAppraisals) setHrAppraisals(savedHrAppraisals);
       else {
-        setHrAppraisals(SEED_HR_APPRAISALS);
-        saveTenantData("unipos_hr_appraisals", SEED_HR_APPRAISALS);
+        setHrAppraisals([]);
+        saveTenantData("unipos_hr_appraisals", []);
       }
 
       const savedHrDepts = getTenantData("unipos_hr_departments", currentUser.tenantId);
@@ -2211,10 +2113,10 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       }
 
       const savedHrCands = getTenantData("unipos_hr_candidates", currentUser.tenantId);
-      if (savedHrCands && savedHrCands.length > 0) setHrCandidates(savedHrCands);
+      if (savedHrCands) setHrCandidates(savedHrCands);
       else {
-        setHrCandidates(SEED_HR_CANDIDATES);
-        saveTenantData("unipos_hr_candidates", SEED_HR_CANDIDATES);
+        setHrCandidates([]);
+        saveTenantData("unipos_hr_candidates", []);
       }
     }
 
