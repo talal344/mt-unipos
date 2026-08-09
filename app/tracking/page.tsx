@@ -289,19 +289,66 @@ export default function TrackingPage() {
     } catch {}
   };
 
-  // Auto-search on page load when URL contains ?id=... or ?receipt=... or ?inv=...
+  // Helper: execute ticket search
+  const executeTicketSearch = (queryStr: string) => {
+    const query = queryStr.trim().toLowerCase();
+    if (!query) return;
+
+    setHasSearched(true);
+    setAuthError(null);
+    setFoundReceipt(null);
+    setFoundSaasInvoice(null);
+    setFoundCustomer(null);
+    setFoundTicket(null);
+    setFoundTicketType(null);
+
+    const demoMatch = demoRequests.find(
+      (r) => (r.ticketNumber && r.ticketNumber.toLowerCase() === query) || r.id.toLowerCase() === query
+    );
+    const suppMatch = supportTickets.find(
+      (r) => (r.ticketNumber && r.ticketNumber.toLowerCase() === query) || r.id.toLowerCase() === query
+    );
+
+    if (demoMatch) {
+      setFoundTicket(demoMatch);
+      setFoundTicketType("demo");
+    } else if (suppMatch) {
+      setFoundTicket(suppMatch);
+      setFoundTicketType("support");
+    } else {
+      // LocalStorage Fallback check for demo requests
+      try {
+        const localDemos: DemoRequest[] = JSON.parse(localStorage.getItem("unipos_demos") || "[]");
+        const localMatch = localDemos.find(
+          (r) => (r.ticketNumber && r.ticketNumber.toLowerCase() === query) || r.id?.toLowerCase() === query
+        );
+        if (localMatch) {
+          setFoundTicket(localMatch);
+          setFoundTicketType("demo");
+        }
+      } catch {}
+    }
+  };
+
+  // Auto-search on page load when URL contains ?id=... or ?receipt=... or ?ticket=... or ?inv=...
   React.useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       const urlId = params.get("id") || params.get("receipt") || params.get("ticket") || params.get("inv");
       if (urlId) {
         const query = urlId.trim();
-        setReceiptInput(query);
-        setSearchMode("receipt");
-        executeReceiptSearch(query);
+        if (query.toUpperCase().startsWith("TKT-") || params.get("ticket")) {
+          setTicketInput(query);
+          setSearchMode("ticket");
+          executeTicketSearch(query);
+        } else {
+          setReceiptInput(query);
+          setSearchMode("receipt");
+          executeReceiptSearch(query);
+        }
       }
     }
-  }, [sales, saasInvoices]);
+  }, [sales, saasInvoices, demoRequests, supportTickets]);
 
   // Execute Search Form Submit
   const handleSearchSubmit = (e?: React.FormEvent) => {
@@ -341,20 +388,7 @@ export default function TrackingPage() {
         setFoundCustomer(match);
       }
     } else if (searchMode === "ticket") {
-      const query = ticketInput.trim();
-      if (!query) return;
-      const demoMatch = demoRequests.find((r) => r.ticketNumber.toLowerCase() === query.toLowerCase());
-      const suppMatch = supportTickets.find(
-        (r) => (r.ticketNumber && r.ticketNumber.toLowerCase() === query.toLowerCase()) || r.id.toLowerCase() === query.toLowerCase()
-      );
-
-      if (demoMatch) {
-        setFoundTicket(demoMatch);
-        setFoundTicketType("demo");
-      } else if (suppMatch) {
-        setFoundTicket(suppMatch);
-        setFoundTicketType("support");
-      }
+      executeTicketSearch(ticketInput);
     }
   };
 

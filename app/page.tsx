@@ -296,16 +296,19 @@ export default function HomePage() {
       {/* ══════════════════════════════════════════════════════════════════════
           INDUSTRIES
       ══════════════════════════════════════════════════════════════════════ */}
+      {/* ══════════════════════════════════════════════════════════════════════
+          INDUSTRIES & SOFTWARE SUITES
+      ══════════════════════════════════════════════════════════════════════ */}
       <section className="py-20 bg-brand-dark-surface/20 border-b border-brand-dark-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-2 bg-brand-dark-surface border border-brand-dark-border px-3 py-1.5 rounded-full mb-4">
-              <Layers size={12} className="text-brand-sky" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Industries We Serve</span>
+              <Layers size={12} className="text-emerald-400" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Industries &amp; Software Lines</span>
             </div>
-            <h2 className="text-2xl sm:text-4xl font-black text-white mb-4">Designed for All Business Sectors</h2>
-            <p className="text-xs sm:text-sm text-gray-500 max-w-xl mx-auto">
-              MT UniPOS micro-customizes checkout lanes, inventory metrics, and tax computations for every major trade sector.
+            <h2 className="text-2xl sm:text-4xl font-black text-white mb-4">Designed for Multi-Industry Operations</h2>
+            <p className="text-xs sm:text-sm text-gray-400 max-w-xl mx-auto">
+              MTCore powers retail stores, supermarkets, corporate HR &amp; payroll operations, educational institutions, healthcare clinics, and real estate networks.
             </p>
           </div>
 
@@ -315,8 +318,8 @@ export default function HomePage() {
               const active = selectedIndustry === ind.name;
               return (
                 <button key={ind.name} onClick={() => setSelectedIndustry(ind.name)}
-                  className={`p-4 rounded-2xl text-left border transition-all duration-300 ${active ? "bg-brand-sky/10 border-brand-sky shadow-lg shadow-brand-sky/10" : "bg-black/40 border-brand-dark-border/60 hover:border-brand-sky/30"}`}>
-                  <div className={`p-2.5 rounded-lg w-fit mb-3 ${active ? "bg-brand-sky text-black" : "bg-brand-dark-border text-gray-400"}`}>
+                  className={`p-4 rounded-2xl text-left border transition-all duration-300 ${active ? "bg-emerald-500/10 border-emerald-500 shadow-lg shadow-emerald-900/10" : "bg-black/40 border-brand-dark-border/60 hover:border-emerald-500/30"}`}>
+                  <div className={`p-2.5 rounded-lg w-fit mb-3 ${active ? "bg-emerald-500 text-black font-bold" : "bg-brand-dark-border text-gray-400"}`}>
                     <Icon size={16} />
                   </div>
                   <h4 className="text-white font-bold text-xs mb-1">{ind.name}</h4>
@@ -327,10 +330,10 @@ export default function HomePage() {
           </div>
 
           <div className="bg-black/50 border border-brand-dark-border rounded-xl p-4 text-center text-[10px]">
-            <span className="text-gray-500 mr-2">Also serving:</span>
+            <span className="text-gray-500 mr-2">Supported Enterprise Sectors:</span>
             <span className="inline-flex flex-wrap justify-center gap-1.5">
-              {["Departmental Stores","Medical Stores","Book Stores","Shoe Stores","Electronics","Hardware","Cosmetics","Gift Shops","Bakeries","Franchises","Auto Parts","Jewellery"].map(t => (
-                <span key={t} className="bg-brand-dark-surface border border-brand-dark-border/50 px-2 py-0.5 rounded text-gray-400">{t}</span>
+              {["Supermarkets & Departmental Stores","HR & Payroll Management","Schools & Colleges","Hospitals & Clinics","Real Estate & Property","Retail Boutiques","Pharmacies","Restaurants & Cafes","Wholesale & Distribution"].map(t => (
+                <span key={t} className="bg-brand-dark-surface border border-brand-dark-border/50 px-2.5 py-1 rounded-lg text-gray-300 font-bold">{t}</span>
               ))}
             </span>
           </div>
@@ -341,16 +344,16 @@ export default function HomePage() {
           FEATURES GRID (12 cards)
       ══════════════════════════════════════════════════════════════════════ */}
       <section className="py-20 border-b border-brand-dark-border relative overflow-hidden">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-brand-sky/3 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-emerald-500/3 rounded-full blur-[120px] pointer-events-none" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-2 bg-brand-dark-surface border border-brand-dark-border px-3 py-1.5 rounded-full mb-4">
-              <Sparkles size={11} className="text-brand-sky" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Platform Features</span>
+              <Sparkles size={11} className="text-emerald-400" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Enterprise Platform Features</span>
             </div>
-            <h2 className="text-2xl sm:text-4xl font-black text-white mb-4">Everything Your Business Needs</h2>
-            <p className="text-xs sm:text-sm text-gray-500 max-w-xl mx-auto">
-              12+ enterprise modules fully integrated — from POS to payroll, all in one SaaS platform.
+            <h2 className="text-2xl sm:text-4xl font-black text-white mb-4">Everything Your Enterprise Needs</h2>
+            <p className="text-xs sm:text-sm text-gray-400 max-w-xl mx-auto">
+              Multi-SaaS architecture — from POS barcode checkout and HR payroll to real-time analytics and double-entry accounting.
             </p>
           </div>
 
@@ -365,7 +368,7 @@ export default function HomePage() {
                   </div>
                   <div>
                     <h4 className={`text-xs font-black text-white mb-1 group-hover:${f.color} transition`}>{f.title}</h4>
-                    <p className="text-[10px] text-gray-500 leading-snug">{f.desc}</p>
+                    <p className="text-[10px] text-gray-400 leading-snug">{f.desc}</p>
                   </div>
                 </div>
               );
