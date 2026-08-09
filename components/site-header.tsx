@@ -65,7 +65,7 @@ export default function SiteHeader() {
     { name: "Features",     href: "/features"      },
     { name: "About Us",     href: "/about"         },
     { name: "SaaS Blog",    href: "/blog"          },
-    { name: "Track Ticket", href: "/track-ticket"  },
+    { name: "Tracking",     href: "/track-ticket"  },
     { name: "Contact",      href: "/contact"       },
   ];
 
