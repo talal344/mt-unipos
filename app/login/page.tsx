@@ -21,9 +21,6 @@ function LoginContent() {
   const [showPwd,  setShowPwd]  = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
-  const [step, setStep] = useState<"credentials" | "otp">("credentials");
-  const [otpCode, setOtpCode]   = useState(["", "", "", ""]);
-  const [verificationSuccess, setVerificationSuccess] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [loading, setLoading]   = useState(false);
 
@@ -235,43 +232,6 @@ function LoginContent() {
       }
       setErrorMessage("");
       setLoading(true);
-      setTimeout(() => { setLoading(false); setStep("otp"); }, 700);
-    } else {
-      setErrorMessage("Invalid credentials. Incorrect email or password.");
-    }
-  };
-
-  const handleOtpChange = (i: number, val: string) => {
-    if (!/^\d*$/.test(val)) return;
-    const next = [...otpCode];
-    next[i] = val.slice(-1);
-    setOtpCode(next);
-    if (val && i < 3) (document.getElementById(`otp-${i + 1}`) as HTMLInputElement)?.focus();
-  };
-
-  const handleVerifyOtp = (e: React.FormEvent) => {
-    e.preventDefault();
-    const code = otpCode.join("");
-    if (code.length < 4) { setErrorMessage("Please enter the 4-digit code."); return; }
-    setLoading(true);
-    setTimeout(() => {
-      setVerificationSuccess(true);
-      setErrorMessage("");
-
-      const tenantEmployees = typeof window !== "undefined"
-        ? (() => {
-            try {
-              const data = localStorage.getItem(`unipos_employees_${inputTenantId}`);
-              return data ? JSON.parse(data) : [];
-            } catch {
-              return [];
-            }
-          })()
-        : [];
-
-      const cleanEmail = email.trim().toLowerCase();
-      const presetMatch = presets.find(p => p.email.trim().toLowerCase() === cleanEmail);
-      const employeeMatch = tenantEmployees.find((emp: any) => (emp.email || "").trim().toLowerCase() === cleanEmail);
 
       const role = presetMatch?.role || employeeMatch?.role || "Owner";
       const name = presetMatch
@@ -281,16 +241,20 @@ function LoginContent() {
       const user = {
         name,
         role,
-        email,
+        email: email.trim().toLowerCase(),
         businessName: activeTenant?.businessName || "Unknown",
-        tenantId: activeTenant?.id || "",
+        tenantId: activeTenant?.id || cleanTenantId,
       };
+
       setTimeout(() => {
+        localStorage.setItem("unipos_last_activated_tenant", cleanTenantId);
         localStorage.setItem("unipos_current_user", JSON.stringify(user));
         setCurrentUser(user);
         router.push(role === "Cashier" ? "/pos" : "/dashboard");
-      }, 1200);
-    }, 600);
+      }, 600);
+    } else {
+      setErrorMessage("Invalid credentials. Incorrect email or password.");
+    }
   };
 
 
@@ -415,108 +379,58 @@ function LoginContent() {
             </div>
           )}
 
-          {/* ── CREDENTIALS STEP ── */}
-          {step === "credentials" && (
-            <form onSubmit={handleCredentialsSubmit} className="space-y-4 text-xs">
-              <div>
-                <label className="block text-[10px] uppercase font-bold text-brand-sky tracking-wider mb-1.5">
-                  <Building2 size={9} className="inline mr-1" /> Workspace / Tenant ID
-                </label>
-                <input 
-                  type="text" 
-                  required 
-                  value={inputTenantId}
-                  onChange={e => { setInputTenantId(e.target.value.toUpperCase()); setErrorMessage(""); }}
-                  placeholder="e.g. AFS-1234"
-                  className={`w-full bg-black border p-3 rounded-xl text-white outline-none transition-all duration-300 ${tenantGlowClass}`} 
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] uppercase font-bold text-gray-400 tracking-wider mb-1.5">Corporate Email</label>
-                <input type="email" required value={email} onChange={e => setEmail(e.target.value)}
-                  placeholder="owner@company.com"
-                  className="w-full bg-black border border-brand-dark-border p-3 rounded-xl text-white focus:outline-none focus:border-brand-sky transition" />
-              </div>
-
-              <div>
-                <div className="flex justify-between items-center mb-1.5">
-                  <label className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Secure Password</label>
-                  <button type="button" className="text-[10px] text-brand-sky hover:underline">Forgot Password?</button>
-                </div>
-                <div className="relative">
-                  <input type={showPwd ? "text" : "password"} required value={password} onChange={e => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full bg-black border border-brand-dark-border p-3 pr-10 rounded-xl text-white focus:outline-none focus:border-brand-sky transition" />
-                  <button type="button" onClick={() => setShowPwd(v => !v)}
-                    className="absolute right-3 top-3 text-gray-500 hover:text-white transition">
-                    {showPwd ? <EyeOff size={14} /> : <Eye size={14} />}
-                  </button>
-                </div>
-              </div>
-
-              <label className="flex items-center gap-2 text-[10px] text-gray-400 cursor-pointer select-none">
-                <input type="checkbox" checked={rememberMe} onChange={e => setRememberMe(e.target.checked)}
-                  className="rounded border-brand-dark-border text-brand-sky" />
-                Remember this terminal for 30 days
+          {/* ── LOGIN FORM ── */}
+          <form onSubmit={handleCredentialsSubmit} className="space-y-4 text-xs">
+            <div>
+              <label className="block text-[10px] uppercase font-bold text-brand-sky tracking-wider mb-1.5">
+                <Building2 size={9} className="inline mr-1" /> Workspace / Tenant ID
               </label>
+              <input 
+                type="text" 
+                required 
+                value={inputTenantId}
+                onChange={e => { setInputTenantId(e.target.value.toUpperCase()); setErrorMessage(""); }}
+                placeholder="e.g. AFS-1234"
+                className={`w-full bg-black border p-3 rounded-xl text-white outline-none transition-all duration-300 ${tenantGlowClass}`} 
+              />
+            </div>
 
-              <button type="submit" disabled={loading}
-                className="w-full py-3 bg-brand-sky hover:bg-brand-sky-light disabled:opacity-60 text-black font-black uppercase text-xs tracking-wider rounded-xl flex items-center justify-center gap-2 transition transform hover:scale-[1.01] shadow-lg shadow-brand-sky/20">
-                {loading
-                  ? <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
-                  : <>Sign In to Workspace <ArrowRight size={14} /></>}
-              </button>
-            </form>
-          )}
+            <div>
+              <label className="block text-[10px] uppercase font-bold text-gray-400 tracking-wider mb-1.5">Corporate Email</label>
+              <input type="email" required value={email} onChange={e => setEmail(e.target.value)}
+                placeholder="owner@company.com"
+                className="w-full bg-black border border-brand-dark-border p-3 rounded-xl text-white focus:outline-none focus:border-brand-sky transition font-bold" />
+            </div>
 
-          {/* ── OTP STEP ── */}
-          {step === "otp" && (
-            <form onSubmit={handleVerifyOtp} className="space-y-5 animate-fade-in-up">
-              <div className="bg-brand-sky/5 border border-brand-sky/20 p-4 rounded-xl text-[11px] leading-relaxed">
-                <div className="text-brand-sky font-black mb-1 flex items-center gap-1.5">
-                  <Lock size={11} /> 2FA Verification Required
-                </div>
-                <span className="text-gray-400">
-                  A 4-digit code was sent to <span className="text-white font-bold">{email}</span>.<br />
-                  Enter <span className="font-black text-white bg-brand-sky/20 px-1.5 rounded">1 2 3 4</span> for demo access.
-                </span>
+            <div>
+              <div className="flex justify-between items-center mb-1.5">
+                <label className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Secure Password</label>
+                <button type="button" className="text-[10px] text-brand-sky hover:underline">Forgot Password?</button>
               </div>
+              <div className="relative">
+                <input type={showPwd ? "text" : "password"} required value={password} onChange={e => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full bg-black border border-brand-dark-border p-3 pr-10 rounded-xl text-white focus:outline-none focus:border-brand-sky transition font-bold" />
+                <button type="button" onClick={() => setShowPwd(v => !v)}
+                  className="absolute right-3 top-3 text-gray-500 hover:text-white transition">
+                  {showPwd ? <EyeOff size={14} /> : <Eye size={14} />}
+                </button>
+              </div>
+            </div>
 
-              {verificationSuccess ? (
-                <div className="text-center py-8 space-y-3 animate-bounce">
-                  <CheckCircle2 size={40} className="text-emerald-400 mx-auto" />
-                  <p className="text-emerald-400 font-black text-sm">Identity Verified — Launching...</p>
-                </div>
-              ) : (
-                <>
-                  <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-400 tracking-wider mb-3 text-center">
-                      Enter 4-Digit Security Code
-                    </label>
-                    <div className="flex justify-center gap-3">
-                      {otpCode.map((digit, i) => (
-                        <input key={i} id={`otp-${i}`} type="text" inputMode="numeric" maxLength={1}
-                          value={digit} onChange={e => handleOtpChange(i, e.target.value)}
-                          onKeyDown={e => { if (e.key === "Backspace" && !digit && i > 0) (document.getElementById(`otp-${i - 1}`) as HTMLInputElement)?.focus(); }}
-                          className="w-13 h-13 w-12 h-12 bg-black border-2 border-brand-dark-border focus:border-brand-sky rounded-xl text-center text-xl font-black text-white focus:outline-none transition" />
-                      ))}
-                    </div>
-                  </div>
-                  <button type="submit" disabled={loading}
-                    className="w-full py-3 bg-brand-sky hover:bg-brand-sky-light text-black font-black uppercase text-xs tracking-wider rounded-xl flex items-center justify-center gap-2 transition shadow-lg shadow-brand-sky/20">
-                    {loading
-                      ? <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
-                      : <>Verify &amp; Enter <ArrowRight size={14} /></>}
-                  </button>
-                  <button type="button" onClick={() => { setStep("credentials"); setOtpCode(["", "", "", ""]); setErrorMessage(""); }}
-                    className="w-full text-center text-[10px] text-gray-500 hover:text-white transition">
-                    ← Back to credentials
-                  </button>
-                </>
-              )}
-            </form>
-          )}
+            <label className="flex items-center gap-2 text-[10px] text-gray-400 cursor-pointer select-none">
+              <input type="checkbox" checked={rememberMe} onChange={e => setRememberMe(e.target.checked)}
+                className="rounded border-brand-dark-border text-brand-sky" />
+              Remember this terminal for 30 days
+            </label>
+
+            <button type="submit" disabled={loading}
+              className="w-full py-3 bg-brand-sky hover:bg-brand-sky-light disabled:opacity-60 text-black font-black uppercase text-xs tracking-wider rounded-xl flex items-center justify-center gap-2 transition transform hover:scale-[1.01] shadow-lg shadow-brand-sky/20">
+              {loading
+                ? <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                : <>Sign In to Workspace <ArrowRight size={14} /></>}
+            </button>
+          </form>
 
 
 
