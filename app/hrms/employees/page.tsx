@@ -74,7 +74,8 @@ export default function HREmployeesPage() {
   const isSenior = myDesignationRank <= 4; // Director, Asst Director, Manager, Asst Manager
 
   // ─── PERMISSION FLAGS ──────────────────────────────────────────────────
-  const canViewFullCards = isOwner || isHRUser || isSenior;
+  // Full cards: ONLY Owner + HR Department (HR Manager, Asst HR Manager, HR Director)
+  const canViewFullCards = isOwner || isHRUser;
   const canEditDelete = isOwner || isHRUser;
   const canActivateEmployee = isOwner || isHRUser;
   const canActivateCredentials = isOwner || isITUser;
