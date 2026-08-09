@@ -2027,6 +2027,26 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       supabase.from('unipos_global').upsert({ key: 'unipos_tenants', value: tenants }).then(() => {});
       supabase.from('unipos_global').upsert({ key: 'unipos_invoices', value: saasInvoices }).then(() => {});
     } catch {}
+
+    // 4. Automated Resend API Email Dispatch to Client
+    if (req.email) {
+      try {
+        fetch("/api/send-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            to: req.email,
+            invoiceId: newInvoice.id,
+            businessName: req.businessName,
+            amount: newInvoice.amount,
+            currency: newInvoice.currency,
+            plan: newInvoice.plan,
+          }),
+        }).catch(err => console.warn("Resend email dispatch error:", err));
+      } catch (e) {
+        console.warn("Email API call exception:", e);
+      }
+    }
   };
 
   const rejectDemoRequest = (id: string, reason: string) => {
