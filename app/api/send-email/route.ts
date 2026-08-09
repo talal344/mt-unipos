@@ -4,7 +4,11 @@ export async function POST(req: Request) {
   try {
     const { to, subject, html, invoiceId, businessName, amount, currency, plan } = await req.json();
 
-    const apiKey = process.env.NEXT_PUBLIC_RESEND_API_KEY || process.env.RESEND_API_KEY;
+    const apiKey =
+      process.env.Resend ||
+      process.env.RESEND ||
+      process.env.RESEND_API_KEY ||
+      process.env.NEXT_PUBLIC_RESEND_API_KEY;
 
     if (!apiKey) {
       return NextResponse.json({ success: false, error: "Resend API Key is missing." }, { status: 400 });
