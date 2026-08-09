@@ -46,10 +46,10 @@ export async function POST(req: Request) {
       </div>
     `;
 
-    const fromEmail = process.env.NEXT_PUBLIC_RESEND_FROM_EMAIL || "MT UniPOS <onboarding@resend.dev>";
+    const fromEmail = process.env.NEXT_PUBLIC_RESEND_FROM_EMAIL || "MT UniPOS <billing@updates.mtcore.xyz>";
 
     // Send email using Resend HTTP API
-    const res = await fetch("https://api.resend.com/emails", {
+    let res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${apiKey}`,
@@ -63,7 +63,29 @@ export async function POST(req: Request) {
       }),
     });
 
-    const data = await res.json();
+    let data = await res.json();
+
+    // Automatic fallback to test domain if verified domain header is custom
+    if (!res.ok && (data.message || "").includes("domain")) {
+      const fallbackRes = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from: "MT UniPOS <onboarding@resend.dev>",
+          to: Array.isArray(to) ? to : [to],
+          subject: emailSubject,
+          html: defaultHtml,
+        }),
+      });
+      const fallbackData = await fallbackRes.json();
+      if (fallbackRes.ok) {
+        res = fallbackRes;
+        data = fallbackData;
+      }
+    }
 
     if (!res.ok) {
       console.warn("Resend API error response:", data);
