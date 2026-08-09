@@ -117,22 +117,18 @@ export default function HRMSSidebar() {
       </button>
 
       {/* Brand Header */}
-      <div className="p-4 border-b border-gray-800/80 flex items-center gap-3">
-        <div className="p-2 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/40 rounded-xl text-emerald-400 shrink-0">
-          <Building2 size={20} />
-        </div>
+      <div className="p-3 border-b border-gray-800/80 bg-black/50 flex items-center justify-between">
+        <Link href="/hrms" className="flex items-center gap-2 overflow-hidden">
+          <img 
+            src="/logo.png" 
+            alt="MT UniPOS HRMS" 
+            className="h-10 w-auto max-w-[150px] object-contain drop-shadow-[0_0_12px_rgba(16,185,129,0.4)]" 
+          />
+        </Link>
         {!collapsed && (
-          <div className="overflow-hidden">
-            <h1 className="font-black text-sm text-white tracking-wide truncate">
-              {currentUser?.businessName || businessSettings?.businessName || "MT Enterprise"}
-            </h1>
-            <div className="flex items-center gap-1 mt-0.5">
-              <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">
-                HRMS Suite
-              </span>
-            </div>
-          </div>
+          <span className="bg-emerald-500/20 text-emerald-400 text-[8px] px-1.5 py-0.5 rounded font-black tracking-widest uppercase shrink-0">
+            HRMS
+          </span>
         )}
       </div>
 

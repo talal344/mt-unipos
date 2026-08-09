@@ -586,9 +586,9 @@ export default function HomePage() {
             </button>
 
             {/* Header band */}
-            <div className="bg-brand-sky px-6 py-5 text-center">
-              <div className="flex items-center justify-center gap-2 mb-1">
-                <Receipt size={18} className="text-black" />
+            <div className="bg-brand-sky px-6 py-4 text-center">
+              <img src="/logo.png" style={{ height: "36px", width: "auto", objectFit: "contain", margin: "0 auto 4px auto", display: "block" }} alt="MT UniPOS" />
+              <div className="flex items-center justify-center gap-2 mb-0.5">
                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-black">MT UniPOS</span>
               </div>
               <p className="text-[9px] text-black/70 uppercase tracking-widest">Demo Request Ticket</p>

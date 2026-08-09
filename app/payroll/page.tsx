@@ -128,6 +128,7 @@ export default function PayrollPage() {
             </div>
 
             <div className="text-center font-sans space-y-1">
+              <img src="/logo.png" className="h-10 w-auto max-w-[150px] object-contain mx-auto mb-1" alt="MT UniPOS" />
               <h2 className="text-sm font-black tracking-tight text-white print:text-black">AL-FATAH SUPERSTORE</h2>
               <p className="text-[9px] text-gray-500">Mian Talal POS ERP Payroll</p>
               <p className="text-[10px] text-brand-sky font-bold">Roster Month: June 2026</p>

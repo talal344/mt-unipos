@@ -302,6 +302,7 @@ export default function HRPayrollPage() {
               <div className="p-6 space-y-4 bg-[#0d121c] text-xs font-mono" id="printable-payslip">
                 {/* Payslip Header */}
                 <div className="text-center border-b border-gray-800 pb-4 space-y-1">
+                  <img src="/logo.png" className="h-11 w-auto max-w-[160px] object-contain mx-auto mb-1" alt="MT UniPOS" />
                   <h2 className="font-black text-white text-lg tracking-wide uppercase">
                     {businessSettings.businessName || "MT Enterprise ERP"}
                   </h2>
