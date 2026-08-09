@@ -1215,6 +1215,31 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem("unipos_tenants", JSON.stringify(currentTenants));
     }
 
+    // Auto-Sync: Mark Demo Requests as "Converted" if a matching tenant is already Active
+    if (savedDemos) {
+      try {
+        const parsedDemos: DemoRequest[] = JSON.parse(savedDemos);
+        let demosSyncChanged = false;
+        const syncedDemos = parsedDemos.map((d) => {
+          const isConvertedActive = uniqueTenantsList.some(
+            (t) =>
+              t.status === "Active" &&
+              ((t.email && d.email && t.email.trim().toLowerCase() === d.email.trim().toLowerCase()) ||
+               (t.businessName && d.businessName && t.businessName.trim().toLowerCase() === d.businessName.trim().toLowerCase()))
+          );
+          if (isConvertedActive && d.status !== "Converted") {
+            demosSyncChanged = true;
+            return { ...d, status: "Converted" as const };
+          }
+          return d;
+        });
+        if (demosSyncChanged) {
+          setDemoRequests(syncedDemos);
+          localStorage.setItem("unipos_demos", JSON.stringify(syncedDemos));
+        }
+      } catch (e) {}
+    }
+
     // Check for expired trials in loaded tenants
     let trialsExpired = false;
     const nowTime = new Date();

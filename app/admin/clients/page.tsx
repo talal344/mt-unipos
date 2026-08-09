@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { useGlobalContext } from "@/context/global-context";
 import AdminSidebar from "@/components/admin-sidebar";
 import {
@@ -868,6 +868,19 @@ export default function AdminClientsPage() {
   const [detailTarget, setDetailTarget]   = useState<DemoRequest | null>(null);
   const [deleteTarget, setDeleteTarget]   = useState<DemoRequest | null>(null);
 
+  // Helper to determine if a demo request is already active in Tenants list
+  const getEffectiveDemoStatus = useCallback((r: DemoRequest): DemoRequest["status"] => {
+    if (r.status === "Converted") return "Converted";
+    const isAlreadyActive = tenants.some(
+      (t) =>
+        t.status === "Active" &&
+        ((t.email && r.email && t.email.trim().toLowerCase() === r.email.trim().toLowerCase()) ||
+         (t.businessName && r.businessName && t.businessName.trim().toLowerCase() === r.businessName.trim().toLowerCase()))
+    );
+    if (isAlreadyActive) return "Converted";
+    return r.status;
+  }, [tenants]);
+
   // Sync detailTarget with live data so messages appear instantly
   const liveDetailTarget = useMemo(() => {
     if (!detailTarget) return null;
@@ -876,7 +889,8 @@ export default function AdminClientsPage() {
 
   const filteredDemos = useMemo(() => {
     return demoRequests.filter((r) => {
-      const matchStatus = demoStatusFilter === "All" || r.status === demoStatusFilter;
+      const effStatus = getEffectiveDemoStatus(r);
+      const matchStatus = demoStatusFilter === "All" || effStatus === demoStatusFilter;
       const q = demoSearch.toLowerCase();
       const matchSearch =
         !q ||
@@ -886,16 +900,17 @@ export default function AdminClientsPage() {
 
       return matchStatus && matchSearch;
     });
-  }, [demoRequests, demoSearch, demoStatusFilter]);
+  }, [demoRequests, demoSearch, demoStatusFilter, getEffectiveDemoStatus]);
 
   const demoStats = useMemo(
     () => ({
       total: demoRequests.length,
-      pending: demoRequests.filter((r) => r.status === "Pending").length,
-      approved: demoRequests.filter((r) => r.status === "Approved").length,
-      rejected: demoRequests.filter((r) => r.status === "Rejected").length,
+      pending: demoRequests.filter((r) => getEffectiveDemoStatus(r) === "Pending").length,
+      approved: demoRequests.filter((r) => getEffectiveDemoStatus(r) === "Approved").length,
+      converted: demoRequests.filter((r) => getEffectiveDemoStatus(r) === "Converted").length,
+      rejected: demoRequests.filter((r) => getEffectiveDemoStatus(r) === "Rejected").length,
     }),
-    [demoRequests]
+    [demoRequests, getEffectiveDemoStatus]
   );
 
   // ── Tenant Tab State ─────────────────────────────────────────────────────
@@ -1412,7 +1427,7 @@ export default function AdminClientsPage() {
         {activeTab === "demo" && (
           <div className="space-y-5">
             {/* Stat Cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
               <StatCard
                 label="Total Requests"
                 value={demoStats.total}
@@ -1430,6 +1445,12 @@ export default function AdminClientsPage() {
                 value={demoStats.approved}
                 icon={CheckCircle2}
                 color="bg-emerald-500/15 text-emerald-400"
+              />
+              <StatCard
+                label="Active Tenants"
+                value={demoStats.converted}
+                icon={Building2}
+                color="bg-purple-500/15 text-purple-400"
               />
               <StatCard
                 label="Rejected"
@@ -1456,8 +1477,8 @@ export default function AdminClientsPage() {
                 />
               </div>
               {/* Status Filter */}
-              <div className="flex gap-1.5">
-                {(["All", "Pending", "Under Review", "Reviewed", "Approved", "Rejected"] as const).map(
+              <div className="flex flex-wrap gap-1.5">
+                {(["All", "Pending", "Under Review", "Reviewed", "Approved", "Converted", "Rejected"] as const).map(
                   (s) => (
                     <button
                       key={s}
@@ -1474,6 +1495,8 @@ export default function AdminClientsPage() {
                             ? "bg-sky-500/20 border-sky-500/50 text-sky-400"
                             : s === "Approved"
                             ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-400"
+                            : s === "Converted"
+                            ? "bg-purple-500/20 border-purple-500/50 text-purple-300"
                             : "bg-red-500/20 border-red-500/50 text-red-400"
                           : "bg-brand-dark-surface/30 border-brand-dark-border text-gray-500 hover:text-gray-300"
                       }`}
@@ -1513,8 +1536,10 @@ export default function AdminClientsPage() {
                       </tr>
                     ) : (
                       filteredDemos.map((req) => {
-                        const canAct =
-                          req.status !== "Approved" && req.status !== "Rejected";
+                        const effStatus = getEffectiveDemoStatus(req);
+                        const isConverted = effStatus === "Converted";
+                        const canAct = !isConverted && req.status !== "Approved" && req.status !== "Rejected";
+
                         return (
                           <tr
                             key={req.id}
@@ -1539,7 +1564,7 @@ export default function AdminClientsPage() {
                               {formatDate(req.date)}
                             </td>
                             <td className="p-4">
-                              <DemoStatusBadge status={req.status} />
+                              <DemoStatusBadge status={effStatus} />
                             </td>
                             <td className="p-4">
                               <div className="flex gap-1.5 justify-center">
@@ -1571,7 +1596,19 @@ export default function AdminClientsPage() {
                                     </button>
                                   </>
                                 )}
-                                {req.status !== "Converted" && (
+                                {isConverted ? (
+                                  <button
+                                    onClick={() => {
+                                      setActiveTab("tenants");
+                                      setTenantSearch(req.businessName);
+                                    }}
+                                    className="flex items-center gap-1 px-2.5 py-1.5 bg-purple-500/20 hover:bg-purple-600 text-purple-300 hover:text-white border border-purple-500/40 rounded-lg text-[10px] font-bold transition shadow-sm"
+                                    title="View active tenant in Active Tenants tab"
+                                  >
+                                    <Building2 size={10} />
+                                    Active Tenant
+                                  </button>
+                                ) : (
                                   <button
                                     onClick={() => setActivateDemoTarget(req)}
                                     className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-500/40 rounded-lg text-[10px] font-bold transition shadow-sm"
