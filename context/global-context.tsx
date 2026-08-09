@@ -1436,8 +1436,9 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         seenIds.add(id);
 
         let salePrice = p.salePrice;
-        if ((p.name.toLowerCase().includes("suger") || p.name.toLowerCase().includes("sugar")) && (salePrice === 1500 || salePrice > 1000)) {
-          salePrice = 180;
+        // Auto-correct: If Suger 5kg was corrupted from 1050 to 180 by legacy code, restore it to 1050
+        if ((p.name.toLowerCase().includes("suger") || p.name.toLowerCase().includes("sugar")) && p.costPrice === 750 && salePrice === 180) {
+          salePrice = 1050;
         }
 
         return { ...p, id, salePrice };

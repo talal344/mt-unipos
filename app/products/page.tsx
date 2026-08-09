@@ -239,6 +239,10 @@ export default function ProductsPage() {
       stock: Number(form.stock), minStock: Number(form.minStock),
       unit: form.unit, variant: form.variant,
     };
+    if (payload.salePrice < payload.costPrice) {
+      triggerToast(`⚠️ Warning: Selling price (${payload.salePrice}) is LOWER than Purchase Cost (${payload.costPrice})! Profit will be negative.`);
+    }
+
     if (editingId) updateProduct(editingId, payload);
     else addProduct(payload);
     setShowModal(false);
