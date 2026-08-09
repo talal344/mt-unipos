@@ -42,6 +42,8 @@ export async function POST(req: Request) {
       </div>
     `;
 
+    const fromEmail = process.env.NEXT_PUBLIC_RESEND_FROM_EMAIL || "MT UniPOS <onboarding@resend.dev>";
+
     // Send email using Resend HTTP API
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -50,8 +52,8 @@ export async function POST(req: Request) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "MT UniPOS <onboarding@resend.dev>",
-        to: [to],
+        from: fromEmail,
+        to: Array.isArray(to) ? to : [to],
         subject: emailSubject,
         html: defaultHtml,
       }),
@@ -60,8 +62,12 @@ export async function POST(req: Request) {
     const data = await res.json();
 
     if (!res.ok) {
-      console.warn("Resend API warning / error response:", data);
-      return NextResponse.json({ success: false, error: data.message || "Email dispatch failed", details: data }, { status: res.status });
+      console.warn("Resend API error response:", data);
+      let errorMsg = data.message || "Failed to deliver email via Resend API";
+      if (data.statusCode === 403 || errorMsg.includes("testing emails")) {
+        errorMsg = `[Resend Free Domain Restriction]: In free test mode (onboarding@resend.dev), emails can ONLY be sent to your registered Resend account email address. Add your domain in Resend Dashboard to send to all clients.`;
+      }
+      return NextResponse.json({ success: false, error: errorMsg, details: data }, { status: res.status });
     }
 
     return NextResponse.json({ success: true, data });

@@ -562,14 +562,14 @@ export default function AdminInvoicesPage() {
       });
       const data = await res.json();
       if (data.success) {
-        setSuccessMsg(`⚡ Invoice ${inv.id} successfully sent via Resend API to ${email}!`);
+        setSuccessMsg(`⚡ SUCCESS: Invoice ${inv.id} delivered via Resend API to ${email}!`);
       } else {
-        setSuccessMsg(`📧 Invoice statement generated for ${inv.tenantName} (${email})`);
+        setSuccessMsg(`⚠️ RESEND API NOTICE: ${data.error || "Failed to send email"}`);
       }
-    } catch {
-      setSuccessMsg(`📧 Invoice statement queued for client ${inv.tenantName} at ${email}!`);
+    } catch (err: any) {
+      setSuccessMsg(`⚠️ Error calling email service: ${err.message}`);
     }
-    setTimeout(() => setSuccessMsg(""), 5000);
+    setTimeout(() => setSuccessMsg(""), 8000);
   };
 
   const handleBackupDb = (tenantId: string) => {
