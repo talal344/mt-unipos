@@ -58,8 +58,14 @@ export default function HRRecruitmentPage() {
     empMatch?.department === "IT & Software Operations"
   );
 
+  const isFinanceUser = Boolean(
+    (currentUser?.role as string) === "Finance" ||
+    currentUser?.email?.toLowerCase().includes("finance@") ||
+    empMatch?.department === "Finance & Accounts"
+  );
+
   const [activeTab, setActiveTab] = useState<"candidates" | "it_queue" | "finance_queue" | "jobs">(
-    isITUser ? "it_queue" : "candidates"
+    isITUser ? "it_queue" : (isFinanceUser ? "finance_queue" : "candidates")
   );
 
   // Candidate Modal
@@ -261,65 +267,73 @@ export default function HRRecruitmentPage() {
           )}
         </div>
 
-        {/* Navigation Tabs with Badges */}
+        {/* Navigation Tabs with Role-Based Isolation */}
         <div className="flex border-b border-gray-800/80 space-x-2">
-          <button
-            onClick={() => setActiveTab("candidates")}
-            className={`flex items-center gap-2 py-3 px-5 text-xs font-bold transition border-b-2 ${
-              activeTab === "candidates"
-                ? "border-emerald-400 text-emerald-400 bg-emerald-500/10"
-                : "border-transparent text-gray-400 hover:text-white"
-            }`}
-          >
-            <Users size={15} />
-            <span>1. Candidate ATS Pipeline ({activeCandidates.length})</span>
-          </button>
+          {!isITUser && (
+            <button
+              onClick={() => setActiveTab("candidates")}
+              className={`flex items-center gap-2 py-3 px-5 text-xs font-bold transition border-b-2 ${
+                activeTab === "candidates"
+                  ? "border-emerald-400 text-emerald-400 bg-emerald-500/10"
+                  : "border-transparent text-gray-400 hover:text-white"
+              }`}
+            >
+              <Users size={15} />
+              <span>1. Candidate ATS Pipeline ({activeCandidates.length})</span>
+            </button>
+          )}
 
-          <button
-            onClick={() => setActiveTab("it_queue")}
-            className={`flex items-center gap-2 py-3 px-5 text-xs font-bold transition border-b-2 relative ${
-              activeTab === "it_queue"
-                ? "border-sky-400 text-sky-400 bg-sky-500/10"
-                : "border-transparent text-gray-400 hover:text-white"
-            }`}
-          >
-            <Cpu size={15} />
-            <span>2. IT Credentials Queue</span>
-            {itPendingQueue.length > 0 && (
-              <span className="px-1.5 py-0.5 rounded-full bg-sky-500 text-black font-black text-[9px]">
-                {itPendingQueue.length}
-              </span>
-            )}
-          </button>
+          {(!isFinanceUser || isITUser) && (
+            <button
+              onClick={() => setActiveTab("it_queue")}
+              className={`flex items-center gap-2 py-3 px-5 text-xs font-bold transition border-b-2 relative ${
+                activeTab === "it_queue"
+                  ? "border-sky-400 text-sky-400 bg-sky-500/10"
+                  : "border-transparent text-gray-400 hover:text-white"
+              }`}
+            >
+              <Cpu size={15} />
+              <span>{isITUser ? "IT Credentials & ID Provisioning Queue" : "2. IT Credentials Queue"}</span>
+              {itPendingQueue.length > 0 && (
+                <span className="px-1.5 py-0.5 rounded-full bg-sky-500 text-black font-black text-[9px]">
+                  {itPendingQueue.length}
+                </span>
+              )}
+            </button>
+          )}
 
-          <button
-            onClick={() => setActiveTab("finance_queue")}
-            className={`flex items-center gap-2 py-3 px-5 text-xs font-bold transition border-b-2 relative ${
-              activeTab === "finance_queue"
-                ? "border-emerald-400 text-emerald-400 bg-emerald-500/10"
-                : "border-transparent text-gray-400 hover:text-white"
-            }`}
-          >
-            <DollarSign size={15} />
-            <span>3. Finance Activation Queue</span>
-            {financePendingQueue.length > 0 && (
-              <span className="px-1.5 py-0.5 rounded-full bg-emerald-400 text-black font-black text-[9px]">
-                {financePendingQueue.length}
-              </span>
-            )}
-          </button>
+          {!isITUser && (
+            <button
+              onClick={() => setActiveTab("finance_queue")}
+              className={`flex items-center gap-2 py-3 px-5 text-xs font-bold transition border-b-2 relative ${
+                activeTab === "finance_queue"
+                  ? "border-emerald-400 text-emerald-400 bg-emerald-500/10"
+                  : "border-transparent text-gray-400 hover:text-white"
+              }`}
+            >
+              <DollarSign size={15} />
+              <span>3. Finance Activation Queue</span>
+              {financePendingQueue.length > 0 && (
+                <span className="px-1.5 py-0.5 rounded-full bg-emerald-400 text-black font-black text-[9px]">
+                  {financePendingQueue.length}
+                </span>
+              )}
+            </button>
+          )}
 
-          <button
-            onClick={() => setActiveTab("jobs")}
-            className={`flex items-center gap-2 py-3 px-5 text-xs font-bold transition border-b-2 ${
-              activeTab === "jobs"
-                ? "border-emerald-400 text-emerald-400 bg-emerald-500/10"
-                : "border-transparent text-gray-400 hover:text-white"
-            }`}
-          >
-            <Briefcase size={15} />
-            <span>Job Openings ({hrJobs.length})</span>
-          </button>
+          {!isITUser && !isFinanceUser && (
+            <button
+              onClick={() => setActiveTab("jobs")}
+              className={`flex items-center gap-2 py-3 px-5 text-xs font-bold transition border-b-2 ${
+                activeTab === "jobs"
+                  ? "border-emerald-400 text-emerald-400 bg-emerald-500/10"
+                  : "border-transparent text-gray-400 hover:text-white"
+              }`}
+            >
+              <Briefcase size={15} />
+              <span>Job Openings ({hrJobs.length})</span>
+            </button>
+          )}
         </div>
 
         {/* 👥 TAB 1: CANDIDATE PIPELINE */}
