@@ -1210,6 +1210,7 @@ export default function AdminClientsPage() {
     connectivityPlan: "hybrid" as "offline-only" | "online-only" | "hybrid",
     customDealAmount: "",
     customCurrency: "PKR" as "PKR" | "USD",
+    assignedSoftware: "POS" as "POS" | "HRMS",
   });
 
   const [editForm, setEditForm] = useState({
@@ -1262,6 +1263,7 @@ export default function AdminClientsPage() {
         connectivityPlan: "hybrid",
         customDealAmount: "",
         customCurrency: "PKR",
+        assignedSoftware: "POS",
       });
       triggerToast("Provisioned new Tenant database sharding successfully!");
     } catch (err: any) {
@@ -1753,8 +1755,17 @@ export default function AdminClientsPage() {
                             {tenant.id}
                           </td>
                           <td className="p-4 font-sans">
-                            <div className="font-bold text-white font-sans">
-                              {tenant.businessName}
+                            <div className="font-bold text-white font-sans flex items-center gap-2">
+                              <span>{tenant.businessName}</span>
+                              <span
+                                className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
+                                  tenant.assignedSoftware === "HRMS"
+                                    ? "bg-purple-500/20 text-purple-300 border border-purple-500/30"
+                                    : "bg-sky-500/20 text-sky-400 border border-sky-500/30"
+                                }`}
+                              >
+                                {tenant.assignedSoftware === "HRMS" ? "👥 HRMS" : "🏬 POS"}
+                              </span>
                             </div>
                             <div className="text-[10px] text-gray-500 font-sans">
                               {tenant.businessType}
@@ -2128,6 +2139,20 @@ export default function AdminClientsPage() {
                   }
                   className="w-full bg-black border border-brand-dark-border p-2.5 rounded text-white focus:outline-none focus:border-purple-500"
                 />
+              </div>
+
+              <div>
+                <label className="block text-[10px] uppercase font-bold text-emerald-400 mb-1">
+                  Assigned Line of Business / Software Product
+                </label>
+                <select
+                  value={addForm.assignedSoftware || "POS"}
+                  onChange={(e) => setAddForm({ ...addForm, assignedSoftware: e.target.value as "POS" | "HRMS" })}
+                  className="w-full bg-black border border-emerald-500/40 p-2.5 rounded text-white font-bold focus:outline-none focus:border-emerald-400"
+                >
+                  <option value="POS">🏬 POS (Point of Sale, Inventory, Departmental Stores)</option>
+                  <option value="HRMS">👥 HRMS (Human Resource System, Attendance & Payroll)</option>
+                </select>
               </div>
 
               <div className="grid grid-cols-2 gap-3">

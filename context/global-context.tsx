@@ -47,6 +47,7 @@ export interface DemoRequest {
   email: string;
   phone: string;
   country: string;
+  assignedSoftware?: "POS" | "HRMS";
   businessType: string;
   date: string;
   status: "Pending" | "Reviewed" | "Under Review" | "Approved" | "Rejected" | "Converted";
@@ -93,6 +94,97 @@ export interface Tenant {
   trialEndsAt?: string;
   connectivityPlan?: "offline-only" | "online-only" | "hybrid";
   licenseExpiresAt?: string;
+  assignedSoftware?: "POS" | "HRMS";
+}
+
+// ─── HRMS DATA MODELS ────────────────────────────────────────────────────────
+export interface HREmployee {
+  id: string;
+  employeeCode: string;
+  name: string;
+  email: string;
+  phone: string;
+  cnic?: string;
+  department: string;
+  designation: string;
+  joiningDate: string;
+  employmentType: "Full-time" | "Part-time" | "Contract" | "Daily Wager";
+  basicSalary: number;
+  bankName?: string;
+  accountNumber?: string;
+  jazzCashNo?: string;
+  status: "Active" | "On Leave" | "Terminated";
+  avatar?: string;
+}
+
+export interface HRAttendance {
+  id: string;
+  employeeId: string;
+  employeeName: string;
+  date: string; // YYYY-MM-DD
+  checkIn: string; // e.g. "09:00 AM"
+  checkOut?: string; // e.g. "06:00 PM"
+  status: "Present" | "Late" | "Absent" | "Half Day" | "On Leave";
+  overtimeHours: number;
+  lateMinutes: number;
+}
+
+export interface HRLeave {
+  id: string;
+  employeeId: string;
+  employeeName: string;
+  leaveType: "Casual" | "Sick" | "Annual" | "Maternity" | "Unpaid";
+  startDate: string;
+  endDate: string;
+  totalDays: number;
+  reason: string;
+  status: "Pending" | "Approved" | "Rejected";
+  appliedOn: string;
+  approvedBy?: string;
+}
+
+export interface HRPayrollItem {
+  employeeId: string;
+  employeeName: string;
+  department: string;
+  basicSalary: number;
+  allowances: number;
+  deductions: number;
+  netSalary: number;
+  status: "Paid" | "Pending";
+}
+
+export interface HRPayrollBatch {
+  id: string;
+  month: string; // e.g. "2026-08"
+  processedDate: string;
+  totalEmployees: number;
+  totalGross: number;
+  totalDeductions: number;
+  totalNet: number;
+  status: "Draft" | "Approved" | "Paid";
+  items: HRPayrollItem[];
+}
+
+export interface HRJobOpening {
+  id: string;
+  title: string;
+  department: string;
+  vacancies: number;
+  status: "Open" | "Closed";
+  applicantsCount: number;
+  postedDate: string;
+}
+
+export interface HRAppraisal {
+  id: string;
+  employeeId: string;
+  employeeName: string;
+  reviewPeriod: string;
+  rating: number; // 1-5
+  comments: string;
+  status: "Completed" | "Pending";
+  date: string;
 }
 
 // ─── PERMANENT SEED TENANTS ───────────────────────────────────────────────────
@@ -463,6 +555,7 @@ interface GlobalContextType {
     email: string;
     businessName?: string;
     tenantId?: string;
+    assignedSoftware?: "POS" | "HRMS";
   } | null;
   setCurrentUser: React.Dispatch<React.SetStateAction<any>>;
   localReceiptsDirHandle: any;
@@ -570,7 +663,102 @@ interface GlobalContextType {
   isOffline: boolean;
 
   isOnlineOnlyBlocked: boolean;
+
+  // HRMS Dedicated System State
+  hrEmployees: HREmployee[];
+  hrAttendance: HRAttendance[];
+  hrLeaves: HRLeave[];
+  hrPayrolls: HRPayrollBatch[];
+  hrJobs: HRJobOpening[];
+  hrAppraisals: HRAppraisal[];
+  addHREmployee: (emp: Omit<HREmployee, "id">) => void;
+  updateHREmployee: (id: string, emp: Partial<HREmployee>) => void;
+  deleteHREmployee: (id: string) => void;
+  recordHRAttendance: (attendance: Omit<HRAttendance, "id">) => void;
+  updateHRAttendance: (id: string, updates: Partial<HRAttendance>) => void;
+  submitHRLeave: (leave: Omit<HRLeave, "id" | "status" | "appliedOn">) => void;
+  updateHRLeaveStatus: (id: string, status: HRLeave["status"], approvedBy?: string) => void;
+  processHRPayroll: (month: string, items: HRPayrollItem[]) => HRPayrollBatch;
+  addHRJobOpening: (job: Omit<HRJobOpening, "id" | "applicantsCount" | "postedDate">) => void;
+  updateHRJobOpening: (id: string, updates: Partial<HRJobOpening>) => void;
+  addHRAppraisal: (appraisal: Omit<HRAppraisal, "id" | "date">) => void;
 }
+
+// ─── HRMS DEMO SEED DATA ──────────────────────────────────────────────────────
+const SEED_HR_EMPLOYEES: HREmployee[] = [
+  {
+    id: "HRE-101", employeeCode: "EMP-001", name: "Waqas Ali", email: "waqas.ali@mtcore.xyz",
+    phone: "03001234567", cnic: "35202-1234567-1", department: "Operations", designation: "Store Operations Manager",
+    joiningDate: "2024-01-15", employmentType: "Full-time", basicSalary: 85000, bankName: "Meezan Bank Ltd",
+    accountNumber: "01020304050607", jazzCashNo: "03001234567", status: "Active"
+  },
+  {
+    id: "HRE-102", employeeCode: "EMP-002", name: "Ayesha Malik", email: "ayesha.malik@mtcore.xyz",
+    phone: "03219876543", cnic: "35201-9876543-2", department: "Human Resources", designation: "HR Officer",
+    joiningDate: "2024-03-01", employmentType: "Full-time", basicSalary: 65000, bankName: "HBL",
+    accountNumber: "00427900112233", jazzCashNo: "03219876543", status: "Active"
+  },
+  {
+    id: "HRE-103", employeeCode: "EMP-003", name: "Muhammad Bilal", email: "bilal.m@mtcore.xyz",
+    phone: "03334567890", cnic: "35202-4567890-3", department: "Accounts & Finance", designation: "Senior Accountant",
+    joiningDate: "2023-11-10", employmentType: "Full-time", basicSalary: 75000, bankName: "Bank Alfalah",
+    accountNumber: "551299008877", jazzCashNo: "03334567890", status: "Active"
+  },
+  {
+    id: "HRE-104", employeeCode: "EMP-004", name: "Hamza Sheikh", email: "hamza.s@mtcore.xyz",
+    phone: "03056789012", cnic: "35202-6789012-4", department: "Sales & Retail", designation: "Head Cashier",
+    joiningDate: "2024-05-20", employmentType: "Full-time", basicSalary: 45000, bankName: "MCB Bank",
+    accountNumber: "112233445566", jazzCashNo: "03056789012", status: "Active"
+  },
+  {
+    id: "HRE-105", employeeCode: "EMP-005", name: "Zainab Fatima", email: "zainab.f@mtcore.xyz",
+    phone: "03123456789", cnic: "35201-3456789-5", department: "Inventory & Warehouse", designation: "Warehouse Officer",
+    joiningDate: "2024-02-01", employmentType: "Full-time", basicSalary: 55000, bankName: "Faysal Bank",
+    accountNumber: "998877665544", jazzCashNo: "03123456789", status: "Active"
+  }
+];
+
+const SEED_HR_ATTENDANCE: HRAttendance[] = [
+  { id: "HRA-1", employeeId: "HRE-101", employeeName: "Waqas Ali", date: new Date().toISOString().split("T")[0], checkIn: "08:55 AM", checkOut: "06:05 PM", status: "Present", overtimeHours: 1, lateMinutes: 0 },
+  { id: "HRA-2", employeeId: "HRE-102", employeeName: "Ayesha Malik", date: new Date().toISOString().split("T")[0], checkIn: "09:12 AM", checkOut: "06:00 PM", status: "Late", overtimeHours: 0, lateMinutes: 12 },
+  { id: "HRA-3", employeeId: "HRE-103", employeeName: "Muhammad Bilal", date: new Date().toISOString().split("T")[0], checkIn: "09:00 AM", checkOut: "06:30 PM", status: "Present", overtimeHours: 0.5, lateMinutes: 0 },
+  { id: "HRA-4", employeeId: "HRE-104", employeeName: "Hamza Sheikh", date: new Date().toISOString().split("T")[0], checkIn: "08:50 AM", checkOut: "06:00 PM", status: "Present", overtimeHours: 0, lateMinutes: 0 },
+  { id: "HRA-5", employeeId: "HRE-105", employeeName: "Zainab Fatima", date: new Date().toISOString().split("T")[0], checkIn: "09:00 AM", checkOut: "06:00 PM", status: "Present", overtimeHours: 0, lateMinutes: 0 }
+];
+
+const SEED_HR_LEAVES: HRLeave[] = [
+  { id: "HRL-1", employeeId: "HRE-102", employeeName: "Ayesha Malik", leaveType: "Casual", startDate: "2026-08-12", endDate: "2026-08-13", totalDays: 2, reason: "Family emergency event", status: "Pending", appliedOn: "2026-08-08" },
+  { id: "HRL-2", employeeId: "HRE-104", employeeName: "Hamza Sheikh", leaveType: "Sick", startDate: "2026-08-05", endDate: "2026-08-05", totalDays: 1, reason: "Severe flu & fever", status: "Approved", appliedOn: "2026-08-04", approvedBy: "SuperAdmin / HR" }
+];
+
+const SEED_HR_PAYROLLS: HRPayrollBatch[] = [
+  {
+    id: "HRPAY-2026-07",
+    month: "2026-07",
+    processedDate: "2026-07-31",
+    totalEmployees: 5,
+    totalGross: 325000,
+    totalDeductions: 12500,
+    totalNet: 312500,
+    status: "Paid",
+    items: [
+      { employeeId: "HRE-101", employeeName: "Waqas Ali", department: "Operations", basicSalary: 85000, allowances: 5000, deductions: 2500, netSalary: 87500, status: "Paid" },
+      { employeeId: "HRE-102", employeeName: "Ayesha Malik", department: "Human Resources", basicSalary: 65000, allowances: 3000, deductions: 1500, netSalary: 66500, status: "Paid" },
+      { employeeId: "HRE-103", employeeName: "Muhammad Bilal", department: "Accounts & Finance", basicSalary: 75000, allowances: 4000, deductions: 2000, netSalary: 77000, status: "Paid" },
+      { employeeId: "HRE-104", employeeName: "Hamza Sheikh", department: "Sales & Retail", basicSalary: 45000, allowances: 2000, deductions: 1000, netSalary: 46000, status: "Paid" },
+      { employeeId: "HRE-105", employeeName: "Zainab Fatima", department: "Inventory & Warehouse", basicSalary: 55000, allowances: 2500, deductions: 2000, netSalary: 55500, status: "Paid" }
+    ]
+  }
+];
+
+const SEED_HR_JOBS: HRJobOpening[] = [
+  { id: "HRJ-1", title: "Assistant Store Manager", department: "Operations", vacancies: 2, status: "Open", applicantsCount: 14, postedDate: "2026-08-01" },
+  { id: "HRJ-2", title: "Accounts Executive", department: "Finance", vacancies: 1, status: "Open", applicantsCount: 8, postedDate: "2026-08-04" }
+];
+
+const SEED_HR_APPRAISALS: HRAppraisal[] = [
+  { id: "HRA-1", employeeId: "HRE-101", employeeName: "Waqas Ali", reviewPeriod: "Q2 2026", rating: 5, comments: "Exceptional store operational performance and team leadership.", status: "Completed", date: "2026-07-15" }
+];
 
 const GlobalContext = createContext<GlobalContextType | undefined>(undefined);
 
@@ -871,6 +1059,14 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
   const [saasInvoices, setSaasInvoices] = useState<SaaSInvoice[]>([]);
   const [supportTickets, setSupportTickets] = useState<SupportTicket[]>([]);
   
+  // HRMS Dedicated System State
+  const [hrEmployees, setHrEmployees] = useState<HREmployee[]>([]);
+  const [hrAttendance, setHrAttendance] = useState<HRAttendance[]>([]);
+  const [hrLeaves, setHrLeaves] = useState<HRLeave[]>([]);
+  const [hrPayrolls, setHrPayrolls] = useState<HRPayrollBatch[]>([]);
+  const [hrJobs, setHrJobs] = useState<HRJobOpening[]>([]);
+  const [hrAppraisals, setHrAppraisals] = useState<HRAppraisal[]>([]);
+
   // Authenticated State
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [localReceiptsDirHandle, setLocalReceiptsDirHandle] = useState<any>(null);
@@ -1741,7 +1937,50 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       setAccounts(defaultInitAccounts);
     }
 
+    // 13. Load HRMS Datasets
+    if (currentUser?.tenantId) {
+      const savedHrEmployees = getTenantData("unipos_hr_employees", currentUser.tenantId);
+      if (savedHrEmployees && savedHrEmployees.length > 0) setHrEmployees(savedHrEmployees);
+      else {
+        setHrEmployees(SEED_HR_EMPLOYEES);
+        saveTenantData("unipos_hr_employees", SEED_HR_EMPLOYEES);
+      }
 
+      const savedHrAttendance = getTenantData("unipos_hr_attendance", currentUser.tenantId);
+      if (savedHrAttendance && savedHrAttendance.length > 0) setHrAttendance(savedHrAttendance);
+      else {
+        setHrAttendance(SEED_HR_ATTENDANCE);
+        saveTenantData("unipos_hr_attendance", SEED_HR_ATTENDANCE);
+      }
+
+      const savedHrLeaves = getTenantData("unipos_hr_leaves", currentUser.tenantId);
+      if (savedHrLeaves && savedHrLeaves.length > 0) setHrLeaves(savedHrLeaves);
+      else {
+        setHrLeaves(SEED_HR_LEAVES);
+        saveTenantData("unipos_hr_leaves", SEED_HR_LEAVES);
+      }
+
+      const savedHrPayrolls = getTenantData("unipos_hr_payrolls", currentUser.tenantId);
+      if (savedHrPayrolls && savedHrPayrolls.length > 0) setHrPayrolls(savedHrPayrolls);
+      else {
+        setHrPayrolls(SEED_HR_PAYROLLS);
+        saveTenantData("unipos_hr_payrolls", SEED_HR_PAYROLLS);
+      }
+
+      const savedHrJobs = getTenantData("unipos_hr_jobs", currentUser.tenantId);
+      if (savedHrJobs && savedHrJobs.length > 0) setHrJobs(savedHrJobs);
+      else {
+        setHrJobs(SEED_HR_JOBS);
+        saveTenantData("unipos_hr_jobs", SEED_HR_JOBS);
+      }
+
+      const savedHrAppraisals = getTenantData("unipos_hr_appraisals", currentUser.tenantId);
+      if (savedHrAppraisals && savedHrAppraisals.length > 0) setHrAppraisals(savedHrAppraisals);
+      else {
+        setHrAppraisals(SEED_HR_APPRAISALS);
+        saveTenantData("unipos_hr_appraisals", SEED_HR_APPRAISALS);
+      }
+    }
 
   }, [currentUser?.tenantId]);
 
@@ -3727,6 +3966,115 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
   };
 
 
+  // HRMS Action Handlers
+  const addHREmployee = (emp: Omit<HREmployee, "id">) => {
+    const newEmp: HREmployee = {
+      ...emp,
+      id: `HRE-${Math.floor(100 + Math.random() * 900)}`
+    };
+    const updated = [newEmp, ...hrEmployees];
+    setHrEmployees(updated);
+    saveTenantData("unipos_hr_employees", updated);
+  };
+
+  const updateHREmployee = (id: string, emp: Partial<HREmployee>) => {
+    const updated = hrEmployees.map(e => e.id === id ? { ...e, ...emp } : e);
+    setHrEmployees(updated);
+    saveTenantData("unipos_hr_employees", updated);
+  };
+
+  const deleteHREmployee = (id: string) => {
+    const updated = hrEmployees.filter(e => e.id !== id);
+    setHrEmployees(updated);
+    saveTenantData("unipos_hr_employees", updated);
+  };
+
+  const recordHRAttendance = (attendance: Omit<HRAttendance, "id">) => {
+    const newAtt: HRAttendance = {
+      ...attendance,
+      id: `HRA-${Math.floor(1000 + Math.random() * 9000)}`
+    };
+    const updated = [newAtt, ...hrAttendance];
+    setHrAttendance(updated);
+    saveTenantData("unipos_hr_attendance", updated);
+  };
+
+  const updateHRAttendance = (id: string, updates: Partial<HRAttendance>) => {
+    const updated = hrAttendance.map(a => a.id === id ? { ...a, ...updates } : a);
+    setHrAttendance(updated);
+    saveTenantData("unipos_hr_attendance", updated);
+  };
+
+  const submitHRLeave = (leave: Omit<HRLeave, "id" | "status" | "appliedOn">) => {
+    const newLeave: HRLeave = {
+      ...leave,
+      id: `HRL-${Math.floor(100 + Math.random() * 900)}`,
+      status: "Pending",
+      appliedOn: new Date().toISOString().split("T")[0]
+    };
+    const updated = [newLeave, ...hrLeaves];
+    setHrLeaves(updated);
+    saveTenantData("unipos_hr_leaves", updated);
+  };
+
+  const updateHRLeaveStatus = (id: string, status: HRLeave["status"], approvedBy?: string) => {
+    const updated = hrLeaves.map(l => l.id === id ? { ...l, status, approvedBy: approvedBy || "SuperAdmin / HR" } : l);
+    setHrLeaves(updated);
+    saveTenantData("unipos_hr_leaves", updated);
+  };
+
+  const processHRPayroll = (month: string, items: HRPayrollItem[]) => {
+    const totalGross = items.reduce((a, b) => a + b.basicSalary + b.allowances, 0);
+    const totalDeductions = items.reduce((a, b) => a + b.deductions, 0);
+    const totalNet = totalGross - totalDeductions;
+
+    const newBatch: HRPayrollBatch = {
+      id: `HRPAY-${month}`,
+      month,
+      processedDate: new Date().toISOString().split("T")[0],
+      totalEmployees: items.length,
+      totalGross,
+      totalDeductions,
+      totalNet,
+      status: "Paid",
+      items
+    };
+
+    const updated = [newBatch, ...hrPayrolls.filter(b => b.month !== month)];
+    setHrPayrolls(updated);
+    saveTenantData("unipos_hr_payrolls", updated);
+    return newBatch;
+  };
+
+  const addHRJobOpening = (job: Omit<HRJobOpening, "id" | "applicantsCount" | "postedDate">) => {
+    const newJob: HRJobOpening = {
+      ...job,
+      id: `HRJ-${Math.floor(100 + Math.random() * 900)}`,
+      applicantsCount: 0,
+      postedDate: new Date().toISOString().split("T")[0]
+    };
+    const updated = [newJob, ...hrJobs];
+    setHrJobs(updated);
+    saveTenantData("unipos_hr_jobs", updated);
+  };
+
+  const updateHRJobOpening = (id: string, updates: Partial<HRJobOpening>) => {
+    const updated = hrJobs.map(j => j.id === id ? { ...j, ...updates } : j);
+    setHrJobs(updated);
+    saveTenantData("unipos_hr_jobs", updated);
+  };
+
+  const addHRAppraisal = (appraisal: Omit<HRAppraisal, "id" | "date">) => {
+    const newApp: HRAppraisal = {
+      ...appraisal,
+      id: `HRA-${Math.floor(100 + Math.random() * 900)}`,
+      date: new Date().toISOString().split("T")[0]
+    };
+    const updated = [newApp, ...hrAppraisals];
+    setHrAppraisals(updated);
+    saveTenantData("unipos_hr_appraisals", updated);
+  };
+
   // Check if current logged in user belongs to an online-only tenant while offline
   const currentTenantObj = tenants.find(t => t.id === currentUser?.tenantId);
   const isOnlineOnlyBlocked = Boolean(
@@ -3770,6 +4118,25 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         localReceiptsDirHandle,
         setLocalReceiptsDirHandle,
         logout,
+
+        // HRMS State & Handlers
+        hrEmployees,
+        hrAttendance,
+        hrLeaves,
+        hrPayrolls,
+        hrJobs,
+        hrAppraisals,
+        addHREmployee,
+        updateHREmployee,
+        deleteHREmployee,
+        recordHRAttendance,
+        updateHRAttendance,
+        submitHRLeave,
+        updateHRLeaveStatus,
+        processHRPayroll,
+        addHRJobOpening,
+        updateHRJobOpening,
+        addHRAppraisal,
 
         currentBranch,
         setCurrentBranch,

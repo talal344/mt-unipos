@@ -238,19 +238,25 @@ function LoginContent() {
         ? (role === "Owner" ? activeTenant?.ownerName || "Owner" : role + " User")
         : (employeeMatch?.name || "Staff User");
 
+      const assignedSoftware = activeTenant?.assignedSoftware || "POS";
       const user = {
         name,
         role,
         email: email.trim().toLowerCase(),
         businessName: activeTenant?.businessName || "Unknown",
         tenantId: activeTenant?.id || cleanTenantId,
+        assignedSoftware
       };
 
       setTimeout(() => {
         localStorage.setItem("unipos_last_activated_tenant", cleanTenantId);
         localStorage.setItem("unipos_current_user", JSON.stringify(user));
         setCurrentUser(user);
-        router.push(role === "Cashier" ? "/pos" : "/dashboard");
+        if (assignedSoftware === "HRMS") {
+          router.push("/hrms");
+        } else {
+          router.push(role === "Cashier" ? "/pos" : "/dashboard");
+        }
       }, 600);
     } else {
       setErrorMessage("Invalid credentials. Incorrect email or password.");

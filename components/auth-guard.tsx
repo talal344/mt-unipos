@@ -42,6 +42,23 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    // Line of Business Isolation: HRMS vs POS
+    const assignedSoftware = currentUser.assignedSoftware || "POS";
+
+    if (assignedSoftware === "HRMS") {
+      // HRMS users can only access /hrms routes (and /support /settings /profile)
+      if (!pathname.startsWith("/hrms") && !pathname.startsWith("/support") && !pathname.startsWith("/settings")) {
+        router.replace("/hrms");
+        return;
+      }
+    } else {
+      // POS users cannot access HRMS routes
+      if (pathname.startsWith("/hrms")) {
+        router.replace("/dashboard");
+        return;
+      }
+    }
+
     // Role-based restrictions
     const role = currentUser.role;
 
