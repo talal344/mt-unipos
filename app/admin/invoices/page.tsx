@@ -21,7 +21,10 @@ import {
   Percent,
   Edit2,
   Trash2,
-  Printer
+  Printer,
+  Smartphone,
+  MessageSquare,
+  Copy
 } from "lucide-react";
 
 function buildThermalInvoiceHTML(invoice: any, tenantEmail: string): string {
@@ -400,6 +403,8 @@ export default function AdminInvoicesPage() {
 
   // Payment Gate Activation Modal State
   const [paymentModalInvoice, setPaymentModalInvoice] = useState<any>(null);
+  const [smsModalInvoice, setSmsModalInvoice] = useState<any>(null);
+  const [copiedSms, setCopiedSms] = useState(false);
   const [paymentForm, setPaymentForm] = useState({
     amount: "0",
     paidAmount: "0",
@@ -1007,6 +1012,15 @@ export default function AdminInvoicesPage() {
                               <Send size={12} />
                             </button>
 
+                            {/* Send SMS / WhatsApp Receipt with Direct Link */}
+                            <button
+                              onClick={() => setSmsModalInvoice(inv)}
+                              className="p-1.5 bg-emerald-500/20 hover:bg-emerald-500/40 text-emerald-400 rounded-lg border border-emerald-500/30 transition"
+                              title="Send SMS / WhatsApp Receipt & Direct Tracking Link"
+                            >
+                              <Smartphone size={12} />
+                            </button>
+
                             {/* Delete Invoice */}
                             <button
                               onClick={() => handleDeleteInvoice(inv.id)}
@@ -1491,6 +1505,68 @@ export default function AdminInvoicesPage() {
                 Compile &amp; Issue Invoice
               </button>
             </form>
+          </div>
+        )}
+
+        {/* SMS & WhatsApp Receipt Dispatch Modal */}
+        {smsModalInvoice && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 font-sans">
+            <div className="bg-[#0b0f17] border border-emerald-500/40 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-fade-in-up">
+              <div className="p-4 bg-black/40 border-b border-gray-800 flex justify-between items-center">
+                <div className="flex items-center gap-2 text-emerald-400">
+                  <Smartphone size={20} />
+                  <span className="font-black text-white text-sm">SMS &amp; WhatsApp Receipt Dispatch</span>
+                </div>
+                <button onClick={() => setSmsModalInvoice(null)} className="text-gray-400 hover:text-white p-1 rounded">
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div className="p-6 space-y-4 text-xs">
+                <div className="bg-emerald-950/30 border border-emerald-500/30 p-3 rounded-xl">
+                  <div className="text-[10px] uppercase font-bold text-emerald-400">Direct Tracking &amp; Receipt Link:</div>
+                  <div className="font-mono text-white font-black mt-0.5 text-xs select-all">
+                    https://pos.mtcore.xyz/track-ticket?id={smsModalInvoice.id}
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-[10px] uppercase font-bold text-gray-400">Formatted SMS / WhatsApp Message:</label>
+                  <textarea
+                    rows={6}
+                    readOnly
+                    value={`[MT UniPOS ERP] Dear ${smsModalInvoice.tenantName},\nYour SaaS Invoice ${smsModalInvoice.id} status is ${smsModalInvoice.status.toUpperCase()}!\nPlan: ${smsModalInvoice.plan}\nTotal Amount: ${smsModalInvoice.currency || "PKR"} ${smsModalInvoice.amount.toLocaleString()}\nAmount Paid: ${smsModalInvoice.currency || "PKR"} ${(smsModalInvoice.paidAmount ?? (smsModalInvoice.status === "Paid" ? smsModalInvoice.amount : 0)).toLocaleString()}\nRemaining Dues: ${smsModalInvoice.currency || "PKR"} ${(smsModalInvoice.remainingBalance ?? 0).toLocaleString()}\n\nTrack & Download Digital Receipt Slip:\nhttps://pos.mtcore.xyz/track-ticket?id=${smsModalInvoice.id}\n\nSupport: 03396399895 | Web: pos.mtcore.xyz`}
+                    className="w-full bg-black border border-gray-800 p-3 rounded-xl text-gray-200 font-mono text-[11px] leading-relaxed focus:outline-none"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2">
+                  <button
+                    onClick={() => {
+                      const text = encodeURIComponent(`[MT UniPOS ERP] Dear ${smsModalInvoice.tenantName},\nYour SaaS Invoice ${smsModalInvoice.id} status is ${smsModalInvoice.status.toUpperCase()}!\nPlan: ${smsModalInvoice.plan}\nTotal Amount: ${smsModalInvoice.currency || "PKR"} ${smsModalInvoice.amount.toLocaleString()}\nAmount Paid: ${smsModalInvoice.currency || "PKR"} ${(smsModalInvoice.paidAmount ?? (smsModalInvoice.status === "Paid" ? smsModalInvoice.amount : 0)).toLocaleString()}\n\nTrack & Download Digital Receipt:\nhttps://pos.mtcore.xyz/track-ticket?id=${smsModalInvoice.id}`);
+                      window.open(`https://wa.me/?text=${text}`, "_blank");
+                    }}
+                    className="py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase text-[11px] rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20"
+                  >
+                    <MessageSquare size={14} />
+                    <span>Send via WhatsApp</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      const msg = `[MT UniPOS ERP] Dear ${smsModalInvoice.tenantName},\nInvoice ${smsModalInvoice.id} status: ${smsModalInvoice.status.toUpperCase()}.\nTrack Slip: https://pos.mtcore.xyz/track-ticket?id=${smsModalInvoice.id}`;
+                      navigator.clipboard.writeText(msg);
+                      setCopiedSms(true);
+                      setTimeout(() => setCopiedSms(false), 3000);
+                    }}
+                    className="py-3 bg-purple-600 hover:bg-purple-500 text-white font-black uppercase text-[11px] rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-purple-600/20"
+                  >
+                    <Copy size={14} />
+                    <span>{copiedSms ? "Copied to Clipboard!" : "Copy SMS & Link"}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
