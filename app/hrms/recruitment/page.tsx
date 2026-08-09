@@ -65,6 +65,14 @@ export default function HRRecruitmentPage() {
     empMatch?.department === "Finance & Accounts"
   );
 
+  const isHRUser = Boolean(
+    (currentUser?.role as string) === "HR" ||
+    currentUser?.email?.toLowerCase().includes("hr@") ||
+    empMatch?.department === "Human Resources"
+  );
+
+  const isOwner = currentUser?.role === "Owner";
+
   const [activeTab, setActiveTab] = useState<"candidates" | "it_queue" | "finance_queue" | "jobs">(
     isITUser ? "it_queue" : (isFinanceUser ? "finance_queue" : "candidates")
   );
@@ -350,7 +358,7 @@ export default function HRRecruitmentPage() {
                 <h3 className="text-sm font-black text-white">Candidates &amp; Interview Pipeline</h3>
                 <p className="text-[11px] text-gray-400">Move candidates through Applied &rarr; Interview &rarr; Hired stages.</p>
               </div>
-              {!isITUser && (
+              {(isOwner || isHRUser) && (
                 <button
                   onClick={() => {
                     setEditingCandId(null);

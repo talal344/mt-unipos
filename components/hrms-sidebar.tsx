@@ -46,6 +46,13 @@ export default function HRMSSidebar() {
     empMatch?.department === "Human Resources"
   );
 
+
+  const isFinanceUser = Boolean(
+    (currentUser?.role as string) === "Finance" ||
+    currentUser?.email?.toLowerCase().includes("finance@") ||
+    empMatch?.department === "Finance & Accounts"
+  );
+
   const isOwner = currentUser?.role === "Owner";
 
   const handleLogout = () => {
@@ -55,98 +62,44 @@ export default function HRMSSidebar() {
 
   const navItems = isITUser
     ? [
-        {
-          label: "IT Dashboard",
-          href: "/hrms",
-          icon: LayoutDashboard,
-        },
-        {
-          label: "Employees Directory",
-          href: "/hrms/employees",
-          icon: Users,
-        },
-        {
-          label: "My Attendance",
-          href: "/hrms/attendance",
-          icon: Clock,
-        },
-        {
-          label: "My Leave Applications",
-          href: "/hrms/leaves",
-          icon: CalendarDays,
-        },
-        {
-          label: "IT Provisioning Tasks",
-          href: "/hrms/recruitment",
-          icon: UserPlus,
-        },
-        {
-          label: "My Team",
-          href: "/hrms/team",
-          icon: Network,
-        },
-        {
-          label: "Helpdesk Tickets",
-          href: "/hrms/tickets",
-          icon: HelpCircle,
-        },
+        { label: "IT Dashboard", href: "/hrms", icon: LayoutDashboard },
+        { label: "Employees Directory", href: "/hrms/employees", icon: Users },
+        { label: "My Attendance", href: "/hrms/attendance", icon: Clock },
+        { label: "My Leave Applications", href: "/hrms/leaves", icon: CalendarDays },
+        { label: "IT Provisioning Tasks", href: "/hrms/recruitment", icon: UserPlus },
+        { label: "My Team", href: "/hrms/team", icon: Network },
+        { label: "Helpdesk Tickets", href: "/hrms/tickets", icon: HelpCircle },
+      ]
+    : isFinanceUser && !isOwner
+    ? [
+        { label: "Finance Dashboard", href: "/hrms", icon: LayoutDashboard },
+        { label: "Employees Directory", href: "/hrms/employees", icon: Users },
+        { label: "My Attendance", href: "/hrms/attendance", icon: Clock },
+        { label: "My Leave Applications", href: "/hrms/leaves", icon: CalendarDays },
+        { label: "Payroll & Payslips", href: "/hrms/payroll", icon: DollarSign },
+        { label: "Finance Activation Tasks", href: "/hrms/recruitment", icon: UserPlus },
+        { label: "My Team", href: "/hrms/team", icon: Network },
+        { label: "Helpdesk Tickets", href: "/hrms/tickets", icon: HelpCircle },
       ]
     : [
-        {
-          label: "HR Dashboard",
-          href: "/hrms",
-          icon: LayoutDashboard,
-        },
-        {
-          label: "Employees Directory",
-          href: "/hrms/employees",
-          icon: Users,
-        },
-        {
-          label: "Attendance & Shifts",
-          href: "/hrms/attendance",
-          icon: Clock,
-        },
-        {
-          label: "Leave Applications",
-          href: "/hrms/leaves",
-          icon: CalendarDays,
-        },
-        {
-          label: "Payroll & Payslips",
-          href: "/hrms/payroll",
-          icon: DollarSign,
-        },
-        {
-          label: "Recruitment (ATS)",
-          href: "/hrms/recruitment",
-          icon: UserPlus,
-        },
-        {
-          label: "Performance (KPIs)",
-          href: "/hrms/performance",
-          icon: TrendingUp,
-        },
-        {
-          label: "My Team",
-          href: "/hrms/team",
-          icon: Network,
-        },
+        { label: "HR Dashboard", href: "/hrms", icon: LayoutDashboard },
+        { label: "Employees Directory", href: "/hrms/employees", icon: Users },
+        { label: "Attendance & Shifts", href: "/hrms/attendance", icon: Clock },
+        { label: "Leave Applications", href: "/hrms/leaves", icon: CalendarDays },
+        { label: "Payroll & Payslips", href: "/hrms/payroll", icon: DollarSign },
+        { label: "Recruitment (ATS)", href: "/hrms/recruitment", icon: UserPlus },
+        { label: "My Team", href: "/hrms/team", icon: Network },
         ...((isOwner || isHRUser) ? [{
           label: "Assign Team",
           href: "/hrms/team-assign",
           icon: GitBranch,
         }] : []),
-        {
-          label: "Helpdesk Tickets",
-          href: "/hrms/tickets",
-          icon: HelpCircle,
-        },
-        {
+        { label: "Helpdesk Tickets", href: "/hrms/tickets", icon: HelpCircle },
+        ...((isOwner || isHRUser) ? [{
           label: "HRMS Settings",
           href: "/hrms/settings",
           icon: Settings,
-        },
+        }] : []),
       ];
 
   return (
