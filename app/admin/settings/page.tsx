@@ -21,6 +21,26 @@ export default function AdminSettingsPage() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [showApiKeys, setShowApiKeys] = useState(false);
 
+  // External API Keys states
+  const [resendApiKey, setResendApiKey] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("unipos_resend_api_key") || process.env.NEXT_PUBLIC_RESEND_API_KEY || "re_resend_api_key_configured";
+    }
+    return process.env.NEXT_PUBLIC_RESEND_API_KEY || "re_resend_api_key_configured";
+  });
+  const [sendgridApiKey, setSendgridApiKey] = useState(() => {
+    if (typeof window !== "undefined") return localStorage.getItem("unipos_sendgrid_api_key") || "SG.MT_UniPOS_SMTP_Key_Secure_2026_LiveGate";
+    return "SG.MT_UniPOS_SMTP_Key_Secure_2026_LiveGate";
+  });
+  const [twilioToken, setTwilioToken] = useState(() => {
+    if (typeof window !== "undefined") return localStorage.getItem("unipos_twilio_token") || "AC_MT_TWILIO_LOYALTY_VOUCHERS_SMS_SHARD";
+    return "AC_MT_TWILIO_LOYALTY_VOUCHERS_SMS_SHARD";
+  });
+  const [stripeSecret, setStripeSecret] = useState(() => {
+    if (typeof window !== "undefined") return localStorage.getItem("unipos_stripe_secret") || "whsec_Stripe_Recurring_Billing_Callbacks_MT";
+    return "whsec_Stripe_Recurring_Billing_Callbacks_MT";
+  });
+
   // Form settings states
   const [platformTitle, setPlatformTitle] = useState("MT UniPOS");
   const [founderCredit, setFounderCredit] = useState("Mian Talal");
@@ -40,6 +60,17 @@ export default function AdminSettingsPage() {
   const triggerToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  const handleSaveApiKeys = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (typeof window !== "undefined") {
+      localStorage.setItem("unipos_resend_api_key", resendApiKey);
+      localStorage.setItem("unipos_sendgrid_api_key", sendgridApiKey);
+      localStorage.setItem("unipos_twilio_token", twilioToken);
+      localStorage.setItem("unipos_stripe_secret", stripeSecret);
+    }
+    triggerToast("✅ Resend.com & External Gateway API Keys saved successfully!");
   };
 
   const handleSaveBranding = (e: React.FormEvent) => {
@@ -194,13 +225,14 @@ export default function AdminSettingsPage() {
             </form>
 
             {/* SMTP and External API Gateway configs */}
-            <div className="bg-brand-dark-surface/50 border border-brand-dark-border p-6 rounded-2xl space-y-4">
+            <form onSubmit={handleSaveApiKeys} className="bg-brand-dark-surface/50 border border-brand-dark-border p-6 rounded-2xl space-y-4">
               <div className="flex justify-between items-center border-b border-brand-dark-border pb-2.5">
                 <h3 className="text-xs font-black uppercase text-gray-400 tracking-wider flex items-center gap-1.5">
                   <Key size={14} className="text-purple-400" />
                   SaaS External SMTP &amp; API Gateways
                 </h3>
                 <button
+                  type="button"
                   onClick={() => setShowApiKeys(!showApiKeys)}
                   className="text-purple-400 hover:text-purple-300 text-[10px] font-bold flex items-center gap-1 focus:outline-none"
                 >
@@ -209,38 +241,67 @@ export default function AdminSettingsPage() {
                 </button>
               </div>
 
-              <div className="space-y-3 text-xs font-mono">
+              <div className="space-y-4 text-xs font-mono">
+                {/* Resend.com API Key */}
                 <div>
-                  <div className="text-[9px] uppercase font-bold text-gray-500 font-sans">SendGrid SMTP API Key</div>
+                  <div className="flex items-center justify-between">
+                    <label className="text-[9px] uppercase font-bold text-emerald-400 font-sans flex items-center gap-1">
+                      <span>⚡ Resend.com Email API Key</span>
+                      <span className="text-[8px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-1.5 py-0.5 rounded font-black">RECOMMENDED FREE (3,000/mo)</span>
+                    </label>
+                  </div>
                   <input
                     type={showApiKeys ? "text" : "password"}
-                    readOnly
-                    value="SG.MT_UniPOS_SMTP_Key_Secure_2026_LiveGate"
-                    className="w-full bg-black border border-brand-dark-border/60 p-2 rounded text-gray-400 mt-1 focus:outline-none"
+                    value={resendApiKey}
+                    onChange={(e) => setResendApiKey(e.target.value)}
+                    placeholder="e.g. re_123456789_abcdef..."
+                    className="w-full bg-black border border-emerald-500/40 p-2.5 rounded-xl text-emerald-300 font-bold mt-1 focus:outline-none focus:border-emerald-400"
+                  />
+                  <p className="text-[9px] text-gray-500 font-sans mt-1">Get your free API Key from <a href="https://resend.com" target="_blank" rel="noreferrer" className="text-sky-400 underline">resend.com</a> (Includes 3,000 free emails/month).</p>
+                </div>
+
+                {/* SendGrid API Key */}
+                <div>
+                  <label className="text-[9px] uppercase font-bold text-gray-400 font-sans block">SendGrid SMTP API Key</label>
+                  <input
+                    type={showApiKeys ? "text" : "password"}
+                    value={sendgridApiKey}
+                    onChange={(e) => setSendgridApiKey(e.target.value)}
+                    className="w-full bg-black border border-brand-dark-border/60 p-2 rounded-xl text-gray-300 mt-1 focus:outline-none focus:border-purple-500"
                   />
                 </div>
 
+                {/* Twilio SMS Gateway */}
                 <div>
-                  <div className="text-[9px] uppercase font-bold text-gray-500 font-sans">Twilio SMS Gateway Token</div>
+                  <label className="text-[9px] uppercase font-bold text-gray-400 font-sans block">Twilio SMS Gateway Token</label>
                   <input
                     type={showApiKeys ? "text" : "password"}
-                    readOnly
-                    value="AC_MT_TWILIO_LOYALTY_VOUCHERS_SMS_SHARD"
-                    className="w-full bg-black border border-brand-dark-border/60 p-2 rounded text-gray-400 mt-1 focus:outline-none"
+                    value={twilioToken}
+                    onChange={(e) => setTwilioToken(e.target.value)}
+                    className="w-full bg-black border border-brand-dark-border/60 p-2 rounded-xl text-gray-300 mt-1 focus:outline-none focus:border-purple-500"
                   />
                 </div>
 
+                {/* Stripe Webhook Secret */}
                 <div>
-                  <div className="text-[9px] uppercase font-bold text-gray-500 font-sans">Stripe SaaS billing Webhook Secret</div>
+                  <label className="text-[9px] uppercase font-bold text-gray-400 font-sans block">Stripe SaaS Billing Webhook Secret</label>
                   <input
                     type={showApiKeys ? "text" : "password"}
-                    readOnly
-                    value="whsec_Stripe_Recurring_Billing_Callbacks_MT"
-                    className="w-full bg-black border border-brand-dark-border/60 p-2 rounded text-gray-400 mt-1 focus:outline-none"
+                    value={stripeSecret}
+                    onChange={(e) => setStripeSecret(e.target.value)}
+                    className="w-full bg-black border border-brand-dark-border/60 p-2 rounded-xl text-gray-300 mt-1 focus:outline-none focus:border-purple-500"
                   />
                 </div>
+
+                <button
+                  type="submit"
+                  className="w-full py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl shadow-lg transition flex items-center justify-center gap-1.5"
+                >
+                  <CheckCircle size={14} />
+                  <span>Save Gateway Credentials</span>
+                </button>
               </div>
-            </div>
+            </form>
 
           </div>
 
