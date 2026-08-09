@@ -70,6 +70,11 @@ export default function HRMSSidebar() {
           href: "/hrms/recruitment",
           icon: UserPlus,
         },
+        {
+          label: "Helpdesk Tickets",
+          href: "/hrms/tickets",
+          icon: HelpCircle,
+        },
       ]
     : [
         {
@@ -106,6 +111,11 @@ export default function HRMSSidebar() {
           label: "Performance (KPIs)",
           href: "/hrms/performance",
           icon: TrendingUp,
+        },
+        {
+          label: "Helpdesk Tickets",
+          href: "/hrms/tickets",
+          icon: HelpCircle,
         },
         {
           label: "HRMS Settings",

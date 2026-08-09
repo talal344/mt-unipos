@@ -243,6 +243,33 @@ export interface HRCandidate {
   appliedDate: string;
 }
 
+export interface HRMSTicketReply {
+  id: string;
+  senderName: string;
+  senderRole: string;
+  senderEmail: string;
+  message: string;
+  createdAt: string;
+}
+
+export interface HRMSTicket {
+  id: string;
+  ticketNumber: string;
+  creatorName: string;
+  creatorEmail: string;
+  creatorDepartment: string;
+  targetDepartment: "IT" | "HR" | "Finance" | "Admin";
+  category: string;
+  subject: string;
+  description: string;
+  priority: "Low" | "Medium" | "High" | "Critical";
+  status: "Open" | "In Progress" | "Resolved" | "Closed";
+  assignedTo?: string;
+  createdAt: string;
+  updatedAt: string;
+  replies?: HRMSTicketReply[];
+}
+
 // ─── PERMANENT SEED TENANTS ───────────────────────────────────────────────────
 // These tenants are ALWAYS guaranteed to exist regardless of browser clear.
 // Add your real clients here. They are seeded from code — not from localStorage.
@@ -777,6 +804,12 @@ interface GlobalContextType {
     tempPassword?: string;
   }) => HREmployee;
   clearAllHRMSData: () => void;
+
+  // HRMS Internal Helpdesk Ticketing System
+  hrmsTickets: HRMSTicket[];
+  createHRMSTicket: (ticket: Omit<HRMSTicket, "id" | "ticketNumber" | "createdAt" | "updatedAt" | "replies">) => void;
+  updateHRMSTicketStatus: (id: string, status: HRMSTicket["status"], assignedTo?: string) => void;
+  addHRMSTicketReply: (ticketId: string, message: string) => void;
 }
 
 // ─── HRMS DEMO SEED DATA ──────────────────────────────────────────────────────
@@ -1298,6 +1331,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
   const [stockTransfers, setStockTransfers] = useState<StockTransfer[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [hrmsTickets, setHrmsTickets] = useState<HRMSTicket[]>([]);
   const [businessSettings, setBusinessSettings] = useState<BusinessSettings>({
     businessName: "",
     ownerName: "",
@@ -2150,9 +2184,72 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         saveTenantData("unipos_hr_candidates", []);
       }
       setHrCandidates(savedHrCands || []);
+
+      const savedHrmsTickets = getTenantData("unipos_hrms_tickets", currentUser.tenantId);
+      setHrmsTickets(savedHrmsTickets || []);
     }
 
   }, [currentUser?.tenantId]);
+
+  const createHRMSTicket = (ticket: Omit<HRMSTicket, "id" | "ticketNumber" | "createdAt" | "updatedAt" | "replies">) => {
+    const nowStr = new Date().toISOString();
+    const count = hrmsTickets.length + 1;
+    const ticketNumber = `TKT-${1000 + count}`;
+    const newTicket: HRMSTicket = {
+      ...ticket,
+      id: `HRTKT-${Math.floor(1000 + Math.random() * 9000)}`,
+      ticketNumber,
+      createdAt: nowStr,
+      updatedAt: nowStr,
+      replies: []
+    };
+    const updated = [newTicket, ...hrmsTickets];
+    setHrmsTickets(updated);
+    saveTenantData("unipos_hrms_tickets", updated);
+  };
+
+  const updateHRMSTicketStatus = (id: string, status: HRMSTicket["status"], assignedTo?: string) => {
+    const nowStr = new Date().toISOString();
+    const updated = hrmsTickets.map(t => {
+      if (t.id === id) {
+        return {
+          ...t,
+          status,
+          assignedTo: assignedTo || t.assignedTo,
+          updatedAt: nowStr
+        };
+      }
+      return t;
+    });
+    setHrmsTickets(updated);
+    saveTenantData("unipos_hrms_tickets", updated);
+  };
+
+  const addHRMSTicketReply = (ticketId: string, message: string) => {
+    const nowStr = new Date().toISOString();
+    const reply: HRMSTicketReply = {
+      id: `RPL-${Math.floor(1000 + Math.random() * 9000)}`,
+      senderName: currentUser?.name || "User",
+      senderRole: currentUser?.role || "Staff",
+      senderEmail: currentUser?.email || "user@company.com",
+      message,
+      createdAt: nowStr
+    };
+
+    const updated = hrmsTickets.map(t => {
+      if (t.id === ticketId) {
+        return {
+          ...t,
+          updatedAt: nowStr,
+          replies: [...(t.replies || []), reply]
+        };
+      }
+      return t;
+    });
+
+    setHrmsTickets(updated);
+    saveTenantData("unipos_hrms_tickets", updated);
+  };
 
 
   // ── Strict Multi-Tenant Duplicate Verification Helper ─────────────────────
@@ -4697,6 +4794,11 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         confirmFinanceAndActivateEmployee,
         provisionExecutiveDirectly,
         clearAllHRMSData,
+
+        hrmsTickets,
+        createHRMSTicket,
+        updateHRMSTicketStatus,
+        addHRMSTicketReply,
 
         currentBranch,
         setCurrentBranch,

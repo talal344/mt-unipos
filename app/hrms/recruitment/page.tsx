@@ -48,7 +48,19 @@ export default function HRRecruitmentPage() {
     businessSettings
   } = useGlobalContext();
 
-  const [activeTab, setActiveTab] = useState<"candidates" | "it_queue" | "finance_queue" | "jobs">("candidates");
+  const empMatch = hrEmployees.find(
+    (e) => e.email?.toLowerCase().trim() === currentUser?.email?.toLowerCase().trim()
+  );
+
+  const isITUser = Boolean(
+    (currentUser?.role as string) === "IT" ||
+    currentUser?.email?.toLowerCase().includes("it@") ||
+    empMatch?.department === "IT & Software Operations"
+  );
+
+  const [activeTab, setActiveTab] = useState<"candidates" | "it_queue" | "finance_queue" | "jobs">(
+    isITUser ? "it_queue" : "candidates"
+  );
 
   // Candidate Modal
   const [showCandModal, setShowCandModal] = useState(false);
@@ -236,15 +248,17 @@ export default function HRRecruitmentPage() {
             </p>
           </div>
 
-          <div className="flex gap-2">
-            <button
-              onClick={() => setShowExecModal(true)}
-              className="flex items-center gap-2 bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-500 hover:to-yellow-500 text-black font-black text-xs px-4 py-2.5 rounded-xl shadow-lg transition"
-            >
-              <Crown size={15} />
-              <span>Owner Direct Executive Provisioning</span>
-            </button>
-          </div>
+          {currentUser?.role === "Owner" && (
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowExecModal(true)}
+                className="flex items-center gap-2 bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-500 hover:to-yellow-500 text-black font-black text-xs px-4 py-2.5 rounded-xl shadow-lg transition"
+              >
+                <Crown size={15} />
+                <span>Owner Direct Executive Provisioning</span>
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Navigation Tabs with Badges */}
@@ -316,28 +330,30 @@ export default function HRRecruitmentPage() {
                 <h3 className="text-sm font-black text-white">Candidates &amp; Interview Pipeline</h3>
                 <p className="text-[11px] text-gray-400">Move candidates through Applied &rarr; Interview &rarr; Hired stages.</p>
               </div>
-              <button
-                onClick={() => {
-                  setEditingCandId(null);
-                  setCandForm({
-                    name: "",
-                    email: "",
-                    phone: "",
-                    cnic: "",
-                    appliedPosition: hrDesignations[0]?.title || "Software Engineer",
-                    department: hrDepartments[0]?.name || "Operation Department",
-                    subDepartment: hrDepartments[0]?.subDepartments?.[0] || "",
-                    proposedSalary: 75000,
-                    bankName: "Meezan Bank Ltd",
-                    accountNumber: "",
-                    stage: "Interview"
-                  });
-                  setShowCandModal(true);
-                }}
-                className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl transition shadow-lg shadow-emerald-900/20"
-              >
-                <Plus size={14} /> Add Candidate Record
-              </button>
+              {!isITUser && (
+                <button
+                  onClick={() => {
+                    setEditingCandId(null);
+                    setCandForm({
+                      name: "",
+                      email: "",
+                      phone: "",
+                      cnic: "",
+                      appliedPosition: hrDesignations[0]?.title || "Software Engineer",
+                      department: hrDepartments[0]?.name || "Operation Department",
+                      subDepartment: hrDepartments[0]?.subDepartments?.[0] || "",
+                      proposedSalary: 75000,
+                      bankName: "Meezan Bank Ltd",
+                      accountNumber: "",
+                      stage: "Interview"
+                    });
+                    setShowCandModal(true);
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl transition shadow-lg shadow-emerald-900/20"
+                >
+                  <Plus size={14} /> Add Candidate Record
+                </button>
+              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
