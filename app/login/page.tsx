@@ -238,7 +238,8 @@ function LoginContent() {
         ? (role === "Owner" ? activeTenant?.ownerName || "Owner" : role + " User")
         : (employeeMatch?.name || "Staff User");
 
-      const assignedSoftware = activeTenant?.assignedSoftware || "POS";
+      const isHRMS = activeTenant?.assignedSoftware === "HRMS" || (activeTenant?.businessType && activeTenant.businessType.includes("HRMS"));
+      const assignedSoftware: "POS" | "HRMS" = isHRMS ? "HRMS" : "POS";
       const user = {
         name,
         role,

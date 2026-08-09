@@ -1757,15 +1757,20 @@ export default function AdminClientsPage() {
                           <td className="p-4 font-sans">
                             <div className="font-bold text-white font-sans flex items-center gap-2">
                               <span>{tenant.businessName}</span>
-                              <span
-                                className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
-                                  tenant.assignedSoftware === "HRMS"
-                                    ? "bg-purple-500/20 text-purple-300 border border-purple-500/30"
-                                    : "bg-sky-500/20 text-sky-400 border border-sky-500/30"
-                                }`}
-                              >
-                                {tenant.assignedSoftware === "HRMS" ? "👥 HRMS" : "🏬 POS"}
-                              </span>
+                              {(() => {
+                                const isHRMS = tenant.assignedSoftware === "HRMS" || (tenant.businessType && tenant.businessType.includes("HRMS"));
+                                return (
+                                  <span
+                                    className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
+                                      isHRMS
+                                        ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
+                                        : "bg-sky-500/20 text-sky-400 border border-sky-500/30"
+                                    }`}
+                                  >
+                                    {isHRMS ? "👥 HRMS" : "🏬 POS"}
+                                  </span>
+                                );
+                              })()}
                             </div>
                             <div className="text-[10px] text-gray-500 font-sans">
                               {tenant.businessType}

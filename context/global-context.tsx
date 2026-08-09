@@ -1239,7 +1239,13 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         const t = localStorage.getItem("unipos_tenants");
         if (t) {
           const parsed: Tenant[] = JSON.parse(t);
-          const clean = parsed.filter(item => !blacklisted.includes(item.id));
+          const clean = parsed.filter(item => !blacklisted.includes(item.id)).map(item => {
+            const isHRMS = item.assignedSoftware === "HRMS" || (item.businessType && item.businessType.includes("HRMS"));
+            return {
+              ...item,
+              assignedSoftware: isHRMS ? ("HRMS" as const) : (item.assignedSoftware || ("POS" as const))
+            };
+          });
           setTenants(clean);
         }
         
@@ -2127,13 +2133,17 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
 
     // Also auto-register a Trial Tenant so the user can actually log in
     const dealCurrency = customCurrency || "PKR";
+    const isHRMSDemo = (req.assignedSoftware === "HRMS") || (req.businessType && req.businessType.includes("HRMS"));
+    const assignedSoftware: "POS" | "HRMS" = isHRMSDemo ? "HRMS" : "POS";
+
     const newTenant: Tenant = {
       id: `TEN-${Math.floor(100 + Math.random() * 900)}`,
       businessName: req.businessName,
       ownerName: req.name,
       email: demoEmail,
       phone: req.phone || "",
-      businessType: req.businessType || "Super Markets",
+      businessType: req.businessType || (isHRMSDemo ? "HRMS Enterprise" : "Super Markets"),
+      assignedSoftware,
       plan: "Professional",
       billingCycle: "monthly",
       signupDate: now.toISOString().split("T")[0],
@@ -2416,10 +2426,13 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     }
 
     const dealCurrency = tenant.customCurrency || tenant.defaultCurrency || "PKR";
+    const isHRMSTenant = tenant.assignedSoftware === "HRMS" || (tenant.businessType && tenant.businessType.includes("HRMS"));
+    const assignedSoftware: "POS" | "HRMS" = isHRMSTenant ? "HRMS" : (tenant.assignedSoftware || "POS");
 
     const newTenant: Tenant = {
       ...tenant,
       id: finalId,
+      assignedSoftware,
       signupDate: signupDateStr,
       status: statusVal as any,
       trialEndsAt: trialEndsAtVal,
