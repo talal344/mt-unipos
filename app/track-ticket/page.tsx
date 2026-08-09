@@ -186,6 +186,15 @@ function ChatBubble({ sender, message, date }: { sender: "Client" | "Admin"; mes
   );
 }
 
+function maskPhone(phone?: string): string {
+  if (!phone) return "0300****000";
+  const clean = phone.trim().replace(/\s+/g, "");
+  if (clean.length < 7) return clean;
+  const first4 = clean.slice(0, 4);
+  const last3 = clean.slice(-3);
+  return `${first4}****${last3}`;
+}
+
 // ─── Main Self-Service & Ticket Portal Page ──────────────────────────────────
 export default function TrackTicketPage() {
   const {
@@ -214,6 +223,7 @@ export default function TrackTicketPage() {
   // Search Triggered & Results
   const [hasSearched, setHasSearched] = useState(false);
   const [foundReceipt, setFoundReceipt] = useState<SaleTransaction | null>(null);
+  const [foundSaasInvoice, setFoundSaasInvoice] = useState<any | null>(null);
   const [foundCustomer, setFoundCustomer] = useState<any | null>(null);
   const [foundTicket, setFoundTicket] = useState<any | null>(null);
   const [foundTicketType, setFoundTicketType] = useState<"demo" | "support" | null>(null);
@@ -236,26 +246,76 @@ export default function TrackTicketPage() {
     setExpandedSales((prev) => ({ ...prev, [saleId]: !prev[saleId] }));
   };
 
-  // Execute Search
-  const handleSearchSubmit = (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
+  // Helper: execute receipt search
+  const executeReceiptSearch = (queryStr: string) => {
+    const query = queryStr.trim().toLowerCase();
+    if (!query) return;
+
     setHasSearched(true);
     setAuthError(null);
     setFoundReceipt(null);
+    setFoundSaasInvoice(null);
     setFoundCustomer(null);
     setFoundTicket(null);
-    setFoundTicketType(null);
+
+    // 1. Search POS Store Sales
+    const saleMatch = sales.find(
+      (s) => s.receiptNumber.toLowerCase() === query || s.id.toLowerCase() === query
+    );
+    if (saleMatch) {
+      setFoundReceipt(saleMatch);
+      return;
+    }
+
+    // 2. Search SaaS Admin Invoices
+    const saasMatch = saasInvoices.find(
+      (inv) => inv.id.toLowerCase() === query || inv.tenantId.toLowerCase() === query
+    );
+    if (saasMatch) {
+      setFoundSaasInvoice(saasMatch);
+      return;
+    }
+
+    // 3. Fallback: check localStorage
+    try {
+      const storedInvoices: any[] = JSON.parse(localStorage.getItem("unipos_invoices") || "[]");
+      const localMatch = storedInvoices.find(
+        (inv) => inv.id?.toLowerCase() === query || inv.tenantId?.toLowerCase() === query
+      );
+      if (localMatch) {
+        setFoundSaasInvoice(localMatch);
+        return;
+      }
+    } catch {}
+  };
+
+  // Auto-search on page load when URL contains ?id=... or ?receipt=... or ?inv=...
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const urlId = params.get("id") || params.get("receipt") || params.get("ticket") || params.get("inv");
+      if (urlId) {
+        const query = urlId.trim();
+        setReceiptInput(query);
+        setSearchMode("receipt");
+        executeReceiptSearch(query);
+      }
+    }
+  }, [sales, saasInvoices]);
+
+  // Execute Search Form Submit
+  const handleSearchSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
 
     if (searchMode === "receipt") {
-      const query = receiptInput.trim().toLowerCase();
-      if (!query) return;
-      const match = sales.find(
-        (s) =>
-          s.receiptNumber.toLowerCase() === query ||
-          s.id.toLowerCase() === query
-      );
-      setFoundReceipt(match || null);
+      executeReceiptSearch(receiptInput);
     } else if (searchMode === "customer") {
+      setHasSearched(true);
+      setAuthError(null);
+      setFoundReceipt(null);
+      setFoundSaasInvoice(null);
+      setFoundCustomer(null);
+      setFoundTicket(null);
       const cNo = custNoInput.trim().toLowerCase();
       const pNo = phoneInput.trim().replace(/\D/g, "");
 
@@ -389,6 +449,71 @@ export default function TrackTicketPage() {
     printWin.document.close();
     printWin.focus();
     setTimeout(() => printWin.print(), 300);
+  };
+
+  const handlePrintSaasSlip = (inv: any) => {
+    const printWin = window.open("", "_blank", "width=600,height=800");
+    if (!printWin) return;
+
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>SaaS Invoice ${inv.id}</title>
+<style>
+  body { font-family: sans-serif; background: #fff; color: #000; padding: 20px; font-size: 12px; }
+  .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px; }
+  .box { border: 1px solid #ddd; padding: 12px; border-radius: 8px; margin-bottom: 15px; background: #f8fafc; }
+  .table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+  .table th, .table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+  .total { text-align: right; font-weight: bold; font-size: 14px; margin-top: 15px; color: #0284c7; }
+</style>
+</head>
+<body>
+  <div class="header">
+    <h2 style="margin:0;color:#0284c7;">MT UniPOS Software Suite</h2>
+    <p style="margin:4px 0;font-size:11px;">Official SaaS Invoice Receipt: <b>${inv.id}</b></p>
+    <p style="margin:0;font-size:11px;">Official Web Portal: <b>pos.mtcore.xyz</b></p>
+  </div>
+
+  <div class="box">
+    <b>Client / Tenant:</b> ${inv.tenantName}<br/>
+    <b>Workspace Tenant ID:</b> ${inv.tenantId}<br/>
+    <b>Issued Date:</b> ${inv.date}<br/>
+    <b>Status:</b> ${inv.status.toUpperCase()}
+  </div>
+
+  <table class="table">
+    <thead>
+      <tr style="background:#f1f5f9;">
+        <th>Subscription Package</th>
+        <th style="text-align:right;">Amount (${inv.currency || "PKR"})</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><b>${inv.plan}</b><br/><span style="font-size:10px;color:#666;">Enterprise Sharding Access & Cloud Backup Sync</span></td>
+        <td style="text-align:right;font-weight:bold;">${inv.currency || "PKR"} ${Number(inv.amount || 0).toLocaleString()}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="total">
+    Remaining Balance Due: ${inv.currency || "PKR"} ${Number(inv.remainingBalance ?? 0).toLocaleString()}
+  </div>
+
+  <div style="margin-top:30px;text-align:center;font-size:10px;color:#666;border-top:1px solid #ddd;padding-top:10px;">
+    MT UniPOS SaaS Management • Support: 03396399895 • pos.mtcore.xyz
+  </div>
+
+  <script>
+    window.onload = function() { setTimeout(function(){ window.print(); }, 300); };
+  </script>
+</body>
+</html>`;
+
+    printWin.document.write(html);
+    printWin.document.close();
   };
 
   return (
@@ -587,7 +712,7 @@ export default function TrackTicketPage() {
           )}
 
           {/* Record Not Found State */}
-          {hasSearched && !authError && !foundReceipt && !foundCustomer && !foundTicket && (
+          {hasSearched && !authError && !foundReceipt && !foundSaasInvoice && !foundCustomer && !foundTicket && (
             <div className="bg-brand-dark-surface border border-red-500/30 rounded-2xl p-8 text-center animate-fade-in-up">
               <XCircle size={40} className="text-red-500 mx-auto mb-3" />
               <h3 className="text-white font-bold text-base mb-1">Record Not Found</h3>
@@ -599,7 +724,7 @@ export default function TrackTicketPage() {
                 onClick={() => { setHasSearched(false); }}
                 className="mt-5 inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-white border border-brand-dark-border px-4 py-2 rounded-lg transition"
               >
-                <RefreshCw size={13} /> Clear & Try Again
+                <RefreshCw size={13} /> Clear &amp; Try Again
               </button>
             </div>
           )}
@@ -719,6 +844,152 @@ export default function TrackTicketPage() {
                     </div>
                   </div>
                 )}
+
+                {/* Registered Customer Portal Guide Card */}
+                {(() => {
+                  const custObj = customers.find(c => c.name.toLowerCase() === (foundReceipt.customerName || "").toLowerCase());
+                  return (
+                    <div className="bg-gradient-to-r from-sky-950/40 via-purple-950/30 to-black border border-sky-500/30 rounded-2xl p-5 mt-6 shadow-xl text-xs space-y-3 font-sans">
+                      <div className="flex items-center gap-2 text-sky-400 font-black uppercase tracking-wider text-xs">
+                        <Sparkles size={16} />
+                        <span>Registered Customer Account Portal Guide</span>
+                      </div>
+                      <p className="text-gray-300 leading-relaxed">
+                        Dear Customer (<b className="text-white">{foundReceipt.customerName || "Valued Customer"}</b> - <b className="text-sky-300 font-mono">{custObj ? maskPhone(custObj.mobile) : "0300****567"}</b>), your purchase receipt is verified!
+                      </p>
+                      <div className="bg-black/60 border border-brand-dark-border p-3.5 rounded-xl space-y-1.5 text-[11px] text-gray-300">
+                        <div className="font-bold text-purple-400 flex items-center gap-1.5">
+                          <span>📱 How to view your complete purchase ledger, credit dues &amp; past receipts online:</span>
+                        </div>
+                        <ol className="list-decimal list-inside space-y-1 pl-1 text-gray-400">
+                          <li>Click on the <b>Customer Account</b> tab above on this portal.</li>
+                          <li>Enter your registered mobile number: <b className="text-sky-400 font-mono">{custObj ? maskPhone(custObj.mobile) : "0300****567"}</b> (or Customer ID: <b className="text-purple-400 font-mono">{custObj?.customerNo || "CUST-VERIFIED"}</b>).</li>
+                          <li>Click <b>Access Customer Ledger</b> to view your entire transaction history, return records, and remaining balance anytime 24/7!</li>
+                        </ol>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+              </div>
+            </div>
+          )}
+
+          {/* 🧾 RESULT A-2: SAAS INVOICE LOOKUP RESULT (e.g. INV-2026-5408) */}
+          {hasSearched && searchMode === "receipt" && foundSaasInvoice && (
+            <div className="space-y-6 animate-fade-in-up text-left">
+              <div className="bg-brand-dark-surface border border-sky-500/40 rounded-2xl p-6 sm:p-8 shadow-2xl space-y-6">
+                
+                {/* Header Row */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-brand-dark-border/80">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-xl bg-sky-500/15 border border-sky-500/30 text-sky-400 flex items-center justify-center shrink-0">
+                      <Receipt size={22} />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-mono font-black text-sky-400 uppercase">OFFICIAL SAAS BILLING STATEMENT</span>
+                        <span className={`font-mono text-[9px] px-2.5 py-0.5 rounded font-black border uppercase ${
+                          foundSaasInvoice.status === "Paid"
+                            ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-300"
+                            : "bg-amber-500/15 border-amber-500/40 text-amber-300"
+                        }`}>
+                          STATUS: {foundSaasInvoice.status}
+                        </span>
+                      </div>
+                      <h2 className="text-xl sm:text-2xl font-black font-mono text-white mt-0.5">{foundSaasInvoice.id}</h2>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handlePrintSaasSlip(foundSaasInvoice)}
+                    className="inline-flex items-center justify-center gap-2 bg-sky-500 hover:bg-sky-400 text-black font-black text-xs px-4 py-2.5 rounded-xl transition shadow-lg shadow-sky-500/20"
+                  >
+                    <Printer size={15} />
+                    <span>Print / Save Executive Invoice</span>
+                  </button>
+                </div>
+
+                {/* Billed Provider & Client Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-sans">
+                  <div className="bg-black/50 border border-brand-dark-border/80 p-4 rounded-xl space-y-1">
+                    <div className="text-[10px] uppercase font-bold text-sky-400">🏢 BILLED PROVIDER</div>
+                    <div className="font-black text-white text-sm">MT UniPOS Software Suite</div>
+                    <div className="text-gray-400 text-[11px] leading-relaxed">
+                      Engineered by Founder <b>Mian Talal</b><br/>
+                      Support Contact: <b>03396399895</b><br/>
+                      Corporate Email: <b>miantalal2@gmail.com</b><br/>
+                      Official Portal: <b className="text-sky-400">pos.mtcore.xyz</b>
+                    </div>
+                  </div>
+
+                  <div className="bg-black/50 border border-brand-dark-border/80 p-4 rounded-xl space-y-1">
+                    <div className="text-[10px] uppercase font-bold text-sky-400">👤 CLIENT / TENANT INFORMATION</div>
+                    <div className="font-black text-white text-sm">{foundSaasInvoice.tenantName}</div>
+                    <div className="text-gray-400 text-[11px] leading-relaxed">
+                      Workspace / Tenant ID: <b className="text-sky-400 font-mono">{foundSaasInvoice.tenantId}</b><br/>
+                      {(() => {
+                        const tObj = tenants.find(t => t.id === foundSaasInvoice.tenantId);
+                        return (
+                          <>
+                            Owner Name: <b>{tObj?.ownerName || foundSaasInvoice.tenantName}</b><br/>
+                            Registered Phone: <b className="text-amber-400 font-mono">{maskPhone(tObj?.phone || "03001234567")}</b><br/>
+                          </>
+                        );
+                      })()}
+                      Issued Date: <b>{foundSaasInvoice.date}</b><br/>
+                      Status: <b className="text-emerald-400">Active</b>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Financial Details Table */}
+                <div className="border border-brand-dark-border/80 rounded-xl overflow-hidden bg-black/40 text-xs font-sans">
+                  <div className="p-3 bg-black/80 font-bold text-gray-300 uppercase text-[10px]">BILLED PACKAGE &amp; PAYMENT BREAKDOWN</div>
+                  <div className="p-4 space-y-3 font-mono">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-white font-bold">{foundSaasInvoice.plan}</span>
+                      <span className="text-sky-400 font-black">
+                        {foundSaasInvoice.currency || "PKR"} {foundSaasInvoice.amount.toLocaleString()}
+                      </span>
+                    </div>
+                    <hr className="border-brand-dark-border/60" />
+                    <div className="flex justify-between text-xs text-gray-400">
+                      <span>Total Bill Amount:</span>
+                      <span className="text-white font-bold">{foundSaasInvoice.currency || "PKR"} {foundSaasInvoice.amount.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between text-xs text-emerald-400">
+                      <span>Amount Paid / Received:</span>
+                      <span className="font-bold">{foundSaasInvoice.currency || "PKR"} {(foundSaasInvoice.paidAmount ?? (foundSaasInvoice.status === "Paid" ? foundSaasInvoice.amount : 0)).toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between text-sm text-sky-400 font-black pt-1 border-t border-brand-dark-border/60">
+                      <span>Remaining Balance Due:</span>
+                      <span>{foundSaasInvoice.currency || "PKR"} {(foundSaasInvoice.remainingBalance ?? 0).toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Registered Tenant Guide Card */}
+                <div className="bg-gradient-to-r from-sky-950/40 via-purple-950/30 to-black border border-sky-500/30 rounded-2xl p-5 shadow-xl text-xs space-y-3 font-sans">
+                  <div className="flex items-center gap-2 text-sky-400 font-black uppercase tracking-wider text-xs">
+                    <Sparkles size={16} />
+                    <span>Registered Tenant Online Portal Guide</span>
+                  </div>
+                  <p className="text-gray-300 leading-relaxed">
+                    Dear Tenant (<b className="text-white">{foundSaasInvoice.tenantName}</b> - <b className="text-sky-300 font-mono">{(() => { const t = tenants.find(x => x.id === foundSaasInvoice.tenantId); return maskPhone(t?.phone || "03001234567"); })()}</b>), your SaaS subscription invoice &amp; workspace are active!
+                  </p>
+                  <div className="bg-black/60 border border-brand-dark-border p-3.5 rounded-xl space-y-1.5 text-[11px] text-gray-300">
+                    <div className="font-bold text-purple-400 flex items-center gap-1.5">
+                      <span>🌐 Direct Access to Software &amp; Invoice History:</span>
+                    </div>
+                    <ol className="list-decimal list-inside space-y-1 pl-1 text-gray-400">
+                      <li>Log in to your POS &amp; ERP Portal: <a href="https://pos.mtcore.xyz/login" target="_blank" rel="noreferrer" className="text-sky-400 underline font-bold">https://pos.mtcore.xyz/login</a></li>
+                      <li>Use your Workspace Tenant ID <b className="text-sky-300 font-mono">{foundSaasInvoice.tenantId}</b> &amp; registered credentials.</li>
+                      <li>To check past invoices anytime, search invoice ID <b className="text-purple-300 font-mono">{foundSaasInvoice.id}</b> in Receipt Lookup above!</li>
+                    </ol>
+                  </div>
+                </div>
 
               </div>
             </div>
