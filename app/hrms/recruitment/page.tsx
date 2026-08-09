@@ -25,7 +25,8 @@ import {
   Trash2,
   Edit2,
   Crown,
-  Lock
+  Lock,
+  Clock
 } from "lucide-react";
 
 export default function HRRecruitmentPage() {
@@ -126,7 +127,9 @@ export default function HRRecruitmentPage() {
   const bName = currentUser?.businessName || businessSettings?.businessName || "MT Software";
 
   // Filter queues
-  const itPendingQueue = hrCandidates.filter((c) => c.stage === "Hired" && c.onboardingStage === "Pending IT Provisioning");
+  const itPendingQueue = hrCandidates.filter(
+    (c) => c.stage === "Hired" && c.onboardingStage !== "Pending Finance Confirmation" && c.onboardingStage !== "Fully Active Employee"
+  );
   const financePendingQueue = hrCandidates.filter((c) => c.onboardingStage === "Pending Finance Confirmation");
   const activeCandidates = hrCandidates.filter((c) => c.onboardingStage !== "Fully Active Employee");
 
@@ -426,7 +429,15 @@ export default function HRRecruitmentPage() {
                       {["Applied", "Interview", "Offered", "Hired"].map((st) => (
                         <button
                           key={st}
-                          onClick={() => updateHRCandidate(c.id, { stage: st as any })}
+                          onClick={() => {
+                            updateHRCandidate(c.id, {
+                              stage: st as any,
+                              onboardingStage: st === "Hired" ? "Pending IT Provisioning" : c.onboardingStage
+                            });
+                            if (st === "Hired") {
+                              triggerToast(`🎉 Candidate '${c.name}' marked HIRED! Onboarding request forwarded to IT Department.`);
+                            }
+                          }}
                           className={`px-2 py-1 rounded text-[9px] font-bold transition ${
                             c.stage === st
                               ? "bg-emerald-600 text-white"
@@ -489,13 +500,20 @@ export default function HRRecruitmentPage() {
                       <div>Phone: <span className="text-gray-300">{c.phone}</span></div>
                     </div>
 
-                    <button
-                      onClick={() => handleOpenITModal(c)}
-                      className="w-full py-3 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white font-black text-xs uppercase tracking-wider rounded-xl transition shadow-lg shadow-sky-900/30 flex items-center justify-center gap-2"
-                    >
-                      <Key size={14} />
-                      <span>Provision Employee ID &amp; Work Credentials</span>
-                    </button>
+                    {(isITUser || currentUser?.role === "Owner") ? (
+                      <button
+                        onClick={() => handleOpenITModal(c)}
+                        className="w-full py-3 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white font-black text-xs uppercase tracking-wider rounded-xl transition shadow-lg shadow-sky-900/30 flex items-center justify-center gap-2"
+                      >
+                        <Key size={14} />
+                        <span>Provision Employee ID &amp; Work Credentials</span>
+                      </button>
+                    ) : (
+                      <div className="w-full py-3 bg-sky-500/10 border border-sky-500/30 text-sky-400 font-bold text-xs rounded-xl text-center flex items-center justify-center gap-2 font-mono">
+                        <Clock size={14} className="animate-spin text-sky-400" />
+                        <span>Awaiting IT Department Credential Provisioning</span>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
