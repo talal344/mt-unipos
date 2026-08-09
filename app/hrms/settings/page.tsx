@@ -2,7 +2,11 @@
 
 import React, { useState } from "react";
 import HRMSSidebar from "@/components/hrms-sidebar";
-import { useGlobalContext } from "@/context/global-context";
+import {
+  useGlobalContext,
+  calculateDesignationRankAndGrade,
+  getHeadOfDepartment
+} from "@/context/global-context";
 import {
   Settings,
   Building2,
@@ -17,7 +21,8 @@ import {
   UserCheck,
   Save,
   X,
-  Layers
+  Layers,
+  Award
 } from "lucide-react";
 
 export default function HRMSPageSettings() {
@@ -34,6 +39,7 @@ export default function HRMSPageSettings() {
     addHRShift,
     updateHRShift,
     deleteHRShift,
+    hrEmployees,
     businessSettings,
     currentUser
   } = useGlobalContext();
@@ -43,18 +49,20 @@ export default function HRMSPageSettings() {
   // Modal States
   const [showDeptModal, setShowDeptModal] = useState(false);
   const [editingDeptId, setEditingDeptId] = useState<string | null>(null);
-  const [deptForm, setDeptForm] = useState({ name: "", code: "", headOfDepartment: "", description: "" });
+  const [deptForm, setDeptForm] = useState({ name: "", code: "", description: "" });
 
   const [showDesgModal, setShowDesgModal] = useState(false);
   const [editingDesgId, setEditingDesgId] = useState<string | null>(null);
-  const [desgForm, setDesgForm] = useState({ title: "", department: "", grade: "E-1" });
+  const [desgForm, setDesgForm] = useState({ title: "", rank: 3, grade: "M-1" });
 
   const [showShiftModal, setShowShiftModal] = useState(false);
   const [editingShiftId, setEditingShiftId] = useState<string | null>(null);
   const [shiftForm, setShiftForm] = useState({
     name: "",
+    type: "Fixed" as "Fixed" | "Flexible",
     startTime: "09:00 AM",
     endTime: "05:00 PM",
+    requiredHours: 8,
     graceMinutes: 15,
     workDays: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
   });
@@ -79,24 +87,34 @@ export default function HRMSPageSettings() {
     }
     setShowDeptModal(false);
     setEditingDeptId(null);
-    setDeptForm({ name: "", code: "", headOfDepartment: "", description: "" });
+    setDeptForm({ name: "", code: "", description: "" });
+  };
+
+  // Auto-calculate grade when title changes
+  const handleDesgTitleChange = (val: string) => {
+    const calculated = calculateDesignationRankAndGrade(val);
+    setDesgForm({
+      title: val,
+      rank: calculated.rank,
+      grade: calculated.grade
+    });
   };
 
   // Designation Form Handlers
   const handleSaveDesg = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!desgForm.title || !desgForm.department) return;
+    if (!desgForm.title) return;
 
     if (editingDesgId) {
       updateHRDesignation(editingDesgId, desgForm);
       triggerToast(`✅ Updated designation '${desgForm.title}'!`);
     } else {
       addHRDesignation(desgForm);
-      triggerToast(`✅ Added designation '${desgForm.title}'!`);
+      triggerToast(`✅ Added global designation '${desgForm.title}' (${desgForm.grade})!`);
     }
     setShowDesgModal(false);
     setEditingDesgId(null);
-    setDesgForm({ title: "", department: hrDepartments[0]?.name || "Human Resources", grade: "E-1" });
+    setDesgForm({ title: "", rank: 3, grade: "M-1" });
   };
 
   // Shift Form Handlers
@@ -104,22 +122,25 @@ export default function HRMSPageSettings() {
     e.preventDefault();
     if (!shiftForm.name) return;
 
+    const payload = {
+      name: shiftForm.name,
+      type: shiftForm.type,
+      startTime: shiftForm.type === "Flexible" ? "Flexible Check-In" : shiftForm.startTime,
+      endTime: shiftForm.type === "Flexible" ? `${shiftForm.requiredHours} Hours Shift Duration` : shiftForm.endTime,
+      requiredHours: shiftForm.requiredHours,
+      graceMinutes: shiftForm.graceMinutes,
+      workDays: shiftForm.workDays
+    };
+
     if (editingShiftId) {
-      updateHRShift(editingShiftId, shiftForm);
+      updateHRShift(editingShiftId, payload);
       triggerToast(`✅ Updated shift '${shiftForm.name}'!`);
     } else {
-      addHRShift(shiftForm);
+      addHRShift(payload);
       triggerToast(`✅ Added shift '${shiftForm.name}'!`);
     }
     setShowShiftModal(false);
     setEditingShiftId(null);
-    setShiftForm({
-      name: "",
-      startTime: "09:00 AM",
-      endTime: "05:00 PM",
-      graceMinutes: 15,
-      workDays: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
-    });
   };
 
   const toggleWorkDay = (day: string) => {
@@ -153,7 +174,7 @@ export default function HRMSPageSettings() {
               Company Departments, Designations &amp; Shifts
             </h1>
             <p className="text-xs text-gray-400 mt-0.5">
-              Configure company organizational structure. Departments and designations defined here drive employee onboarding and hierarchy rules.
+              Global designations applies across all departments with auto rank hierarchy. Head of Department is auto-assigned based on highest employee rank.
             </p>
           </div>
         </div>
@@ -181,7 +202,7 @@ export default function HRMSPageSettings() {
             }`}
           >
             <Briefcase size={15} />
-            <span>Designations Hierarchy ({hrDesignations.length})</span>
+            <span>Global Designations &amp; Rank Hierarchy ({hrDesignations.length})</span>
           </button>
 
           <button
@@ -193,7 +214,7 @@ export default function HRMSPageSettings() {
             }`}
           >
             <Clock size={15} />
-            <span>Shifts &amp; Work Timings ({hrShifts.length})</span>
+            <span>Shifts &amp; Timings ({hrShifts.length})</span>
           </button>
         </div>
 
@@ -203,12 +224,12 @@ export default function HRMSPageSettings() {
             <div className="flex justify-between items-center bg-[#0b0f17] p-4 rounded-2xl border border-gray-800/80">
               <div>
                 <h3 className="text-sm font-black text-white">Company Departments List</h3>
-                <p className="text-[11px] text-gray-400">All registered operational units in {currentUser?.businessName || "MT Software"}.</p>
+                <p className="text-[11px] text-gray-400">Head of Department is automatically calculated from the highest ranking employee assigned to that department.</p>
               </div>
               <button
                 onClick={() => {
                   setEditingDeptId(null);
-                  setDeptForm({ name: "", code: "", headOfDepartment: "", description: "" });
+                  setDeptForm({ name: "", code: "", description: "" });
                   setShowDeptModal(true);
                 }}
                 className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl transition shadow-lg shadow-emerald-900/20"
@@ -218,59 +239,61 @@ export default function HRMSPageSettings() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {hrDepartments.map((dept) => (
-                <div
-                  key={dept.id}
-                  className="bg-[#0b0f17] border border-gray-800/80 hover:border-emerald-500/40 p-5 rounded-2xl space-y-3 relative group transition shadow-xl"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center font-black text-sm font-mono">
-                        {dept.code}
+              {hrDepartments.map((dept) => {
+                const autoHod = getHeadOfDepartment(dept.name, hrEmployees, hrDesignations);
+                return (
+                  <div
+                    key={dept.id}
+                    className="bg-[#0b0f17] border border-gray-800/80 hover:border-emerald-500/40 p-5 rounded-2xl space-y-3 relative group transition shadow-xl"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center font-black text-sm font-mono">
+                          {dept.code}
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-extrabold text-white">{dept.name}</h4>
+                          <span className="text-[10px] text-gray-400 font-mono">ID: {dept.id}</span>
+                        </div>
                       </div>
-                      <div>
-                        <h4 className="text-sm font-extrabold text-white">{dept.name}</h4>
-                        <span className="text-[10px] text-gray-400 font-mono">ID: {dept.id}</span>
+
+                      <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition">
+                        <button
+                          onClick={() => {
+                            setEditingDeptId(dept.id);
+                            setDeptForm({
+                              name: dept.name,
+                              code: dept.code,
+                              description: dept.description || ""
+                            });
+                            setShowDeptModal(true);
+                          }}
+                          className="p-1.5 hover:bg-gray-800 rounded text-gray-400 hover:text-white"
+                          title="Edit Department"
+                        >
+                          <Edit2 size={13} />
+                        </button>
+                        <button
+                          onClick={() => deleteHRDepartment(dept.id)}
+                          className="p-1.5 hover:bg-red-500/20 rounded text-gray-400 hover:text-red-400"
+                          title="Delete Department"
+                        >
+                          <Trash2 size={13} />
+                        </button>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition">
-                      <button
-                        onClick={() => {
-                          setEditingDeptId(dept.id);
-                          setDeptForm({
-                            name: dept.name,
-                            code: dept.code,
-                            headOfDepartment: dept.headOfDepartment || "",
-                            description: dept.description || ""
-                          });
-                          setShowDeptModal(true);
-                        }}
-                        className="p-1.5 hover:bg-gray-800 rounded text-gray-400 hover:text-white"
-                        title="Edit Department"
-                      >
-                        <Edit2 size={13} />
-                      </button>
-                      <button
-                        onClick={() => deleteHRDepartment(dept.id)}
-                        className="p-1.5 hover:bg-red-500/20 rounded text-gray-400 hover:text-red-400"
-                        title="Delete Department"
-                      >
-                        <Trash2 size={13} />
-                      </button>
+                    {dept.description && (
+                      <p className="text-xs text-gray-400 line-clamp-2">{dept.description}</p>
+                    )}
+
+                    <div className="pt-3 border-t border-gray-800/60 flex items-center justify-between text-[11px]">
+                      <span className="text-gray-500">Head of Dept (Auto):</span>
+                      <span className="text-emerald-400 font-bold">{autoHod}</span>
                     </div>
                   </div>
-
-                  {dept.description && (
-                    <p className="text-xs text-gray-400 line-clamp-2">{dept.description}</p>
-                  )}
-
-                  <div className="pt-3 border-t border-gray-800/60 flex items-center justify-between text-[11px]">
-                    <span className="text-gray-500">Head of Dept:</span>
-                    <span className="text-emerald-400 font-bold">{dept.headOfDepartment || "Unassigned"}</span>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
@@ -280,18 +303,18 @@ export default function HRMSPageSettings() {
           <div className="space-y-4">
             <div className="flex justify-between items-center bg-[#0b0f17] p-4 rounded-2xl border border-gray-800/80">
               <div>
-                <h3 className="text-sm font-black text-white">Designations &amp; Job Hierarchy</h3>
-                <p className="text-[11px] text-gray-400 font-sans">Formal designations mapped to specific departments.</p>
+                <h3 className="text-sm font-black text-white">Global Designations &amp; Hierarchy Ranks</h3>
+                <p className="text-[11px] text-gray-400">Designations apply globally across all company departments with auto rank evaluation (Rank 1 = Highest Director/Executive).</p>
               </div>
               <button
                 onClick={() => {
                   setEditingDesgId(null);
-                  setDesgForm({ title: "", department: hrDepartments[0]?.name || "Human Resources", grade: "E-1" });
+                  setDesgForm({ title: "", rank: 3, grade: "M-1" });
                   setShowDesgModal(true);
                 }}
                 className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl transition shadow-lg shadow-emerald-900/20"
               >
-                <Plus size={14} /> Add Designation
+                <Plus size={14} /> Add New Designation
               </button>
             </div>
 
@@ -299,33 +322,37 @@ export default function HRMSPageSettings() {
               <table className="w-full text-left text-xs">
                 <thead className="bg-black/50 border-b border-gray-800 text-gray-400 uppercase font-mono text-[10px]">
                   <tr>
+                    <th className="p-4">Hierarchy Rank</th>
                     <th className="p-4">Designation Title</th>
-                    <th className="p-4">Mapped Department</th>
-                    <th className="p-4">Pay Grade</th>
+                    <th className="p-4">Pay Grade Level</th>
+                    <th className="p-4">Scope</th>
                     <th className="p-4 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-800/60">
+                <tbody className="divide-y divide-gray-800/60 font-sans">
                   {hrDesignations.map((desg) => (
                     <tr key={desg.id} className="hover:bg-white/[0.02]">
+                      <td className="p-4 font-mono font-bold">
+                        <span className="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[11px]">
+                          Rank #{desg.rank}
+                        </span>
+                      </td>
                       <td className="p-4 font-bold text-white flex items-center gap-2">
                         <Briefcase size={14} className="text-emerald-400" />
                         <span>{desg.title}</span>
                       </td>
-                      <td className="p-4 text-gray-300">
-                        <span className="px-2 py-0.5 rounded bg-gray-800 text-gray-300 font-mono text-[11px]">
-                          {desg.department}
-                        </span>
-                      </td>
                       <td className="p-4 text-emerald-400 font-mono font-bold">
-                        {desg.grade || "Standard"}
+                        {desg.grade}
+                      </td>
+                      <td className="p-4 text-gray-400 text-[11px]">
+                        Global (Applicable to All Depts)
                       </td>
                       <td className="p-4 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => {
                               setEditingDesgId(desg.id);
-                              setDesgForm({ title: desg.title, department: desg.department, grade: desg.grade || "E-1" });
+                              setDesgForm({ title: desg.title, rank: desg.rank, grade: desg.grade });
                               setShowDesgModal(true);
                             }}
                             className="p-1 hover:bg-gray-800 rounded text-gray-400 hover:text-white"
@@ -354,15 +381,17 @@ export default function HRMSPageSettings() {
             <div className="flex justify-between items-center bg-[#0b0f17] p-4 rounded-2xl border border-gray-800/80">
               <div>
                 <h3 className="text-sm font-black text-white">Shifts &amp; Work Timings</h3>
-                <p className="text-[11px] text-gray-400">Configure roster shift schedules and grace time allowances.</p>
+                <p className="text-[11px] text-gray-400">Configure General Fixed Shifts (e.g. 09:00 AM - 05:00 PM) or Flexible Shift timings.</p>
               </div>
               <button
                 onClick={() => {
                   setEditingShiftId(null);
                   setShiftForm({
                     name: "",
+                    type: "Fixed",
                     startTime: "09:00 AM",
                     endTime: "05:00 PM",
+                    requiredHours: 8,
                     graceMinutes: 15,
                     workDays: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
                   });
@@ -382,12 +411,23 @@ export default function HRMSPageSettings() {
                 >
                   <div className="flex items-start justify-between">
                     <div>
-                      <h4 className="text-sm font-black text-white flex items-center gap-2">
-                        <Clock size={15} className="text-emerald-400" />
-                        <span>{shift.name}</span>
-                      </h4>
+                      <div className="flex items-center gap-2">
+                        <h4 className="text-sm font-black text-white flex items-center gap-2">
+                          <Clock size={15} className="text-emerald-400" />
+                          <span>{shift.name}</span>
+                        </h4>
+                        <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase border ${
+                          shift.type === "Flexible"
+                            ? "bg-purple-500/20 text-purple-300 border-purple-500/40"
+                            : "bg-emerald-500/20 text-emerald-400 border-emerald-500/40"
+                        }`}>
+                          {shift.type || "Fixed"}
+                        </span>
+                      </div>
                       <div className="text-xs text-emerald-400 font-mono font-bold mt-1">
-                        {shift.startTime} — {shift.endTime} ({shift.graceMinutes}m Grace Time)
+                        {shift.type === "Flexible"
+                          ? `Flexible Check-in (${shift.requiredHours || 8} Hours Shift Duration Required)`
+                          : `${shift.startTime} — ${shift.endTime} (${shift.graceMinutes}m Grace Allowance)`}
                       </div>
                     </div>
                     <div className="flex items-center gap-1">
@@ -396,8 +436,10 @@ export default function HRMSPageSettings() {
                           setEditingShiftId(shift.id);
                           setShiftForm({
                             name: shift.name,
+                            type: shift.type || "Fixed",
                             startTime: shift.startTime,
                             endTime: shift.endTime,
+                            requiredHours: shift.requiredHours || 8,
                             graceMinutes: shift.graceMinutes,
                             workDays: shift.workDays
                           });
@@ -465,28 +507,16 @@ export default function HRMSPageSettings() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-gray-400 font-bold mb-1">Dept Code</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. FIN"
-                      value={deptForm.code}
-                      onChange={(e) => setDeptForm({ ...deptForm, code: e.target.value.toUpperCase() })}
-                      className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-mono uppercase focus:outline-none focus:border-emerald-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-gray-400 font-bold mb-1">Head of Dept</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Muhammad Bilal"
-                      value={deptForm.headOfDepartment}
-                      onChange={(e) => setDeptForm({ ...deptForm, headOfDepartment: e.target.value })}
-                      className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white focus:outline-none focus:border-emerald-500"
-                    />
-                  </div>
+                <div>
+                  <label className="block text-gray-400 font-bold mb-1">Dept Code</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. FIN"
+                    value={deptForm.code}
+                    onChange={(e) => setDeptForm({ ...deptForm, code: e.target.value.toUpperCase() })}
+                    className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-mono uppercase focus:outline-none focus:border-emerald-500"
+                  />
                 </div>
 
                 <div>
@@ -500,6 +530,10 @@ export default function HRMSPageSettings() {
                   />
                 </div>
 
+                <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-[11px] text-emerald-300">
+                  ⚡ <b>Auto Head of Dept:</b> Head of Department is automatically assigned from the highest ranking employee assigned to this department.
+                </div>
+
                 <button
                   type="submit"
                   className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase rounded-xl transition shadow-lg shadow-emerald-900/30"
@@ -511,13 +545,13 @@ export default function HRMSPageSettings() {
           </div>
         )}
 
-        {/* MODAL 2: ADD/EDIT DESIGNATION */}
+        {/* MODAL 2: ADD/EDIT GLOBAL DESIGNATION (Department dropdown removed, Auto Grade & Rank) */}
         {showDesgModal && (
           <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
             <div className="bg-[#0b0f17] border border-emerald-500/40 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden p-6 space-y-4">
               <div className="flex justify-between items-center border-b border-gray-800 pb-3">
                 <h3 className="text-sm font-black text-white">
-                  {editingDesgId ? "Edit Designation" : "Add New Designation"}
+                  {editingDesgId ? "Edit Global Designation" : "Add New Designation"}
                 </h3>
                 <button onClick={() => setShowDesgModal(false)} className="text-gray-400 hover:text-white">
                   <X size={16} />
@@ -526,40 +560,54 @@ export default function HRMSPageSettings() {
 
               <form onSubmit={handleSaveDesg} className="space-y-3 text-xs">
                 <div>
-                  <label className="block text-gray-400 font-bold mb-1">Designation Title</label>
+                  <label className="block text-gray-400 font-bold mb-1">Designation Title *</label>
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Senior Software Engineer"
+                    placeholder="e.g. Director, Manager, Supervisor, Team Lead, Employee..."
                     value={desgForm.title}
-                    onChange={(e) => setDesgForm({ ...desgForm, title: e.target.value })}
-                    className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white focus:outline-none focus:border-emerald-500"
+                    onChange={(e) => handleDesgTitleChange(e.target.value)}
+                    className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-bold focus:outline-none focus:border-emerald-500"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-gray-400 font-bold mb-1">Department</label>
+                    <label className="block text-gray-400 font-bold mb-1">Auto Rank Level</label>
                     <select
-                      value={desgForm.department}
-                      onChange={(e) => setDesgForm({ ...desgForm, department: e.target.value })}
-                      className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white focus:outline-none focus:border-emerald-500"
+                      value={desgForm.rank}
+                      onChange={(e) => setDesgForm({ ...desgForm, rank: parseInt(e.target.value) || 3 })}
+                      className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-emerald-400 font-mono font-bold focus:outline-none focus:border-emerald-500"
                     >
-                      {hrDepartments.map((d) => (
-                        <option key={d.id} value={d.name}>{d.name}</option>
-                      ))}
+                      <option value={1}>Rank #1 (Director)</option>
+                      <option value={2}>Rank #2 (Assistant Director)</option>
+                      <option value={3}>Rank #3 (Manager)</option>
+                      <option value={4}>Rank #4 (Assistant Manager)</option>
+                      <option value={5}>Rank #5 (Supervisor)</option>
+                      <option value={6}>Rank #6 (Assistant Supervisor)</option>
+                      <option value={7}>Rank #7 (Team Lead)</option>
+                      <option value={8}>Rank #8 (Senior Officer)</option>
+                      <option value={9}>Rank #9 (Employee)</option>
+                      <option value={10}>Rank #10 (Intern)</option>
                     </select>
                   </div>
+
                   <div>
-                    <label className="block text-gray-400 font-bold mb-1">Grade Level</label>
+                    <label className="block text-gray-400 font-bold mb-1">Pay Grade Level</label>
                     <input
                       type="text"
-                      placeholder="e.g. M-1, E-2"
+                      required
+                      placeholder="e.g. M-1"
                       value={desgForm.grade}
                       onChange={(e) => setDesgForm({ ...desgForm, grade: e.target.value })}
-                      className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-mono focus:outline-none focus:border-emerald-500"
+                      className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-mono uppercase focus:outline-none focus:border-emerald-500"
                     />
                   </div>
+                </div>
+
+                <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-[11px] text-emerald-300 space-y-1">
+                  <div>🌐 <b>Global Scope:</b> This designation is available across ALL departments.</div>
+                  <div>👑 <b>Auto Head Ranking:</b> The employee with the highest rank (e.g. Director &gt; Manager) in a department becomes the Head of Department.</div>
                 </div>
 
                 <button
@@ -592,44 +640,75 @@ export default function HRMSPageSettings() {
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Morning Shift"
+                    placeholder="e.g. Morning General Shift or Flexible Shift"
                     value={shiftForm.name}
                     onChange={(e) => setShiftForm({ ...shiftForm, name: e.target.value })}
                     className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white focus:outline-none focus:border-emerald-500"
                   />
                 </div>
 
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-gray-400 font-bold mb-1">Start Time</label>
-                    <input
-                      type="text"
-                      placeholder="09:00 AM"
-                      value={shiftForm.startTime}
-                      onChange={(e) => setShiftForm({ ...shiftForm, startTime: e.target.value })}
-                      className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-mono focus:outline-none focus:border-emerald-500 text-center"
-                    />
+                    <label className="block text-gray-400 font-bold mb-1">Shift Type</label>
+                    <select
+                      value={shiftForm.type}
+                      onChange={(e) => setShiftForm({ ...shiftForm, type: e.target.value as "Fixed" | "Flexible" })}
+                      className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-emerald-400 font-bold focus:outline-none focus:border-emerald-500"
+                    >
+                      <option value="Fixed">Fixed Clock Shift (General)</option>
+                      <option value="Flexible">Flexible Shift (Duration Based)</option>
+                    </select>
                   </div>
+
                   <div>
-                    <label className="block text-gray-400 font-bold mb-1">End Time</label>
-                    <input
-                      type="text"
-                      placeholder="05:00 PM"
-                      value={shiftForm.endTime}
-                      onChange={(e) => setShiftForm({ ...shiftForm, endTime: e.target.value })}
-                      className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-mono focus:outline-none focus:border-emerald-500 text-center"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-gray-400 font-bold mb-1">Grace Mins</label>
+                    <label className="block text-gray-400 font-bold mb-1">Required Hours</label>
                     <input
                       type="number"
-                      value={shiftForm.graceMinutes}
-                      onChange={(e) => setShiftForm({ ...shiftForm, graceMinutes: parseInt(e.target.value) || 0 })}
-                      className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-mono focus:outline-none focus:border-emerald-500 text-center"
+                      value={shiftForm.requiredHours}
+                      onChange={(e) => setShiftForm({ ...shiftForm, requiredHours: parseInt(e.target.value) || 8 })}
+                      className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-mono focus:outline-none focus:border-emerald-500"
                     />
                   </div>
                 </div>
+
+                {shiftForm.type === "Fixed" ? (
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="block text-gray-400 font-bold mb-1">Start Time</label>
+                      <input
+                        type="text"
+                        placeholder="09:00 AM"
+                        value={shiftForm.startTime}
+                        onChange={(e) => setShiftForm({ ...shiftForm, startTime: e.target.value })}
+                        className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-mono focus:outline-none focus:border-emerald-500 text-center"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-gray-400 font-bold mb-1">End Time</label>
+                      <input
+                        type="text"
+                        placeholder="05:00 PM"
+                        value={shiftForm.endTime}
+                        onChange={(e) => setShiftForm({ ...shiftForm, endTime: e.target.value })}
+                        className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-mono focus:outline-none focus:border-emerald-500 text-center"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-gray-400 font-bold mb-1">Grace Mins</label>
+                      <input
+                        type="number"
+                        value={shiftForm.graceMinutes}
+                        onChange={(e) => setShiftForm({ ...shiftForm, graceMinutes: parseInt(e.target.value) || 0 })}
+                        className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-mono focus:outline-none focus:border-emerald-500 text-center"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-3 bg-purple-500/10 border border-purple-500/30 rounded-xl text-purple-300 text-[11px] space-y-1">
+                    <div>⏰ <b>Flexible Check-In Mode:</b> Employee check-in can happen at any time.</div>
+                    <div>⏱️ Employee must complete <b>{shiftForm.requiredHours} Hours</b> shift duration starting from check-in.</div>
+                  </div>
+                )}
 
                 <div>
                   <label className="block text-gray-400 font-bold mb-1">Working Days</label>

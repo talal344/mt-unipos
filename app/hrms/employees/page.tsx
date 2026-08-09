@@ -381,7 +381,7 @@ export default function HREmployeesPage() {
                       className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white focus:outline-none focus:border-emerald-500"
                     >
                       {hrDesignations.map((desg) => (
-                        <option key={desg.id} value={desg.title}>{desg.title} ({desg.department})</option>
+                        <option key={desg.id} value={desg.title}>{desg.title} ({desg.grade})</option>
                       ))}
                     </select>
                   </div>

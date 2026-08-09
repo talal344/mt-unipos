@@ -198,15 +198,17 @@ export interface HRDepartment {
 export interface HRDesignation {
   id: string;
   title: string;
-  department: string;
-  grade?: string;
+  rank: number; // 1 = Highest (Director), 10 = Lowest (Intern)
+  grade: string;
 }
 
 export interface HRShift {
   id: string;
   name: string;
+  type?: "Fixed" | "Flexible";
   startTime: string;
   endTime: string;
+  requiredHours?: number;
   graceMinutes: number;
   workDays: string[];
 }
@@ -771,6 +773,40 @@ export function generateNextEmployeeCode(businessName: string, count: number): s
   return `${cleanPrefix}-${numStr}`;
 }
 
+export function calculateDesignationRankAndGrade(title: string): { rank: number; grade: string } {
+  const t = title.toLowerCase().trim();
+  if (t.includes("director") && !t.includes("assistant") && !t.includes("asst")) return { rank: 1, grade: "EXEC-1" };
+  if (t.includes("assistant director") || t.includes("asst director")) return { rank: 2, grade: "EXEC-2" };
+  if (t.includes("manager") && !t.includes("assistant") && !t.includes("asst")) return { rank: 3, grade: "M-1" };
+  if (t.includes("assistant manager") || t.includes("asst manager")) return { rank: 4, grade: "M-2" };
+  if (t.includes("supervisor") && !t.includes("assistant") && !t.includes("asst")) return { rank: 5, grade: "SUP-1" };
+  if (t.includes("assistant supervisor") || t.includes("asst supervisor")) return { rank: 6, grade: "SUP-2" };
+  if (t.includes("team lead") || t.includes("lead") || t.includes("head")) return { rank: 7, grade: "TL-1" };
+  if (t.includes("senior") || t.includes("officer") || t.includes("specialist")) return { rank: 8, grade: "E-1" };
+  if (t.includes("intern")) return { rank: 10, grade: "INT-1" };
+  return { rank: 9, grade: "E-2" };
+}
+
+export function getHeadOfDepartment(deptName: string, employees: HREmployee[], designations: HRDesignation[]): string {
+  const deptEmps = employees.filter((e) => e.department === deptName && e.status === "Active");
+  if (deptEmps.length === 0) return "Unassigned";
+
+  // Rank each employee based on designation
+  const ranked = deptEmps.map((emp) => {
+    const desg = designations.find((d) => d.title.toLowerCase() === emp.designation.toLowerCase());
+    const rankInfo = desg && desg.rank ? { rank: desg.rank, grade: desg.grade } : calculateDesignationRankAndGrade(emp.designation);
+    return {
+      emp,
+      rank: rankInfo.rank
+    };
+  });
+
+  // Sort by rank ascending (1 = highest rank, e.g. Director/Manager)
+  ranked.sort((a, b) => a.rank - b.rank);
+  const top = ranked[0];
+  return `${top.emp.name} (${top.emp.designation})`;
+}
+
 const SEED_HR_DEPARTMENTS: HRDepartment[] = [
   { id: "DEPT-1", name: "Human Resources", code: "HR", headOfDepartment: "Ayesha Malik", description: "Talent acquisition, employee welfare, payroll, and compliance." },
   { id: "DEPT-2", name: "Accounts & Finance", code: "FIN", headOfDepartment: "Muhammad Bilal", description: "Financial ledgers, salary disbursements, and tax reporting." },
@@ -780,22 +816,23 @@ const SEED_HR_DEPARTMENTS: HRDepartment[] = [
 ];
 
 const SEED_HR_DESIGNATIONS: HRDesignation[] = [
-  { id: "DESG-1", title: "HR Manager", department: "Human Resources", grade: "M-1" },
-  { id: "DESG-2", title: "HR Officer", department: "Human Resources", grade: "O-2" },
-  { id: "DESG-3", title: "Senior Accountant", department: "Accounts & Finance", grade: "M-2" },
-  { id: "DESG-4", title: "Finance Executive", department: "Accounts & Finance", grade: "E-1" },
-  { id: "DESG-5", title: "IT Systems Administrator", department: "IT & Software Operations", grade: "M-1" },
-  { id: "DESG-6", title: "Software Engineer", department: "IT & Software Operations", grade: "E-2" },
-  { id: "DESG-7", title: "Store Operations Manager", department: "Sales & Retail", grade: "M-1" },
-  { id: "DESG-8", title: "Head Cashier", department: "Sales & Retail", grade: "O-1" },
-  { id: "DESG-9", title: "Warehouse Officer", department: "Inventory & Warehouse", grade: "O-2" }
+  { id: "DESG-1", title: "Director", rank: 1, grade: "EXEC-1" },
+  { id: "DESG-2", title: "Assistant Director", rank: 2, grade: "EXEC-2" },
+  { id: "DESG-3", title: "Manager", rank: 3, grade: "M-1" },
+  { id: "DESG-4", title: "Assistant Manager", rank: 4, grade: "M-2" },
+  { id: "DESG-5", title: "Supervisor", rank: 5, grade: "SUP-1" },
+  { id: "DESG-6", title: "Assistant Supervisor", rank: 6, grade: "SUP-2" },
+  { id: "DESG-7", title: "Team Lead", rank: 7, grade: "TL-1" },
+  { id: "DESG-8", title: "Senior Officer / Specialist", rank: 8, grade: "E-1" },
+  { id: "DESG-9", title: "Employee / Associate", rank: 9, grade: "E-2" },
+  { id: "DESG-10", title: "Intern", rank: 10, grade: "INT-1" }
 ];
 
 const SEED_HR_SHIFTS: HRShift[] = [
-  { id: "SHF-1", name: "Morning Standard Shift", startTime: "09:00 AM", endTime: "05:00 PM", graceMinutes: 15, workDays: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] },
-  { id: "SHF-2", name: "Evening Retail Shift", startTime: "02:00 PM", endTime: "10:00 PM", graceMinutes: 15, workDays: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] },
-  { id: "SHF-3", name: "Night Support Shift", startTime: "10:00 PM", endTime: "06:00 AM", graceMinutes: 15, workDays: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] },
-  { id: "SHF-4", name: "Flexible Executive Shift", startTime: "08:00 AM", endTime: "08:00 PM", graceMinutes: 30, workDays: ["Mon", "Tue", "Wed", "Thu", "Fri"] }
+  { id: "SHF-1", name: "Morning General Shift", type: "Fixed", startTime: "09:00 AM", endTime: "05:00 PM", requiredHours: 8, graceMinutes: 15, workDays: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] },
+  { id: "SHF-2", name: "Evening Shift", type: "Fixed", startTime: "02:00 PM", endTime: "10:00 PM", requiredHours: 8, graceMinutes: 15, workDays: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] },
+  { id: "SHF-3", name: "Night Shift", type: "Fixed", startTime: "10:00 PM", endTime: "06:00 AM", requiredHours: 8, graceMinutes: 15, workDays: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] },
+  { id: "SHF-4", name: "Flexible Work Shift", type: "Flexible", startTime: "Flexible Check-In", endTime: "8 Hours After Check-In", requiredHours: 8, graceMinutes: 30, workDays: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] }
 ];
 
 const SEED_HR_CANDIDATES: HRCandidate[] = [
