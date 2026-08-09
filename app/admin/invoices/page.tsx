@@ -317,7 +317,7 @@ function buildA4ExecutiveInvoiceHTML(invoice: any, tenant: any): string {
           Engineered by Founder <b>Mian Talal</b><br/>
           Support Contact: <b>03396399895</b><br/>
           Corporate Email: <b>miantalal2@gmail.com</b><br/>
-          Official Portal: mt-unipos.vercel.app
+          Official Portal: pos.mtcore.xyz
         </div>
       </div>
 

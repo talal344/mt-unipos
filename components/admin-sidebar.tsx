@@ -61,6 +61,7 @@ export default function AdminSidebar() {
     { name: "Tenants Directory", href: "/admin/clients", icon: Users },
     { name: "SaaS Reports", href: "/admin/reports", icon: PieChart },
     { name: "SaaS Invoices", href: "/admin/invoices", icon: DollarSign },
+    { name: "Email Logs", href: "/admin/emails", icon: Mail },
     { name: "Support Tickets", href: "/admin/support", icon: MessageSquare },
     { name: "Platform Settings", href: "/admin/settings", icon: Settings }
   ];
