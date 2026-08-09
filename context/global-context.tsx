@@ -236,6 +236,10 @@ export interface HRCandidate {
   tempPassword?: string;
   itProvisionedAt?: string;
   financeConfirmedAt?: string;
+  assignedToITUserId?: string;
+  assignedToITUserName?: string;
+  itTaskAssignedAt?: string;
+  itTaskTimeline?: { action: string; actor: string; timestamp: string }[];
   appliedDate: string;
 }
 
@@ -757,6 +761,7 @@ interface GlobalContextType {
   updateHRCandidate: (id: string, updates: Partial<HRCandidate>) => void;
   deleteHRCandidate: (id: string) => void;
   provisionITCredentials: (candidateId: string, workEmail: string, tempPassword: string) => void;
+  assignITTaskToSubordinate: (candidateId: string, subordinateEmpId: string, subordinateName: string) => void;
   confirmFinanceAndActivateEmployee: (candidateId: string) => void;
   provisionExecutiveDirectly: (execData: {
     name: string;
@@ -4437,6 +4442,32 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const assignITTaskToSubordinate = (candidateId: string, subordinateEmpId: string, subordinateName: string) => {
+    const nowStr = new Date().toISOString();
+    const updatedCands = hrCandidates.map(c => {
+      if (c.id === candidateId) {
+        const timeline = c.itTaskTimeline || [
+          { action: "Onboarding Request Created by HR", actor: "HR System", timestamp: c.appliedDate || nowStr }
+        ];
+        const newTimeline = [
+          ...timeline,
+          { action: `IT HOD Delegated Task to Subordinate (${subordinateName})`, actor: currentUser?.name || "IT HOD", timestamp: nowStr }
+        ];
+        return {
+          ...c,
+          assignedToITUserId: subordinateEmpId,
+          assignedToITUserName: subordinateName,
+          itTaskAssignedAt: nowStr,
+          itTaskTimeline: newTimeline
+        };
+      }
+      return c;
+    });
+
+    setHrCandidates(updatedCands);
+    saveTenantData("unipos_hr_candidates", updatedCands);
+  };
+
   // Step 3: Finance Department Confirmation & Active Directory Activation Action
   const confirmFinanceAndActivateEmployee = (candidateId: string) => {
     const candidate = hrCandidates.find(c => c.id === candidateId);
@@ -4662,6 +4693,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         updateHRCandidate,
         deleteHRCandidate,
         provisionITCredentials,
+        assignITTaskToSubordinate,
         confirmFinanceAndActivateEmployee,
         provisionExecutiveDirectly,
         clearAllHRMSData,

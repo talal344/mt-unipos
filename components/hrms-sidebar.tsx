@@ -25,56 +25,94 @@ import {
 export default function HRMSSidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { currentUser, logout, businessSettings } = useGlobalContext();
+  const { currentUser, logout, businessSettings, hrEmployees } = useGlobalContext();
   const [collapsed, setCollapsed] = useState(false);
+
+  const empMatch = hrEmployees.find(
+    (e) => e.email?.toLowerCase().trim() === currentUser?.email?.toLowerCase().trim()
+  );
+
+  const isITUser = Boolean(
+    (currentUser?.role as string) === "IT" ||
+    currentUser?.email?.toLowerCase().includes("it@") ||
+    empMatch?.department === "IT & Software Operations"
+  );
 
   const handleLogout = () => {
     logout();
     router.push("/login");
   };
 
-  const navItems = [
-    {
-      label: "HR Dashboard",
-      href: "/hrms",
-      icon: LayoutDashboard,
-    },
-    {
-      label: "Employees Directory",
-      href: "/hrms/employees",
-      icon: Users,
-    },
-    {
-      label: "Attendance & Shifts",
-      href: "/hrms/attendance",
-      icon: Clock,
-    },
-    {
-      label: "Leave Applications",
-      href: "/hrms/leaves",
-      icon: CalendarDays,
-    },
-    {
-      label: "Payroll & Payslips",
-      href: "/hrms/payroll",
-      icon: DollarSign,
-    },
-    {
-      label: "Recruitment (ATS)",
-      href: "/hrms/recruitment",
-      icon: UserPlus,
-    },
-    {
-      label: "Performance (KPIs)",
-      href: "/hrms/performance",
-      icon: TrendingUp,
-    },
-    {
-      label: "HRMS Settings",
-      href: "/hrms/settings",
-      icon: Settings,
-    },
-  ];
+  const navItems = isITUser
+    ? [
+        {
+          label: "IT Dashboard",
+          href: "/hrms",
+          icon: LayoutDashboard,
+        },
+        {
+          label: "Employees Directory",
+          href: "/hrms/employees",
+          icon: Users,
+        },
+        {
+          label: "My Attendance",
+          href: "/hrms/attendance",
+          icon: Clock,
+        },
+        {
+          label: "My Leave Applications",
+          href: "/hrms/leaves",
+          icon: CalendarDays,
+        },
+        {
+          label: "IT Provisioning Tasks",
+          href: "/hrms/recruitment",
+          icon: UserPlus,
+        },
+      ]
+    : [
+        {
+          label: "HR Dashboard",
+          href: "/hrms",
+          icon: LayoutDashboard,
+        },
+        {
+          label: "Employees Directory",
+          href: "/hrms/employees",
+          icon: Users,
+        },
+        {
+          label: "Attendance & Shifts",
+          href: "/hrms/attendance",
+          icon: Clock,
+        },
+        {
+          label: "Leave Applications",
+          href: "/hrms/leaves",
+          icon: CalendarDays,
+        },
+        {
+          label: "Payroll & Payslips",
+          href: "/hrms/payroll",
+          icon: DollarSign,
+        },
+        {
+          label: "Recruitment (ATS)",
+          href: "/hrms/recruitment",
+          icon: UserPlus,
+        },
+        {
+          label: "Performance (KPIs)",
+          href: "/hrms/performance",
+          icon: TrendingUp,
+        },
+        {
+          label: "HRMS Settings",
+          href: "/hrms/settings",
+          icon: Settings,
+        },
+      ];
 
   return (
     <aside

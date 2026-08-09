@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import HRMSSidebar from "@/components/hrms-sidebar";
+import HRMSTopHeader from "@/components/hrms-top-header";
 import { useGlobalContext, generateNextEmployeeCode } from "@/context/global-context";
 import {
   Users,
@@ -155,8 +156,9 @@ export default function HREmployeesPage() {
     <div className="flex min-h-screen bg-[#05080d] text-gray-100 font-sans">
       <HRMSSidebar />
 
-      <main className="flex-grow p-6 space-y-6 overflow-y-auto max-h-screen">
-        {/* Header */}
+      <main className="flex-grow overflow-y-auto max-h-screen">
+        <HRMSTopHeader title="Employee Directory (EIS)" subtitle="Manage complete staff profiles, CNIC verification, bank accounts, and employment status." />
+        <div className="p-6 space-y-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-800 pb-5">
           <div>
             <h1 className="text-xl font-black text-white flex items-center gap-2">
@@ -469,6 +471,7 @@ export default function HREmployeesPage() {
             </div>
           </div>
         )}
+        </div>
       </main>
     </div>
   );
