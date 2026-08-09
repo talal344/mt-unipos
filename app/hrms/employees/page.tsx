@@ -247,7 +247,7 @@ export default function HREmployeesPage() {
                 <div className="space-y-1.5 text-xs text-gray-400 border-t border-gray-800/80 pt-3">
                   <div className="flex items-center gap-2">
                     <Briefcase size={12} className="text-gray-500 shrink-0" />
-                    <span>Dept: <strong className="text-gray-200">{emp.department}</strong> ({emp.employmentType})</span>
+                    <span>Dept: <strong className="text-gray-200">{emp.department}</strong> {emp.subDepartment && <span className="text-emerald-400 font-mono">(&rarr; {emp.subDepartment})</span>} ({emp.employmentType})</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Phone size={12} className="text-gray-500 shrink-0" />

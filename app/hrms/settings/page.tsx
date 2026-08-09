@@ -22,7 +22,8 @@ import {
   Save,
   X,
   Layers,
-  Award
+  Award,
+  GitBranch
 } from "lucide-react";
 
 export default function HRMSPageSettings() {
@@ -49,7 +50,13 @@ export default function HRMSPageSettings() {
   // Modal States
   const [showDeptModal, setShowDeptModal] = useState(false);
   const [editingDeptId, setEditingDeptId] = useState<string | null>(null);
-  const [deptForm, setDeptForm] = useState({ name: "", code: "", description: "" });
+  const [deptForm, setDeptForm] = useState({
+    name: "",
+    code: "",
+    description: "",
+    subDepartments: [] as string[]
+  });
+  const [newSubDeptInput, setNewSubDeptInput] = useState("");
 
   const [showDesgModal, setShowDesgModal] = useState(false);
   const [editingDesgId, setEditingDesgId] = useState<string | null>(null);
@@ -73,6 +80,25 @@ export default function HRMSPageSettings() {
     setTimeout(() => setToastMsg(null), 3000);
   };
 
+  // Sub department helpers
+  const handleAddSubDept = () => {
+    const trimmed = newSubDeptInput.trim();
+    if (!trimmed) return;
+    if (deptForm.subDepartments.includes(trimmed)) return;
+    setDeptForm((prev) => ({
+      ...prev,
+      subDepartments: [...prev.subDepartments, trimmed]
+    }));
+    setNewSubDeptInput("");
+  };
+
+  const handleRemoveSubDept = (subName: string) => {
+    setDeptForm((prev) => ({
+      ...prev,
+      subDepartments: prev.subDepartments.filter((s) => s !== subName)
+    }));
+  };
+
   // Department Form Handlers
   const handleSaveDept = (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,11 +109,12 @@ export default function HRMSPageSettings() {
       triggerToast(`✅ Updated department '${deptForm.name}'!`);
     } else {
       addHRDepartment(deptForm);
-      triggerToast(`✅ Added new department '${deptForm.name}'!`);
+      triggerToast(`✅ Added new department '${deptForm.name}' with ${deptForm.subDepartments.length} sub-units!`);
     }
     setShowDeptModal(false);
     setEditingDeptId(null);
-    setDeptForm({ name: "", code: "", description: "" });
+    setDeptForm({ name: "", code: "", description: "", subDepartments: [] });
+    setNewSubDeptInput("");
   };
 
   // Auto-calculate grade when title changes
@@ -171,10 +198,10 @@ export default function HRMSPageSettings() {
               <Settings size={12} /> HRMS Master Configuration Desk
             </div>
             <h1 className="text-2xl font-black text-white tracking-tight">
-              Company Departments, Designations &amp; Shifts
+              Departments, Sub-Units, Designations &amp; Shifts
             </h1>
             <p className="text-xs text-gray-400 mt-0.5">
-              Global designations applies across all departments with auto rank hierarchy. Head of Department is auto-assigned based on highest employee rank.
+              Configure corporate departments and sub-operational units (e.g. Medical Billing AR, Credentials, Production, Spinning).
             </p>
           </div>
         </div>
@@ -190,7 +217,7 @@ export default function HRMSPageSettings() {
             }`}
           >
             <Building2 size={15} />
-            <span>Departments ({hrDepartments.length})</span>
+            <span>Departments &amp; Sub-Units ({hrDepartments.length})</span>
           </button>
 
           <button
@@ -218,18 +245,19 @@ export default function HRMSPageSettings() {
           </button>
         </div>
 
-        {/* 🏢 TAB 1: DEPARTMENTS */}
+        {/* 🏢 TAB 1: DEPARTMENTS & SUB-UNITS */}
         {activeTab === "departments" && (
           <div className="space-y-4">
             <div className="flex justify-between items-center bg-[#0b0f17] p-4 rounded-2xl border border-gray-800/80">
               <div>
-                <h3 className="text-sm font-black text-white">Company Departments List</h3>
-                <p className="text-[11px] text-gray-400">Head of Department is automatically calculated from the highest ranking employee assigned to that department.</p>
+                <h3 className="text-sm font-black text-white">Company Departments &amp; Sub-Operational Units</h3>
+                <p className="text-[11px] text-gray-400">Configure parent departments along with specialized operational sub-units (e.g. Medical Billing, AR, Spinning, Credentials).</p>
               </div>
               <button
                 onClick={() => {
                   setEditingDeptId(null);
-                  setDeptForm({ name: "", code: "", description: "" });
+                  setDeptForm({ name: "", code: "", description: "", subDepartments: [] });
+                  setNewSubDeptInput("");
                   setShowDeptModal(true);
                 }}
                 className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl transition shadow-lg shadow-emerald-900/20"
@@ -244,48 +272,72 @@ export default function HRMSPageSettings() {
                 return (
                   <div
                     key={dept.id}
-                    className="bg-[#0b0f17] border border-gray-800/80 hover:border-emerald-500/40 p-5 rounded-2xl space-y-3 relative group transition shadow-xl"
+                    className="bg-[#0b0f17] border border-gray-800/80 hover:border-emerald-500/40 p-5 rounded-2xl space-y-3 relative group transition shadow-xl flex flex-col justify-between"
                   >
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center font-black text-sm font-mono">
-                          {dept.code}
+                    <div className="space-y-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center font-black text-sm font-mono">
+                            {dept.code}
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-extrabold text-white">{dept.name}</h4>
+                            <span className="text-[10px] text-gray-400 font-mono">ID: {dept.id}</span>
+                          </div>
                         </div>
-                        <div>
-                          <h4 className="text-sm font-extrabold text-white">{dept.name}</h4>
-                          <span className="text-[10px] text-gray-400 font-mono">ID: {dept.id}</span>
+
+                        <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition">
+                          <button
+                            onClick={() => {
+                              setEditingDeptId(dept.id);
+                              setDeptForm({
+                                name: dept.name,
+                                code: dept.code,
+                                description: dept.description || "",
+                                subDepartments: dept.subDepartments || []
+                              });
+                              setNewSubDeptInput("");
+                              setShowDeptModal(true);
+                            }}
+                            className="p-1.5 hover:bg-gray-800 rounded text-gray-400 hover:text-white"
+                            title="Edit Department"
+                          >
+                            <Edit2 size={13} />
+                          </button>
+                          <button
+                            onClick={() => deleteHRDepartment(dept.id)}
+                            className="p-1.5 hover:bg-red-500/20 rounded text-gray-400 hover:text-red-400"
+                            title="Delete Department"
+                          >
+                            <Trash2 size={13} />
+                          </button>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition">
-                        <button
-                          onClick={() => {
-                            setEditingDeptId(dept.id);
-                            setDeptForm({
-                              name: dept.name,
-                              code: dept.code,
-                              description: dept.description || ""
-                            });
-                            setShowDeptModal(true);
-                          }}
-                          className="p-1.5 hover:bg-gray-800 rounded text-gray-400 hover:text-white"
-                          title="Edit Department"
-                        >
-                          <Edit2 size={13} />
-                        </button>
-                        <button
-                          onClick={() => deleteHRDepartment(dept.id)}
-                          className="p-1.5 hover:bg-red-500/20 rounded text-gray-400 hover:text-red-400"
-                          title="Delete Department"
-                        >
-                          <Trash2 size={13} />
-                        </button>
-                      </div>
+                      {dept.description && (
+                        <p className="text-xs text-gray-400 line-clamp-2">{dept.description}</p>
+                      )}
+
+                      {/* Sub-Departments / Operational Units */}
+                      {dept.subDepartments && dept.subDepartments.length > 0 && (
+                        <div className="pt-2 border-t border-gray-800/60 space-y-1.5">
+                          <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider flex items-center gap-1">
+                            <GitBranch size={11} className="text-emerald-400" />
+                            <span>Sub-Units ({dept.subDepartments.length}):</span>
+                          </span>
+                          <div className="flex flex-wrap gap-1">
+                            {dept.subDepartments.map((sub, idx) => (
+                              <span
+                                key={idx}
+                                className="px-2 py-0.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-[10px] font-mono font-semibold"
+                              >
+                                {sub}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
-
-                    {dept.description && (
-                      <p className="text-xs text-gray-400 line-clamp-2">{dept.description}</p>
-                    )}
 
                     <div className="pt-3 border-t border-gray-800/60 flex items-center justify-between text-[11px]">
                       <span className="text-gray-500">Head of Dept (Auto):</span>
@@ -481,42 +533,43 @@ export default function HRMSPageSettings() {
           </div>
         )}
 
-        {/* MODAL 1: ADD/EDIT DEPARTMENT */}
+        {/* MODAL 1: ADD/EDIT DEPARTMENT & SUB-UNITS */}
         {showDeptModal && (
           <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-            <div className="bg-[#0b0f17] border border-emerald-500/40 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden p-6 space-y-4">
+            <div className="bg-[#0b0f17] border border-emerald-500/40 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden p-6 space-y-4">
               <div className="flex justify-between items-center border-b border-gray-800 pb-3">
                 <h3 className="text-sm font-black text-white">
-                  {editingDeptId ? "Edit Department" : "Add New Department"}
+                  {editingDeptId ? "Edit Department & Sub-Units" : "Add Department & Sub-Units"}
                 </h3>
                 <button onClick={() => setShowDeptModal(false)} className="text-gray-400 hover:text-white">
                   <X size={16} />
                 </button>
               </div>
 
-              <form onSubmit={handleSaveDept} className="space-y-3 text-xs">
-                <div>
-                  <label className="block text-gray-400 font-bold mb-1">Department Name</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Accounts & Finance"
-                    value={deptForm.name}
-                    onChange={(e) => setDeptForm({ ...deptForm, name: e.target.value })}
-                    className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white focus:outline-none focus:border-emerald-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-gray-400 font-bold mb-1">Dept Code</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. FIN"
-                    value={deptForm.code}
-                    onChange={(e) => setDeptForm({ ...deptForm, code: e.target.value.toUpperCase() })}
-                    className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-mono uppercase focus:outline-none focus:border-emerald-500"
-                  />
+              <form onSubmit={handleSaveDept} className="space-y-4 text-xs">
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="col-span-2">
+                    <label className="block text-gray-400 font-bold mb-1">Department Name *</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Operation Department"
+                      value={deptForm.name}
+                      onChange={(e) => setDeptForm({ ...deptForm, name: e.target.value })}
+                      className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-bold focus:outline-none focus:border-emerald-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-gray-400 font-bold mb-1">Dept Code *</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. OPD"
+                      value={deptForm.code}
+                      onChange={(e) => setDeptForm({ ...deptForm, code: e.target.value.toUpperCase() })}
+                      className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-mono uppercase focus:outline-none focus:border-emerald-500"
+                    />
+                  </div>
                 </div>
 
                 <div>
@@ -530,22 +583,70 @@ export default function HRMSPageSettings() {
                   />
                 </div>
 
-                <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-[11px] text-emerald-300">
-                  ⚡ <b>Auto Head of Dept:</b> Head of Department is automatically assigned from the highest ranking employee assigned to this department.
+                {/* Sub-Departments / Operational Units Manager */}
+                <div className="space-y-2 pt-2 border-t border-gray-800/80">
+                  <label className="block text-emerald-400 font-bold">
+                    Sub-Departments &amp; Operational Units (e.g. AR, Medical Billing, Spinning, Production)
+                  </label>
+
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="e.g. Medical Billing or Spinning Unit"
+                      value={newSubDeptInput}
+                      onChange={(e) => setNewSubDeptInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleAddSubDept();
+                        }
+                      }}
+                      className="flex-1 bg-black border border-gray-800 p-2.5 rounded-xl text-white text-xs focus:outline-none focus:border-emerald-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddSubDept}
+                      className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition shrink-0"
+                    >
+                      + Add Unit
+                    </button>
+                  </div>
+
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {deptForm.subDepartments.length === 0 ? (
+                      <span className="text-[11px] text-gray-500 italic">No sub-departments added yet. Add specialized units above.</span>
+                    ) : (
+                      deptForm.subDepartments.map((sub, idx) => (
+                        <span
+                          key={idx}
+                          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-xs font-mono font-bold"
+                        >
+                          <span>{sub}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveSubDept(sub)}
+                            className="hover:text-red-400 text-gray-400"
+                          >
+                            <X size={12} />
+                          </button>
+                        </span>
+                      ))
+                    )}
+                  </div>
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase rounded-xl transition shadow-lg shadow-emerald-900/30"
+                  className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase rounded-xl transition shadow-lg shadow-emerald-900/30 mt-2"
                 >
-                  Save Department
+                  Save Department &amp; Sub-Units
                 </button>
               </form>
             </div>
           </div>
         )}
 
-        {/* MODAL 2: ADD/EDIT GLOBAL DESIGNATION (Department dropdown removed, Auto Grade & Rank) */}
+        {/* MODAL 2: ADD/EDIT GLOBAL DESIGNATION */}
         {showDesgModal && (
           <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
             <div className="bg-[#0b0f17] border border-emerald-500/40 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden p-6 space-y-4">
@@ -603,11 +704,6 @@ export default function HRMSPageSettings() {
                       className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-mono uppercase focus:outline-none focus:border-emerald-500"
                     />
                   </div>
-                </div>
-
-                <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-[11px] text-emerald-300 space-y-1">
-                  <div>🌐 <b>Global Scope:</b> This designation is available across ALL departments.</div>
-                  <div>👑 <b>Auto Head Ranking:</b> The employee with the highest rank (e.g. Director &gt; Manager) in a department becomes the Head of Department.</div>
                 </div>
 
                 <button

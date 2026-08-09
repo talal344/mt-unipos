@@ -106,6 +106,7 @@ export interface HREmployee {
   phone: string;
   cnic?: string;
   department: string;
+  subDepartment?: string;
   designation: string;
   joiningDate: string;
   employmentType: "Full-time" | "Part-time" | "Contract" | "Daily Wager";
@@ -193,6 +194,7 @@ export interface HRDepartment {
   code: string;
   headOfDepartment?: string;
   description?: string;
+  subDepartments?: string[];
 }
 
 export interface HRDesignation {
@@ -220,6 +222,7 @@ export interface HRCandidate {
   phone: string;
   appliedPosition: string;
   department: string;
+  subDepartment?: string;
   cnic?: string;
   proposedSalary: number;
   bankName?: string;
@@ -808,11 +811,12 @@ export function getHeadOfDepartment(deptName: string, employees: HREmployee[], d
 }
 
 const SEED_HR_DEPARTMENTS: HRDepartment[] = [
-  { id: "DEPT-1", name: "Human Resources", code: "HR", headOfDepartment: "Ayesha Malik", description: "Talent acquisition, employee welfare, payroll, and compliance." },
-  { id: "DEPT-2", name: "Accounts & Finance", code: "FIN", headOfDepartment: "Muhammad Bilal", description: "Financial ledgers, salary disbursements, and tax reporting." },
-  { id: "DEPT-3", name: "IT & Software Operations", code: "IT", headOfDepartment: "Mian Talal", description: "System infrastructure, employee credentials, and software development." },
-  { id: "DEPT-4", name: "Sales & Retail", code: "SLS", headOfDepartment: "Waqas Ali", description: "Store counters, checkout lanes, and customer sales." },
-  { id: "DEPT-5", name: "Inventory & Warehouse", code: "WH", headOfDepartment: "Zainab Fatima", description: "Stock transfers, supplier receipts, and batch management." }
+  { id: "DEPT-1", name: "Human Resources", code: "HR", headOfDepartment: "Ayesha Malik", description: "Talent acquisition, employee welfare, payroll, and compliance.", subDepartments: ["Talent Acquisition & ATS", "Employee Relations & Payroll", "Compliance & HR Ops"] },
+  { id: "DEPT-2", name: "Accounts & Finance", code: "FIN", headOfDepartment: "Muhammad Bilal", description: "Financial ledgers, salary disbursements, and tax reporting.", subDepartments: ["Accounts Payable (AP)", "Accounts Receivable (AR)", "Taxation & Audit"] },
+  { id: "DEPT-3", name: "Operation Department", code: "OPD", headOfDepartment: "Mian Talal", description: "Core operational workflows, medical billing, and production units.", subDepartments: ["Accounts Receivable (AR)", "Medical Billing", "Provider Credentialing", "Prior Authorization", "Production Unit", "Spinning Unit"] },
+  { id: "DEPT-4", name: "IT & Software Operations", code: "IT", headOfDepartment: "Mian Talal", description: "System infrastructure, employee credentials, and software development.", subDepartments: ["Software Engineering", "Cloud Infrastructure & DevOps", "IT Support"] },
+  { id: "DEPT-5", name: "Sales & Retail", code: "SLS", headOfDepartment: "Waqas Ali", description: "Store counters, checkout lanes, and customer sales.", subDepartments: ["Retail Counters", "Corporate B2B Sales", "E-Commerce Ops"] },
+  { id: "DEPT-6", name: "Inventory & Warehouse", code: "WH", headOfDepartment: "Zainab Fatima", description: "Stock transfers, supplier receipts, and batch management.", subDepartments: ["Inbound Receiving", "Outbound Dispatch", "Stock Audit"] }
 ];
 
 const SEED_HR_DESIGNATIONS: HRDesignation[] = [
@@ -4425,6 +4429,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       phone: candidate.phone,
       cnic: candidate.cnic || "35202-0000000-0",
       department: candidate.department,
+      subDepartment: candidate.subDepartment,
       designation: candidate.appliedPosition,
       joiningDate: new Date().toISOString().split("T")[0],
       employmentType: "Full-time",

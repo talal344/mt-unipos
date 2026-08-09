@@ -56,7 +56,8 @@ export default function HRRecruitmentPage() {
     phone: "",
     cnic: "",
     appliedPosition: hrDesignations[0]?.title || "Software Engineer",
-    department: hrDepartments[0]?.name || "IT & Software Operations",
+    department: hrDepartments[0]?.name || "Operation Department",
+    subDepartment: hrDepartments[0]?.subDepartments?.[0] || "",
     proposedSalary: 75000,
     bankName: "Meezan Bank Ltd",
     accountNumber: "",
@@ -259,7 +260,8 @@ export default function HRRecruitmentPage() {
                     phone: "",
                     cnic: "",
                     appliedPosition: hrDesignations[0]?.title || "Software Engineer",
-                    department: hrDepartments[0]?.name || "IT & Software Operations",
+                    department: hrDepartments[0]?.name || "Operation Department",
+                    subDepartment: hrDepartments[0]?.subDepartments?.[0] || "",
                     proposedSalary: 75000,
                     bankName: "Meezan Bank Ltd",
                     accountNumber: "",
@@ -594,7 +596,14 @@ export default function HRRecruitmentPage() {
                     <label className="block text-gray-400 font-bold mb-1">Department</label>
                     <select
                       value={candForm.department}
-                      onChange={(e) => setCandForm({ ...candForm, department: e.target.value })}
+                      onChange={(e) => {
+                        const targetDept = hrDepartments.find((d) => d.name === e.target.value);
+                        setCandForm({
+                          ...candForm,
+                          department: e.target.value,
+                          subDepartment: targetDept?.subDepartments?.[0] || ""
+                        });
+                      }}
                       className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white focus:outline-none focus:border-emerald-500"
                     >
                       {hrDepartments.map((d) => (
@@ -602,18 +611,33 @@ export default function HRRecruitmentPage() {
                       ))}
                     </select>
                   </div>
+
                   <div>
-                    <label className="block text-gray-400 font-bold mb-1">Applied Position</label>
+                    <label className="block text-gray-400 font-bold mb-1">Sub-Department / Operational Unit</label>
                     <select
-                      value={candForm.appliedPosition}
-                      onChange={(e) => setCandForm({ ...candForm, appliedPosition: e.target.value })}
-                      className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white focus:outline-none focus:border-emerald-500"
+                      value={candForm.subDepartment || ""}
+                      onChange={(e) => setCandForm({ ...candForm, subDepartment: e.target.value })}
+                      className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-emerald-400 font-bold focus:outline-none focus:border-emerald-500"
                     >
-                      {hrDesignations.map((d) => (
-                        <option key={d.id} value={d.title}>{d.title}</option>
+                      <option value="">-- Main Department --</option>
+                      {(hrDepartments.find((d) => d.name === candForm.department)?.subDepartments || []).map((sub) => (
+                        <option key={sub} value={sub}>{sub}</option>
                       ))}
                     </select>
                   </div>
+                </div>
+
+                <div>
+                  <label className="block text-gray-400 font-bold mb-1">Applied Position / Designation</label>
+                  <select
+                    value={candForm.appliedPosition}
+                    onChange={(e) => setCandForm({ ...candForm, appliedPosition: e.target.value })}
+                    className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white focus:outline-none focus:border-emerald-500"
+                  >
+                    {hrDesignations.map((d) => (
+                      <option key={d.id} value={d.title}>{d.title} ({d.grade})</option>
+                    ))}
+                  </select>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
