@@ -47,9 +47,22 @@ export default function HREmployeesPage() {
   const defaultDept = hrDepartments[0]?.name || "Human Resources";
   const defaultDesg = hrDesignations[0]?.title || "HR Officer";
 
+  const empMatch = hrEmployees.find(
+    (e) => e.email?.toLowerCase().trim() === currentUser?.email?.toLowerCase().trim()
+  );
+
+  const isITUser = Boolean(
+    (currentUser?.role as string) === "IT" ||
+    currentUser?.email?.toLowerCase().includes("it@") ||
+    empMatch?.department === "IT & Software Operations"
+  );
+
   const [form, setForm] = useState({
+    employeeCode: "",
     name: "",
     email: "",
+    personalEmail: "",
+    tempPassword: "",
     phone: "",
     cnic: "",
     department: defaultDept,
@@ -73,6 +86,7 @@ export default function HREmployeesPage() {
       emp.name.toLowerCase().includes(q) ||
       emp.employeeCode.toLowerCase().includes(q) ||
       emp.email.toLowerCase().includes(q) ||
+      (emp.personalEmail || "").toLowerCase().includes(q) ||
       emp.phone.includes(q) ||
       (emp.cnic || "").includes(q);
 
@@ -82,8 +96,11 @@ export default function HREmployeesPage() {
   const handleOpenAdd = () => {
     setEditingEmployee(null);
     setForm({
+      employeeCode: "",
       name: "",
       email: "",
+      personalEmail: "",
+      tempPassword: "",
       phone: "",
       cnic: "",
       department: hrDepartments[0]?.name || "Human Resources",
@@ -102,8 +119,11 @@ export default function HREmployeesPage() {
   const handleOpenEdit = (emp: any) => {
     setEditingEmployee(emp);
     setForm({
+      employeeCode: emp.employeeCode || "",
       name: emp.name,
       email: emp.email,
+      personalEmail: emp.personalEmail || "",
+      tempPassword: emp.tempPassword || "",
       phone: emp.phone,
       cnic: emp.cnic || "",
       department: emp.department,
@@ -127,9 +147,11 @@ export default function HREmployeesPage() {
     const autoCode = generateNextEmployeeCode(bName, hrEmployees.length);
 
     const payload = {
-      employeeCode: editingEmployee ? editingEmployee.employeeCode : autoCode,
+      employeeCode: form.employeeCode.trim() || (editingEmployee ? editingEmployee.employeeCode : autoCode),
       name: form.name,
       email: form.email,
+      personalEmail: form.personalEmail,
+      tempPassword: form.tempPassword,
       phone: form.phone,
       cnic: form.cnic,
       department: form.department,
@@ -256,9 +278,15 @@ export default function HREmployeesPage() {
                     <span className="font-mono">{emp.phone}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Mail size={12} className="text-gray-500 shrink-0" />
-                    <span className="font-mono text-[11px] truncate">{emp.email}</span>
+                    <Mail size={12} className="text-sky-400 shrink-0" />
+                    <span>Work Email: <strong className="font-mono text-[11px] text-sky-300">{emp.email}</strong></span>
                   </div>
+                  {emp.personalEmail && (
+                    <div className="flex items-center gap-2">
+                      <Mail size={12} className="text-gray-500 shrink-0" />
+                      <span>Personal Email: <strong className="font-mono text-[11px] text-gray-300">{emp.personalEmail}</strong></span>
+                    </div>
+                  )}
                   {emp.cnic && (
                     <div className="flex items-center gap-2">
                       <CreditCard size={12} className="text-gray-500 shrink-0" />
@@ -275,24 +303,45 @@ export default function HREmployeesPage() {
                 <div className="p-2.5 bg-black/40 border border-gray-800/80 rounded-xl text-[10px] text-gray-400 font-mono">
                   <div>Bank: <strong className="text-gray-200">{emp.bankName || "N/A"}</strong></div>
                   <div>Account #: <strong className="text-gray-200">{emp.accountNumber || emp.jazzCashNo || "N/A"}</strong></div>
+                  {emp.tempPassword && (
+                    <div className="text-amber-400 pt-1">Login Password: <strong className="text-white font-mono">{emp.tempPassword}</strong></div>
+                  )}
                 </div>
 
                 {/* Actions */}
-                <div className="flex gap-2 pt-1 justify-end">
-                  <button
-                    onClick={() => handleOpenEdit(emp)}
-                    className="p-1.5 bg-gray-800 hover:bg-emerald-600 text-gray-300 hover:text-white rounded-lg transition"
-                    title="Edit Profile"
-                  >
-                    <Edit2 size={12} />
-                  </button>
-                  <button
-                    onClick={() => deleteHREmployee(emp.id)}
-                    className="p-1.5 bg-red-900/20 hover:bg-red-600 text-red-400 hover:text-white rounded-lg transition"
-                    title="Delete Record"
-                  >
-                    <Trash2 size={12} />
-                  </button>
+                <div className="flex gap-2 pt-1 items-center justify-between">
+                  {(isITUser || currentUser?.role === "Owner") && (
+                    <button
+                      onClick={() => {
+                        const nextStatus = emp.status === "Active" ? "Terminated" : "Active";
+                        updateHREmployee(emp.id, { status: nextStatus });
+                      }}
+                      className={`px-2.5 py-1 text-[10px] font-bold rounded-lg border transition ${
+                        emp.status === "Active"
+                          ? "bg-red-500/10 border-red-500/30 text-red-400 hover:bg-red-500/20"
+                          : "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20"
+                      }`}
+                    >
+                      {emp.status === "Active" ? "Deactivate Account" : "Activate Account"}
+                    </button>
+                  )}
+
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleOpenEdit(emp)}
+                      className="p-1.5 bg-gray-800 hover:bg-emerald-600 text-gray-300 hover:text-white rounded-lg transition"
+                      title="Edit Profile & Credentials"
+                    >
+                      <Edit2 size={12} />
+                    </button>
+                    <button
+                      onClick={() => deleteHREmployee(emp.id)}
+                      className="p-1.5 bg-red-900/20 hover:bg-red-600 text-red-400 hover:text-white rounded-lg transition"
+                      title="Delete Record"
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  </div>
                 </div>
               </div>
             ))
@@ -316,6 +365,60 @@ export default function HREmployeesPage() {
               </div>
 
               <form onSubmit={handleSubmit} className="p-6 space-y-4 text-xs">
+                {(isITUser || currentUser?.role === "Owner") && (
+                  <div className="bg-sky-500/10 border border-sky-500/30 p-3 rounded-xl space-y-3">
+                    <div className="text-sky-400 font-black text-xs uppercase flex items-center gap-1.5">
+                      <span>⚡ IT System Credentials &amp; Employee ID Control</span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[10px] uppercase font-bold text-sky-300 mb-1">Employee ID (Editable) *</label>
+                        <input
+                          type="text"
+                          required
+                          value={form.employeeCode}
+                          onChange={(e) => setForm({ ...form, employeeCode: e.target.value })}
+                          className="w-full bg-black border border-sky-500/50 p-2.5 rounded-xl text-sky-300 font-mono font-bold focus:outline-none focus:border-sky-400"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] uppercase font-bold text-sky-300 mb-1">Company Work Email *</label>
+                        <input
+                          type="email"
+                          required
+                          value={form.email}
+                          onChange={(e) => setForm({ ...form, email: e.target.value })}
+                          className="w-full bg-black border border-sky-500/50 p-2.5 rounded-xl text-sky-300 font-mono font-bold focus:outline-none focus:border-sky-400"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">System Login Password</label>
+                        <input
+                          type="text"
+                          value={form.tempPassword}
+                          onChange={(e) => setForm({ ...form, tempPassword: e.target.value })}
+                          className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-mono focus:outline-none focus:border-emerald-500"
+                          placeholder="Pass123!"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Personal Email (HR Record)</label>
+                        <input
+                          type="email"
+                          value={form.personalEmail}
+                          onChange={(e) => setForm({ ...form, personalEmail: e.target.value })}
+                          className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-gray-300 font-mono focus:outline-none focus:border-emerald-500"
+                          placeholder="personal@gmail.com"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Full Name *</label>
@@ -329,13 +432,13 @@ export default function HREmployeesPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Corporate Email *</label>
+                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Phone Number *</label>
                     <input
-                      type="email"
+                      type="text"
                       required
-                      placeholder="e.g. waqas@mtcore.xyz"
-                      value={form.email}
-                      onChange={(e) => setForm({ ...form, email: e.target.value })}
+                      placeholder="03001234567"
+                      value={form.phone}
+                      onChange={(e) => setForm({ ...form, phone: e.target.value })}
                       className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white focus:outline-none focus:border-emerald-500"
                     />
                   </div>

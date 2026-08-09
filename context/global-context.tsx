@@ -103,6 +103,7 @@ export interface HREmployee {
   employeeCode: string;
   name: string;
   email: string;
+  personalEmail?: string;
   tempPassword?: string;
   phone: string;
   cnic?: string;
@@ -787,7 +788,7 @@ interface GlobalContextType {
   addHRCandidate: (cand: Omit<HRCandidate, "id" | "appliedDate">) => void;
   updateHRCandidate: (id: string, updates: Partial<HRCandidate>) => void;
   deleteHRCandidate: (id: string) => void;
-  provisionITCredentials: (candidateId: string, workEmail: string, tempPassword: string) => void;
+  provisionITCredentials: (candidateId: string, workEmail: string, tempPassword: string, customEmployeeCode?: string) => void;
   assignITTaskToSubordinate: (candidateId: string, subordinateEmpId: string, subordinateName: string) => void;
   confirmFinanceAndActivateEmployee: (candidateId: string) => void;
   provisionExecutiveDirectly: (execData: {
@@ -4490,9 +4491,9 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Step 2: IT Department Provisioning Action
-  const provisionITCredentials = (candidateId: string, workEmail: string, tempPassword: string) => {
+  const provisionITCredentials = (candidateId: string, workEmail: string, tempPassword: string, customEmployeeCode?: string) => {
     const bName = currentUser?.businessName || businessSettings?.businessName || "MT Software";
-    const autoCode = generateNextEmployeeCode(bName, hrEmployees.length);
+    const autoCode = customEmployeeCode?.trim() || generateNextEmployeeCode(bName, hrEmployees.length);
     const nowStr = new Date().toISOString();
 
     const updatedCands = hrCandidates.map(c => {

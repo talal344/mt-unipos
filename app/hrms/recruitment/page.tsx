@@ -106,6 +106,7 @@ export default function HRRecruitmentPage() {
   const [showITModal, setShowITModal] = useState(false);
   const [selectedCandForIT, setSelectedCandForIT] = useState<any>(null);
   const [itForm, setItForm] = useState({
+    customEmployeeCode: "",
     workEmail: "",
     tempPassword: ""
   });
@@ -190,7 +191,9 @@ export default function HRRecruitmentPage() {
     setSelectedCandForIT(candidate);
     const cleanName = candidate.name.toLowerCase().replace(/\s+/g, ".");
     const companyDomain = bName.toLowerCase().replace(/[^a-z0-9]/g, "") || "mtsoftware";
+    const autoCode = generateNextEmployeeCode(bName, hrEmployees.length);
     setItForm({
+      customEmployeeCode: autoCode,
       workEmail: `${cleanName}@${companyDomain}.com`,
       tempPassword: `${candidate.name.split(" ")[0]}@2026!`
     });
@@ -201,9 +204,9 @@ export default function HRRecruitmentPage() {
     e.preventDefault();
     if (!selectedCandForIT || !itForm.workEmail || !itForm.tempPassword) return;
 
-    provisionITCredentials(selectedCandForIT.id, itForm.workEmail, itForm.tempPassword);
-    const generatedCode = generateNextEmployeeCode(bName, hrEmployees.length);
-    triggerToast(`⚡ IT Provisioned! Auto Employee ID '${generatedCode}' & Work Credentials assigned. Routed to Finance Confirmation.`);
+    const finalCode = itForm.customEmployeeCode.trim() || generateNextEmployeeCode(bName, hrEmployees.length);
+    provisionITCredentials(selectedCandForIT.id, itForm.workEmail, itForm.tempPassword, finalCode);
+    triggerToast(`⚡ IT Provisioned! Employee ID '${finalCode}' & Work Credentials assigned. Routed to Finance Confirmation.`);
     setShowITModal(false);
     setSelectedCandForIT(null);
   };
@@ -960,14 +963,26 @@ export default function HRRecruitmentPage() {
               <div className="bg-sky-500/10 border border-sky-500/30 p-3 rounded-xl text-xs space-y-1">
                 <div className="text-gray-300 font-bold">Candidate: <span className="text-white">{selectedCandForIT.name}</span></div>
                 <div className="text-gray-400 text-[11px]">Dept: {selectedCandForIT.department} &bull; Position: {selectedCandForIT.appliedPosition}</div>
-                <div className="text-sky-300 font-mono font-black pt-1">
-                  Generated Employee ID: {generateNextEmployeeCode(bName, hrEmployees.length)}
-                </div>
+                <div className="text-gray-400 text-[11px]">Personal Email (HR): <span className="text-gray-200 font-mono">{selectedCandForIT.email}</span></div>
               </div>
 
               <form onSubmit={handleConfirmITProvisioning} className="space-y-3 text-xs">
                 <div>
-                  <label className="block text-gray-400 font-bold mb-1">Company Work Email *</label>
+                  <label className="block text-sky-400 font-black mb-1 uppercase tracking-wider text-[10px]">
+                    Employee ID (IT Customizable) *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={itForm.customEmployeeCode}
+                    onChange={(e) => setItForm({ ...itForm, customEmployeeCode: e.target.value })}
+                    className="w-full bg-black border border-sky-500/50 p-2.5 rounded-xl text-sky-300 font-mono font-black focus:outline-none focus:border-sky-400"
+                    placeholder="e.g. MTS-1001 / MS-0004"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-gray-400 font-bold mb-1">Company Professional Work Email *</label>
                   <input
                     type="email"
                     required
