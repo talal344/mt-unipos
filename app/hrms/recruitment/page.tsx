@@ -628,12 +628,40 @@ export default function HRRecruitmentPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-emerald-400 font-bold mb-1">Proposed Salary ({currencySymbol})</label>
+                    <label className="block text-emerald-400 font-bold mb-1">Basic Monthly Salary ({currencySymbol})</label>
                     <input
                       type="number"
                       value={candForm.proposedSalary}
                       onChange={(e) => setCandForm({ ...candForm, proposedSalary: parseFloat(e.target.value) || 0 })}
                       className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-emerald-400 font-bold focus:outline-none focus:border-emerald-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-gray-400 font-bold mb-1">Bank Name</label>
+                    <select
+                      value={candForm.bankName}
+                      onChange={(e) => setCandForm({ ...candForm, bankName: e.target.value })}
+                      className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white focus:outline-none focus:border-emerald-500"
+                    >
+                      <option value="Meezan Bank Ltd">Meezan Bank Ltd</option>
+                      <option value="Habib Bank Limited (HBL)">Habib Bank Limited (HBL)</option>
+                      <option value="MCB Bank">MCB Bank</option>
+                      <option value="Bank Alfalah">Bank Alfalah</option>
+                      <option value="Faysal Bank">Faysal Bank</option>
+                      <option value="United Bank Limited (UBL)">United Bank Limited (UBL)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-gray-400 font-bold mb-1">Bank Account Number / IBAN</label>
+                    <input
+                      type="text"
+                      placeholder="01020304050607"
+                      value={candForm.accountNumber}
+                      onChange={(e) => setCandForm({ ...candForm, accountNumber: e.target.value })}
+                      className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-mono focus:outline-none focus:border-emerald-500"
                     />
                   </div>
                 </div>

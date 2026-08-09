@@ -1,10 +1,12 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import HRMSSidebar from "@/components/hrms-sidebar";
 import { useGlobalContext, generateNextEmployeeCode } from "@/context/global-context";
 import {
   Users,
+  UserPlus,
   Search,
   Plus,
   Edit2,
@@ -165,12 +167,13 @@ export default function HREmployeesPage() {
               Manage complete staff profiles, CNIC verification, bank accounts, and employment status.
             </p>
           </div>
-          <button
-            onClick={handleOpenAdd}
-            className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-lg transition"
+          <Link
+            href="/hrms/recruitment"
+            className="flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-lg transition"
           >
-            <Plus size={14} /> Register New Employee
-          </button>
+            <UserPlus size={15} />
+            <span>Recruit &amp; Onboard New Staff</span>
+          </Link>
         </div>
 
         {/* Filters */}
