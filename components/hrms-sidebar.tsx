@@ -19,7 +19,9 @@ import {
   Building2,
   HelpCircle,
   Settings,
-  Sparkles
+  Sparkles,
+  Network,
+  GitBranch
 } from "lucide-react";
 
 export default function HRMSSidebar() {
@@ -37,6 +39,14 @@ export default function HRMSSidebar() {
     currentUser?.email?.toLowerCase().includes("it@") ||
     empMatch?.department === "IT & Software Operations"
   );
+
+  const isHRUser = Boolean(
+    (currentUser?.role as string) === "HR" ||
+    currentUser?.email?.toLowerCase().includes("hr@") ||
+    empMatch?.department === "Human Resources"
+  );
+
+  const isOwner = currentUser?.role === "Owner";
 
   const handleLogout = () => {
     logout();
@@ -69,6 +79,11 @@ export default function HRMSSidebar() {
           label: "IT Provisioning Tasks",
           href: "/hrms/recruitment",
           icon: UserPlus,
+        },
+        {
+          label: "My Team",
+          href: "/hrms/team",
+          icon: Network,
         },
         {
           label: "Helpdesk Tickets",
@@ -112,6 +127,16 @@ export default function HRMSSidebar() {
           href: "/hrms/performance",
           icon: TrendingUp,
         },
+        {
+          label: "My Team",
+          href: "/hrms/team",
+          icon: Network,
+        },
+        ...((isOwner || isHRUser) ? [{
+          label: "Assign Team",
+          href: "/hrms/team-assign",
+          icon: GitBranch,
+        }] : []),
         {
           label: "Helpdesk Tickets",
           href: "/hrms/tickets",

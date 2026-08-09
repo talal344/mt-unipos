@@ -118,6 +118,8 @@ export interface HREmployee {
   jazzCashNo?: string;
   status: "Active" | "On Leave" | "Terminated";
   avatar?: string;
+  reportsTo?: string;
+  reportingDesignation?: string;
 }
 
 export interface HRAttendance {

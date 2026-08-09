@@ -1,28 +1,29 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import HRMSSidebar from "@/components/hrms-sidebar";
 import HRMSTopHeader from "@/components/hrms-top-header";
-import { useGlobalContext, generateNextEmployeeCode } from "@/context/global-context";
+import { useGlobalContext, calculateDesignationRankAndGrade } from "@/context/global-context";
 import {
   Users,
   UserPlus,
   Search,
-  Plus,
   Edit2,
   Trash2,
-  CheckCircle2,
-  XCircle,
   Building2,
   Phone,
   Mail,
   CreditCard,
   Briefcase,
-  Calendar,
   X,
-  FileText,
-  DollarSign
+  DollarSign,
+  ShieldCheck,
+  ShieldOff,
+  Calendar,
+  ChevronDown,
+  ChevronUp,
+  AlertTriangle
 } from "lucide-react";
 
 export default function HREmployeesPage() {
@@ -33,7 +34,6 @@ export default function HREmployeesPage() {
     deleteHREmployee,
     hrDepartments,
     hrDesignations,
-    hrShifts,
     currencySymbol,
     currentUser,
     businessSettings
@@ -43,12 +43,20 @@ export default function HREmployeesPage() {
   const [departmentFilter, setDepartmentFilter] = useState("All");
   const [showModal, setShowModal] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<any>(null);
+  const [sortField, setSortField] = useState<string>("name");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
 
-  const defaultDept = hrDepartments[0]?.name || "Human Resources";
-  const defaultDesg = hrDesignations[0]?.title || "HR Officer";
-
+  // ─── ROLE DETECTION ────────────────────────────────────────────────────
   const empMatch = hrEmployees.find(
     (e) => e.email?.toLowerCase().trim() === currentUser?.email?.toLowerCase().trim()
+  );
+
+  const isOwner = currentUser?.role === "Owner";
+
+  const isHRUser = Boolean(
+    (currentUser?.role as string) === "HR" ||
+    currentUser?.email?.toLowerCase().includes("hr@") ||
+    empMatch?.department === "Human Resources"
   );
 
   const isITUser = Boolean(
@@ -56,6 +64,24 @@ export default function HREmployeesPage() {
     currentUser?.email?.toLowerCase().includes("it@") ||
     empMatch?.department === "IT & Software Operations"
   );
+
+  // Check if current user is senior (Assistant Manager rank 4 or above)
+  const myDesignationRank = empMatch
+    ? (hrDesignations.find((d) => d.title.toLowerCase() === empMatch.designation.toLowerCase())?.rank
+      ?? calculateDesignationRankAndGrade(empMatch.designation).rank)
+    : 99;
+
+  const isSenior = myDesignationRank <= 4; // Director, Asst Director, Manager, Asst Manager
+
+  // ─── PERMISSION FLAGS ──────────────────────────────────────────────────
+  const canViewFullCards = isOwner || isHRUser || isSenior;
+  const canEditDelete = isOwner || isHRUser;
+  const canActivateEmployee = isOwner || isHRUser;
+  const canActivateCredentials = isOwner || isITUser;
+
+  // ─── FORM STATE ────────────────────────────────────────────────────────
+  const defaultDept = hrDepartments[0]?.name || "Human Resources";
+  const defaultDesg = hrDesignations[0]?.title || "HR Officer";
 
   const [form, setForm] = useState({
     employeeCode: "",
@@ -76,46 +102,43 @@ export default function HREmployeesPage() {
     status: "Active" as const
   });
 
+  // ─── FILTERING & SORTING ──────────────────────────────────────────────
   const departmentList = ["All", ...hrDepartments.map((d) => d.name)];
 
-  const filteredEmployees = hrEmployees.filter((emp) => {
-    const matchDept = departmentFilter === "All" || emp.department === departmentFilter;
-    const q = searchQuery.toLowerCase();
-    const matchQuery =
-      !q ||
-      emp.name.toLowerCase().includes(q) ||
-      emp.employeeCode.toLowerCase().includes(q) ||
-      emp.email.toLowerCase().includes(q) ||
-      (emp.personalEmail || "").toLowerCase().includes(q) ||
-      emp.phone.includes(q) ||
-      (emp.cnic || "").includes(q);
+  const filteredEmployees = useMemo(() => {
+    let result = hrEmployees.filter((emp) => {
+      const matchDept = departmentFilter === "All" || emp.department === departmentFilter;
+      const q = searchQuery.toLowerCase();
+      const matchQuery =
+        !q ||
+        emp.name.toLowerCase().includes(q) ||
+        emp.employeeCode.toLowerCase().includes(q) ||
+        emp.email.toLowerCase().includes(q) ||
+        (emp.personalEmail || "").toLowerCase().includes(q) ||
+        emp.phone.includes(q) ||
+        (emp.cnic || "").includes(q);
 
-    return matchDept && matchQuery;
-  });
-
-  const handleOpenAdd = () => {
-    setEditingEmployee(null);
-    setForm({
-      employeeCode: "",
-      name: "",
-      email: "",
-      personalEmail: "",
-      tempPassword: "",
-      phone: "",
-      cnic: "",
-      department: hrDepartments[0]?.name || "Human Resources",
-      designation: hrDesignations[0]?.title || "HR Officer",
-      joiningDate: new Date().toISOString().split("T")[0],
-      employmentType: "Full-time",
-      basicSalary: "50000",
-      bankName: "Meezan Bank Ltd",
-      accountNumber: "",
-      jazzCashNo: "",
-      status: "Active"
+      return matchDept && matchQuery;
     });
-    setShowModal(true);
-  };
 
+    // Sort for table view
+    result.sort((a, b) => {
+      let valA = "", valB = "";
+      if (sortField === "name") { valA = a.name; valB = b.name; }
+      else if (sortField === "department") { valA = a.department; valB = b.department; }
+      else if (sortField === "designation") { valA = a.designation; valB = b.designation; }
+      else if (sortField === "joiningDate") { valA = a.joiningDate; valB = b.joiningDate; }
+      else if (sortField === "employeeCode") { valA = a.employeeCode; valB = b.employeeCode; }
+      else { valA = a.email; valB = b.email; }
+
+      const cmp = valA.localeCompare(valB);
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+
+    return result;
+  }, [hrEmployees, departmentFilter, searchQuery, sortField, sortDir]);
+
+  // ─── HANDLERS ──────────────────────────────────────────────────────────
   const handleOpenEdit = (emp: any) => {
     setEditingEmployee(emp);
     setForm({
@@ -143,11 +166,8 @@ export default function HREmployeesPage() {
     e.preventDefault();
     if (!form.name || !form.email || !form.phone) return;
 
-    const bName = currentUser?.businessName || businessSettings?.businessName || "MT Software";
-    const autoCode = generateNextEmployeeCode(bName, hrEmployees.length);
-
     const payload = {
-      employeeCode: form.employeeCode.trim() || (editingEmployee ? editingEmployee.employeeCode : autoCode),
+      employeeCode: form.employeeCode.trim() || editingEmployee?.employeeCode || "",
       name: form.name,
       email: form.email,
       personalEmail: form.personalEmail,
@@ -174,6 +194,24 @@ export default function HREmployeesPage() {
     setShowModal(false);
   };
 
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortDir(sortDir === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDir("asc");
+    }
+  };
+
+  const SortIcon = ({ field }: { field: string }) => {
+    if (sortField !== field) return null;
+    return sortDir === "asc" ? <ChevronUp size={10} /> : <ChevronDown size={10} />;
+  };
+
+  // ─── STATS ─────────────────────────────────────────────────────────────
+  const activeCount = hrEmployees.filter((e) => e.status === "Active").length;
+  const totalCount = hrEmployees.length;
+
   return (
     <div className="flex min-h-screen bg-[#05080d] text-gray-100 font-sans">
       <HRMSSidebar />
@@ -181,399 +219,517 @@ export default function HREmployeesPage() {
       <main className="flex-grow overflow-y-auto max-h-screen">
         <HRMSTopHeader title="Employee Directory (EIS)" subtitle="Manage complete staff profiles, CNIC verification, bank accounts, and employment status." />
         <div className="p-6 space-y-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-800 pb-5">
-          <div>
-            <h1 className="text-xl font-black text-white flex items-center gap-2">
-              <Users size={20} className="text-emerald-400" />
-              Employee Directory (EIS)
-            </h1>
-            <p className="text-xs text-gray-400">
-              Manage complete staff profiles, CNIC verification, bank accounts, and employment status.
-            </p>
-          </div>
-          <Link
-            href="/hrms/recruitment"
-            className="flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-lg transition"
-          >
-            <UserPlus size={15} />
-            <span>Recruit &amp; Onboard New Staff</span>
-          </Link>
-        </div>
 
-        {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-grow">
-            <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500" />
-            <input
-              type="text"
-              placeholder="Search by name, CNIC, employee code, email, phone..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-[#0b0f17] border border-gray-800 pl-10 pr-4 py-2.5 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500 placeholder-gray-600"
-            />
-          </div>
-
-          <div className="flex gap-2 overflow-x-auto">
-            {departmentList.map((d) => (
-              <button
-                key={d}
-                onClick={() => setDepartmentFilter(d)}
-                className={`px-3 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${
-                  departmentFilter === d
-                    ? "bg-emerald-600 text-white"
-                    : "bg-[#0b0f17] border border-gray-800 text-gray-400 hover:text-white"
-                }`}
+          {/* ── Top Action Bar ──────────────────────────────────────────── */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="px-4 py-2 bg-[#0b0f17] border border-gray-800 rounded-xl">
+                <span className="text-[10px] text-gray-500 uppercase font-bold block">Total Staff</span>
+                <span className="text-lg font-black text-white">{totalCount}</span>
+              </div>
+              <div className="px-4 py-2 bg-[#0b0f17] border border-emerald-500/20 rounded-xl">
+                <span className="text-[10px] text-gray-500 uppercase font-bold block">Active</span>
+                <span className="text-lg font-black text-emerald-400">{activeCount}</span>
+              </div>
+              <div className="px-4 py-2 bg-[#0b0f17] border border-amber-500/20 rounded-xl">
+                <span className="text-[10px] text-gray-500 uppercase font-bold block">Inactive</span>
+                <span className="text-lg font-black text-amber-400">{totalCount - activeCount}</span>
+              </div>
+            </div>
+            {canEditDelete && (
+              <Link
+                href="/hrms/recruitment"
+                className="flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-lg transition"
               >
-                {d}
-              </button>
-            ))}
+                <UserPlus size={15} />
+                <span>Recruit &amp; Onboard New Staff</span>
+              </Link>
+            )}
           </div>
-        </div>
 
-        {/* Employees Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredEmployees.length === 0 ? (
-            <div className="col-span-full p-12 bg-[#0b0f17] border border-gray-800 rounded-2xl text-center text-gray-500 italic text-xs">
-              No employee records found matching your filters.
+          {/* ── Filters ─────────────────────────────────────────────────── */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-grow">
+              <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500" />
+              <input
+                type="text"
+                placeholder="Search by name, employee code, email, phone..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-[#0b0f17] border border-gray-800 pl-10 pr-4 py-2.5 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500 placeholder-gray-600"
+              />
+            </div>
+
+            <div className="flex gap-2 overflow-x-auto">
+              {departmentList.map((d) => (
+                <button
+                  key={d}
+                  onClick={() => setDepartmentFilter(d)}
+                  className={`px-3 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${
+                    departmentFilter === d
+                      ? "bg-emerald-600 text-white"
+                      : "bg-[#0b0f17] border border-gray-800 text-gray-400 hover:text-white"
+                  }`}
+                >
+                  {d}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* ── CONTENT: FULL CARDS (Owner/HR/Senior) or TABLE (Others) ── */}
+          {canViewFullCards ? (
+            /* ═══════════ FULL CARD VIEW ═══════════ */
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredEmployees.length === 0 ? (
+                <div className="col-span-full p-12 bg-[#0b0f17] border border-gray-800 rounded-2xl text-center text-gray-500 italic text-xs">
+                  No employee records found matching your filters.
+                </div>
+              ) : (
+                filteredEmployees.map((emp) => (
+                  <div
+                    key={emp.id}
+                    className="bg-[#0b0f17] border border-gray-800 hover:border-emerald-500/40 p-5 rounded-2xl space-y-3 transition relative group"
+                  >
+                    {/* Employee Header */}
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 text-emerald-400 flex items-center justify-center font-black text-sm uppercase">
+                          {emp.name.slice(0, 2)}
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-white text-sm">{emp.name}</h3>
+                          <div className="text-[10px] text-emerald-400 font-mono font-bold">
+                            {emp.employeeCode} • <span className="text-gray-400">{emp.designation}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <span
+                        className={`px-2 py-0.5 text-[9px] font-bold uppercase rounded border ${
+                          emp.status === "Active"
+                            ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+                            : emp.status === "On Leave"
+                              ? "bg-amber-500/10 border-amber-500/30 text-amber-400"
+                              : "bg-red-500/10 border-red-500/30 text-red-400"
+                        }`}
+                      >
+                        {emp.status}
+                      </span>
+                    </div>
+
+                    {/* Info Fields */}
+                    <div className="space-y-1.5 text-xs text-gray-400 border-t border-gray-800/80 pt-3">
+                      <div className="flex items-center gap-2">
+                        <Briefcase size={12} className="text-gray-500 shrink-0" />
+                        <span>Dept: <strong className="text-gray-200">{emp.department}</strong> {emp.subDepartment && <span className="text-emerald-400 font-mono">(&rarr; {emp.subDepartment})</span>} ({emp.employmentType})</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Calendar size={12} className="text-gray-500 shrink-0" />
+                        <span>Joined: <strong className="text-gray-200">{emp.joiningDate}</strong></span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Phone size={12} className="text-gray-500 shrink-0" />
+                        <span className="font-mono">{emp.phone}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Mail size={12} className="text-sky-400 shrink-0" />
+                        <span>Work Email: <strong className="font-mono text-[11px] text-sky-300">{emp.email}</strong></span>
+                      </div>
+                      {emp.personalEmail && (
+                        <div className="flex items-center gap-2">
+                          <Mail size={12} className="text-gray-500 shrink-0" />
+                          <span>Personal: <strong className="font-mono text-[11px] text-gray-300">{emp.personalEmail}</strong></span>
+                        </div>
+                      )}
+                      {emp.cnic && (
+                        <div className="flex items-center gap-2">
+                          <CreditCard size={12} className="text-gray-500 shrink-0" />
+                          <span>CNIC: <strong className="text-gray-300 font-mono">{emp.cnic}</strong></span>
+                        </div>
+                      )}
+                      <div className="flex items-center gap-2">
+                        <DollarSign size={12} className="text-emerald-400 shrink-0" />
+                        <span>Basic Salary: <strong className="text-emerald-400 font-mono">{currencySymbol} {emp.basicSalary.toLocaleString()}</strong></span>
+                      </div>
+                    </div>
+
+                    {/* Bank / Payout details */}
+                    <div className="p-2.5 bg-black/40 border border-gray-800/80 rounded-xl text-[10px] text-gray-400 font-mono">
+                      <div>Bank: <strong className="text-gray-200">{emp.bankName || "N/A"}</strong></div>
+                      <div>Account #: <strong className="text-gray-200">{emp.accountNumber || emp.jazzCashNo || "N/A"}</strong></div>
+                    </div>
+
+                    {/* Actions — permission gated */}
+                    <div className="flex gap-2 pt-1 items-center justify-between">
+                      <div className="flex gap-1.5">
+                        {/* Employee Activate/Deactivate — HR/Owner only */}
+                        {canActivateEmployee && (
+                          <button
+                            onClick={() => {
+                              const nextStatus = emp.status === "Active" ? "Terminated" : "Active";
+                              updateHREmployee(emp.id, { status: nextStatus });
+                            }}
+                            className={`px-2.5 py-1 text-[10px] font-bold rounded-lg border transition flex items-center gap-1 ${
+                              emp.status === "Active"
+                                ? "bg-red-500/10 border-red-500/30 text-red-400 hover:bg-red-500/20"
+                                : "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20"
+                            }`}
+                          >
+                            {emp.status === "Active" ? <><ShieldOff size={10} /> Deactivate</> : <><ShieldCheck size={10} /> Activate</>}
+                          </button>
+                        )}
+
+                        {/* Credentials Activate/Deactivate — IT/Owner only (NOT HR) */}
+                        {canActivateCredentials && !canActivateEmployee && (
+                          <button
+                            onClick={() => {
+                              const nextStatus = emp.status === "Active" ? "Terminated" : "Active";
+                              updateHREmployee(emp.id, { status: nextStatus });
+                            }}
+                            className={`px-2.5 py-1 text-[10px] font-bold rounded-lg border transition flex items-center gap-1 ${
+                              emp.status === "Active"
+                                ? "bg-amber-500/10 border-amber-500/30 text-amber-400 hover:bg-amber-500/20"
+                                : "bg-sky-500/10 border-sky-500/30 text-sky-400 hover:bg-sky-500/20"
+                            }`}
+                          >
+                            {emp.status === "Active" ? <><ShieldOff size={10} /> Disable Login</> : <><ShieldCheck size={10} /> Enable Login</>}
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Edit / Delete — HR/Owner only */}
+                      {canEditDelete && (
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleOpenEdit(emp)}
+                            className="p-1.5 bg-gray-800 hover:bg-emerald-600 text-gray-300 hover:text-white rounded-lg transition"
+                            title="Edit Employee Profile"
+                          >
+                            <Edit2 size={12} />
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (confirm(`Are you sure you want to permanently delete ${emp.name}'s record?`)) {
+                                deleteHREmployee(emp.id);
+                              }
+                            }}
+                            className="p-1.5 bg-red-900/20 hover:bg-red-600 text-red-400 hover:text-white rounded-lg transition"
+                            title="Delete Record"
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           ) : (
-            filteredEmployees.map((emp) => (
-              <div
-                key={emp.id}
-                className="bg-[#0b0f17] border border-gray-800 hover:border-emerald-500/40 p-5 rounded-2xl space-y-3 transition relative group"
-              >
-                {/* Employee Header */}
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 text-emerald-400 flex items-center justify-center font-black text-sm uppercase">
-                      {emp.name.slice(0, 2)}
+            /* ═══════════ SIMPLE TABLE VIEW (Regular Employees) ═══════════ */
+            <div className="bg-[#0b0f17] border border-gray-800 rounded-2xl overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b border-gray-800 bg-black/40">
+                      {[
+                        { key: "employeeCode", label: "Employee ID" },
+                        { key: "name", label: "Name" },
+                        { key: "department", label: "Department" },
+                        { key: "designation", label: "Designation" },
+                        { key: "joiningDate", label: "Date of Joining" },
+                        { key: "email", label: "Company Email" }
+                      ].map((col) => (
+                        <th
+                          key={col.key}
+                          onClick={() => handleSort(col.key)}
+                          className="px-4 py-3 text-left text-[10px] uppercase font-bold text-gray-400 cursor-pointer hover:text-emerald-400 transition select-none"
+                        >
+                          <span className="flex items-center gap-1">
+                            {col.label}
+                            <SortIcon field={col.key} />
+                          </span>
+                        </th>
+                      ))}
+                      <th className="px-4 py-3 text-left text-[10px] uppercase font-bold text-gray-400">Status</th>
+                      {/* IT users get a credentials toggle column */}
+                      {canActivateCredentials && (
+                        <th className="px-4 py-3 text-left text-[10px] uppercase font-bold text-gray-400">Credentials</th>
+                      )}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredEmployees.length === 0 ? (
+                      <tr>
+                        <td colSpan={canActivateCredentials ? 8 : 7} className="p-12 text-center text-gray-500 italic">
+                          No employee records found matching your filters.
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredEmployees.map((emp, idx) => (
+                        <tr
+                          key={emp.id}
+                          className={`border-b border-gray-800/50 transition hover:bg-emerald-500/5 ${
+                            emp.email?.toLowerCase() === currentUser?.email?.toLowerCase() ? "bg-emerald-500/10 border-l-2 border-l-emerald-500" : ""
+                          }`}
+                        >
+                          <td className="px-4 py-3 font-mono font-bold text-emerald-400">{emp.employeeCode}</td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-2">
+                              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/20 text-emerald-400 flex items-center justify-center font-black text-[10px] uppercase shrink-0">
+                                {emp.name.slice(0, 2)}
+                              </div>
+                              <span className="font-bold text-white">{emp.name}</span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-gray-300">{emp.department}</td>
+                          <td className="px-4 py-3 text-gray-300">{emp.designation}</td>
+                          <td className="px-4 py-3 text-gray-400 font-mono">{emp.joiningDate}</td>
+                          <td className="px-4 py-3">
+                            <span className="text-sky-300 font-mono text-[11px]">{emp.email}</span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span
+                              className={`px-2 py-0.5 text-[9px] font-bold uppercase rounded border ${
+                                emp.status === "Active"
+                                  ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+                                  : emp.status === "On Leave"
+                                    ? "bg-amber-500/10 border-amber-500/30 text-amber-400"
+                                    : "bg-red-500/10 border-red-500/30 text-red-400"
+                              }`}
+                            >
+                              {emp.status}
+                            </span>
+                          </td>
+                          {canActivateCredentials && (
+                            <td className="px-4 py-3">
+                              <button
+                                onClick={() => {
+                                  const nextStatus = emp.status === "Active" ? "Terminated" : "Active";
+                                  updateHREmployee(emp.id, { status: nextStatus });
+                                }}
+                                className={`px-2 py-1 text-[9px] font-bold rounded-lg border transition flex items-center gap-1 ${
+                                  emp.status === "Active"
+                                    ? "bg-amber-500/10 border-amber-500/30 text-amber-400 hover:bg-amber-500/20"
+                                    : "bg-sky-500/10 border-sky-500/30 text-sky-400 hover:bg-sky-500/20"
+                                }`}
+                              >
+                                {emp.status === "Active" ? <><ShieldOff size={9} /> Disable</> : <><ShieldCheck size={9} /> Enable</>}
+                              </button>
+                            </td>
+                          )}
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* ── Modal: Edit Employee (HR/Owner only) ────────────────────── */}
+          {showModal && canEditDelete && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 font-sans">
+              <div className="bg-[#0b0f17] border border-emerald-500/40 rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden animate-fade-in-up max-h-[90vh] overflow-y-auto">
+                <div className="p-5 border-b border-gray-800 flex justify-between items-center bg-black/40 sticky top-0 z-10">
+                  <div className="flex items-center gap-2">
+                    <Users size={18} className="text-emerald-400" />
+                    <h3 className="font-bold text-white text-base">
+                      {editingEmployee ? "Edit Employee Profile" : "Register New Employee"}
+                    </h3>
+                  </div>
+                  <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-white">
+                    <X size={18} />
+                  </button>
+                </div>
+
+                <form onSubmit={handleSubmit} className="p-6 space-y-4 text-xs">
+                  {/* Name & Email */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Full Name *</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Waqas Ali"
+                        value={form.name}
+                        onChange={(e) => setForm({ ...form, name: e.target.value })}
+                        className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white focus:outline-none focus:border-emerald-500"
+                      />
                     </div>
                     <div>
-                      <h3 className="font-bold text-white text-sm">{emp.name}</h3>
-                      <div className="text-[10px] text-emerald-400 font-mono font-bold">
-                        {emp.employeeCode} • <span className="text-gray-400">{emp.designation}</span>
-                      </div>
+                      <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Company Work Email *</label>
+                      <input
+                        type="email"
+                        required
+                        placeholder="e.g. waqas@mtcore.xyz"
+                        value={form.email}
+                        onChange={(e) => setForm({ ...form, email: e.target.value })}
+                        className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white focus:outline-none focus:border-emerald-500"
+                      />
                     </div>
                   </div>
 
-                  <span
-                    className={`px-2 py-0.5 text-[9px] font-bold uppercase rounded border ${
-                      emp.status === "Active"
-                        ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
-                        : "bg-amber-500/10 border-amber-500/30 text-amber-400"
-                    }`}
-                  >
-                    {emp.status}
-                  </span>
-                </div>
-
-                {/* Info Fields */}
-                <div className="space-y-1.5 text-xs text-gray-400 border-t border-gray-800/80 pt-3">
-                  <div className="flex items-center gap-2">
-                    <Briefcase size={12} className="text-gray-500 shrink-0" />
-                    <span>Dept: <strong className="text-gray-200">{emp.department}</strong> {emp.subDepartment && <span className="text-emerald-400 font-mono">(&rarr; {emp.subDepartment})</span>} ({emp.employmentType})</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Phone size={12} className="text-gray-500 shrink-0" />
-                    <span className="font-mono">{emp.phone}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Mail size={12} className="text-sky-400 shrink-0" />
-                    <span>Work Email: <strong className="font-mono text-[11px] text-sky-300">{emp.email}</strong></span>
-                  </div>
-                  {emp.personalEmail && (
-                    <div className="flex items-center gap-2">
-                      <Mail size={12} className="text-gray-500 shrink-0" />
-                      <span>Personal Email: <strong className="font-mono text-[11px] text-gray-300">{emp.personalEmail}</strong></span>
+                  {/* Phone & CNIC */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Phone Number *</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="03001234567"
+                        value={form.phone}
+                        onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                        className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white focus:outline-none focus:border-emerald-500"
+                      />
                     </div>
-                  )}
-                  {emp.cnic && (
-                    <div className="flex items-center gap-2">
-                      <CreditCard size={12} className="text-gray-500 shrink-0" />
-                      <span>CNIC: <strong className="text-gray-300 font-mono">{emp.cnic}</strong></span>
+                    <div>
+                      <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">CNIC #</label>
+                      <input
+                        type="text"
+                        placeholder="35202-1234567-1"
+                        value={form.cnic}
+                        onChange={(e) => setForm({ ...form, cnic: e.target.value })}
+                        className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white focus:outline-none focus:border-emerald-500"
+                      />
                     </div>
-                  )}
-                  <div className="flex items-center gap-2">
-                    <DollarSign size={12} className="text-emerald-400 shrink-0" />
-                    <span>Basic Salary: <strong className="text-emerald-400 font-mono">{currencySymbol} {emp.basicSalary.toLocaleString()}</strong></span>
                   </div>
-                </div>
 
-                {/* Bank / Payout details */}
-                <div className="p-2.5 bg-black/40 border border-gray-800/80 rounded-xl text-[10px] text-gray-400 font-mono">
-                  <div>Bank: <strong className="text-gray-200">{emp.bankName || "N/A"}</strong></div>
-                  <div>Account #: <strong className="text-gray-200">{emp.accountNumber || emp.jazzCashNo || "N/A"}</strong></div>
-                  {emp.tempPassword && (
-                    <div className="text-amber-400 pt-1">Login Password: <strong className="text-white font-mono">{emp.tempPassword}</strong></div>
-                  )}
-                </div>
+                  {/* Personal Email & Employee Code */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Personal Email</label>
+                      <input
+                        type="email"
+                        placeholder="personal@gmail.com"
+                        value={form.personalEmail}
+                        onChange={(e) => setForm({ ...form, personalEmail: e.target.value })}
+                        className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-gray-300 focus:outline-none focus:border-emerald-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Employee Code</label>
+                      <input
+                        type="text"
+                        placeholder="Auto-generated"
+                        value={form.employeeCode}
+                        onChange={(e) => setForm({ ...form, employeeCode: e.target.value })}
+                        className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-emerald-400 font-mono font-bold focus:outline-none focus:border-emerald-500"
+                      />
+                    </div>
+                  </div>
 
-                {/* Actions */}
-                <div className="flex gap-2 pt-1 items-center justify-between">
-                  {(isITUser || currentUser?.role === "Owner") && (
+                  {/* Department & Designation */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Department</label>
+                      <select
+                        value={form.department}
+                        onChange={(e) => setForm({ ...form, department: e.target.value })}
+                        className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white focus:outline-none focus:border-emerald-500"
+                      >
+                        {hrDepartments.map((d) => (
+                          <option key={d.id} value={d.name}>{d.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Designation</label>
+                      <select
+                        value={form.designation}
+                        onChange={(e) => setForm({ ...form, designation: e.target.value })}
+                        className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white focus:outline-none focus:border-emerald-500"
+                      >
+                        {hrDesignations.map((desg) => (
+                          <option key={desg.id} value={desg.title}>{desg.title} ({desg.grade})</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Employment Type, Salary, Status */}
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Employment Type</label>
+                      <select
+                        value={form.employmentType}
+                        onChange={(e) => setForm({ ...form, employmentType: e.target.value as any })}
+                        className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white focus:outline-none focus:border-emerald-500"
+                      >
+                        <option value="Full-time">Full-time</option>
+                        <option value="Part-time">Part-time</option>
+                        <option value="Contract">Contract</option>
+                        <option value="Daily Wager">Daily Wager</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] uppercase font-bold text-emerald-400 mb-1">Basic Salary ({currencySymbol})</label>
+                      <input
+                        type="number"
+                        value={form.basicSalary}
+                        onChange={(e) => setForm({ ...form, basicSalary: e.target.value })}
+                        className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-bold focus:outline-none focus:border-emerald-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Status</label>
+                      <select
+                        value={form.status}
+                        onChange={(e) => setForm({ ...form, status: e.target.value as any })}
+                        className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white focus:outline-none focus:border-emerald-500"
+                      >
+                        <option value="Active">Active</option>
+                        <option value="On Leave">On Leave</option>
+                        <option value="Terminated">Terminated</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Bank Info */}
+                  <div className="grid grid-cols-2 gap-3 p-3 bg-black/40 border border-gray-800 rounded-xl">
+                    <div>
+                      <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Bank Name</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Meezan Bank Ltd"
+                        value={form.bankName}
+                        onChange={(e) => setForm({ ...form, bankName: e.target.value })}
+                        className="w-full bg-black border border-gray-800 p-2 rounded-lg text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Account / IBAN Number</label>
+                      <input
+                        type="text"
+                        placeholder="01020304050607"
+                        value={form.accountNumber}
+                        onChange={(e) => setForm({ ...form, accountNumber: e.target.value })}
+                        className="w-full bg-black border border-gray-800 p-2 rounded-lg text-white font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex gap-2 pt-2">
                     <button
-                      onClick={() => {
-                        const nextStatus = emp.status === "Active" ? "Terminated" : "Active";
-                        updateHREmployee(emp.id, { status: nextStatus });
-                      }}
-                      className={`px-2.5 py-1 text-[10px] font-bold rounded-lg border transition ${
-                        emp.status === "Active"
-                          ? "bg-red-500/10 border-red-500/30 text-red-400 hover:bg-red-500/20"
-                          : "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20"
-                      }`}
+                      type="button"
+                      onClick={() => setShowModal(false)}
+                      className="flex-1 py-3 bg-gray-800 hover:bg-gray-700 text-gray-300 font-bold rounded-xl transition"
                     >
-                      {emp.status === "Active" ? "Deactivate Account" : "Activate Account"}
+                      Cancel
                     </button>
-                  )}
-
-                  <div className="flex gap-2">
                     <button
-                      onClick={() => handleOpenEdit(emp)}
-                      className="p-1.5 bg-gray-800 hover:bg-emerald-600 text-gray-300 hover:text-white rounded-lg transition"
-                      title="Edit Profile & Credentials"
+                      type="submit"
+                      className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase tracking-wider rounded-xl transition shadow-lg shadow-emerald-900/30"
                     >
-                      <Edit2 size={12} />
-                    </button>
-                    <button
-                      onClick={() => deleteHREmployee(emp.id)}
-                      className="p-1.5 bg-red-900/20 hover:bg-red-600 text-red-400 hover:text-white rounded-lg transition"
-                      title="Delete Record"
-                    >
-                      <Trash2 size={12} />
+                      {editingEmployee ? "Save Changes" : "Create Employee"}
                     </button>
                   </div>
-                </div>
+                </form>
               </div>
-            ))
-          )}
-        </div>
-
-        {/* Modal: Add/Edit Employee */}
-        {showModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 font-sans">
-            <div className="bg-[#0b0f17] border border-emerald-500/40 rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden animate-fade-in-up">
-              <div className="p-5 border-b border-gray-800 flex justify-between items-center bg-black/40">
-                <div className="flex items-center gap-2">
-                  <Users size={18} className="text-emerald-400" />
-                  <h3 className="font-bold text-white text-base">
-                    {editingEmployee ? "Edit Employee Profile" : "Register New Employee"}
-                  </h3>
-                </div>
-                <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-white">
-                  <X size={18} />
-                </button>
-              </div>
-
-              <form onSubmit={handleSubmit} className="p-6 space-y-4 text-xs">
-                {(isITUser || currentUser?.role === "Owner") && (
-                  <div className="bg-sky-500/10 border border-sky-500/30 p-3 rounded-xl space-y-3">
-                    <div className="text-sky-400 font-black text-xs uppercase flex items-center gap-1.5">
-                      <span>⚡ IT System Credentials &amp; Employee ID Control</span>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-[10px] uppercase font-bold text-sky-300 mb-1">Employee ID (Editable) *</label>
-                        <input
-                          type="text"
-                          required
-                          value={form.employeeCode}
-                          onChange={(e) => setForm({ ...form, employeeCode: e.target.value })}
-                          className="w-full bg-black border border-sky-500/50 p-2.5 rounded-xl text-sky-300 font-mono font-bold focus:outline-none focus:border-sky-400"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] uppercase font-bold text-sky-300 mb-1">Company Work Email *</label>
-                        <input
-                          type="email"
-                          required
-                          value={form.email}
-                          onChange={(e) => setForm({ ...form, email: e.target.value })}
-                          className="w-full bg-black border border-sky-500/50 p-2.5 rounded-xl text-sky-300 font-mono font-bold focus:outline-none focus:border-sky-400"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">System Login Password</label>
-                        <input
-                          type="text"
-                          value={form.tempPassword}
-                          onChange={(e) => setForm({ ...form, tempPassword: e.target.value })}
-                          className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-mono focus:outline-none focus:border-emerald-500"
-                          placeholder="Pass123!"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Personal Email (HR Record)</label>
-                        <input
-                          type="email"
-                          value={form.personalEmail}
-                          onChange={(e) => setForm({ ...form, personalEmail: e.target.value })}
-                          className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-gray-300 font-mono focus:outline-none focus:border-emerald-500"
-                          placeholder="personal@gmail.com"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Full Name *</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. Waqas Ali"
-                      value={form.name}
-                      onChange={(e) => setForm({ ...form, name: e.target.value })}
-                      className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white focus:outline-none focus:border-emerald-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Phone Number *</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="03001234567"
-                      value={form.phone}
-                      onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                      className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white focus:outline-none focus:border-emerald-500"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Phone Number *</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="03001234567"
-                      value={form.phone}
-                      onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                      className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white focus:outline-none focus:border-emerald-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">CNIC #</label>
-                    <input
-                      type="text"
-                      placeholder="35202-1234567-1"
-                      value={form.cnic}
-                      onChange={(e) => setForm({ ...form, cnic: e.target.value })}
-                      className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white focus:outline-none focus:border-emerald-500"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Department</label>
-                    <select
-                      value={form.department}
-                      onChange={(e) => setForm({ ...form, department: e.target.value })}
-                      className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white focus:outline-none focus:border-emerald-500"
-                    >
-                      {hrDepartments.map((d) => (
-                        <option key={d.id} value={d.name}>{d.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Designation</label>
-                    <select
-                      value={form.designation}
-                      onChange={(e) => setForm({ ...form, designation: e.target.value })}
-                      className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white focus:outline-none focus:border-emerald-500"
-                    >
-                      {hrDesignations.map((desg) => (
-                        <option key={desg.id} value={desg.title}>{desg.title} ({desg.grade})</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-3">
-                  <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Employment Type</label>
-                    <select
-                      value={form.employmentType}
-                      onChange={(e) => setForm({ ...form, employmentType: e.target.value as any })}
-                      className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white focus:outline-none focus:border-emerald-500"
-                    >
-                      <option value="Full-time">Full-time</option>
-                      <option value="Part-time">Part-time</option>
-                      <option value="Contract">Contract</option>
-                      <option value="Daily Wager">Daily Wager</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-[10px] uppercase font-bold text-emerald-400 mb-1">Basic Salary ({currencySymbol})</label>
-                    <input
-                      type="number"
-                      value={form.basicSalary}
-                      onChange={(e) => setForm({ ...form, basicSalary: e.target.value })}
-                      className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-bold focus:outline-none focus:border-emerald-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Status</label>
-                    <select
-                      value={form.status}
-                      onChange={(e) => setForm({ ...form, status: e.target.value as any })}
-                      className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white focus:outline-none focus:border-emerald-500"
-                    >
-                      <option value="Active">Active</option>
-                      <option value="On Leave">On Leave</option>
-                      <option value="Terminated">Terminated</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3 p-3 bg-black/40 border border-gray-800 rounded-xl">
-                  <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Bank Name</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Meezan Bank Ltd"
-                      value={form.bankName}
-                      onChange={(e) => setForm({ ...form, bankName: e.target.value })}
-                      className="w-full bg-black border border-gray-800 p-2 rounded-lg text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Account / IBAN Number</label>
-                    <input
-                      type="text"
-                      placeholder="01020304050607"
-                      value={form.accountNumber}
-                      onChange={(e) => setForm({ ...form, accountNumber: e.target.value })}
-                      className="w-full bg-black border border-gray-800 p-2 rounded-lg text-white font-mono"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex gap-2 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowModal(false)}
-                    className="flex-1 py-3 bg-gray-800 hover:bg-gray-700 text-gray-300 font-bold rounded-xl transition"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase tracking-wider rounded-xl transition shadow-lg shadow-emerald-900/30"
-                  >
-                    {editingEmployee ? "Save Changes" : "Create Employee"}
-                  </button>
-                </div>
-              </form>
             </div>
-          </div>
-        )}
+          )}
         </div>
       </main>
     </div>
