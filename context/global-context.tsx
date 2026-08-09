@@ -770,6 +770,7 @@ interface GlobalContextType {
     accountNumber?: string;
     tempPassword?: string;
   }) => HREmployee;
+  clearAllHRMSData: () => void;
 }
 
 // ─── HRMS DEMO SEED DATA ──────────────────────────────────────────────────────
@@ -778,15 +779,40 @@ export function generateNextEmployeeCode(businessName: string, count: number): s
   const words = businessName.trim().split(/\s+/).filter(Boolean);
   let prefix = "";
   if (words.length === 1) {
-    prefix = words[0].slice(0, 3).toUpperCase();
-  } else if (words.length === 2) {
-    prefix = (words[0].slice(0, 2) + words[1].slice(0, 1)).toUpperCase();
+    prefix = words[0].substring(0, 3).toUpperCase();
   } else {
-    prefix = words.map(w => w[0]).join("").slice(0, 4).toUpperCase();
+    prefix = words.map((w) => w[0]).join("").toUpperCase();
   }
   const cleanPrefix = prefix.replace(/[^A-Z]/g, "") || "EMP";
   const numStr = (count + 1).toString().padStart(4, "0");
   return `${cleanPrefix}-${numStr}`;
+}
+
+export function generateActiveTenantId(businessName: string, existingTenants: Tenant[] = []): string {
+  if (!businessName) return `MTS-${Math.floor(1000 + Math.random() * 9000)}`;
+
+  const cleanName = businessName.replace(/[^a-zA-Z0-9\s]/g, "").trim();
+  const words = cleanName.split(/\s+/).filter(Boolean);
+  let prefix = "";
+
+  if (words.length >= 3) {
+    prefix = (words[0][0] + words[1][0] + words[2][0]).toUpperCase();
+  } else if (words.length === 2) {
+    prefix = (words[0].substring(0, 2) + words[1][0]).toUpperCase();
+  } else if (words.length === 1) {
+    prefix = words[0].substring(0, 3).toUpperCase();
+  } else {
+    prefix = "MTS";
+  }
+
+  prefix = prefix.replace(/[^A-Z]/g, "") || "MTS";
+  if (prefix.length < 3) prefix = (prefix + "POS").substring(0, 3);
+
+  let seq = 1001;
+  while (existingTenants.some(t => t.id === `${prefix}-${seq}`)) {
+    seq++;
+  }
+  return `${prefix}-${seq}`;
 }
 
 export function calculateDesignationRankAndGrade(title: string): { rank: number; grade: string } {
@@ -2047,49 +2073,49 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       setAccounts(defaultInitAccounts);
     }
 
-    // 13. Load HRMS Datasets
+    // 13. Load HRMS Datasets with Strict Demo Data Filtering & Purging
     if (currentUser?.tenantId) {
-      const savedHrEmployees = getTenantData("unipos_hr_employees", currentUser.tenantId);
-      if (savedHrEmployees) setHrEmployees(savedHrEmployees);
-      else {
-        setHrEmployees([]);
+      let savedHrEmployees = getTenantData("unipos_hr_employees", currentUser.tenantId);
+      if (savedHrEmployees && savedHrEmployees.some((e: any) => e.employeeCode === "EMP-001" || e.name === "Waqas Ali" || e.name === "Ayesha Malik")) {
+        savedHrEmployees = [];
         saveTenantData("unipos_hr_employees", []);
       }
+      setHrEmployees(savedHrEmployees || []);
 
-      const savedHrAttendance = getTenantData("unipos_hr_attendance", currentUser.tenantId);
-      if (savedHrAttendance) setHrAttendance(savedHrAttendance);
-      else {
-        setHrAttendance([]);
+      let savedHrAttendance = getTenantData("unipos_hr_attendance", currentUser.tenantId);
+      if (savedHrAttendance && savedHrAttendance.some((a: any) => a.id === "HRA-1" || a.employeeName === "Waqas Ali" || a.employeeName === "Ayesha Malik")) {
+        savedHrAttendance = [];
         saveTenantData("unipos_hr_attendance", []);
       }
+      setHrAttendance(savedHrAttendance || []);
 
-      const savedHrLeaves = getTenantData("unipos_hr_leaves", currentUser.tenantId);
-      if (savedHrLeaves) setHrLeaves(savedHrLeaves);
-      else {
-        setHrLeaves([]);
+      let savedHrLeaves = getTenantData("unipos_hr_leaves", currentUser.tenantId);
+      if (savedHrLeaves && savedHrLeaves.some((l: any) => l.id === "HRL-1" || l.employeeName === "Ayesha Malik")) {
+        savedHrLeaves = [];
         saveTenantData("unipos_hr_leaves", []);
       }
+      setHrLeaves(savedHrLeaves || []);
 
-      const savedHrPayrolls = getTenantData("unipos_hr_payrolls", currentUser.tenantId);
-      if (savedHrPayrolls) setHrPayrolls(savedHrPayrolls);
-      else {
-        setHrPayrolls([]);
+      let savedHrPayrolls = getTenantData("unipos_hr_payrolls", currentUser.tenantId);
+      if (savedHrPayrolls && savedHrPayrolls.some((p: any) => p.id === "HRPAY-2026-07" || p.items?.some((i: any) => i.employeeName === "Waqas Ali"))) {
+        savedHrPayrolls = [];
         saveTenantData("unipos_hr_payrolls", []);
       }
+      setHrPayrolls(savedHrPayrolls || []);
 
-      const savedHrJobs = getTenantData("unipos_hr_jobs", currentUser.tenantId);
-      if (savedHrJobs) setHrJobs(savedHrJobs);
-      else {
-        setHrJobs([]);
+      let savedHrJobs = getTenantData("unipos_hr_jobs", currentUser.tenantId);
+      if (savedHrJobs && savedHrJobs.some((j: any) => j.id === "HRJ-1" || j.title === "Assistant Store Manager")) {
+        savedHrJobs = [];
         saveTenantData("unipos_hr_jobs", []);
       }
+      setHrJobs(savedHrJobs || []);
 
-      const savedHrAppraisals = getTenantData("unipos_hr_appraisals", currentUser.tenantId);
-      if (savedHrAppraisals) setHrAppraisals(savedHrAppraisals);
-      else {
-        setHrAppraisals([]);
+      let savedHrAppraisals = getTenantData("unipos_hr_appraisals", currentUser.tenantId);
+      if (savedHrAppraisals && savedHrAppraisals.some((a: any) => a.id === "HRA-1" || a.employeeName === "Waqas Ali")) {
+        savedHrAppraisals = [];
         saveTenantData("unipos_hr_appraisals", []);
       }
+      setHrAppraisals(savedHrAppraisals || []);
 
       const savedHrDepts = getTenantData("unipos_hr_departments", currentUser.tenantId);
       if (savedHrDepts && savedHrDepts.length > 0) setHrDepartments(savedHrDepts);
@@ -2112,12 +2138,12 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         saveTenantData("unipos_hr_shifts", SEED_HR_SHIFTS);
       }
 
-      const savedHrCands = getTenantData("unipos_hr_candidates", currentUser.tenantId);
-      if (savedHrCands) setHrCandidates(savedHrCands);
-      else {
-        setHrCandidates([]);
+      let savedHrCands = getTenantData("unipos_hr_candidates", currentUser.tenantId);
+      if (savedHrCands && savedHrCands.some((c: any) => c.id === "CND-101" || c.name === "Usman Raza")) {
+        savedHrCands = [];
         saveTenantData("unipos_hr_candidates", []);
       }
+      setHrCandidates(savedHrCands || []);
     }
 
   }, [currentUser?.tenantId]);
@@ -2358,10 +2384,13 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     let targetTenantId = existingTenant?.id;
 
     if (existingTenant) {
-      // Upgrade existing tenant to Active Paid!
+      // Upgrade existing tenant to Active Paid with brand new Active Tenant ID!
+      const newActiveId = generateActiveTenantId(req.businessName, tenants);
+      targetTenantId = newActiveId;
       const updatedTenants = tenants.map(t =>
         t.id === existingTenant.id ? {
           ...t,
+          id: newActiveId,
           status: "Active" as const,
           isTrial: false,
           plan: options.plan as any,
@@ -2373,10 +2402,10 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       setTenants(updatedTenants);
       localStorage.setItem("unipos_tenants", JSON.stringify(updatedTenants));
     } else {
-      // Create new active tenant
+      // Create new active tenant with format: Business Initials + '-' + 4 digits
       const demoEmail = req.email;
       const demoPassword = `Pass@${Math.floor(1000 + Math.random() * 9000)}`;
-      targetTenantId = `TEN-${Math.floor(100 + Math.random() * 900)}`;
+      targetTenantId = generateActiveTenantId(req.businessName, tenants);
       const newTenant: Tenant = {
         id: targetTenantId,
         businessName: req.businessName,
@@ -2618,7 +2647,59 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateTenantStatus = async (id: string, status: Tenant["status"]) => {
-    const updated = tenants.map(t => t.id === id ? { ...t, status } : t);
+    const targetTenant = tenants.find(t => t.id === id);
+    let newTenantId = id;
+
+    // Rule: When tenant is updated to Active from Trial/Demo/Pending, transform Tenant ID to Company Initials + '-' + 4 digits
+    if (targetTenant && status === "Active" && (targetTenant.isTrial || (targetTenant.status as string) === "Trial" || (targetTenant.status as string) === "Pending Payment" || id.startsWith("DEMO-") || id.startsWith("TEN-"))) {
+      newTenantId = generateActiveTenantId(targetTenant.businessName, tenants);
+
+      // Migrate all tenant localStorage datasets from old tenant ID to new active tenant ID
+      const ALL_KEYS = [
+        "unipos_products", "unipos_customers", "unipos_suppliers", "unipos_sales",
+        "unipos_expenses", "unipos_employees", "unipos_settings", "unipos_pos",
+        "unipos_batches", "unipos_tables", "unipos_kitchen", "unipos_accounts",
+        "unipos_journal", "unipos_attendance", "unipos_payroll", "unipos_transfers",
+        "unipos_counters", "unipos_hr_employees", "unipos_hr_attendance", "unipos_hr_leaves",
+        "unipos_hr_payrolls", "unipos_hr_jobs", "unipos_hr_candidates", "unipos_hr_appraisals",
+        "unipos_hr_departments", "unipos_hr_designations", "unipos_hr_shifts"
+      ];
+
+      ALL_KEYS.forEach((keyPrefix) => {
+        const oldData = localStorage.getItem(`${keyPrefix}_${id}`);
+        if (oldData) {
+          localStorage.setItem(`${keyPrefix}_${newTenantId}`, oldData);
+          localStorage.removeItem(`${keyPrefix}_${id}`);
+        }
+      });
+
+      // Update associated SaaS Invoices
+      setSaasInvoices(prev => {
+        const updatedInvs = prev.map(inv => inv.tenantId === id ? { ...inv, tenantId: newTenantId } : inv);
+        localStorage.setItem("unipos_invoices", JSON.stringify(updatedInvs));
+        return updatedInvs;
+      });
+
+      // Update active user session if this tenant is logged in
+      if (currentUser?.tenantId === id) {
+        const updatedUser = { ...currentUser, tenantId: newTenantId };
+        setCurrentUser(updatedUser);
+        localStorage.setItem("unipos_current_user", JSON.stringify(updatedUser));
+      }
+    }
+
+    const updated = tenants.map(t => {
+      if (t.id === id) {
+        return {
+          ...t,
+          id: newTenantId,
+          status,
+          isTrial: status === "Active" ? false : t.isTrial
+        };
+      }
+      return t;
+    });
+
     setTenants(updated);
     localStorage.setItem("unipos_tenants", JSON.stringify(updated));
 
@@ -4431,6 +4512,24 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     saveTenantData("unipos_hr_appraisals", updated);
   };
 
+  const clearAllHRMSData = () => {
+    setHrEmployees([]);
+    setHrAttendance([]);
+    setHrLeaves([]);
+    setHrPayrolls([]);
+    setHrJobs([]);
+    setHrCandidates([]);
+    setHrAppraisals([]);
+
+    saveTenantData("unipos_hr_employees", []);
+    saveTenantData("unipos_hr_attendance", []);
+    saveTenantData("unipos_hr_leaves", []);
+    saveTenantData("unipos_hr_payrolls", []);
+    saveTenantData("unipos_hr_jobs", []);
+    saveTenantData("unipos_hr_candidates", []);
+    saveTenantData("unipos_hr_appraisals", []);
+  };
+
   // Check if current logged in user belongs to an online-only tenant while offline
   const currentTenantObj = tenants.find(t => t.id === currentUser?.tenantId);
   const isOnlineOnlyBlocked = Boolean(
@@ -4513,6 +4612,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         provisionITCredentials,
         confirmFinanceAndActivateEmployee,
         provisionExecutiveDirectly,
+        clearAllHRMSData,
 
         currentBranch,
         setCurrentBranch,

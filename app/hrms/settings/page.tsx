@@ -42,7 +42,8 @@ export default function HRMSPageSettings() {
     deleteHRShift,
     hrEmployees,
     businessSettings,
-    currentUser
+    currentUser,
+    clearAllHRMSData
   } = useGlobalContext();
 
   const [activeTab, setActiveTab] = useState<"departments" | "designations" | "shifts">("departments");
@@ -204,6 +205,18 @@ export default function HRMSPageSettings() {
               Configure corporate departments and sub-operational units (e.g. Medical Billing AR, Credentials, Production, Spinning).
             </p>
           </div>
+
+          <button
+            onClick={() => {
+              if (confirm("Are you sure you want to permanently clear all HRMS demo employees, attendance, leaves, payrolls, candidates, and job listings?")) {
+                clearAllHRMSData();
+                triggerToast("🧹 All HRMS demo records successfully purged!");
+              }
+            }}
+            className="flex items-center gap-2 bg-red-600/20 hover:bg-red-600 text-red-300 hover:text-white border border-red-500/40 text-xs font-bold px-4 py-2.5 rounded-xl transition shadow-lg"
+          >
+            <Trash2 size={15} /> Clear All Demo HRMS Records
+          </button>
         </div>
 
         {/* Navigation Tabs */}
