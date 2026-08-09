@@ -23,7 +23,9 @@ import {
   Phone,
   CreditCard,
   Trash2,
-  Edit2
+  Edit2,
+  Crown,
+  Lock
 } from "lucide-react";
 
 export default function HRRecruitmentPage() {
@@ -37,6 +39,7 @@ export default function HRRecruitmentPage() {
     deleteHRCandidate,
     provisionITCredentials,
     confirmFinanceAndActivateEmployee,
+    provisionExecutiveDirectly,
     hrDepartments,
     hrDesignations,
     hrEmployees,
@@ -62,6 +65,22 @@ export default function HRRecruitmentPage() {
     bankName: "Meezan Bank Ltd",
     accountNumber: "",
     stage: "Interview" as const
+  });
+
+  // Owner Direct Executive Provisioning Modal
+  const [showExecModal, setShowExecModal] = useState(false);
+  const [execForm, setExecForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    cnic: "",
+    department: hrDepartments[0]?.name || "Human Resources",
+    subDepartment: "",
+    designation: "HR Manager",
+    basicSalary: 120000,
+    bankName: "Meezan Bank Ltd",
+    accountNumber: "",
+    tempPassword: "Mts@Exec2026!"
   });
 
   // IT Provisioning Modal
@@ -107,6 +126,42 @@ export default function HRRecruitmentPage() {
     }
     setShowCandModal(false);
     setEditingCandId(null);
+  };
+
+  // Direct Owner Executive Provisioning Handler
+  const handleSaveExecutiveDirectly = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!execForm.name || !execForm.email || !execForm.phone || !execForm.tempPassword) return;
+
+    const createdEmp = provisionExecutiveDirectly({
+      name: execForm.name,
+      email: execForm.email,
+      phone: execForm.phone,
+      cnic: execForm.cnic,
+      department: execForm.department,
+      subDepartment: execForm.subDepartment,
+      designation: execForm.designation,
+      basicSalary: execForm.basicSalary,
+      bankName: execForm.bankName,
+      accountNumber: execForm.accountNumber,
+      tempPassword: execForm.tempPassword
+    });
+
+    triggerToast(`👑 Executive User '${createdEmp.name}' (${createdEmp.designation}) directly provisioned and activated into Employee Directory (${createdEmp.employeeCode})!`);
+    setShowExecModal(false);
+    setExecForm({
+      name: "",
+      email: "",
+      phone: "",
+      cnic: "",
+      department: hrDepartments[0]?.name || "Human Resources",
+      subDepartment: "",
+      designation: "HR Manager",
+      basicSalary: 120000,
+      bankName: "Meezan Bank Ltd",
+      accountNumber: "",
+      tempPassword: "Mts@Exec2026!"
+    });
   };
 
   // IT Provisioning Submit
@@ -179,6 +234,16 @@ export default function HRRecruitmentPage() {
             <p className="text-xs text-gray-400 mt-0.5">
               Strict 3-step hierarchy: Candidate Hired &rarr; IT Auto Employee ID &amp; Credentials &rarr; Finance Salary Confirmation &rarr; Active Directory.
             </p>
+          </div>
+
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowExecModal(true)}
+              className="flex items-center gap-2 bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-500 hover:to-yellow-500 text-black font-black text-xs px-4 py-2.5 rounded-xl shadow-lg transition"
+            >
+              <Crown size={15} />
+              <span>Owner Direct Executive Provisioning</span>
+            </button>
           </div>
         </div>
 
@@ -286,7 +351,9 @@ export default function HRRecruitmentPage() {
                       <div>
                         <h4 className="text-sm font-black text-white">{c.name}</h4>
                         <div className="text-[11px] text-emerald-400 font-bold mt-0.5">{c.appliedPosition}</div>
-                        <div className="text-[10px] text-gray-400">{c.department}</div>
+                        <div className="text-[10px] text-gray-400">
+                          {c.department} {c.subDepartment ? `(${c.subDepartment})` : ""}
+                        </div>
                       </div>
                       <span
                         className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider border ${
@@ -701,7 +768,131 @@ export default function HRRecruitmentPage() {
           </div>
         )}
 
-        {/* MODAL 2: IT PROVISIONING MODAL */}
+        {/* MODAL 2: OWNER DIRECT EXECUTIVE PROVISIONING MODAL */}
+        {showExecModal && (
+          <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-[#0b0f17] border border-amber-500/50 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden p-6 space-y-4">
+              <div className="flex justify-between items-center border-b border-gray-800 pb-3">
+                <div className="flex items-center gap-2 text-amber-400 font-black text-base">
+                  <Crown size={20} />
+                  <span>Owner Direct Executive Provisioning</span>
+                </div>
+                <button onClick={() => setShowExecModal(false)} className="text-gray-400 hover:text-white">
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div className="bg-amber-500/10 border border-amber-500/30 p-3 rounded-xl text-amber-300 text-xs space-y-1">
+                <div>👑 <b>Bootstrap Executive User Desk:</b> Business Owner can directly provision Directors, HR Managers, Finance Managers &amp; IT Administrators with immediate system credentials &amp; active status.</div>
+              </div>
+
+              <form onSubmit={handleSaveExecutiveDirectly} className="space-y-3 text-xs">
+                <div>
+                  <label className="block text-gray-400 font-bold mb-1">Executive Full Name *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Mian Talal / Muhammad Bilal"
+                    value={execForm.name}
+                    onChange={(e) => setExecForm({ ...execForm, name: e.target.value })}
+                    className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-bold focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-gray-400 font-bold mb-1">Executive Designation *</label>
+                    <select
+                      value={execForm.designation}
+                      onChange={(e) => setExecForm({ ...execForm, designation: e.target.value })}
+                      className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-amber-400 font-bold focus:outline-none focus:border-amber-500"
+                    >
+                      <option value="Director">Director (Rank #1)</option>
+                      <option value="Assistant Director">Assistant Director (Rank #2)</option>
+                      <option value="HR Manager">HR Manager (Rank #3)</option>
+                      <option value="Finance Manager">Finance Manager (Rank #3)</option>
+                      <option value="IT Administrator">IT Administrator (Rank #3)</option>
+                      <option value="Store Operations Manager">Store Operations Manager (Rank #3)</option>
+                      <option value="Supervisor">Supervisor (Rank #5)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-gray-400 font-bold mb-1">Department *</label>
+                    <select
+                      value={execForm.department}
+                      onChange={(e) => setExecForm({ ...execForm, department: e.target.value })}
+                      className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white focus:outline-none focus:border-amber-500"
+                    >
+                      {hrDepartments.map((d) => (
+                        <option key={d.id} value={d.name}>{d.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-gray-400 font-bold mb-1">Work / Personal Email *</label>
+                    <input
+                      type="email"
+                      required
+                      placeholder="exec@company.com"
+                      value={execForm.email}
+                      onChange={(e) => setExecForm({ ...execForm, email: e.target.value })}
+                      className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white focus:outline-none focus:border-amber-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-gray-400 font-bold mb-1">Phone Number *</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="03001234567"
+                      value={execForm.phone}
+                      onChange={(e) => setExecForm({ ...execForm, phone: e.target.value })}
+                      className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white focus:outline-none focus:border-amber-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-amber-400 font-bold mb-1">Login Password *</label>
+                    <input
+                      type="text"
+                      required
+                      value={execForm.tempPassword}
+                      onChange={(e) => setExecForm({ ...execForm, tempPassword: e.target.value })}
+                      className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-amber-300 font-mono font-bold focus:outline-none focus:border-amber-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-emerald-400 font-bold mb-1">Basic Monthly Salary ({currencySymbol})</label>
+                    <input
+                      type="number"
+                      value={execForm.basicSalary}
+                      onChange={(e) => setExecForm({ ...execForm, basicSalary: parseFloat(e.target.value) || 0 })}
+                      className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-emerald-400 font-bold focus:outline-none focus:border-amber-500"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full py-3 bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-500 hover:to-yellow-500 text-black font-black text-xs uppercase tracking-wider rounded-xl transition shadow-lg shadow-amber-900/40 flex items-center justify-center gap-2 mt-2"
+                >
+                  <Crown size={16} />
+                  <span>Directly Provision &amp; Activate Executive User</span>
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* MODAL 3: IT PROVISIONING MODAL */}
         {showITModal && selectedCandForIT && (
           <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
             <div className="bg-[#0b0f17] border border-sky-500/40 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden p-6 space-y-4">
@@ -757,7 +948,7 @@ export default function HRRecruitmentPage() {
           </div>
         )}
 
-        {/* MODAL 3: POST JOB */}
+        {/* MODAL 4: POST JOB */}
         {showJobModal && (
           <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
             <div className="bg-[#0b0f17] border border-emerald-500/40 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden p-6 space-y-4">

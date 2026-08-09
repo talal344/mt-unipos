@@ -757,6 +757,19 @@ interface GlobalContextType {
   deleteHRCandidate: (id: string) => void;
   provisionITCredentials: (candidateId: string, workEmail: string, tempPassword: string) => void;
   confirmFinanceAndActivateEmployee: (candidateId: string) => void;
+  provisionExecutiveDirectly: (execData: {
+    name: string;
+    email: string;
+    phone: string;
+    cnic?: string;
+    department: string;
+    subDepartment?: string;
+    designation: string;
+    basicSalary: number;
+    bankName?: string;
+    accountNumber?: string;
+    tempPassword?: string;
+  }) => HREmployee;
 }
 
 // ─── HRMS DEMO SEED DATA ──────────────────────────────────────────────────────
@@ -4458,6 +4471,47 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     saveTenantData("unipos_hr_candidates", updatedCands);
   };
 
+  // Direct Owner Executive Provisioning Action (For Directors & Department Managers Bootstrap)
+  const provisionExecutiveDirectly = (execData: {
+    name: string;
+    email: string;
+    phone: string;
+    cnic?: string;
+    department: string;
+    subDepartment?: string;
+    designation: string;
+    basicSalary: number;
+    bankName?: string;
+    accountNumber?: string;
+    tempPassword?: string;
+  }) => {
+    const bName = currentUser?.businessName || businessSettings?.businessName || "MT Software";
+    const autoCode = generateNextEmployeeCode(bName, hrEmployees.length);
+
+    const newEmp: HREmployee = {
+      id: `HRE-${Math.floor(100 + Math.random() * 900)}`,
+      employeeCode: autoCode,
+      name: execData.name,
+      email: execData.email,
+      phone: execData.phone,
+      cnic: execData.cnic || "35201-0000000-0",
+      department: execData.department,
+      subDepartment: execData.subDepartment,
+      designation: execData.designation,
+      joiningDate: new Date().toISOString().split("T")[0],
+      employmentType: "Full-time",
+      basicSalary: execData.basicSalary,
+      bankName: execData.bankName || "Meezan Bank Ltd",
+      accountNumber: execData.accountNumber || "01020304050607",
+      status: "Active"
+    };
+
+    const updatedEmps = [newEmp, ...hrEmployees];
+    setHrEmployees(updatedEmps);
+    saveTenantData("unipos_hr_employees", updatedEmps);
+    return newEmp;
+  };
+
   const updateHRJobOpening = (id: string, updates: Partial<HRJobOpening>) => {
     const updated = hrJobs.map(j => j.id === id ? { ...j, ...updates } : j);
     setHrJobs(updated);
@@ -4556,6 +4610,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         deleteHRCandidate,
         provisionITCredentials,
         confirmFinanceAndActivateEmployee,
+        provisionExecutiveDirectly,
 
         currentBranch,
         setCurrentBranch,
