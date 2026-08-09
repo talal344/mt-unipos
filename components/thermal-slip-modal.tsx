@@ -235,7 +235,7 @@ function buildSlipHTML(
     <div style="font-weight:900;font-size:9px;text-transform:uppercase;letter-spacing:0.5px;color:#000">🌐 ONLINE LEDGER &amp; RECEIPT PORTAL</div>
     <div style="font-size:8px;margin-top:3px;color:#333;line-height:1.4">
       Track your past receipts, full purchase ledger &amp; credit dues 24/7 online:<br/>
-      <b style="font-size:9px;color:#0284c7;font-family:monospace">pos.mtcore.xyz/track-ticket</b><br/>
+      <b style="font-size:9px;color:#0284c7;font-family:monospace">pos.mtcore.xyz/tracking</b><br/>
       Search Invoice #: <b>${sale.receiptNumber}</b>${sale.customerNo ? ` or Customer ID: <b>${sale.customerNo}</b>` : ""}
     </div>
   </div>

@@ -128,7 +128,7 @@ export default function ContactPage() {
                 <p className="text-xl font-black text-brand-sky sky-neon-text">{generatedTicket}</p>
               </div>
               <div>
-                <a href="/track-ticket" className="bg-brand-sky hover:bg-brand-sky-light text-black font-black px-6 py-2 rounded uppercase tracking-wider text-xs inline-flex items-center gap-2">
+                <a href="/tracking" className="bg-brand-sky hover:bg-brand-sky-light text-black font-black px-6 py-2 rounded uppercase tracking-wider text-xs inline-flex items-center gap-2">
                   Track Your Ticket <Send size={12} />
                 </a>
               </div>

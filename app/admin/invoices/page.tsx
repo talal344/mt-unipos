@@ -1526,7 +1526,7 @@ export default function AdminInvoicesPage() {
                 <div className="bg-emerald-950/30 border border-emerald-500/30 p-3 rounded-xl">
                   <div className="text-[10px] uppercase font-bold text-emerald-400">Direct Tracking &amp; Receipt Link:</div>
                   <div className="font-mono text-white font-black mt-0.5 text-xs select-all">
-                    https://pos.mtcore.xyz/track-ticket?id={smsModalInvoice.id}
+                    https://pos.mtcore.xyz/tracking?id={smsModalInvoice.id}
                   </div>
                 </div>
 
@@ -1535,7 +1535,7 @@ export default function AdminInvoicesPage() {
                   <textarea
                     rows={6}
                     readOnly
-                    value={`[MT UniPOS ERP] Dear ${smsModalInvoice.tenantName},\nYour SaaS Invoice ${smsModalInvoice.id} status is ${smsModalInvoice.status.toUpperCase()}!\nPlan: ${smsModalInvoice.plan}\nTotal Amount: ${smsModalInvoice.currency || "PKR"} ${smsModalInvoice.amount.toLocaleString()}\nAmount Paid: ${smsModalInvoice.currency || "PKR"} ${(smsModalInvoice.paidAmount ?? (smsModalInvoice.status === "Paid" ? smsModalInvoice.amount : 0)).toLocaleString()}\nRemaining Dues: ${smsModalInvoice.currency || "PKR"} ${(smsModalInvoice.remainingBalance ?? 0).toLocaleString()}\n\nTrack & Download Digital Receipt Slip:\nhttps://pos.mtcore.xyz/track-ticket?id=${smsModalInvoice.id}\n\nSupport: 03396399895 | Web: pos.mtcore.xyz`}
+                    value={`[MT UniPOS ERP] Dear ${smsModalInvoice.tenantName},\nYour SaaS Invoice ${smsModalInvoice.id} status is ${smsModalInvoice.status.toUpperCase()}!\nPlan: ${smsModalInvoice.plan}\nTotal Amount: ${smsModalInvoice.currency || "PKR"} ${smsModalInvoice.amount.toLocaleString()}\nAmount Paid: ${smsModalInvoice.currency || "PKR"} ${(smsModalInvoice.paidAmount ?? (smsModalInvoice.status === "Paid" ? smsModalInvoice.amount : 0)).toLocaleString()}\nRemaining Dues: ${smsModalInvoice.currency || "PKR"} ${(smsModalInvoice.remainingBalance ?? 0).toLocaleString()}\n\nTrack & Download Digital Receipt Slip:\nhttps://pos.mtcore.xyz/tracking?id=${smsModalInvoice.id}\n\nSupport: 03396399895 | Web: pos.mtcore.xyz`}
                     className="w-full bg-black border border-gray-800 p-3 rounded-xl text-gray-200 font-mono text-[11px] leading-relaxed focus:outline-none"
                   />
                 </div>
@@ -1543,7 +1543,7 @@ export default function AdminInvoicesPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2">
                   <button
                     onClick={() => {
-                      const text = encodeURIComponent(`[MT UniPOS ERP] Dear ${smsModalInvoice.tenantName},\nYour SaaS Invoice ${smsModalInvoice.id} status is ${smsModalInvoice.status.toUpperCase()}!\nPlan: ${smsModalInvoice.plan}\nTotal Amount: ${smsModalInvoice.currency || "PKR"} ${smsModalInvoice.amount.toLocaleString()}\nAmount Paid: ${smsModalInvoice.currency || "PKR"} ${(smsModalInvoice.paidAmount ?? (smsModalInvoice.status === "Paid" ? smsModalInvoice.amount : 0)).toLocaleString()}\n\nTrack & Download Digital Receipt:\nhttps://pos.mtcore.xyz/track-ticket?id=${smsModalInvoice.id}`);
+                      const text = encodeURIComponent(`[MT UniPOS ERP] Dear ${smsModalInvoice.tenantName},\nYour SaaS Invoice ${smsModalInvoice.id} status is ${smsModalInvoice.status.toUpperCase()}!\nPlan: ${smsModalInvoice.plan}\nTotal Amount: ${smsModalInvoice.currency || "PKR"} ${smsModalInvoice.amount.toLocaleString()}\nAmount Paid: ${smsModalInvoice.currency || "PKR"} ${(smsModalInvoice.paidAmount ?? (smsModalInvoice.status === "Paid" ? smsModalInvoice.amount : 0)).toLocaleString()}\n\nTrack & Download Digital Receipt:\nhttps://pos.mtcore.xyz/tracking?id=${smsModalInvoice.id}`);
                       window.open(`https://wa.me/?text=${text}`, "_blank");
                     }}
                     className="py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase text-[11px] rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20"
@@ -1554,7 +1554,7 @@ export default function AdminInvoicesPage() {
 
                   <button
                     onClick={() => {
-                      const msg = `[MT UniPOS ERP] Dear ${smsModalInvoice.tenantName},\nInvoice ${smsModalInvoice.id} status: ${smsModalInvoice.status.toUpperCase()}.\nTrack Slip: https://pos.mtcore.xyz/track-ticket?id=${smsModalInvoice.id}`;
+                      const msg = `[MT UniPOS ERP] Dear ${smsModalInvoice.tenantName},\nInvoice ${smsModalInvoice.id} status: ${smsModalInvoice.status.toUpperCase()}.\nTrack Slip: https://pos.mtcore.xyz/tracking?id=${smsModalInvoice.id}`;
                       navigator.clipboard.writeText(msg);
                       setCopiedSms(true);
                       setTimeout(() => setCopiedSms(false), 3000);

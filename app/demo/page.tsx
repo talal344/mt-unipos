@@ -133,7 +133,7 @@ export default function DemoPage() {
                       <Printer size={12} /> Print
                     </button>
                     <a
-                      href="/track-ticket"
+                      href="/tracking"
                       className="flex items-center justify-center gap-1.5 py-2.5 border border-brand-dark-border text-gray-300 text-[10px] font-black uppercase rounded-xl hover:bg-white/5 transition"
                     >
                       <ExternalLink size={12} /> Track Status
@@ -383,7 +383,7 @@ export default function DemoPage() {
                   <Printer size={12} /> Print Ticket
                 </button>
                 <a
-                  href="/track-ticket"
+                  href="/tracking"
                   className="flex-1 flex items-center justify-center gap-1.5 py-2.5 border border-gray-300 dark:border-brand-dark-border text-gray-700 dark:text-gray-300 text-[10px] font-black uppercase rounded-xl hover:bg-gray-100 dark:hover:bg-white/5 transition"
                 >
                   <ExternalLink size={12} /> Track Ticket

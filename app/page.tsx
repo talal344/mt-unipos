@@ -468,7 +468,7 @@ export default function HomePage() {
                   >
                     <Printer size={12} /> Print
                   </button>
-                  <a href="/track-ticket"
+                  <a href="/tracking"
                     className="inline-flex items-center gap-1.5 px-4 py-2 border border-brand-dark-border text-gray-300 text-[10px] font-black uppercase rounded-xl hover:bg-white/5 transition"
                   >
                     <ExternalLink size={12} /> Track Status
@@ -677,7 +677,7 @@ export default function HomePage() {
                 <Printer size={12} /> Print Ticket
               </button>
               <a
-                href="/track-ticket"
+                href="/tracking"
                 className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-brand-sky text-black text-[10px] font-black uppercase tracking-wider hover:bg-brand-sky-light transition shadow-lg shadow-brand-sky/20"
               >
                 <ExternalLink size={12} /> Track My Ticket

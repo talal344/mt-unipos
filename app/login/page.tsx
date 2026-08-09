@@ -441,8 +441,8 @@ function LoginContent() {
                 📝 Apply for Demo
               </Link>
               <span>·</span>
-              <Link href="/track-ticket" className="text-purple-400 font-bold hover:underline flex items-center gap-1">
-                🎟️ Track Ticket
+              <Link href="/tracking" className="text-purple-400 font-bold hover:underline flex items-center gap-1">
+                🔍 Self-Service Tracking
               </Link>
               <span>·</span>
               <Link href="/features" className="text-emerald-400 font-bold hover:underline flex items-center gap-1">
