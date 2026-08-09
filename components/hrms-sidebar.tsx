@@ -69,6 +69,11 @@ export default function HRMSSidebar() {
       href: "/hrms/performance",
       icon: TrendingUp,
     },
+    {
+      label: "HRMS Settings",
+      href: "/hrms/settings",
+      icon: Settings,
+    },
   ];
 
   return (

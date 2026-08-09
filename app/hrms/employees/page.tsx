@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import HRMSSidebar from "@/components/hrms-sidebar";
-import { useGlobalContext } from "@/context/global-context";
+import { useGlobalContext, generateNextEmployeeCode } from "@/context/global-context";
 import {
   Users,
   Search,
@@ -28,7 +28,12 @@ export default function HREmployeesPage() {
     addHREmployee,
     updateHREmployee,
     deleteHREmployee,
-    currencySymbol
+    hrDepartments,
+    hrDesignations,
+    hrShifts,
+    currencySymbol,
+    currentUser,
+    businessSettings
   } = useGlobalContext();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -36,13 +41,16 @@ export default function HREmployeesPage() {
   const [showModal, setShowModal] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<any>(null);
 
+  const defaultDept = hrDepartments[0]?.name || "Human Resources";
+  const defaultDesg = hrDesignations[0]?.title || "HR Officer";
+
   const [form, setForm] = useState({
     name: "",
     email: "",
     phone: "",
     cnic: "",
-    department: "Operations",
-    designation: "Assistant Manager",
+    department: defaultDept,
+    designation: defaultDesg,
     joiningDate: new Date().toISOString().split("T")[0],
     employmentType: "Full-time" as const,
     basicSalary: "50000",
@@ -52,7 +60,7 @@ export default function HREmployeesPage() {
     status: "Active" as const
   });
 
-  const departments = ["All", "Operations", "Human Resources", "Accounts & Finance", "Sales & Retail", "Inventory & Warehouse"];
+  const departmentList = ["All", ...hrDepartments.map((d) => d.name)];
 
   const filteredEmployees = hrEmployees.filter((emp) => {
     const matchDept = departmentFilter === "All" || emp.department === departmentFilter;
@@ -75,8 +83,8 @@ export default function HREmployeesPage() {
       email: "",
       phone: "",
       cnic: "",
-      department: "Operations",
-      designation: "Assistant Manager",
+      department: hrDepartments[0]?.name || "Human Resources",
+      designation: hrDesignations[0]?.title || "HR Officer",
       joiningDate: new Date().toISOString().split("T")[0],
       employmentType: "Full-time",
       basicSalary: "50000",
@@ -112,8 +120,11 @@ export default function HREmployeesPage() {
     e.preventDefault();
     if (!form.name || !form.email || !form.phone) return;
 
+    const bName = currentUser?.businessName || businessSettings?.businessName || "MT Software";
+    const autoCode = generateNextEmployeeCode(bName, hrEmployees.length);
+
     const payload = {
-      employeeCode: editingEmployee ? editingEmployee.employeeCode : `EMP-${String(hrEmployees.length + 1).padStart(3, '0')}`,
+      employeeCode: editingEmployee ? editingEmployee.employeeCode : autoCode,
       name: form.name,
       email: form.email,
       phone: form.phone,
@@ -176,7 +187,7 @@ export default function HREmployeesPage() {
           </div>
 
           <div className="flex gap-2 overflow-x-auto">
-            {departments.map((d) => (
+            {departmentList.map((d) => (
               <button
                 key={d}
                 onClick={() => setDepartmentFilter(d)}
@@ -357,22 +368,22 @@ export default function HREmployeesPage() {
                       onChange={(e) => setForm({ ...form, department: e.target.value })}
                       className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white focus:outline-none focus:border-emerald-500"
                     >
-                      <option>Operations</option>
-                      <option>Human Resources</option>
-                      <option>Accounts &amp; Finance</option>
-                      <option>Sales &amp; Retail</option>
-                      <option>Inventory &amp; Warehouse</option>
+                      {hrDepartments.map((d) => (
+                        <option key={d.id} value={d.name}>{d.name}</option>
+                      ))}
                     </select>
                   </div>
                   <div>
                     <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Designation</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Store Operations Manager"
+                    <select
                       value={form.designation}
                       onChange={(e) => setForm({ ...form, designation: e.target.value })}
                       className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white focus:outline-none focus:border-emerald-500"
-                    />
+                    >
+                      {hrDesignations.map((desg) => (
+                        <option key={desg.id} value={desg.title}>{desg.title} ({desg.department})</option>
+                      ))}
+                    </select>
                   </div>
                 </div>
 

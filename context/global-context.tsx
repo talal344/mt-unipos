@@ -187,6 +187,52 @@ export interface HRAppraisal {
   date: string;
 }
 
+export interface HRDepartment {
+  id: string;
+  name: string;
+  code: string;
+  headOfDepartment?: string;
+  description?: string;
+}
+
+export interface HRDesignation {
+  id: string;
+  title: string;
+  department: string;
+  grade?: string;
+}
+
+export interface HRShift {
+  id: string;
+  name: string;
+  startTime: string;
+  endTime: string;
+  graceMinutes: number;
+  workDays: string[];
+}
+
+export interface HRCandidate {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  appliedPosition: string;
+  department: string;
+  cnic?: string;
+  proposedSalary: number;
+  bankName?: string;
+  accountNumber?: string;
+  stage: "Applied" | "Screening" | "Interview" | "Offered" | "Hired" | "Rejected";
+  onboardingStage?: "Pending IT Provisioning" | "Pending Finance Confirmation" | "Fully Active Employee";
+  generatedEmployeeCode?: string;
+  assignedShift?: string;
+  workEmail?: string;
+  tempPassword?: string;
+  itProvisionedAt?: string;
+  financeConfirmedAt?: string;
+  appliedDate: string;
+}
+
 // ─── PERMANENT SEED TENANTS ───────────────────────────────────────────────────
 // These tenants are ALWAYS guaranteed to exist regardless of browser clear.
 // Add your real clients here. They are seeded from code — not from localStorage.
@@ -671,6 +717,11 @@ interface GlobalContextType {
   hrPayrolls: HRPayrollBatch[];
   hrJobs: HRJobOpening[];
   hrAppraisals: HRAppraisal[];
+  hrDepartments: HRDepartment[];
+  hrDesignations: HRDesignation[];
+  hrShifts: HRShift[];
+  hrCandidates: HRCandidate[];
+
   addHREmployee: (emp: Omit<HREmployee, "id">) => void;
   updateHREmployee: (id: string, emp: Partial<HREmployee>) => void;
   deleteHREmployee: (id: string) => void;
@@ -682,9 +733,102 @@ interface GlobalContextType {
   addHRJobOpening: (job: Omit<HRJobOpening, "id" | "applicantsCount" | "postedDate">) => void;
   updateHRJobOpening: (id: string, updates: Partial<HRJobOpening>) => void;
   addHRAppraisal: (appraisal: Omit<HRAppraisal, "id" | "date">) => void;
+
+  // HRMS Settings & Recruitment Handlers
+  addHRDepartment: (dept: Omit<HRDepartment, "id">) => void;
+  updateHRDepartment: (id: string, updates: Partial<HRDepartment>) => void;
+  deleteHRDepartment: (id: string) => void;
+
+  addHRDesignation: (desg: Omit<HRDesignation, "id">) => void;
+  updateHRDesignation: (id: string, updates: Partial<HRDesignation>) => void;
+  deleteHRDesignation: (id: string) => void;
+
+  addHRShift: (shift: Omit<HRShift, "id">) => void;
+  updateHRShift: (id: string, updates: Partial<HRShift>) => void;
+  deleteHRShift: (id: string) => void;
+
+  addHRCandidate: (cand: Omit<HRCandidate, "id" | "appliedDate">) => void;
+  updateHRCandidate: (id: string, updates: Partial<HRCandidate>) => void;
+  deleteHRCandidate: (id: string) => void;
+  provisionITCredentials: (candidateId: string, workEmail: string, tempPassword: string) => void;
+  confirmFinanceAndActivateEmployee: (candidateId: string) => void;
 }
 
 // ─── HRMS DEMO SEED DATA ──────────────────────────────────────────────────────
+export function generateNextEmployeeCode(businessName: string, count: number): string {
+  if (!businessName) return `EMP-${(count + 1).toString().padStart(4, "0")}`;
+  const words = businessName.trim().split(/\s+/).filter(Boolean);
+  let prefix = "";
+  if (words.length === 1) {
+    prefix = words[0].slice(0, 3).toUpperCase();
+  } else if (words.length === 2) {
+    prefix = (words[0].slice(0, 2) + words[1].slice(0, 1)).toUpperCase();
+  } else {
+    prefix = words.map(w => w[0]).join("").slice(0, 4).toUpperCase();
+  }
+  const cleanPrefix = prefix.replace(/[^A-Z]/g, "") || "EMP";
+  const numStr = (count + 1).toString().padStart(4, "0");
+  return `${cleanPrefix}-${numStr}`;
+}
+
+const SEED_HR_DEPARTMENTS: HRDepartment[] = [
+  { id: "DEPT-1", name: "Human Resources", code: "HR", headOfDepartment: "Ayesha Malik", description: "Talent acquisition, employee welfare, payroll, and compliance." },
+  { id: "DEPT-2", name: "Accounts & Finance", code: "FIN", headOfDepartment: "Muhammad Bilal", description: "Financial ledgers, salary disbursements, and tax reporting." },
+  { id: "DEPT-3", name: "IT & Software Operations", code: "IT", headOfDepartment: "Mian Talal", description: "System infrastructure, employee credentials, and software development." },
+  { id: "DEPT-4", name: "Sales & Retail", code: "SLS", headOfDepartment: "Waqas Ali", description: "Store counters, checkout lanes, and customer sales." },
+  { id: "DEPT-5", name: "Inventory & Warehouse", code: "WH", headOfDepartment: "Zainab Fatima", description: "Stock transfers, supplier receipts, and batch management." }
+];
+
+const SEED_HR_DESIGNATIONS: HRDesignation[] = [
+  { id: "DESG-1", title: "HR Manager", department: "Human Resources", grade: "M-1" },
+  { id: "DESG-2", title: "HR Officer", department: "Human Resources", grade: "O-2" },
+  { id: "DESG-3", title: "Senior Accountant", department: "Accounts & Finance", grade: "M-2" },
+  { id: "DESG-4", title: "Finance Executive", department: "Accounts & Finance", grade: "E-1" },
+  { id: "DESG-5", title: "IT Systems Administrator", department: "IT & Software Operations", grade: "M-1" },
+  { id: "DESG-6", title: "Software Engineer", department: "IT & Software Operations", grade: "E-2" },
+  { id: "DESG-7", title: "Store Operations Manager", department: "Sales & Retail", grade: "M-1" },
+  { id: "DESG-8", title: "Head Cashier", department: "Sales & Retail", grade: "O-1" },
+  { id: "DESG-9", title: "Warehouse Officer", department: "Inventory & Warehouse", grade: "O-2" }
+];
+
+const SEED_HR_SHIFTS: HRShift[] = [
+  { id: "SHF-1", name: "Morning Standard Shift", startTime: "09:00 AM", endTime: "05:00 PM", graceMinutes: 15, workDays: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] },
+  { id: "SHF-2", name: "Evening Retail Shift", startTime: "02:00 PM", endTime: "10:00 PM", graceMinutes: 15, workDays: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] },
+  { id: "SHF-3", name: "Night Support Shift", startTime: "10:00 PM", endTime: "06:00 AM", graceMinutes: 15, workDays: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] },
+  { id: "SHF-4", name: "Flexible Executive Shift", startTime: "08:00 AM", endTime: "08:00 PM", graceMinutes: 30, workDays: ["Mon", "Tue", "Wed", "Thu", "Fri"] }
+];
+
+const SEED_HR_CANDIDATES: HRCandidate[] = [
+  {
+    id: "CND-101",
+    name: "Usman Raza",
+    email: "usman.raza@gmail.com",
+    phone: "03129998877",
+    appliedPosition: "Software Engineer",
+    department: "IT & Software Operations",
+    cnic: "35201-8899776-1",
+    proposedSalary: 95000,
+    bankName: "Meezan Bank Ltd",
+    accountNumber: "01099887766",
+    stage: "Interview",
+    appliedDate: "2026-08-01"
+  },
+  {
+    id: "CND-102",
+    name: "Sara Khan",
+    email: "sara.khan@gmail.com",
+    phone: "03224445566",
+    appliedPosition: "HR Officer",
+    department: "Human Resources",
+    cnic: "35202-5544332-9",
+    proposedSalary: 60000,
+    bankName: "HBL",
+    accountNumber: "004288776655",
+    stage: "Hired",
+    onboardingStage: "Pending IT Provisioning",
+    appliedDate: "2026-08-03"
+  }
+];
 const SEED_HR_EMPLOYEES: HREmployee[] = [
   {
     id: "HRE-101", employeeCode: "EMP-001", name: "Waqas Ali", email: "waqas.ali@mtcore.xyz",
@@ -1066,6 +1210,10 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
   const [hrPayrolls, setHrPayrolls] = useState<HRPayrollBatch[]>([]);
   const [hrJobs, setHrJobs] = useState<HRJobOpening[]>([]);
   const [hrAppraisals, setHrAppraisals] = useState<HRAppraisal[]>([]);
+  const [hrDepartments, setHrDepartments] = useState<HRDepartment[]>([]);
+  const [hrDesignations, setHrDesignations] = useState<HRDesignation[]>([]);
+  const [hrShifts, setHrShifts] = useState<HRShift[]>([]);
+  const [hrCandidates, setHrCandidates] = useState<HRCandidate[]>([]);
 
   // Authenticated State
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -1985,6 +2133,34 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       else {
         setHrAppraisals(SEED_HR_APPRAISALS);
         saveTenantData("unipos_hr_appraisals", SEED_HR_APPRAISALS);
+      }
+
+      const savedHrDepts = getTenantData("unipos_hr_departments", currentUser.tenantId);
+      if (savedHrDepts && savedHrDepts.length > 0) setHrDepartments(savedHrDepts);
+      else {
+        setHrDepartments(SEED_HR_DEPARTMENTS);
+        saveTenantData("unipos_hr_departments", SEED_HR_DEPARTMENTS);
+      }
+
+      const savedHrDesgs = getTenantData("unipos_hr_designations", currentUser.tenantId);
+      if (savedHrDesgs && savedHrDesgs.length > 0) setHrDesignations(savedHrDesgs);
+      else {
+        setHrDesignations(SEED_HR_DESIGNATIONS);
+        saveTenantData("unipos_hr_designations", SEED_HR_DESIGNATIONS);
+      }
+
+      const savedHrShifts = getTenantData("unipos_hr_shifts", currentUser.tenantId);
+      if (savedHrShifts && savedHrShifts.length > 0) setHrShifts(savedHrShifts);
+      else {
+        setHrShifts(SEED_HR_SHIFTS);
+        saveTenantData("unipos_hr_shifts", SEED_HR_SHIFTS);
+      }
+
+      const savedHrCands = getTenantData("unipos_hr_candidates", currentUser.tenantId);
+      if (savedHrCands && savedHrCands.length > 0) setHrCandidates(savedHrCands);
+      else {
+        setHrCandidates(SEED_HR_CANDIDATES);
+        saveTenantData("unipos_hr_candidates", SEED_HR_CANDIDATES);
       }
     }
 
@@ -4071,6 +4247,172 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     saveTenantData("unipos_hr_jobs", updated);
   };
 
+  // ── HRMS Settings & Recruitment Action Handlers ──
+  const addHRDepartment = (dept: Omit<HRDepartment, "id">) => {
+    const newDept: HRDepartment = {
+      ...dept,
+      id: `DEPT-${Math.floor(100 + Math.random() * 900)}`
+    };
+    const updated = [newDept, ...hrDepartments];
+    setHrDepartments(updated);
+    saveTenantData("unipos_hr_departments", updated);
+  };
+
+  const updateHRDepartment = (id: string, updates: Partial<HRDepartment>) => {
+    const updated = hrDepartments.map(d => d.id === id ? { ...d, ...updates } : d);
+    setHrDepartments(updated);
+    saveTenantData("unipos_hr_departments", updated);
+  };
+
+  const deleteHRDepartment = (id: string) => {
+    const updated = hrDepartments.filter(d => d.id !== id);
+    setHrDepartments(updated);
+    saveTenantData("unipos_hr_departments", updated);
+  };
+
+  const addHRDesignation = (desg: Omit<HRDesignation, "id">) => {
+    const newDesg: HRDesignation = {
+      ...desg,
+      id: `DESG-${Math.floor(100 + Math.random() * 900)}`
+    };
+    const updated = [newDesg, ...hrDesignations];
+    setHrDesignations(updated);
+    saveTenantData("unipos_hr_designations", updated);
+  };
+
+  const updateHRDesignation = (id: string, updates: Partial<HRDesignation>) => {
+    const updated = hrDesignations.map(d => d.id === id ? { ...d, ...updates } : d);
+    setHrDesignations(updated);
+    saveTenantData("unipos_hr_designations", updated);
+  };
+
+  const deleteHRDesignation = (id: string) => {
+    const updated = hrDesignations.filter(d => d.id !== id);
+    setHrDesignations(updated);
+    saveTenantData("unipos_hr_designations", updated);
+  };
+
+  const addHRShift = (shift: Omit<HRShift, "id">) => {
+    const newShift: HRShift = {
+      ...shift,
+      id: `SHF-${Math.floor(100 + Math.random() * 900)}`
+    };
+    const updated = [newShift, ...hrShifts];
+    setHrShifts(updated);
+    saveTenantData("unipos_hr_shifts", updated);
+  };
+
+  const updateHRShift = (id: string, updates: Partial<HRShift>) => {
+    const updated = hrShifts.map(s => s.id === id ? { ...s, ...updates } : s);
+    setHrShifts(updated);
+    saveTenantData("unipos_hr_shifts", updated);
+  };
+
+  const deleteHRShift = (id: string) => {
+    const updated = hrShifts.filter(s => s.id !== id);
+    setHrShifts(updated);
+    saveTenantData("unipos_hr_shifts", updated);
+  };
+
+  const addHRCandidate = (cand: Omit<HRCandidate, "id" | "appliedDate">) => {
+    const newCand: HRCandidate = {
+      ...cand,
+      id: `CND-${Math.floor(100 + Math.random() * 900)}`,
+      appliedDate: new Date().toISOString().split("T")[0]
+    };
+    const updated = [newCand, ...hrCandidates];
+    setHrCandidates(updated);
+    saveTenantData("unipos_hr_candidates", updated);
+  };
+
+  const updateHRCandidate = (id: string, updates: Partial<HRCandidate>) => {
+    const updated = hrCandidates.map(c => {
+      if (c.id === id) {
+        const next = { ...c, ...updates };
+        if (updates.stage === "Hired" && !next.onboardingStage) {
+          next.onboardingStage = "Pending IT Provisioning";
+        }
+        return next;
+      }
+      return c;
+    });
+    setHrCandidates(updated);
+    saveTenantData("unipos_hr_candidates", updated);
+  };
+
+  const deleteHRCandidate = (id: string) => {
+    const updated = hrCandidates.filter(c => c.id !== id);
+    setHrCandidates(updated);
+    saveTenantData("unipos_hr_candidates", updated);
+  };
+
+  // Step 2: IT Department Provisioning Action
+  const provisionITCredentials = (candidateId: string, workEmail: string, tempPassword: string) => {
+    const bName = currentUser?.businessName || businessSettings?.businessName || "MT Software";
+    const autoCode = generateNextEmployeeCode(bName, hrEmployees.length);
+    const nowStr = new Date().toISOString();
+
+    const updatedCands = hrCandidates.map(c => {
+      if (c.id === candidateId) {
+        return {
+          ...c,
+          stage: "Hired" as const,
+          onboardingStage: "Pending Finance Confirmation" as const,
+          generatedEmployeeCode: autoCode,
+          workEmail,
+          tempPassword,
+          itProvisionedAt: nowStr
+        };
+      }
+      return c;
+    });
+
+    setHrCandidates(updatedCands);
+    saveTenantData("unipos_hr_candidates", updatedCands);
+  };
+
+  // Step 3: Finance Department Confirmation & Active Directory Activation Action
+  const confirmFinanceAndActivateEmployee = (candidateId: string) => {
+    const candidate = hrCandidates.find(c => c.id === candidateId);
+    if (!candidate) return;
+
+    const bName = currentUser?.businessName || businessSettings?.businessName || "MT Software";
+    const finalEmpCode = candidate.generatedEmployeeCode || generateNextEmployeeCode(bName, hrEmployees.length);
+
+    // 1. Create Active HREmployee
+    const newEmp: HREmployee = {
+      id: `HRE-${Math.floor(100 + Math.random() * 900)}`,
+      employeeCode: finalEmpCode,
+      name: candidate.name,
+      email: candidate.workEmail || candidate.email,
+      phone: candidate.phone,
+      cnic: candidate.cnic || "35202-0000000-0",
+      department: candidate.department,
+      designation: candidate.appliedPosition,
+      joiningDate: new Date().toISOString().split("T")[0],
+      employmentType: "Full-time",
+      basicSalary: candidate.proposedSalary,
+      bankName: candidate.bankName || "Meezan Bank Ltd",
+      accountNumber: candidate.accountNumber || "01020304050607",
+      status: "Active"
+    };
+
+    const updatedEmps = [newEmp, ...hrEmployees];
+    setHrEmployees(updatedEmps);
+    saveTenantData("unipos_hr_employees", updatedEmps);
+
+    // 2. Mark Candidate as Fully Active
+    const updatedCands = hrCandidates.map(c =>
+      c.id === candidateId ? {
+        ...c,
+        onboardingStage: "Fully Active Employee" as const,
+        financeConfirmedAt: new Date().toISOString()
+      } : c
+    );
+    setHrCandidates(updatedCands);
+    saveTenantData("unipos_hr_candidates", updatedCands);
+  };
+
   const updateHRJobOpening = (id: string, updates: Partial<HRJobOpening>) => {
     const updated = hrJobs.map(j => j.id === id ? { ...j, ...updates } : j);
     setHrJobs(updated);
@@ -4150,6 +4492,25 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         addHRJobOpening,
         updateHRJobOpening,
         addHRAppraisal,
+
+        hrDepartments,
+        hrDesignations,
+        hrShifts,
+        hrCandidates,
+        addHRDepartment,
+        updateHRDepartment,
+        deleteHRDepartment,
+        addHRDesignation,
+        updateHRDesignation,
+        deleteHRDesignation,
+        addHRShift,
+        updateHRShift,
+        deleteHRShift,
+        addHRCandidate,
+        updateHRCandidate,
+        deleteHRCandidate,
+        provisionITCredentials,
+        confirmFinanceAndActivateEmployee,
 
         currentBranch,
         setCurrentBranch,
