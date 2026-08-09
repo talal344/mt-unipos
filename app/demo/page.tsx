@@ -230,18 +230,15 @@ export default function DemoPage() {
                   </div>
                   <div>
                     <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
-                      Industry Category
+                      Software Line of Business
                     </label>
                     <select
                       value={demoForm.businessType}
                       onChange={(e) => setDemoForm({ ...demoForm, businessType: e.target.value })}
-                      className="w-full bg-black border border-brand-dark-border p-2.5 rounded text-white focus:outline-none focus:border-brand-sky"
+                      className="w-full bg-black border border-brand-dark-border p-2.5 rounded text-white focus:outline-none focus:border-brand-sky font-bold"
                     >
-                      <option>Super Markets</option>
-                      <option>Pharmacy Stores</option>
-                      <option>Restaurants / Cafes</option>
-                      <option>Electronics Stores</option>
-                      <option>Clothing Stores</option>
+                      <option value="POS (Supermarkets & Retail)">🏬 POS (Supermarkets &amp; Retail Stores)</option>
+                      <option value="HRMS (Human Resources & Payroll)">👥 HRMS (Human Resources &amp; Payroll)</option>
                     </select>
                   </div>
                 </div>

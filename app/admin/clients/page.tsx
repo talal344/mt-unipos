@@ -2107,20 +2107,16 @@ export default function AdminClientsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
-                    Sector Line
+                  <label className="block text-[10px] uppercase font-bold text-emerald-400 mb-1">
+                    Line of Business (Software)
                   </label>
                   <select
-                    value={addForm.businessType}
-                    onChange={(e) =>
-                      setAddForm({ ...addForm, businessType: e.target.value })
-                    }
-                    className="w-full bg-black border border-brand-dark-border p-2.5 rounded text-white focus:outline-none focus:border-purple-500 font-sans"
+                    value={addForm.assignedSoftware || "POS"}
+                    onChange={(e) => setAddForm({ ...addForm, assignedSoftware: e.target.value as "POS" | "HRMS", businessType: e.target.value === "HRMS" ? "HRMS Enterprise" : "Super Markets" })}
+                    className="w-full bg-black border border-emerald-500/40 p-2.5 rounded text-white font-bold focus:outline-none focus:border-emerald-400 font-sans"
                   >
-                    <option>Super Mart</option>
-                    <option>Pharmacy Stores</option>
-                    <option>Restaurants / Cafes</option>
-                    <option>Electronics Stores</option>
+                    <option value="POS">🏬 POS (Stores, Retail & Dept Stores)</option>
+                    <option value="HRMS">👥 HRMS (Human Resource & Payroll)</option>
                   </select>
                 </div>
               </div>
@@ -2139,20 +2135,6 @@ export default function AdminClientsPage() {
                   }
                   className="w-full bg-black border border-brand-dark-border p-2.5 rounded text-white focus:outline-none focus:border-purple-500"
                 />
-              </div>
-
-              <div>
-                <label className="block text-[10px] uppercase font-bold text-emerald-400 mb-1">
-                  Assigned Line of Business / Software Product
-                </label>
-                <select
-                  value={addForm.assignedSoftware || "POS"}
-                  onChange={(e) => setAddForm({ ...addForm, assignedSoftware: e.target.value as "POS" | "HRMS" })}
-                  className="w-full bg-black border border-emerald-500/40 p-2.5 rounded text-white font-bold focus:outline-none focus:border-emerald-400"
-                >
-                  <option value="POS">🏬 POS (Point of Sale, Inventory, Departmental Stores)</option>
-                  <option value="HRMS">👥 HRMS (Human Resource System, Attendance & Payroll)</option>
-                </select>
               </div>
 
               <div className="grid grid-cols-2 gap-3">

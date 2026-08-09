@@ -47,7 +47,7 @@ export default function AboutPage() {
           </div>
 
           <h1 className="text-4xl sm:text-6xl font-black tracking-tight mb-4 leading-none">
-            Our Story: <span className="sky-gradient-text">MT UniPOS</span>
+            About <span className="sky-gradient-text">MTCore Ecosystem</span>
           </h1>
           <p className="text-xs sm:text-sm text-gray-400 max-w-2xl mx-auto leading-relaxed">
             MT UniPOS (Mian Talal UniPOS) is engineered to solve retail stock leakages, streamline checkout speeds, and automate double-entry accounting for supermarkets, pharmacies, F&amp;B outlets, and corporate trade networks.

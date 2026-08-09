@@ -129,28 +129,28 @@ export default function HomePage() {
         <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[900px] h-[400px] bg-brand-sky/4 rounded-full blur-[130px] pointer-events-none" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-          <div className="inline-flex items-center gap-2 bg-brand-dark-surface/90 border border-brand-sky/30 px-3.5 py-1.5 rounded-full mb-6 animate-fade-in-up">
-            <Zap className="text-brand-sky animate-bounce" size={13} />
-            <span className="text-[11px] font-black uppercase tracking-wider text-brand-sky">Next-Gen SaaS POS Platform — v1.1.0</span>
+          <div className="inline-flex items-center gap-2 bg-brand-dark-surface/90 border border-emerald-500/30 px-3.5 py-1.5 rounded-full mb-6 animate-fade-in-up">
+            <Sparkles className="text-emerald-400 animate-bounce" size={13} />
+            <span className="text-[11px] font-black uppercase tracking-wider text-emerald-400">MTCore Multi-SaaS Platform — Enterprise ERP Suite v1.2</span>
           </div>
 
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-none mb-6">
-            <span className="sky-gradient-text">Unified Point of Sale</span>
-            <br /><span className="text-white">&amp; Enterprise ERP</span>
+            <span className="sky-gradient-text">MTCore Enterprise Suite</span>
+            <br /><span className="text-white">Multi-SaaS Software Platform</span>
           </h1>
 
           <p className="max-w-2xl mx-auto text-sm sm:text-base text-gray-400 leading-relaxed mb-10">
-            Maximize throughput, track real-time stock across branches, auto-sync general ledgers, and access AI-driven forecasting predictions. Engineered by Mian Talal for modern scale.
+            Power your entire business operations with MTCore. From retail POS ERP and HRMS Payroll to upcoming School, Hospital, and Real Estate enterprise modules.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
             <Link href="/demo"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-brand-sky px-7 py-3.5 text-sm font-black text-black hover:bg-brand-sky-light transition-all transform hover:scale-105 shadow-2xl shadow-brand-sky/25">
-              Start Free Trial <ArrowRight size={16} />
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-7 py-3.5 text-sm font-black text-white hover:from-emerald-500 hover:to-teal-500 transition-all transform hover:scale-105 shadow-2xl shadow-emerald-900/30">
+              Request Live Demo <ArrowRight size={16} />
             </Link>
             <Link href="/login"
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-brand-dark-border bg-brand-dark-surface/60 hover:bg-brand-dark-surface px-7 py-3.5 text-sm font-bold text-white transition">
-              <Laptop size={14} /> Launch Demo POS
+              <Laptop size={14} /> Portal Sign In
             </Link>
           </div>
 
@@ -273,6 +273,9 @@ export default function HomePage() {
 
         </div>
       </section>
+
+      {/* ── MTCore Multi-SaaS Software Showcase ── */}
+      <SoftwareShowcase />
 
       {/* ══════════════════════════════════════════════════════════════════════
           STATS BAR
