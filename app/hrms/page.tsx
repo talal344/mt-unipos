@@ -18,7 +18,8 @@ import {
   Award,
   Sparkles,
   Building2,
-  FileText
+  FileText,
+  Cpu
 } from "lucide-react";
 
 export default function HRMSDashboardPage() {
@@ -28,6 +29,7 @@ export default function HRMSDashboardPage() {
     hrLeaves,
     hrPayrolls,
     hrJobs,
+    hrCandidates,
     currencySymbol,
     businessSettings
   } = useGlobalContext();
@@ -149,6 +151,58 @@ export default function HRMSDashboardPage() {
             </div>
             <div className="mt-3 text-[10px] text-gray-400 font-mono">
               Month: <span className="text-purple-300 font-bold">{latestPayroll ? latestPayroll.month : "Current Month"}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Owner Recruitment & Onboarding Pipeline Live Tracker Desk */}
+        <div className="bg-[#0b0f17] border border-sky-500/30 p-5 rounded-2xl space-y-3 shadow-xl">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-gray-800 pb-3">
+            <div className="flex items-center gap-2 text-sky-400 font-bold text-xs">
+              <UserPlus size={16} />
+              <h3 className="text-sm font-black text-white">Owner Corporate Onboarding Pipeline Overview</h3>
+            </div>
+            <Link
+              href="/hrms/recruitment"
+              className="text-[11px] text-sky-400 hover:text-sky-300 font-bold flex items-center gap-1 bg-sky-500/10 px-3 py-1 rounded-lg border border-sky-500/30 transition"
+            >
+              Open Full ATS Portal &rarr;
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
+            <div className="p-3.5 bg-black/40 border border-gray-800 rounded-xl flex items-center justify-between">
+              <div>
+                <span className="text-[10px] text-gray-500 font-bold uppercase block">1. Candidate ATS Pipeline</span>
+                <span className="text-lg font-black text-white">{hrCandidates.filter(c => c.onboardingStage !== "Fully Active Employee").length} Active Applicants</span>
+              </div>
+              <div className="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg">
+                <Users size={16} />
+              </div>
+            </div>
+
+            <div className="p-3.5 bg-black/40 border border-gray-800 rounded-xl flex items-center justify-between">
+              <div>
+                <span className="text-[10px] text-gray-500 font-bold uppercase block">2. IT Credentials Queue</span>
+                <span className="text-lg font-black text-sky-400">
+                  {hrCandidates.filter(c => c.stage === "Hired" && c.onboardingStage === "Pending IT Provisioning").length} Awaiting IT ID
+                </span>
+              </div>
+              <div className="p-2 bg-sky-500/10 text-sky-400 rounded-lg">
+                <Cpu size={16} />
+              </div>
+            </div>
+
+            <div className="p-3.5 bg-black/40 border border-gray-800 rounded-xl flex items-center justify-between">
+              <div>
+                <span className="text-[10px] text-gray-500 font-bold uppercase block">3. Finance Release Queue</span>
+                <span className="text-lg font-black text-emerald-400">
+                  {hrCandidates.filter(c => c.onboardingStage === "Pending Finance Confirmation").length} Awaiting Finance
+                </span>
+              </div>
+              <div className="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg">
+                <DollarSign size={16} />
+              </div>
             </div>
           </div>
         </div>

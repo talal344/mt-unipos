@@ -513,8 +513,8 @@ export default function HRRecruitmentPage() {
                         <span className="text-sky-400 font-bold">{c.workEmail}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-500">Temp Password:</span>
-                        <span className="text-gray-300">{c.tempPassword}</span>
+                        <span className="text-gray-500">CNIC Number:</span>
+                        <span className="text-gray-300">{c.cnic || '35201-0000000-0'}</span>
                       </div>
                       <div className="flex justify-between border-t border-gray-800 pt-1.5">
                         <span className="text-gray-500">Basic Monthly Salary:</span>
@@ -523,6 +523,9 @@ export default function HRRecruitmentPage() {
                       <div className="flex justify-between text-[11px]">
                         <span className="text-gray-500">Bank Account:</span>
                         <span className="text-gray-300">{c.bankName} ({c.accountNumber || '0102030405'})</span>
+                      </div>
+                      <div className="text-[10px] text-gray-500 italic pt-1 border-t border-gray-800/40">
+                        🔒 Login credentials strictly protected &amp; managed by IT Dept.
                       </div>
                     </div>
 
