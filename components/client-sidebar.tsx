@@ -9,6 +9,7 @@ import {
   Heart, Users, Users2, MessageCircle, FileDown, Brain, ExternalLink,
   LogOut, ShieldAlert, ShoppingBag, Receipt, Sliders, Bell, X, Package, CreditCard, Monitor, Settings, Landmark
 } from "lucide-react";
+import MTCoreLogo from "@/components/mt-logo";
 
 export default function ClientSidebar() {
   const router = useRouter();
@@ -182,11 +183,7 @@ export default function ClientSidebar() {
         {/* Brand Header */}
         <div className="py-4 px-3 border-b border-brand-dark-border shrink-0 bg-black/50 flex items-center justify-center">
           <Link href="/dashboard" className="w-full flex items-center justify-center">
-            <img 
-              src="/logo.png" 
-              alt="MT UniPOS Logo" 
-              className="h-14 w-auto max-w-[200px] object-contain drop-shadow-[0_0_16px_rgba(14,165,233,0.4)] transition-transform duration-300 hover:scale-105" 
-            />
+            <MTCoreLogo variant="sky" size="md" showText={true} />
           </Link>
         </div>
 

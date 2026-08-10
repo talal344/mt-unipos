@@ -23,6 +23,7 @@ import {
   Network,
   GitBranch
 } from "lucide-react";
+import MTCoreLogo from "@/components/mt-logo";
 
 export default function HRMSSidebar() {
   const pathname = usePathname();
@@ -119,10 +120,11 @@ export default function HRMSSidebar() {
       {/* Brand Header */}
       <div className="p-3 border-b border-gray-800/80 bg-black/50 flex items-center justify-between">
         <Link href="/hrms" className="flex items-center gap-2 overflow-hidden">
-          <img 
-            src="/logo.png" 
-            alt="MT UniPOS HRMS" 
-            className="h-10 w-auto max-w-[150px] object-contain drop-shadow-[0_0_12px_rgba(16,185,129,0.4)]" 
+          <MTCoreLogo
+            variant="emerald"
+            size="sm"
+            showText={true}
+            collapsed={collapsed}
           />
         </Link>
         {!collapsed && (

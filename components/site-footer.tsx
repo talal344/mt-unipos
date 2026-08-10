@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Laptop, Mail, Phone, MapPin, MessageCircle } from "lucide-react";
+import MTCoreLogo from "@/components/mt-logo";
 
 export default function SiteFooter() {
 
@@ -27,7 +28,7 @@ export default function SiteFooter() {
         {/* Branding & Contact */}
         <div className="space-y-4">
           <Link href="/" className="flex items-center gap-2">
-            <img src="/logo.png" alt="MTCore Logo" className="h-14 w-auto max-w-[220px] object-contain drop-shadow-[0_0_16px_rgba(14,165,233,0.35)]" />
+            <MTCoreLogo variant="sky" size="lg" showText={true} />
           </Link>
           <p className="text-xs leading-relaxed text-gray-400">
             MTCore is a unified multi-SaaS enterprise platform offering specialized software suites including POS Retail ERP, HRMS & Payroll, and upcoming School, Hospital, and Property management platforms. Founded by Mian Talal.

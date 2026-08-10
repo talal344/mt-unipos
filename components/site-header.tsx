@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Laptop, Menu, X, ArrowRight, ShieldAlert, KeyRound } from "lucide-react";
+import MTCoreLogo from "@/components/mt-logo";
 
 const SUPER_ADMIN_PASSCODE = "talal344";
 
@@ -78,7 +79,7 @@ export default function SiteHeader() {
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center cursor-pointer select-none" onClick={handleLogoTap}>
             <Link href="/" className="flex items-center gap-2 group">
-              <img src="/logo.png" alt="MT UniPOS" className="h-12 sm:h-14 w-auto max-w-[240px] object-contain transition-all duration-300 group-hover:scale-105 drop-shadow-[0_0_16px_rgba(14,165,233,0.35)]" />
+              <MTCoreLogo variant="sky" size="md" showText={true} />
             </Link>
           </div>
 

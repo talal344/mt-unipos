@@ -20,6 +20,7 @@ import {
   Mail, 
   UserPlus 
 } from "lucide-react";
+import MTCoreLogo from "@/components/mt-logo";
 
 export default function AdminSidebar() {
   const router = useRouter();
@@ -206,11 +207,7 @@ export default function AdminSidebar() {
         {/* Brand Header */}
         <div className="py-3 px-4 border-b border-brand-dark-border shrink-0 bg-black/60 flex items-center justify-between">
           <Link href="/admin/dashboard" className="flex items-center gap-2">
-            <img 
-              src="/logo.png" 
-              alt="MT UniPOS Logo" 
-              className="h-10 w-auto max-w-[150px] object-contain drop-shadow-[0_0_12px_rgba(168,85,247,0.4)]" 
-            />
+            <MTCoreLogo variant="purple" size="sm" showText={true} />
           </Link>
           <span className="bg-purple-500/20 text-purple-400 text-[8px] px-1.5 py-0.5 rounded font-black tracking-widest uppercase shrink-0">
             Admin
