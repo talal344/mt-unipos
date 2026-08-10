@@ -37,11 +37,11 @@ export default function HRRemindersPage() {
           probEnd.setMonth(probEnd.getMonth() + 3); // 3 month probation assumption
           
           if (probEnd >= today) {
-            const id = \`AUTO-PROB-\${emp.id}\`;
+            const id = `AUTO-PROB-\${emp.id}`;
             if (!currentReminders.some(r => r.id === id)) {
               currentReminders.push({
                 id,
-                title: \`Probation Ends for \${emp.name}\`,
+                title: `Probation Ends for \${emp.name}`,
                 description: "Evaluate performance to confirm permanent employment.",
                 category: "Probation End",
                 dueDate: probEnd.toISOString().split("T")[0],
@@ -133,7 +133,7 @@ export default function HRRemindersPage() {
 
         <div className="flex gap-2 bg-[#0b0f17] border border-gray-800 p-2 rounded-2xl w-fit">
           {["Pending", "Done", "All"].map(f => (
-            <button key={f} onClick={() => setFilter(f)} className={\`px-4 py-1.5 rounded-xl text-xs font-bold transition \${filter === f ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/40' : 'text-gray-400 hover:text-white'}\`}>
+            <button key={f} onClick={() => setFilter(f)} className={`px-4 py-1.5 rounded-xl text-xs font-bold transition \${filter === f ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/40' : 'text-gray-400 hover:text-white'}`}>
               {f}
             </button>
           ))}
@@ -145,9 +145,9 @@ export default function HRRemindersPage() {
           ) : filtered.map(rem => {
             const isOverdue = rem.status === "Pending" && rem.dueDate < todayStr;
             return (
-              <div key={rem.id} className={\`bg-[#0b0f17] border \${isOverdue ? 'border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.1)]' : 'border-gray-800'} p-5 rounded-2xl flex flex-col gap-3 relative overflow-hidden\`}>
+              <div key={rem.id} className={`bg-[#0b0f17] border \${isOverdue ? 'border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.1)]' : 'border-gray-800'} p-5 rounded-2xl flex flex-col gap-3 relative overflow-hidden`}>
                 <div className="flex justify-between items-start">
-                  <span className={\`text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded border \${getPriorityColor(rem.priority)}\`}>
+                  <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded border \${getPriorityColor(rem.priority)}`}>
                     {rem.priority} Priority
                   </span>
                   <span className="text-[10px] text-gray-500 uppercase bg-black px-2 py-1 rounded">{rem.category}</span>

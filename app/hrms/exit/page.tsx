@@ -176,7 +176,7 @@ export default function HRExitPage() {
                   <td className="p-4">{exit.reason}</td>
                   <td className="p-4 text-gray-400">{exit.lastWorkingDate}</td>
                   <td className="p-4">
-                    <span className={\`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider \${getStatusColor(exit.status)}\`}>
+                    <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider \${getStatusColor(exit.status)}`}>
                       {exit.status}
                     </span>
                   </td>

@@ -149,9 +149,9 @@ export default function HRSalaryHikePage() {
                   <td className="p-4 font-bold text-emerald-400">${hike.newSalary.toLocaleString()}</td>
                   <td className="p-4">
                     <div className="flex items-center gap-2">
-                      <span className={\`font-bold \${hike.hikePercentage >= 10 ? 'text-emerald-400' : hike.hikePercentage >= 5 ? 'text-amber-400' : 'text-gray-400'}\`}>+{hike.hikePercentage}%</span>
+                      <span className={`font-bold \${hike.hikePercentage >= 10 ? 'text-emerald-400' : hike.hikePercentage >= 5 ? 'text-amber-400' : 'text-gray-400'}`}>+{hike.hikePercentage}%</span>
                       <div className="w-12 h-1.5 bg-gray-900 rounded-full">
-                        <div className={\`h-1.5 rounded-full \${hike.hikePercentage >= 10 ? 'bg-emerald-500' : hike.hikePercentage >= 5 ? 'bg-amber-500' : 'bg-gray-500'}\`} style={{ width: \`\${Math.min(hike.hikePercentage * 3, 100)}%\` }}></div>
+                        <div className={`h-1.5 rounded-full \${hike.hikePercentage >= 10 ? 'bg-emerald-500' : hike.hikePercentage >= 5 ? 'bg-amber-500' : 'bg-gray-500'}`} style={{ width: `\${Math.min(hike.hikePercentage * 3, 100)}%` }}></div>
                       </div>
                     </div>
                   </td>
@@ -181,7 +181,7 @@ export default function HRSalaryHikePage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[10px] text-gray-500 uppercase font-bold mb-1">Current Salary</label>
-                  <input type="text" readOnly value={\`\$\${prevSalary}\`} className="w-full bg-gray-900 border border-gray-800 text-gray-400 text-xs p-2 rounded-xl" />
+                  <input type="text" readOnly value={`\$\${prevSalary}`} className="w-full bg-gray-900 border border-gray-800 text-gray-400 text-xs p-2 rounded-xl" />
                 </div>
                 <div>
                   <label className="block text-[10px] text-emerald-500 uppercase font-bold mb-1">New Salary</label>

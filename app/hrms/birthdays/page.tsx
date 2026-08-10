@@ -61,7 +61,7 @@ export default function HRBirthdaysPage() {
   const depts = ["All", ...Array.from(new Set(hrEmployees.map(e => e.department)))];
 
   const handleSendWishes = (name: string, type: string) => {
-    alert(\`🎉 Sent Happy \${type} wishes to \${name} via email/slack!\`);
+    alert(`🎉 Sent Happy \${type} wishes to \${name} via email/slack!`);
   };
 
   return (
@@ -96,7 +96,7 @@ export default function HRBirthdaysPage() {
                     <div>
                       <p className="text-sm font-bold text-white">{evt.emp.name}</p>
                       <p className="text-[10px] text-pink-300">
-                        {evt.type} {evt.years ? \`(\${evt.years} Years)\` : ''}
+                        {evt.type} {evt.years ? `(\${evt.years} Years)` : ''}
                       </p>
                     </div>
                   </div>
@@ -124,7 +124,7 @@ export default function HRBirthdaysPage() {
                     <div className="text-[10px] text-gray-500 uppercase font-bold">{evt.date.toLocaleDateString('en-US', { month: 'short' })}</div>
                     <div className="text-xl font-black text-white">{evt.date.getDate()}</div>
                   </div>
-                  <div className={\`w-1 h-10 rounded-full \${evt.type === 'Birthday' ? 'bg-pink-500' : 'bg-purple-500'}\`}></div>
+                  <div className={`w-1 h-10 rounded-full \${evt.type === 'Birthday' ? 'bg-pink-500' : 'bg-purple-500'}`}></div>
                   <div>
                     <p className="text-sm font-bold text-white">{evt.emp.name}</p>
                     <p className="text-xs text-gray-400">{evt.emp.department} &bull; {evt.emp.designation}</p>
@@ -132,8 +132,8 @@ export default function HRBirthdaysPage() {
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="text-right">
-                    <p className={\`text-xs font-bold \${evt.type === 'Birthday' ? 'text-pink-400' : 'text-purple-400'}\`}>
-                      {evt.type} {evt.years ? \`(\${evt.years} Years)\` : ''}
+                    <p className={`text-xs font-bold \${evt.type === 'Birthday' ? 'text-pink-400' : 'text-purple-400'}`}>
+                      {evt.type} {evt.years ? `(\${evt.years} Years)` : ''}
                     </p>
                     <p className="text-[10px] text-gray-500">in {evt.days} days</p>
                   </div>

@@ -35,7 +35,7 @@ export default function HRLeaveCalendarPage() {
   };
 
   const leavesForDate = (day: number) => {
-    const dateStr = \`\${currentDate.getFullYear()}-\${String(currentDate.getMonth() + 1).padStart(2, '0')}-\${String(day).padStart(2, '0')}\`;
+    const dateStr = `\${currentDate.getFullYear()}-\${String(currentDate.getMonth() + 1).padStart(2, '0')}-\${String(day).padStart(2, '0')}`;
     return approvedLeaves.filter(l => {
       const emp = hrEmployees.find(e => e.id === l.employeeId);
       if (filterDept !== "All" && emp?.department !== filterDept) return false;
@@ -74,7 +74,7 @@ export default function HRLeaveCalendarPage() {
             ))}
             
             {Array.from({ length: firstDay }).map((_, i) => (
-              <div key={\`empty-\${i}\`} className="bg-[#0c1018] min-h-[100px] p-2" />
+              <div key={`empty-\${i}`} className="bg-[#0c1018] min-h-[100px] p-2" />
             ))}
             
             {Array.from({ length: daysInMonth }).map((_, i) => {
@@ -83,13 +83,13 @@ export default function HRLeaveCalendarPage() {
               const isToday = new Date().getDate() === day && new Date().getMonth() === currentDate.getMonth() && new Date().getFullYear() === currentDate.getFullYear();
               
               return (
-                <div key={day} className={\`bg-black min-h-[100px] p-2 flex flex-col gap-1 border-t border-gray-800/50 \${isToday ? 'bg-sky-900/10' : ''}\`}>
+                <div key={day} className={`bg-black min-h-[100px] p-2 flex flex-col gap-1 border-t border-gray-800/50 \${isToday ? 'bg-sky-900/10' : ''}`}>
                   <div className="flex justify-between items-start">
-                    <span className={\`text-xs font-bold \${isToday ? 'bg-sky-500 text-white px-1.5 rounded-md' : 'text-gray-500'}\`}>{day}</span>
+                    <span className={`text-xs font-bold \${isToday ? 'bg-sky-500 text-white px-1.5 rounded-md' : 'text-gray-500'}`}>{day}</span>
                   </div>
                   <div className="flex flex-col gap-1 mt-1 overflow-y-auto max-h-[70px] no-scrollbar">
                     {leaves.map((l, idx) => (
-                      <div key={idx} className={\`text-[9px] truncate px-1.5 py-0.5 rounded border \${getLeaveColor(l.leaveType)}\`}>
+                      <div key={idx} className={`text-[9px] truncate px-1.5 py-0.5 rounded border \${getLeaveColor(l.leaveType)}`}>
                         {l.employeeName.split(' ')[0]}
                       </div>
                     ))}

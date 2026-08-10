@@ -177,7 +177,7 @@ export default function HRGoalsPage() {
                         <span className="text-purple-400 font-bold">{goal.progress}%</span>
                       </div>
                       <div className="w-full bg-gray-900 rounded-full h-1.5">
-                        <div className="bg-purple-500 h-1.5 rounded-full transition-all duration-500" style={{ width: \`\${goal.progress}%\` }}></div>
+                        <div className="bg-purple-500 h-1.5 rounded-full transition-all duration-500" style={{ width: `\${goal.progress}%` }}></div>
                       </div>
                       <input type="range" min="0" max="100" value={goal.progress} onChange={(e) => updateProgress(goal.id, parseInt(e.target.value))} className="w-full mt-2" />
                     </div>
