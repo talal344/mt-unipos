@@ -140,9 +140,9 @@ export default function OrgChartPage() {
               className="min-w-max min-h-max p-20 flex justify-center transform origin-top transition-transform duration-300 ease-out"
               style={{ transform: `scale(${zoom})` }}
             >
-              {roots.length > 0 ? (
+              {orgTree.length > 0 ? (
                 <div className="flex gap-16">
-                  {roots.map(root => renderNode(root))}
+                  {orgTree.map(root => renderNode(root))}
                 </div>
               ) : (
                 <div className="text-gray-500">Circular reporting structure detected or missing root nodes.</div>
