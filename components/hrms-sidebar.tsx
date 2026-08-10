@@ -21,7 +21,24 @@ import {
   Settings,
   Sparkles,
   Network,
-  GitBranch
+  GitBranch,
+  BarChart3,
+  Package,
+  AlertTriangle,
+  CalendarRange,
+  Megaphone,
+  FileArchive,
+  Target,
+  Calendar,
+  ArrowUpRight,
+  Gift,
+  DoorOpen,
+  BellRing,
+  Brain,
+  Trophy,
+  UserCheck,
+  Wifi,
+  GitMerge,
 } from "lucide-react";
 import MTCoreLogo from "@/components/mt-logo";
 
@@ -47,7 +64,6 @@ export default function HRMSSidebar() {
     empMatch?.department === "Human Resources"
   );
 
-
   const isFinanceUser = Boolean(
     (currentUser?.role as string) === "Finance" ||
     currentUser?.email?.toLowerCase().includes("finance@") ||
@@ -61,47 +77,95 @@ export default function HRMSSidebar() {
     router.push("/login");
   };
 
-  const navItems = isITUser
-    ? [
-        { label: "IT Dashboard", href: "/hrms", icon: LayoutDashboard },
-        { label: "Employees Directory", href: "/hrms/employees", icon: Users },
-        { label: "My Attendance", href: "/hrms/attendance", icon: Clock },
-        { label: "My Leave Applications", href: "/hrms/leaves", icon: CalendarDays },
-        { label: "IT Provisioning Tasks", href: "/hrms/recruitment", icon: UserPlus },
-        { label: "My Team", href: "/hrms/team", icon: Network },
-        { label: "Helpdesk Tickets", href: "/hrms/tickets", icon: HelpCircle },
-      ]
+  // ── Core nav (all roles) ────────────────────────────────────────────
+  const coreItems = [
+    { label: "HR Dashboard",        href: "/hrms",              icon: LayoutDashboard },
+    { label: "Employees Directory",  href: "/hrms/employees",   icon: Users },
+    { label: "Attendance & Shifts",  href: "/hrms/attendance",  icon: Clock },
+    { label: "Leave Applications",   href: "/hrms/leaves",      icon: CalendarDays },
+    { label: "Payroll & Payslips",   href: "/hrms/payroll",     icon: DollarSign },
+    { label: "Recruitment (ATS)",    href: "/hrms/recruitment", icon: UserPlus },
+    { label: "My Team",             href: "/hrms/team",        icon: Network },
+  ];
+
+  // ── IT-only nav ─────────────────────────────────────────────────────
+  const itItems = [
+    { label: "IT Dashboard",              href: "/hrms",              icon: LayoutDashboard },
+    { label: "Employees Directory",        href: "/hrms/employees",   icon: Users },
+    { label: "My Attendance",             href: "/hrms/attendance",  icon: Clock },
+    { label: "My Leave Applications",      href: "/hrms/leaves",      icon: CalendarDays },
+    { label: "IT Provisioning Tasks",      href: "/hrms/recruitment", icon: UserPlus },
+    { label: "My Team",                   href: "/hrms/team",        icon: Network },
+    { label: "Helpdesk Tickets",          href: "/hrms/tickets",     icon: HelpCircle },
+    { label: "Self-Service Portal",        href: "/hrms/self-service",icon: UserCheck },
+  ];
+
+  // ── Finance-only nav ────────────────────────────────────────────────
+  const financeItems = [
+    { label: "Finance Dashboard",          href: "/hrms",              icon: LayoutDashboard },
+    { label: "Employees Directory",        href: "/hrms/employees",   icon: Users },
+    { label: "My Attendance",             href: "/hrms/attendance",  icon: Clock },
+    { label: "My Leave Applications",      href: "/hrms/leaves",      icon: CalendarDays },
+    { label: "Payroll & Payslips",         href: "/hrms/payroll",     icon: DollarSign },
+    { label: "Salary Hike Manager",        href: "/hrms/salary-hike", icon: ArrowUpRight },
+    { label: "Finance Activation Tasks",   href: "/hrms/recruitment", icon: UserPlus },
+    { label: "My Team",                   href: "/hrms/team",        icon: Network },
+    { label: "Helpdesk Tickets",          href: "/hrms/tickets",     icon: HelpCircle },
+    { label: "Self-Service Portal",        href: "/hrms/self-service",icon: UserCheck },
+  ];
+
+  // ── Priority 1 — High Impact (HR/Owner only) ────────────────────────
+  const p1Items = [
+    { label: "Employee Analytics",   href: "/hrms/analytics",      icon: BarChart3 },
+    { label: "Asset Management",     href: "/hrms/assets",         icon: Package },
+    { label: "Disciplinary Records", href: "/hrms/disciplinary",   icon: AlertTriangle },
+    { label: "Shift Planner",        href: "/hrms/shift-planner",  icon: CalendarRange },
+    { label: "Announcements",        href: "/hrms/announcements",  icon: Megaphone },
+    { label: "Document Vault",       href: "/hrms/documents",      icon: FileArchive },
+  ];
+
+  // ── Priority 2 — Medium Impact (HR/Owner only) ──────────────────────
+  const p2Items = [
+    { label: "Goals & OKR Tracker",  href: "/hrms/goals",          icon: Target },
+    { label: "Leave Calendar",       href: "/hrms/leave-calendar", icon: Calendar },
+    { label: "Salary Hike Manager",  href: "/hrms/salary-hike",    icon: ArrowUpRight },
+    { label: "Birthdays & Anniv.",   href: "/hrms/birthdays",      icon: Gift },
+    { label: "Exit & Clearance",     href: "/hrms/exit",           icon: DoorOpen },
+    { label: "HR Reminders",         href: "/hrms/reminders",      icon: BellRing },
+  ];
+
+  // ── Priority 3 — Premium (HR/Owner only) ───────────────────────────
+  const p3Items = [
+    { label: "AI Attrition Risk",    href: "/hrms/attrition",      icon: Brain },
+    { label: "Performance Board",    href: "/hrms/leaderboard",    icon: Trophy },
+    { label: "Self-Service Portal",  href: "/hrms/self-service",   icon: UserCheck },
+    { label: "Remote Work Tracker",  href: "/hrms/remote",         icon: Wifi },
+    { label: "Org Chart",            href: "/hrms/org-chart",      icon: GitMerge },
+  ];
+
+  // ── Admin / settings ────────────────────────────────────────────────
+  const adminItems = [
+    ...(isOwner || isHRUser ? [{ label: "Assign Team",   href: "/hrms/team-assign", icon: GitBranch }] : []),
+    { label: "Helpdesk Tickets", href: "/hrms/tickets",   icon: HelpCircle },
+    ...(isOwner || isHRUser ? [{ label: "HRMS Settings", href: "/hrms/settings",    icon: Settings  }] : []),
+  ];
+
+  // ── Build nav sections ──────────────────────────────────────────────
+  type NavSection = { heading: string; items: { label: string; href: string; icon: React.ElementType }[] };
+
+  const navSections: NavSection[] = isITUser
+    ? [{ heading: "IT Modules", items: itItems }]
     : isFinanceUser && !isOwner
-    ? [
-        { label: "Finance Dashboard", href: "/hrms", icon: LayoutDashboard },
-        { label: "Employees Directory", href: "/hrms/employees", icon: Users },
-        { label: "My Attendance", href: "/hrms/attendance", icon: Clock },
-        { label: "My Leave Applications", href: "/hrms/leaves", icon: CalendarDays },
-        { label: "Payroll & Payslips", href: "/hrms/payroll", icon: DollarSign },
-        { label: "Finance Activation Tasks", href: "/hrms/recruitment", icon: UserPlus },
-        { label: "My Team", href: "/hrms/team", icon: Network },
-        { label: "Helpdesk Tickets", href: "/hrms/tickets", icon: HelpCircle },
-      ]
+    ? [{ heading: "Finance Modules", items: financeItems }]
     : [
-        { label: "HR Dashboard", href: "/hrms", icon: LayoutDashboard },
-        { label: "Employees Directory", href: "/hrms/employees", icon: Users },
-        { label: "Attendance & Shifts", href: "/hrms/attendance", icon: Clock },
-        { label: "Leave Applications", href: "/hrms/leaves", icon: CalendarDays },
-        { label: "Payroll & Payslips", href: "/hrms/payroll", icon: DollarSign },
-        { label: "Recruitment (ATS)", href: "/hrms/recruitment", icon: UserPlus },
-        { label: "My Team", href: "/hrms/team", icon: Network },
-        ...((isOwner || isHRUser) ? [{
-          label: "Assign Team",
-          href: "/hrms/team-assign",
-          icon: GitBranch,
-        }] : []),
-        { label: "Helpdesk Tickets", href: "/hrms/tickets", icon: HelpCircle },
-        ...((isOwner || isHRUser) ? [{
-          label: "HRMS Settings",
-          href: "/hrms/settings",
-          icon: Settings,
-        }] : []),
+        { heading: "Core HR",            items: coreItems  },
+        { heading: "Analytics & Tools",  items: p1Items    },
+        { heading: "People Insights",    items: p2Items    },
+        { heading: "Premium Features",   items: p3Items    },
+        { heading: "Admin",              items: adminItems },
       ];
+
+
 
   return (
     <aside
@@ -135,29 +199,36 @@ export default function HRMSSidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-grow p-3 space-y-1.5 overflow-y-auto">
-        <div className={`px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-gray-500 ${collapsed ? "hidden" : "block"}`}>
-          HR Core Modules
-        </div>
-        {navItems.map((item) => {
-          const isActive = pathname === item.href;
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-xs transition ${
-                isActive
-                  ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-900/30"
-                  : "text-gray-400 hover:text-white hover:bg-emerald-500/10"
-              }`}
-              title={collapsed ? item.label : undefined}
-            >
-              <Icon size={16} className={isActive ? "text-white" : "text-emerald-400/80"} />
-              {!collapsed && <span>{item.label}</span>}
-            </Link>
-          );
-        })}
+      <nav className="flex-grow p-3 space-y-0.5 overflow-y-auto">
+        {navSections.map((section) => (
+          <div key={section.heading} className="mb-2">
+            {/* Section heading */}
+            {!collapsed && (
+              <div className="px-2 pt-3 pb-1 text-[9px] font-black uppercase tracking-widest text-gray-600">
+                {section.heading}
+              </div>
+            )}
+            {section.items.map((item) => {
+              const isActive = pathname === item.href;
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`flex items-center gap-3 px-3 py-2 rounded-xl font-bold text-xs transition mb-0.5 ${
+                    isActive
+                      ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-900/30"
+                      : "text-gray-400 hover:text-white hover:bg-emerald-500/10"
+                  }`}
+                  title={collapsed ? item.label : undefined}
+                >
+                  <Icon size={15} className={isActive ? "text-white" : "text-emerald-400/80"} />
+                  {!collapsed && <span>{item.label}</span>}
+                </Link>
+              );
+            })}
+          </div>
+        ))}
       </nav>
 
       {/* User Footer */}
