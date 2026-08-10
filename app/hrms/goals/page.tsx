@@ -83,7 +83,7 @@ export default function HRGoalsPage() {
         if (newProgress === 100) status = "Completed";
         else if (newProgress > 0) status = "In Progress";
         else status = "Not Started";
-        return { ...g, progress: newProgress, status };
+        return { ...g, progress: newProgress, status: status as HRGoal["status"] };
       }
       return g;
     });

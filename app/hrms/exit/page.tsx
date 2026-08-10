@@ -91,7 +91,7 @@ export default function HRExitPage() {
         else if (allChecked && !e.exitInterviewDone) status = "Interview Pending";
         else status = "Clearance Pending";
 
-        return { ...e, clearanceChecklist: checks, status };
+        return { ...e, clearanceChecklist: checks, status: status as ExitRecord["status"] };
       }
       return e;
     });
@@ -103,7 +103,7 @@ export default function HRExitPage() {
     const updated = exits.map(e => {
       if (e.id === id) {
         const allChecked = Object.values(e.clearanceChecklist).every(Boolean);
-        return { ...e, exitInterviewDone: true, status: allChecked ? "Completed" : "Clearance Pending" };
+        return { ...e, exitInterviewDone: true, status: (allChecked ? "Completed" : "Clearance Pending") as ExitRecord["status"] };
       }
       return e;
     });
