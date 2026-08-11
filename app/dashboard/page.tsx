@@ -3,7 +3,7 @@
 import React, { useMemo } from "react";
 import { useGlobalContext } from "@/context/global-context";
 import ClientSidebar from "@/components/client-sidebar";
-import AnnouncementsBanner from "@/components/announcements-banner";
+import POSAlertBanner from "@/components/pos-alert-banner";
 import { 
   DollarSign, 
   ShoppingCart, 
@@ -695,8 +695,8 @@ export default function ClientDashboardPage() {
           </span>
         </div>
 
-        {/* Company Announcements Broadcast Banner */}
-        <AnnouncementsBanner />
+        {/* POS Operational Alerts & Store Desk Announcements */}
+        <POSAlertBanner />
 
         {/* Global Configurations Settings Card */}
         <div className="bg-brand-dark-surface/60 border border-brand-sky/20 p-4 rounded-2xl glass-panel flex flex-col sm:flex-row items-center justify-between gap-4">
