@@ -26,6 +26,7 @@ import {
   CalendarRange,
   Megaphone,
   FileArchive,
+  FileText,
   Target,
   Calendar,
   ArrowUpRight,
@@ -90,6 +91,7 @@ export default function HRMSSidebar() {
 
   // ── Priority 1 — Analytics & Operations (Dropdown) ──────────────────
   const p1Items = [
+    { label: "HR Letter Generator",  href: "/hrms/letters",        icon: FileText },
     { label: "Employee Analytics",   href: "/hrms/analytics",      icon: BarChart3 },
     { label: "Asset Management",     href: "/hrms/assets",         icon: Package },
     { label: "Disciplinary Records", href: "/hrms/disciplinary",   icon: AlertTriangle },

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
+import Link from "next/link";
 import HRMSSidebar from "@/components/hrms-sidebar";
 import { useGlobalContext } from "@/context/global-context";
 import {
@@ -16,7 +17,8 @@ import {
   AlertTriangle,
   X,
   Building2,
-  User
+  User,
+  Sparkles
 } from "lucide-react";
 
 interface HRDocument {
@@ -186,12 +188,20 @@ export default function HRDocumentsPage() {
               Secure digital repository for company policies, NDAs, employee contracts, and verification documents.
             </p>
           </div>
-          <button
-            onClick={() => setShowUploadModal(true)}
-            className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition shadow-lg shadow-emerald-950/40"
-          >
-            <Plus size={15} /> Upload Document
-          </button>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/hrms/letters"
+              className="flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition shadow-lg shadow-emerald-950/40"
+            >
+              <Sparkles size={14} /> Generate Official Letter
+            </Link>
+            <button
+              onClick={() => setShowUploadModal(true)}
+              className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700 font-bold text-xs px-4 py-2.5 rounded-xl transition"
+            >
+              <Plus size={15} /> Upload Document
+            </button>
+          </div>
         </div>
 
         {/* Tab & Filter bar */}
