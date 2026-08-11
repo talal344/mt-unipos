@@ -21,6 +21,7 @@ export default function HRPayrollPage() {
   const {
     hrEmployees,
     hrPayrolls,
+    hrLoans,
     processHRPayroll,
     currencySymbol,
     businessSettings
@@ -31,17 +32,33 @@ export default function HRPayrollPage() {
   const [selectedPayslip, setSelectedPayslip] = useState<any>(null);
 
   const [customItems, setCustomItems] = useState<
-    Array<{ employeeId: string; basicSalary: number; allowances: number; deductions: number }>
+    Array<{
+      employeeId: string;
+      basicSalary: number;
+      allowances: number;
+      deductions: number;
+      loanEMI: number;
+      loanCode?: string;
+    }>
   >([]);
 
   const handleOpenProcess = () => {
     setCustomItems(
-      hrEmployees.map((e) => ({
-        employeeId: e.id,
-        basicSalary: e.basicSalary,
-        allowances: 3000,
-        deductions: 1000
-      }))
+      hrEmployees.map((e) => {
+        // Auto-detect active loan EMI for this month
+        const activeLoan = hrLoans.find((l) => l.employeeId === e.id && l.status === "Active");
+        const pendingRep = activeLoan?.repayments.find((r) => r.month === selectedMonth && r.status === "Pending");
+        const loanEMI = pendingRep ? pendingRep.amount : 0;
+
+        return {
+          employeeId: e.id,
+          basicSalary: e.basicSalary,
+          allowances: 3000,
+          deductions: 1000 + loanEMI,
+          loanEMI,
+          loanCode: activeLoan?.loanCode
+        };
+      })
     );
     setShowProcessModal(true);
   };
@@ -246,7 +263,14 @@ export default function HRPayrollPage() {
                         </div>
 
                         <div>
-                          <div className="text-[9px] uppercase font-bold text-red-400">Deductions (-)</div>
+                          <div className="flex items-center justify-between mb-0.5">
+                            <span className="text-[9px] uppercase font-bold text-red-400">Deductions (-)</span>
+                            {item.loanEMI > 0 && (
+                              <span className="text-[8.5px] text-amber-400 font-bold bg-amber-500/10 px-1 py-0.2 rounded border border-amber-500/20">
+                                Incl. Loan EMI: {currencySymbol} {item.loanEMI.toLocaleString()}
+                              </span>
+                            )}
+                          </div>
                           <input
                             type="number"
                             value={item.deductions}
@@ -269,14 +293,14 @@ export default function HRPayrollPage() {
                 <button
                   type="button"
                   onClick={() => setShowProcessModal(false)}
-                  className="flex-1 py-3 bg-gray-800 hover:bg-gray-700 text-gray-300 font-bold rounded-xl transition"
+                  className="flex-1 py-3 bg-gray-800 hover:bg-gray-700 text-gray-300 font-bold rounded-xl transition cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
                   onClick={handleConfirmPayroll}
-                  className="flex-1 py-3 bg-purple-600 hover:bg-purple-500 text-white font-black uppercase tracking-wider rounded-xl transition shadow-lg shadow-purple-900/30"
+                  className="flex-1 py-3 bg-purple-600 hover:bg-purple-500 text-white font-black uppercase tracking-wider rounded-xl transition shadow-lg shadow-purple-900/30 cursor-pointer"
                 >
                   Confirm &amp; Issue Payroll Batch
                 </button>
@@ -294,7 +318,7 @@ export default function HRPayrollPage() {
                   <FileText size={16} className="text-emerald-400" />
                   <h3 className="font-bold text-white text-sm">Official Employee Pay Slip</h3>
                 </div>
-                <button onClick={() => setSelectedPayslip(null)} className="text-gray-400 hover:text-white">
+                <button onClick={() => setSelectedPayslip(null)} className="text-gray-400 hover:text-white cursor-pointer">
                   <X size={16} />
                 </button>
               </div>
@@ -335,9 +359,23 @@ export default function HRPayrollPage() {
                     <span className="text-emerald-400 font-bold">+{currencySymbol} {selectedPayslip.allowances.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-red-400">Tax &amp; Late Deductions:</span>
+                    <span className="text-red-400">Tax, Fines &amp; Deductions:</span>
                     <span className="text-red-400 font-bold">-{currencySymbol} {selectedPayslip.deductions.toLocaleString()}</span>
                   </div>
+                  {/* Active loan indicator on payslip */}
+                  {(() => {
+                    const empLoan = hrLoans.find((l) => l.employeeId === selectedPayslip.employeeId && (l.status === "Active" || l.status === "Completed"));
+                    const rep = empLoan?.repayments.find((r) => r.month === (currentBatch ? currentBatch.month : selectedMonth));
+                    if (rep && (rep.status === "Deducted" || rep.status === "Pending")) {
+                      return (
+                        <div className="flex justify-between bg-amber-500/10 border border-amber-500/20 p-2 rounded-lg text-[10px] text-amber-300">
+                          <span>Loan / Advance Recovery ({empLoan.loanCode}):</span>
+                          <span className="font-bold font-mono">-{currencySymbol} {rep.amount.toLocaleString()} (Bal: {currencySymbol} {empLoan.remainingBalance.toLocaleString()})</span>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
                 </div>
 
                 {/* Net Total */}

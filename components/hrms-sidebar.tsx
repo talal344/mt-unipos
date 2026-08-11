@@ -27,6 +27,7 @@ import {
   Megaphone,
   FileArchive,
   FileText,
+  HandCoins,
   Target,
   Calendar,
   ArrowUpRight,
@@ -91,6 +92,7 @@ export default function HRMSSidebar() {
 
   // ── Priority 1 — Analytics & Operations (Dropdown) ──────────────────
   const p1Items = [
+    { label: "Loans & Advances",     href: "/hrms/loans",          icon: HandCoins },
     { label: "HR Letter Generator",  href: "/hrms/letters",        icon: FileText },
     { label: "Employee Analytics",   href: "/hrms/analytics",      icon: BarChart3 },
     { label: "Asset Management",     href: "/hrms/assets",         icon: Package },
@@ -144,6 +146,7 @@ export default function HRMSSidebar() {
     { label: "Employees Directory",        href: "/hrms/employees",   icon: Users },
     { label: "My Attendance",             href: "/hrms/attendance",  icon: Clock },
     { label: "My Leave Applications",      href: "/hrms/leaves",      icon: CalendarDays },
+    { label: "Loans & Advances",           href: "/hrms/loans",       icon: HandCoins },
     { label: "Payroll & Payslips",         href: "/hrms/payroll",     icon: DollarSign },
     { label: "Salary Hike Manager",        href: "/hrms/salary-hike", icon: ArrowUpRight },
     { label: "Finance Activation Tasks",   href: "/hrms/recruitment", icon: UserPlus },

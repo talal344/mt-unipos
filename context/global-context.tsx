@@ -192,6 +192,40 @@ export interface HRAppraisal {
   date: string;
 }
 
+export interface HRLoanRepayment {
+  installmentNo: number;
+  month: string; // e.g. "2026-08"
+  amount: number;
+  status: "Pending" | "Deducted" | "Waived";
+  deductedAt?: string;
+  payrollBatchId?: string;
+}
+
+export interface HRLoan {
+  id: string;
+  loanCode: string;
+  employeeId: string;
+  employeeName: string;
+  employeeCode?: string;
+  department: string;
+  designation: string;
+  type: "Salary Advance" | "Personal Loan" | "Emergency Aid" | "Equipment / Laptop Loan" | "Education / Certification";
+  principalAmount: number;
+  tenureMonths: number;
+  monthlyInstallment: number;
+  disbursedAmount: number;
+  totalRepaid: number;
+  remainingBalance: number;
+  reason: string;
+  disbursementDate: string;
+  startDeductionMonth: string; // e.g. "2026-08"
+  status: "Pending Approval" | "Active" | "Completed" | "Rejected";
+  approvedBy?: string;
+  approvedAt?: string;
+  repayments: HRLoanRepayment[];
+  notes?: string;
+}
+
 export interface HRDepartment {
   id: string;
   name: string;
@@ -761,6 +795,7 @@ interface GlobalContextType {
   hrDesignations: HRDesignation[];
   hrShifts: HRShift[];
   hrCandidates: HRCandidate[];
+  hrLoans: HRLoan[];
 
   addHREmployee: (emp: Omit<HREmployee, "id">) => void;
   updateHREmployee: (id: string, emp: Partial<HREmployee>) => void;
@@ -773,6 +808,12 @@ interface GlobalContextType {
   addHRJobOpening: (job: Omit<HRJobOpening, "id" | "applicantsCount" | "postedDate">) => void;
   updateHRJobOpening: (id: string, updates: Partial<HRJobOpening>) => void;
   addHRAppraisal: (appraisal: Omit<HRAppraisal, "id" | "date">) => void;
+
+  // HR Loans & Advances Handlers
+  applyHRLoan: (loan: Omit<HRLoan, "id" | "loanCode" | "totalRepaid" | "remainingBalance" | "repayments">) => HRLoan;
+  updateHRLoanStatus: (id: string, status: HRLoan["status"], approvedBy?: string) => void;
+  recordLoanManualRepayment: (loanId: string, amount: number, notes?: string) => void;
+  deleteHRLoan: (id: string) => void;
 
   // HRMS Settings & Recruitment Handlers
   addHRDepartment: (dept: Omit<HRDepartment, "id">) => void;
@@ -927,6 +968,7 @@ const SEED_HR_LEAVES: HRLeave[] = [];
 const SEED_HR_PAYROLLS: HRPayrollBatch[] = [];
 const SEED_HR_JOBS: HRJobOpening[] = [];
 const SEED_HR_APPRAISALS: HRAppraisal[] = [];
+const SEED_HR_LOANS: HRLoan[] = [];
 
 const GlobalContext = createContext<GlobalContextType | undefined>(undefined);
 
@@ -1238,6 +1280,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
   const [hrDesignations, setHrDesignations] = useState<HRDesignation[]>([]);
   const [hrShifts, setHrShifts] = useState<HRShift[]>([]);
   const [hrCandidates, setHrCandidates] = useState<HRCandidate[]>([]);
+  const [hrLoans, setHrLoans] = useState<HRLoan[]>([]);
 
   // Authenticated State
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -2190,6 +2233,9 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
 
       const savedHrmsTickets = getTenantData("unipos_hrms_tickets", currentUser.tenantId);
       setHrmsTickets(savedHrmsTickets || []);
+
+      const savedHrLoans = getTenantData("unipos_hr_loans", currentUser.tenantId);
+      setHrLoans(savedHrLoans || []);
     }
 
   }, [currentUser?.tenantId]);
@@ -4375,7 +4421,139 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     const updated = [newBatch, ...hrPayrolls.filter(b => b.month !== month)];
     setHrPayrolls(updated);
     saveTenantData("unipos_hr_payrolls", updated);
+
+    // Auto-update active loan repayments for this month
+    const updatedLoans = hrLoans.map(loan => {
+      if (loan.status !== "Active") return loan;
+      const empInPayroll = items.some(item => item.employeeId === loan.employeeId);
+      if (!empInPayroll) return loan;
+
+      let loanUpdated = false;
+      let addedRepayment = 0;
+      const updatedRepayments = loan.repayments.map(rep => {
+        if (rep.month === month && rep.status === "Pending") {
+          loanUpdated = true;
+          addedRepayment += rep.amount;
+          return {
+            ...rep,
+            status: "Deducted" as const,
+            deductedAt: new Date().toISOString(),
+            payrollBatchId: `HRPAY-${month}`
+          };
+        }
+        return rep;
+      });
+
+      if (loanUpdated) {
+        const newTotalRepaid = loan.totalRepaid + addedRepayment;
+        const newRemaining = Math.max(0, loan.principalAmount - newTotalRepaid);
+        return {
+          ...loan,
+          totalRepaid: newTotalRepaid,
+          remainingBalance: newRemaining,
+          status: newRemaining <= 0 ? ("Completed" as const) : ("Active" as const),
+          repayments: updatedRepayments
+        };
+      }
+      return loan;
+    });
+
+    setHrLoans(updatedLoans);
+    saveTenantData("unipos_hr_loans", updatedLoans);
+
     return newBatch;
+  };
+
+  const applyHRLoan = (loanData: Omit<HRLoan, "id" | "loanCode" | "totalRepaid" | "remainingBalance" | "repayments">) => {
+    const repayments: HRLoanRepayment[] = [];
+    const [sYear, sMonth] = loanData.startDeductionMonth.split("-").map(Number);
+    let currY = sYear || new Date().getFullYear();
+    let currM = sMonth || (new Date().getMonth() + 1);
+
+    for (let i = 1; i <= loanData.tenureMonths; i++) {
+      const mStr = `${currY}-${String(currM).padStart(2, "0")}`;
+      repayments.push({
+        installmentNo: i,
+        month: mStr,
+        amount: loanData.monthlyInstallment,
+        status: "Pending"
+      });
+      currM++;
+      if (currM > 12) {
+        currM = 1;
+        currY++;
+      }
+    }
+
+    const newLoan: HRLoan = {
+      ...loanData,
+      id: `LOAN-${Date.now()}`,
+      loanCode: `LN-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`,
+      totalRepaid: 0,
+      remainingBalance: loanData.principalAmount,
+      repayments
+    };
+
+    const updated = [newLoan, ...hrLoans];
+    setHrLoans(updated);
+    saveTenantData("unipos_hr_loans", updated);
+    return newLoan;
+  };
+
+  const updateHRLoanStatus = (id: string, status: HRLoan["status"], approvedBy?: string) => {
+    const updated = hrLoans.map(l => {
+      if (l.id === id) {
+        return {
+          ...l,
+          status,
+          approvedBy: approvedBy || (status === "Active" ? "HR & Finance Director" : l.approvedBy),
+          approvedAt: status === "Active" ? new Date().toISOString().split("T")[0] : l.approvedAt
+        };
+      }
+      return l;
+    });
+    setHrLoans(updated);
+    saveTenantData("unipos_hr_loans", updated);
+  };
+
+  const recordLoanManualRepayment = (loanId: string, amount: number, notes?: string) => {
+    const updated = hrLoans.map(l => {
+      if (l.id === loanId) {
+        const newTotalRepaid = l.totalRepaid + amount;
+        const newRemaining = Math.max(0, l.principalAmount - newTotalRepaid);
+        let remAmount = amount;
+        const updatedRepayments = l.repayments.map(rep => {
+          if (rep.status === "Pending" && remAmount >= rep.amount) {
+            remAmount -= rep.amount;
+            return {
+              ...rep,
+              status: "Deducted" as const,
+              deductedAt: new Date().toISOString(),
+              payrollBatchId: "MANUAL-SETTLEMENT"
+            };
+          }
+          return rep;
+        });
+
+        return {
+          ...l,
+          totalRepaid: newTotalRepaid,
+          remainingBalance: newRemaining,
+          status: newRemaining <= 0 ? ("Completed" as const) : ("Active" as const),
+          repayments: updatedRepayments,
+          notes: notes ? (l.notes ? `${l.notes} | ${notes}` : notes) : l.notes
+        };
+      }
+      return l;
+    });
+    setHrLoans(updated);
+    saveTenantData("unipos_hr_loans", updated);
+  };
+
+  const deleteHRLoan = (id: string) => {
+    const updated = hrLoans.filter(l => l.id !== id);
+    setHrLoans(updated);
+    saveTenantData("unipos_hr_loans", updated);
   };
 
   const addHRJobOpening = (job: Omit<HRJobOpening, "id" | "applicantsCount" | "postedDate">) => {
@@ -4775,6 +4953,13 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         addHRJobOpening,
         updateHRJobOpening,
         addHRAppraisal,
+
+        // HR Loans & Advances
+        hrLoans,
+        applyHRLoan,
+        updateHRLoanStatus,
+        recordLoanManualRepayment,
+        deleteHRLoan,
 
         hrDepartments,
         hrDesignations,
