@@ -496,7 +496,6 @@ export default function HRDocumentsPage() {
           </div>
         </div>
       )}
-      </main>
 
       {/* Upload Modal */}
       {showUploadModal && (
