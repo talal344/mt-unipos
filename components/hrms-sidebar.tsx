@@ -40,7 +40,13 @@ import {
   Wifi,
   GitMerge,
   Layers,
-  HeartHandshake
+  HeartHandshake,
+  BookOpen,
+  Receipt,
+  PiggyBank,
+  Boxes,
+  Car,
+  Key
 } from "lucide-react";
 import MTCoreLogo from "@/components/mt-logo";
 
@@ -92,6 +98,12 @@ export default function HRMSSidebar() {
 
   // ── Priority 1 — Analytics & Operations (Dropdown) ──────────────────
   const p1Items = [
+    { label: "Company Policies",     href: "/hrms/policies",       icon: BookOpen },
+    { label: "Expense Claims",       href: "/hrms/expense-claims", icon: Receipt },
+    { label: "Gratuity & PF Fund",   href: "/hrms/gratuity-pf",    icon: PiggyBank },
+    { label: "IT Lifecycle & SaaS",  href: "/hrms/it-lifecycle",   icon: Key },
+    { label: "Stationery & Supplies",href: "/hrms/stationery",     icon: Boxes },
+    { label: "Fleet & Fuel Logs",    href: "/hrms/fleet",          icon: Car },
     { label: "Loans & Advances",     href: "/hrms/loans",          icon: HandCoins },
     { label: "HR Letter Generator",  href: "/hrms/letters",        icon: FileText },
     { label: "Employee Analytics",   href: "/hrms/analytics",      icon: BarChart3 },
@@ -131,7 +143,10 @@ export default function HRMSSidebar() {
   // ── IT-only nav ─────────────────────────────────────────────────────
   const itItems = [
     { label: "IT Dashboard",              href: "/hrms",              icon: LayoutDashboard },
+    { label: "IT Lifecycle & SaaS",       href: "/hrms/it-lifecycle", icon: Key },
+    { label: "Asset Management",          href: "/hrms/assets",       icon: Package },
     { label: "Employees Directory",        href: "/hrms/employees",   icon: Users },
+    { label: "Company Policies",          href: "/hrms/policies",     icon: BookOpen },
     { label: "My Attendance",             href: "/hrms/attendance",  icon: Clock },
     { label: "My Leave Applications",      href: "/hrms/leaves",      icon: CalendarDays },
     { label: "IT Provisioning Tasks",      href: "/hrms/recruitment", icon: UserPlus },
@@ -143,12 +158,15 @@ export default function HRMSSidebar() {
   // ── Finance-only nav ────────────────────────────────────────────────
   const financeItems = [
     { label: "Finance Dashboard",          href: "/hrms",              icon: LayoutDashboard },
-    { label: "Employees Directory",        href: "/hrms/employees",   icon: Users },
-    { label: "My Attendance",             href: "/hrms/attendance",  icon: Clock },
-    { label: "My Leave Applications",      href: "/hrms/leaves",      icon: CalendarDays },
+    { label: "Expense Claims",            href: "/hrms/expense-claims",icon: Receipt },
+    { label: "Gratuity & PF Fund",        href: "/hrms/gratuity-pf",  icon: PiggyBank },
     { label: "Loans & Advances",           href: "/hrms/loans",       icon: HandCoins },
     { label: "Payroll & Payslips",         href: "/hrms/payroll",     icon: DollarSign },
+    { label: "Company Policies",          href: "/hrms/policies",     icon: BookOpen },
+    { label: "Employees Directory",        href: "/hrms/employees",   icon: Users },
     { label: "Salary Hike Manager",        href: "/hrms/salary-hike", icon: ArrowUpRight },
+    { label: "My Attendance",             href: "/hrms/attendance",  icon: Clock },
+    { label: "My Leave Applications",      href: "/hrms/leaves",      icon: CalendarDays },
     { label: "Finance Activation Tasks",   href: "/hrms/recruitment", icon: UserPlus },
     { label: "My Team",                   href: "/hrms/team",        icon: Network },
     { label: "Helpdesk Tickets",          href: "/hrms/tickets",     icon: HelpCircle },
