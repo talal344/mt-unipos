@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from "react";
 import { useGlobalContext } from "@/context/global-context";
 import AdminSidebar from "@/components/admin-sidebar";
+import AnnouncementsBanner from "@/components/announcements-banner";
 import { 
   Users, 
   DollarSign, 
@@ -134,6 +135,9 @@ export default function AdminDashboardPage() {
             </span>
           </div>
         </div>
+
+        {/* Company Announcements Broadcast Banner */}
+        <AnnouncementsBanner />
 
         {/* Metrics Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

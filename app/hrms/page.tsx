@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import HRMSSidebar from "@/components/hrms-sidebar";
 import HRMSTopHeader from "@/components/hrms-top-header";
+import AnnouncementsBanner from "@/components/announcements-banner";
 import { useGlobalContext } from "@/context/global-context";
 import {
   Users,
@@ -142,6 +143,9 @@ export default function HRMSDashboardPage() {
         />
 
         <div className="p-6 space-y-6">
+          {/* Universal Company Announcement Banner */}
+          <AnnouncementsBanner />
+
           {/* ─────────────────────────────────────────────────────────────────────────────
               IT DEPARTMENT DEDICATED PORTAL VIEW
              ───────────────────────────────────────────────────────────────────────────── */}

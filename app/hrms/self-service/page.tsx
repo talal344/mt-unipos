@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import HRMSSidebar from "@/components/hrms-sidebar";
+import AnnouncementsBanner from "@/components/announcements-banner";
 import { useGlobalContext } from "@/context/global-context";
 import { 
   User, Calendar, Clock, DollarSign, FileText, 
@@ -138,11 +139,14 @@ export default function SelfServicePortalPage() {
             </div>
             <button
               onClick={() => setShowLeaveModal(true)}
-              className="flex items-center gap-2 bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-lg transition"
+              className="flex items-center gap-2 bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition shadow-lg shadow-sky-950/40"
             >
-              <Plus size={14} /> Request Leave
+              <Plus size={14} /> Request Time Off
             </button>
           </div>
+
+          {/* Company Announcements Broadcast */}
+          <AnnouncementsBanner />
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Profile & Leave Balances */}
