@@ -5,7 +5,7 @@ import HRMSSidebar from "@/components/hrms-sidebar";
 import { useGlobalContext } from "@/context/global-context";
 import { 
   User, Calendar, Clock, DollarSign, FileText, 
-  Download, Plus, X, Briefcase, CalendarDays 
+  Download, Plus, X, Briefcase, CalendarDays, Award
 } from "lucide-react";
 
 export default function SelfServicePortalPage() {
