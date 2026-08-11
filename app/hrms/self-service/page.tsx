@@ -471,7 +471,9 @@ export default function SelfServicePortalPage() {
                             <td className="py-2.5 font-mono text-gray-300">{att.date}</td>
                             <td className="py-2.5 text-gray-400 font-mono">{att.checkIn || "—"}</td>
                             <td className="py-2.5 text-gray-400 font-mono">{att.checkOut || "—"}</td>
-                            <td className="py-2.5 text-gray-300 font-mono">{att.workHours || 8} hrs</td>
+                            <td className="py-2.5 text-gray-300 font-mono">
+                              {att.overtimeHours ? `${8 + att.overtimeHours} hrs` : "8 hrs"}
+                            </td>
                             <td className="py-2.5 text-right">
                               <span
                                 className={`text-[9px] font-bold px-2 py-0.5 rounded ${
