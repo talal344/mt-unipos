@@ -852,7 +852,9 @@ interface GlobalContextType {
   // HRMS Internal Helpdesk Ticketing System
   hrmsTickets: HRMSTicket[];
   createHRMSTicket: (ticket: Omit<HRMSTicket, "id" | "ticketNumber" | "createdAt" | "updatedAt" | "replies">) => void;
+  updateHRMSTicket: (id: string, updates: Partial<HRMSTicket>) => void;
   updateHRMSTicketStatus: (id: string, status: HRMSTicket["status"], assignedTo?: string) => void;
+  deleteHRMSTicket: (id: string) => void;
   addHRMSTicketReply: (ticketId: string, message: string) => void;
 }
 
@@ -2257,6 +2259,22 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     saveTenantData("unipos_hrms_tickets", updated);
   };
 
+  const updateHRMSTicket = (id: string, updates: Partial<HRMSTicket>) => {
+    const nowStr = new Date().toISOString();
+    const updated = hrmsTickets.map(t => {
+      if (t.id === id) {
+        return {
+          ...t,
+          ...updates,
+          updatedAt: nowStr
+        };
+      }
+      return t;
+    });
+    setHrmsTickets(updated);
+    saveTenantData("unipos_hrms_tickets", updated);
+  };
+
   const updateHRMSTicketStatus = (id: string, status: HRMSTicket["status"], assignedTo?: string) => {
     const nowStr = new Date().toISOString();
     const updated = hrmsTickets.map(t => {
@@ -2270,6 +2288,12 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       }
       return t;
     });
+    setHrmsTickets(updated);
+    saveTenantData("unipos_hrms_tickets", updated);
+  };
+
+  const deleteHRMSTicket = (id: string) => {
+    const updated = hrmsTickets.filter(t => t.id !== id);
     setHrmsTickets(updated);
     saveTenantData("unipos_hrms_tickets", updated);
   };
@@ -4985,7 +5009,9 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
 
         hrmsTickets,
         createHRMSTicket,
+        updateHRMSTicket,
         updateHRMSTicketStatus,
+        deleteHRMSTicket,
         addHRMSTicketReply,
 
         currentBranch,

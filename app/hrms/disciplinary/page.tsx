@@ -13,7 +13,10 @@ import {
   CheckCircle,
   X,
   Clock,
-  DollarSign
+  DollarSign,
+  Edit2,
+  Trash2,
+  CheckCircle2
 } from "lucide-react";
 
 interface HRDisciplinaryRecord {
@@ -41,6 +44,13 @@ export default function HRDisciplinaryPage() {
   const [filterStatus, setFilterStatus] = useState("All");
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<HRDisciplinaryRecord | null>(null);
+  const [editingRecord, setEditingRecord] = useState<HRDisciplinaryRecord | null>(null);
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
+
+  const triggerToast = (msg: string) => {
+    setToastMsg(msg);
+    setTimeout(() => setToastMsg(null), 3000);
+  };
 
   useEffect(() => {
     if (currentUser?.tenantId) {
@@ -75,6 +85,42 @@ export default function HRDisciplinaryPage() {
     if (currentUser?.tenantId) {
       localStorage.setItem(`hr_disciplinary_${currentUser.tenantId}`, JSON.stringify(data));
     }
+  };
+
+  const handleDeleteRecord = (id: string, code: string) => {
+    if (confirm(`Are you sure you want to delete disciplinary notice "${code}"?`)) {
+      const updated = records.filter((r) => r.id !== id);
+      saveRecords(updated);
+      triggerToast(`🗑️ Disciplinary notice "${code}" deleted successfully!`);
+    }
+  };
+
+  const handleUpdateRecord = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingRecord) return;
+    const emp = hrEmployees.find((e) => e.id === editingRecord.employeeId);
+    const updated = records.map((r) => {
+      if (r.id === editingRecord.id) {
+        return {
+          ...r,
+          employeeId: emp ? emp.id : r.employeeId,
+          employeeName: emp ? emp.name : r.employeeName,
+          department: emp ? emp.department : r.department,
+          type: editingRecord.type,
+          date: editingRecord.date,
+          reason: editingRecord.reason,
+          description: editingRecord.description,
+          fineAmount: Number(editingRecord.fineAmount) || 0,
+          suspensionDays: Number(editingRecord.suspensionDays) || 0,
+          status: editingRecord.status,
+          resolution: editingRecord.resolution
+        };
+      }
+      return r;
+    });
+    saveRecords(updated);
+    setEditingRecord(null);
+    triggerToast("✅ Disciplinary record updated successfully!");
   };
 
   const [form, setForm] = useState({
@@ -120,6 +166,7 @@ export default function HRDisciplinaryPage() {
       fineAmount: 0,
       suspensionDays: 0
     });
+    triggerToast("✅ Conduct notice issued!");
   };
 
   const handleResolve = (id: string, resolutionText: string) => {
@@ -135,6 +182,7 @@ export default function HRDisciplinaryPage() {
     });
     saveRecords(updated);
     setSelectedRecord(null);
+    triggerToast("✅ Disciplinary issue marked as resolved!");
   };
 
   const filteredRecords = useMemo(() => {
@@ -319,16 +367,30 @@ export default function HRDisciplinaryPage() {
                         </span>
                       </td>
                       <td className="p-3.5 text-right">
-                        {rec.status === "Active" ? (
+                        <div className="flex items-center justify-end gap-1.5">
+                          {rec.status === "Active" && (
+                            <button
+                              onClick={() => setSelectedRecord(rec)}
+                              className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] px-2.5 py-1.2 rounded-lg transition cursor-pointer"
+                            >
+                              Resolve
+                            </button>
+                          )}
                           <button
-                            onClick={() => setSelectedRecord(rec)}
-                            className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] px-3 py-1.5 rounded-lg transition"
+                            onClick={() => setEditingRecord(rec)}
+                            title="Edit Disciplinary Notice"
+                            className="p-1.5 rounded-lg bg-gray-800 hover:bg-sky-500/20 text-gray-400 hover:text-sky-400 border border-gray-700 transition cursor-pointer"
                           >
-                            Resolve
+                            <Edit2 size={13} />
                           </button>
-                        ) : (
-                          <span className="text-gray-600 text-[11px] italic">Closed</span>
-                        )}
+                          <button
+                            onClick={() => handleDeleteRecord(rec.id, rec.recordNumber)}
+                            title="Delete Notice"
+                            className="p-1.5 rounded-lg bg-gray-800 hover:bg-red-500/20 text-gray-400 hover:text-red-400 border border-gray-700 transition cursor-pointer"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -338,6 +400,119 @@ export default function HRDisciplinaryPage() {
           </div>
         </div>
       </main>
+
+      {/* Edit Modal */}
+      {editingRecord && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-[#0c1018] border border-sky-500/30 rounded-2xl w-full max-w-md overflow-hidden animate-fade-in-up">
+            <div className="flex justify-between items-center p-4 border-b border-gray-800 bg-sky-500/5">
+              <h2 className="text-sm font-bold text-white flex items-center gap-2">
+                <Edit2 size={16} className="text-sky-400" />
+                Edit Disciplinary Notice ({editingRecord.recordNumber})
+              </h2>
+              <button onClick={() => setEditingRecord(null)} className="text-gray-400 hover:text-white cursor-pointer">
+                <X size={16} />
+              </button>
+            </div>
+            <form onSubmit={handleUpdateRecord} className="p-4 space-y-3.5">
+              <div>
+                <label className="block text-[10px] text-gray-500 uppercase font-bold mb-1">Employee</label>
+                <select
+                  value={editingRecord.employeeId}
+                  onChange={(e) => setEditingRecord({ ...editingRecord, employeeId: e.target.value })}
+                  className="w-full bg-black border border-gray-800 text-white text-xs p-2.5 rounded-xl focus:outline-none focus:border-sky-500 cursor-pointer"
+                >
+                  {hrEmployees.map((emp) => (
+                    <option key={emp.id} value={emp.id}>
+                      {emp.name} &bull; {emp.department}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] text-gray-500 uppercase font-bold mb-1">Notice Type</label>
+                  <select
+                    value={editingRecord.type}
+                    onChange={(e) => setEditingRecord({ ...editingRecord, type: e.target.value as any })}
+                    className="w-full bg-black border border-gray-800 text-white text-xs p-2.5 rounded-xl focus:outline-none focus:border-sky-500 cursor-pointer"
+                  >
+                    <option value="Verbal Warning">Verbal Warning</option>
+                    <option value="Written Warning">Written Warning</option>
+                    <option value="Show Cause">Show Cause Notice</option>
+                    <option value="Suspension">Suspension</option>
+                    <option value="Fine">Salary Deduction Fine</option>
+                    <option value="Termination">Termination Notice</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] text-gray-500 uppercase font-bold mb-1">Status</label>
+                  <select
+                    value={editingRecord.status}
+                    onChange={(e) => setEditingRecord({ ...editingRecord, status: e.target.value as any })}
+                    className="w-full bg-black border border-gray-800 text-white text-xs p-2.5 rounded-xl focus:outline-none focus:border-sky-500 cursor-pointer"
+                  >
+                    <option value="Active">Active</option>
+                    <option value="Under Review">Under Review</option>
+                    <option value="Resolved">Resolved</option>
+                    <option value="Expunged">Expunged</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[10px] text-gray-500 uppercase font-bold mb-1">Date</label>
+                <input
+                  required
+                  type="date"
+                  value={editingRecord.date}
+                  onChange={(e) => setEditingRecord({ ...editingRecord, date: e.target.value })}
+                  className="w-full bg-black border border-gray-800 text-white text-xs p-2.5 rounded-xl focus:outline-none focus:border-sky-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] text-gray-500 uppercase font-bold mb-1">Reason / Subject</label>
+                <input
+                  required
+                  type="text"
+                  value={editingRecord.reason}
+                  onChange={(e) => setEditingRecord({ ...editingRecord, reason: e.target.value })}
+                  className="w-full bg-black border border-gray-800 text-white text-xs p-2.5 rounded-xl focus:outline-none focus:border-sky-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] text-gray-500 uppercase font-bold mb-1">Details &amp; Description</label>
+                <textarea
+                  rows={2}
+                  required
+                  value={editingRecord.description}
+                  onChange={(e) => setEditingRecord({ ...editingRecord, description: e.target.value })}
+                  className="w-full bg-black border border-gray-800 text-white text-xs p-2.5 rounded-xl focus:outline-none focus:border-sky-500"
+                />
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingRecord(null)}
+                  className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 font-bold text-xs p-2.5 rounded-xl transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs p-2.5 rounded-xl transition shadow-lg shadow-sky-950/50 cursor-pointer"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Add Modal */}
       {showAddModal && (

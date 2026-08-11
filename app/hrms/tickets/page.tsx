@@ -20,7 +20,9 @@ import {
   DollarSign,
   ShieldCheck,
   Tag,
-  X
+  X,
+  Edit2,
+  Trash2
 } from "lucide-react";
 
 export default function HRMSTicketsPage() {
@@ -29,7 +31,9 @@ export default function HRMSTicketsPage() {
     hrEmployees,
     hrmsTickets,
     createHRMSTicket,
+    updateHRMSTicket,
     updateHRMSTicketStatus,
+    deleteHRMSTicket,
     addHRMSTicketReply
   } = useGlobalContext();
 
@@ -46,6 +50,7 @@ export default function HRMSTicketsPage() {
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<HRMSTicket | null>(null);
+  const [editingTicket, setEditingTicket] = useState<HRMSTicket | null>(null);
   const [replyMsg, setReplyMsg] = useState("");
   const [toastMsg, setToastMsg] = useState<string | null>(null);
 
@@ -60,6 +65,31 @@ export default function HRMSTicketsPage() {
   const triggerToast = (msg: string) => {
     setToastMsg(msg);
     setTimeout(() => setToastMsg(null), 3000);
+  };
+
+  const handleDeleteTicket = (id: string, ticketNumber: string) => {
+    if (confirm(`Are you sure you want to delete ticket "${ticketNumber}"?`)) {
+      deleteHRMSTicket(id);
+      if (selectedTicket?.id === id) {
+        setSelectedTicket(null);
+      }
+      triggerToast(`🗑️ Ticket "${ticketNumber}" deleted!`);
+    }
+  };
+
+  const handleUpdateTicketSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingTicket) return;
+    updateHRMSTicket(editingTicket.id, {
+      targetDepartment: editingTicket.targetDepartment,
+      category: editingTicket.category,
+      subject: editingTicket.subject,
+      description: editingTicket.description,
+      priority: editingTicket.priority,
+      status: editingTicket.status
+    });
+    setEditingTicket(null);
+    triggerToast("✅ Ticket details updated successfully!");
   };
 
   const handleCreateTicketSubmit = (e: React.FormEvent) => {
@@ -267,13 +297,156 @@ export default function HRMSTicketsPage() {
 
                   <div className="flex items-center justify-between text-[10px] text-gray-500 font-mono pt-1">
                     <span>By: <strong className="text-gray-300">{t.creatorName}</strong> ({t.creatorDepartment})</span>
-                    <span>{new Date(t.createdAt).toLocaleDateString()}</span>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingTicket(t);
+                        }}
+                        title="Edit Ticket"
+                        className="p-1 rounded-lg bg-gray-800 hover:bg-sky-500/20 text-gray-400 hover:text-sky-400 border border-gray-700 transition cursor-pointer"
+                      >
+                        <Edit2 size={12} />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteTicket(t.id, t.ticketNumber);
+                        }}
+                        title="Delete Ticket"
+                        className="p-1 rounded-lg bg-gray-800 hover:bg-red-500/20 text-gray-400 hover:text-red-400 border border-gray-700 transition cursor-pointer"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                      <span className="text-gray-600 pl-1">{new Date(t.createdAt).toLocaleDateString()}</span>
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
           )}
         </div>
+
+        {/* Edit Ticket Modal */}
+        {editingTicket && (
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-[#090d16] border border-sky-500/30 rounded-2xl w-full max-w-lg p-6 space-y-4 shadow-2xl relative animate-fade-in-up">
+              <button
+                onClick={() => setEditingTicket(null)}
+                className="absolute right-4 top-4 text-gray-400 hover:text-white p-1 cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+
+              <div>
+                <h3 className="text-lg font-black text-white flex items-center gap-2">
+                  <Edit2 size={20} className="text-sky-400" />
+                  Edit Support Ticket ({editingTicket.ticketNumber})
+                </h3>
+                <p className="text-xs text-gray-400">
+                  Update department dispatch, status, or priority level.
+                </p>
+              </div>
+
+              <form onSubmit={handleUpdateTicketSubmit} className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[10px] text-gray-400 font-bold uppercase block mb-1">Target Department</label>
+                    <select
+                      value={editingTicket.targetDepartment}
+                      onChange={(e) => setEditingTicket({ ...editingTicket, targetDepartment: e.target.value as any })}
+                      className="w-full bg-black border border-gray-800 text-xs text-white rounded-xl p-2.5 outline-none focus:border-sky-500 cursor-pointer"
+                    >
+                      <option value="IT">💻 IT Operations &amp; Systems</option>
+                      <option value="HR">👥 HR &amp; People Operations</option>
+                      <option value="Finance">💰 Finance &amp; Payroll Accounts</option>
+                      <option value="Admin">🏢 Admin &amp; Infrastructure</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] text-gray-400 font-bold uppercase block mb-1">Status</label>
+                    <select
+                      value={editingTicket.status}
+                      onChange={(e) => setEditingTicket({ ...editingTicket, status: e.target.value as any })}
+                      className="w-full bg-black border border-gray-800 text-xs text-white rounded-xl p-2.5 outline-none focus:border-sky-500 cursor-pointer"
+                    >
+                      <option value="Open">🟢 Open</option>
+                      <option value="In Progress">🟡 In Progress</option>
+                      <option value="Resolved">🔵 Resolved</option>
+                      <option value="Closed">⚪ Closed</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[10px] text-gray-400 font-bold uppercase block mb-1">Priority Level</label>
+                    <select
+                      value={editingTicket.priority}
+                      onChange={(e) => setEditingTicket({ ...editingTicket, priority: e.target.value as any })}
+                      className="w-full bg-black border border-gray-800 text-xs text-white rounded-xl p-2.5 outline-none focus:border-sky-500 cursor-pointer"
+                    >
+                      <option value="Low">🟢 Low Priority</option>
+                      <option value="Medium">🟡 Medium Priority</option>
+                      <option value="High">🟠 High Priority</option>
+                      <option value="Critical">🔴 Critical / Emergency</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] text-gray-400 font-bold uppercase block mb-1">Category</label>
+                    <input
+                      required
+                      type="text"
+                      value={editingTicket.category}
+                      onChange={(e) => setEditingTicket({ ...editingTicket, category: e.target.value })}
+                      className="w-full bg-black border border-gray-800 text-xs text-white rounded-xl p-2.5 outline-none focus:border-sky-500"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[10px] text-gray-400 font-bold uppercase block mb-1">Subject / Issue Summary</label>
+                  <input
+                    required
+                    type="text"
+                    value={editingTicket.subject}
+                    onChange={(e) => setEditingTicket({ ...editingTicket, subject: e.target.value })}
+                    className="w-full bg-black border border-gray-800 text-xs text-white rounded-xl p-2.5 outline-none focus:border-sky-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] text-gray-400 font-bold uppercase block mb-1">Detailed Description</label>
+                  <textarea
+                    required
+                    rows={3}
+                    value={editingTicket.description}
+                    onChange={(e) => setEditingTicket({ ...editingTicket, description: e.target.value })}
+                    className="w-full bg-black border border-gray-800 text-xs text-white rounded-xl p-2.5 outline-none focus:border-sky-500"
+                  />
+                </div>
+
+                <div className="flex gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setEditingTicket(null)}
+                    className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 font-bold text-xs p-3 rounded-xl transition cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs p-3 rounded-xl transition shadow-lg shadow-sky-950/50 cursor-pointer"
+                  >
+                    Save Changes
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
 
         {/* Create Ticket Modal */}
         {showCreateModal && (

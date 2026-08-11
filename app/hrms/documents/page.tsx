@@ -18,7 +18,10 @@ import {
   X,
   Building2,
   User,
-  Sparkles
+  Sparkles,
+  Edit2,
+  Trash2,
+  CheckCircle2
 } from "lucide-react";
 
 interface HRDocument {
@@ -45,6 +48,13 @@ export default function HRDocumentsPage() {
   const [selectedType, setSelectedType] = useState("All");
   const [tab, setTab] = useState<"Company" | "Employee">("Company");
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [editingDoc, setEditingDoc] = useState<HRDocument | null>(null);
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
+
+  const triggerToast = (msg: string) => {
+    setToastMsg(msg);
+    setTimeout(() => setToastMsg(null), 3000);
+  };
 
   useEffect(() => {
     if (currentUser?.tenantId) {
@@ -110,6 +120,38 @@ export default function HRDocumentsPage() {
     }
   };
 
+  const handleDeleteDocument = (id: string, title: string) => {
+    if (confirm(`Are you sure you want to delete document "${title}"?`)) {
+      const updated = documents.filter((d) => d.id !== id);
+      saveDocuments(updated);
+      triggerToast(`🗑️ Document "${title}" deleted successfully!`);
+    }
+  };
+
+  const handleUpdateDocument = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingDoc) return;
+    const emp = hrEmployees.find((e) => e.id === editingDoc.employeeId);
+    const updated = documents.map((d) => {
+      if (d.id === editingDoc.id) {
+        return {
+          ...d,
+          title: editingDoc.title,
+          type: editingDoc.type,
+          employeeId: emp?.id,
+          employeeName: emp?.name,
+          fileName: editingDoc.fileName || `${editingDoc.title.replace(/\s+/g, "_")}.pdf`,
+          description: editingDoc.description,
+          isConfidential: editingDoc.isConfidential
+        };
+      }
+      return d;
+    });
+    saveDocuments(updated);
+    setEditingDoc(null);
+    triggerToast("✅ Document updated successfully!");
+  };
+
   const [form, setForm] = useState({
     title: "",
     type: "Contract" as HRDocument["type"],
@@ -153,6 +195,7 @@ export default function HRDocumentsPage() {
       expiresAt: "",
       isConfidential: false
     });
+    triggerToast("✅ Document uploaded to vault!");
   };
 
   const filteredDocuments = useMemo(() => {
@@ -174,9 +217,17 @@ export default function HRDocumentsPage() {
   const employeeDocsCount = documents.filter((d) => d.employeeId).length;
 
   return (
-    <div className="flex min-h-screen bg-[#05080d] text-gray-100 font-sans">
+    <div className="flex h-screen bg-[#05080d] text-gray-100 font-sans overflow-hidden">
       <HRMSSidebar />
-      <main className="flex-grow p-6 space-y-6 overflow-y-auto max-h-screen">
+      <main className="flex-grow p-6 space-y-6 overflow-y-auto h-full">
+        {/* Toast */}
+        {toastMsg && (
+          <div className="fixed top-6 right-6 z-50 bg-emerald-500 text-black px-4 py-2.5 rounded-xl font-bold text-xs shadow-2xl flex items-center gap-2 animate-bounce border border-emerald-400/50">
+            <CheckCircle2 size={16} />
+            <span>{toastMsg}</span>
+          </div>
+        )}
+
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-gray-800 pb-5">
           <div>
@@ -197,7 +248,7 @@ export default function HRDocumentsPage() {
             </Link>
             <button
               onClick={() => setShowUploadModal(true)}
-              className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700 font-bold text-xs px-4 py-2.5 rounded-xl transition"
+              className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700 font-bold text-xs px-4 py-2.5 rounded-xl transition cursor-pointer"
             >
               <Plus size={15} /> Upload Document
             </button>
@@ -210,7 +261,7 @@ export default function HRDocumentsPage() {
           <div className="flex gap-2">
             <button
               onClick={() => setTab("Company")}
-              className={`flex items-center gap-2 text-xs font-bold px-4 py-2 rounded-xl transition ${
+              className={`flex items-center gap-2 text-xs font-bold px-4 py-2 rounded-xl transition cursor-pointer ${
                 tab === "Company"
                   ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
                   : "bg-black/50 text-gray-400 border border-gray-800 hover:text-white"
@@ -220,7 +271,7 @@ export default function HRDocumentsPage() {
             </button>
             <button
               onClick={() => setTab("Employee")}
-              className={`flex items-center gap-2 text-xs font-bold px-4 py-2 rounded-xl transition ${
+              className={`flex items-center gap-2 text-xs font-bold px-4 py-2 rounded-xl transition cursor-pointer ${
                 tab === "Employee"
                   ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
                   : "bg-black/50 text-gray-400 border border-gray-800 hover:text-white"
@@ -245,7 +296,7 @@ export default function HRDocumentsPage() {
             <select
               value={selectedType}
               onChange={(e) => setSelectedType(e.target.value)}
-              className="bg-black border border-gray-800 text-white text-xs px-3 py-2 rounded-xl focus:outline-none focus:border-emerald-500"
+              className="bg-black border border-gray-800 text-white text-xs px-3 py-2 rounded-xl focus:outline-none focus:border-emerald-500 cursor-pointer"
             >
               <option value="All">All Types</option>
               <option value="Policy">Policy</option>
@@ -302,20 +353,149 @@ export default function HRDocumentsPage() {
                     <span>{doc.fileSize}</span>
                   </div>
 
-                  <div className="flex justify-between items-center pt-1">
-                    <span className="text-[10px] text-gray-500">Uploaded {doc.uploadedAt}</span>
-                    <button
-                      onClick={() => alert(`Downloading ${doc.fileName}...`)}
-                      className="flex items-center gap-1.5 text-xs font-bold text-emerald-400 hover:text-white bg-emerald-500/10 hover:bg-emerald-600 px-3 py-1.5 rounded-lg transition border border-emerald-500/20"
-                    >
-                      <Download size={13} /> Download
-                    </button>
+                  <div className="flex justify-between items-center pt-1 gap-2">
+                    <span className="text-[10px] text-gray-500 truncate">Uploaded {doc.uploadedAt}</span>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        onClick={() => setEditingDoc(doc)}
+                        title="Edit Document"
+                        className="p-1.5 rounded-lg bg-gray-800 hover:bg-sky-500/20 text-gray-400 hover:text-sky-400 border border-gray-700 transition cursor-pointer"
+                      >
+                        <Edit2 size={13} />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteDocument(doc.id, doc.title)}
+                        title="Delete Document"
+                        className="p-1.5 rounded-lg bg-gray-800 hover:bg-red-500/20 text-gray-400 hover:text-red-400 border border-gray-700 transition cursor-pointer"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                      <button
+                        onClick={() => alert(`Downloading ${doc.fileName}...`)}
+                        className="flex items-center gap-1.5 text-xs font-bold text-emerald-400 hover:text-white bg-emerald-500/10 hover:bg-emerald-600 px-3 py-1.5 rounded-lg transition border border-emerald-500/20 cursor-pointer"
+                      >
+                        <Download size={13} /> Download
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
             ))
           )}
         </div>
+      </main>
+
+      {/* Edit Modal */}
+      {editingDoc && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-[#0c1018] border border-sky-500/30 rounded-2xl w-full max-w-md overflow-hidden animate-fade-in-up">
+            <div className="flex justify-between items-center p-4 border-b border-gray-800 bg-sky-500/5">
+              <h2 className="text-sm font-bold text-white flex items-center gap-2">
+                <Edit2 size={16} className="text-sky-400" />
+                Edit Document Details
+              </h2>
+              <button onClick={() => setEditingDoc(null)} className="text-gray-400 hover:text-white cursor-pointer">
+                <X size={16} />
+              </button>
+            </div>
+            <form onSubmit={handleUpdateDocument} className="p-4 space-y-3.5">
+              <div>
+                <label className="block text-[10px] text-gray-500 uppercase font-bold mb-1">Document Title</label>
+                <input
+                  required
+                  type="text"
+                  value={editingDoc.title}
+                  onChange={(e) => setEditingDoc({ ...editingDoc, title: e.target.value })}
+                  className="w-full bg-black border border-gray-800 text-white text-xs p-2.5 rounded-xl focus:outline-none focus:border-sky-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] text-gray-500 uppercase font-bold mb-1">Document Type</label>
+                  <select
+                    value={editingDoc.type}
+                    onChange={(e) => setEditingDoc({ ...editingDoc, type: e.target.value as any })}
+                    className="w-full bg-black border border-gray-800 text-white text-xs p-2.5 rounded-xl focus:outline-none focus:border-sky-500 cursor-pointer"
+                  >
+                    <option value="Policy">Company Policy</option>
+                    <option value="Contract">Employment Contract</option>
+                    <option value="NDA">NDA Agreement</option>
+                    <option value="CNIC">CNIC / ID Card</option>
+                    <option value="Experience Letter">Experience Letter</option>
+                    <option value="Offer Letter">Offer Letter</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] text-gray-500 uppercase font-bold mb-1">Assign to Staff</label>
+                  <select
+                    value={editingDoc.employeeId || ""}
+                    onChange={(e) => setEditingDoc({ ...editingDoc, employeeId: e.target.value })}
+                    className="w-full bg-black border border-gray-800 text-white text-xs p-2.5 rounded-xl focus:outline-none focus:border-sky-500 cursor-pointer"
+                  >
+                    <option value="">None (Company Document)</option>
+                    {hrEmployees.map((emp) => (
+                      <option key={emp.id} value={emp.id}>
+                        {emp.name} &bull; {emp.department}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[10px] text-gray-500 uppercase font-bold mb-1">File Name</label>
+                <input
+                  type="text"
+                  value={editingDoc.fileName}
+                  onChange={(e) => setEditingDoc({ ...editingDoc, fileName: e.target.value })}
+                  className="w-full bg-black border border-gray-800 text-white text-xs p-2.5 rounded-xl focus:outline-none focus:border-sky-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] text-gray-500 uppercase font-bold mb-1">Description / Notes</label>
+                <textarea
+                  rows={2}
+                  value={editingDoc.description || ""}
+                  onChange={(e) => setEditingDoc({ ...editingDoc, description: e.target.value })}
+                  className="w-full bg-black border border-gray-800 text-white text-xs p-2.5 rounded-xl focus:outline-none focus:border-sky-500"
+                />
+              </div>
+
+              <div className="flex items-center gap-2 pt-1">
+                <input
+                  type="checkbox"
+                  id="editConfidentialDoc"
+                  checked={editingDoc.isConfidential}
+                  onChange={(e) => setEditingDoc({ ...editingDoc, isConfidential: e.target.checked })}
+                  className="rounded bg-black border-gray-800 text-sky-500"
+                />
+                <label htmlFor="editConfidentialDoc" className="text-xs text-gray-300 font-bold cursor-pointer">
+                  Mark as confidential (restricted HR access)
+                </label>
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingDoc(null)}
+                  className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 font-bold text-xs p-2.5 rounded-xl transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs p-2.5 rounded-xl transition shadow-lg shadow-sky-950/50 cursor-pointer"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
       </main>
 
       {/* Upload Modal */}

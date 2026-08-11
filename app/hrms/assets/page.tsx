@@ -18,7 +18,9 @@ import {
   RotateCcw,
   X,
   UserCheck,
-  DollarSign
+  DollarSign,
+  Edit2,
+  Trash2
 } from "lucide-react";
 
 interface HRAsset {
@@ -48,6 +50,13 @@ export default function HRAssetsPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState<HRAsset | null>(null);
+  const [editingAsset, setEditingAsset] = useState<HRAsset | null>(null);
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
+
+  const triggerToast = (msg: string) => {
+    setToastMsg(msg);
+    setTimeout(() => setToastMsg(null), 3000);
+  };
 
   useEffect(() => {
     if (currentUser?.tenantId) {
@@ -194,9 +203,42 @@ export default function HRAssetsPage() {
     setSelectedAsset(null);
   };
 
-  const handleReturn = (assetId: string) => {
+  const handleDeleteAsset = (id: string, name: string) => {
+    if (confirm(`Are you sure you want to delete asset "${name}"?`)) {
+      const updated = assets.filter((a) => a.id !== id);
+      saveAssets(updated);
+      triggerToast(`🗑️ Asset "${name}" deleted successfully!`);
+    }
+  };
+
+  const handleUpdateAsset = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingAsset) return;
     const updated = assets.map((a) => {
-      if (a.id === assetId) {
+      if (a.id === editingAsset.id) {
+        return {
+          ...a,
+          name: editingAsset.name,
+          category: editingAsset.category,
+          brand: editingAsset.brand,
+          serialNumber: editingAsset.serialNumber,
+          purchaseDate: editingAsset.purchaseDate,
+          purchaseValue: Number(editingAsset.purchaseValue) || 0,
+          condition: editingAsset.condition,
+          status: editingAsset.status,
+          notes: editingAsset.notes
+        };
+      }
+      return a;
+    });
+    saveAssets(updated);
+    setEditingAsset(null);
+    triggerToast("✅ Asset updated successfully!");
+  };
+
+  const handleReturn = (id: string) => {
+    const updated = assets.map((a) => {
+      if (a.id === id) {
         return {
           ...a,
           assignedTo: undefined,
@@ -208,6 +250,7 @@ export default function HRAssetsPage() {
       return a;
     });
     saveAssets(updated);
+    triggerToast("✅ Asset marked as returned and available!");
   };
 
   const filteredAssets = useMemo(() => {
@@ -418,24 +461,40 @@ export default function HRAssetsPage() {
                         </span>
                       </td>
                       <td className="p-3.5 text-right">
-                        {asset.status === "Available" ? (
+                        <div className="flex items-center justify-end gap-1.5">
+                          {asset.status === "Available" ? (
+                            <button
+                              onClick={() => {
+                                setSelectedAsset(asset);
+                                setShowAssignModal(true);
+                              }}
+                              className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] px-2.5 py-1.2 rounded-lg transition cursor-pointer"
+                            >
+                              Assign
+                            </button>
+                          ) : asset.status === "Assigned" ? (
+                            <button
+                              onClick={() => handleReturn(asset.id)}
+                              className="bg-gray-800 hover:bg-red-500/20 text-gray-300 hover:text-red-400 font-bold text-[11px] px-2.5 py-1.2 rounded-lg transition border border-gray-700 hover:border-red-500/30 cursor-pointer"
+                            >
+                              Return
+                            </button>
+                          ) : null}
                           <button
-                            onClick={() => {
-                              setSelectedAsset(asset);
-                              setShowAssignModal(true);
-                            }}
-                            className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] px-3 py-1.5 rounded-lg transition"
+                            onClick={() => setEditingAsset(asset)}
+                            title="Edit Asset"
+                            className="p-1.5 rounded-lg bg-gray-800 hover:bg-sky-500/20 text-gray-400 hover:text-sky-400 border border-gray-700 transition cursor-pointer"
                           >
-                            Assign
+                            <Edit2 size={13} />
                           </button>
-                        ) : asset.status === "Assigned" ? (
                           <button
-                            onClick={() => handleReturn(asset.id)}
-                            className="bg-gray-800 hover:bg-red-500/20 text-gray-300 hover:text-red-400 font-bold text-[11px] px-3 py-1.5 rounded-lg transition border border-gray-700 hover:border-red-500/30"
+                            onClick={() => handleDeleteAsset(asset.id, asset.name)}
+                            title="Delete Asset"
+                            className="p-1.5 rounded-lg bg-gray-800 hover:bg-red-500/20 text-gray-400 hover:text-red-400 border border-gray-700 transition cursor-pointer"
                           >
-                            Return
+                            <Trash2 size={13} />
                           </button>
-                        ) : null}
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -445,6 +504,128 @@ export default function HRAssetsPage() {
           </div>
         </div>
       </main>
+
+      {/* Edit Asset Modal */}
+      {editingAsset && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-[#0c1018] border border-sky-500/30 rounded-2xl w-full max-w-md overflow-hidden animate-fade-in-up">
+            <div className="flex justify-between items-center p-4 border-b border-gray-800 bg-sky-500/5">
+              <h2 className="text-sm font-bold text-white flex items-center gap-2">
+                <Edit2 size={16} className="text-sky-400" />
+                Edit Company Asset ({editingAsset.assetCode})
+              </h2>
+              <button onClick={() => setEditingAsset(null)} className="text-gray-400 hover:text-white cursor-pointer">
+                <X size={16} />
+              </button>
+            </div>
+            <form onSubmit={handleUpdateAsset} className="p-4 space-y-3.5">
+              <div>
+                <label className="block text-[10px] text-gray-500 uppercase font-bold mb-1">Asset Name</label>
+                <input
+                  required
+                  type="text"
+                  value={editingAsset.name}
+                  onChange={(e) => setEditingAsset({ ...editingAsset, name: e.target.value })}
+                  className="w-full bg-black border border-gray-800 text-white text-xs p-2.5 rounded-xl focus:outline-none focus:border-sky-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] text-gray-500 uppercase font-bold mb-1">Category</label>
+                  <select
+                    value={editingAsset.category}
+                    onChange={(e) => setEditingAsset({ ...editingAsset, category: e.target.value as any })}
+                    className="w-full bg-black border border-gray-800 text-white text-xs p-2.5 rounded-xl focus:outline-none focus:border-sky-500 cursor-pointer"
+                  >
+                    <option value="Laptop">Laptop / PC</option>
+                    <option value="Mobile">Mobile Phone</option>
+                    <option value="SIM Card">SIM Card</option>
+                    <option value="Vehicle">Vehicle</option>
+                    <option value="Furniture">Furniture</option>
+                    <option value="Other">Other Equipment</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] text-gray-500 uppercase font-bold mb-1">Status</label>
+                  <select
+                    value={editingAsset.status}
+                    onChange={(e) => setEditingAsset({ ...editingAsset, status: e.target.value as any })}
+                    className="w-full bg-black border border-gray-800 text-white text-xs p-2.5 rounded-xl focus:outline-none focus:border-sky-500 cursor-pointer"
+                  >
+                    <option value="Available">Available</option>
+                    <option value="Assigned">Assigned</option>
+                    <option value="Under Repair">Under Repair</option>
+                    <option value="Disposed">Disposed</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] text-gray-500 uppercase font-bold mb-1">Brand / Maker</label>
+                  <input
+                    type="text"
+                    value={editingAsset.brand || ""}
+                    onChange={(e) => setEditingAsset({ ...editingAsset, brand: e.target.value })}
+                    className="w-full bg-black border border-gray-800 text-white text-xs p-2.5 rounded-xl focus:outline-none focus:border-sky-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] text-gray-500 uppercase font-bold mb-1">Serial / IMEI #</label>
+                  <input
+                    type="text"
+                    value={editingAsset.serialNumber || ""}
+                    onChange={(e) => setEditingAsset({ ...editingAsset, serialNumber: e.target.value })}
+                    className="w-full bg-black border border-gray-800 text-white text-xs p-2.5 rounded-xl focus:outline-none focus:border-sky-500 font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] text-gray-500 uppercase font-bold mb-1">Condition</label>
+                  <select
+                    value={editingAsset.condition}
+                    onChange={(e) => setEditingAsset({ ...editingAsset, condition: e.target.value as any })}
+                    className="w-full bg-black border border-gray-800 text-white text-xs p-2.5 rounded-xl focus:outline-none focus:border-sky-500 cursor-pointer"
+                  >
+                    <option value="New">New / Mint</option>
+                    <option value="Good">Good Condition</option>
+                    <option value="Fair">Fair / Used</option>
+                    <option value="Damaged">Damaged / Faulty</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] text-gray-500 uppercase font-bold mb-1">Value ({currencySymbol || "$"})</label>
+                  <input
+                    type="number"
+                    value={editingAsset.purchaseValue || 0}
+                    onChange={(e) => setEditingAsset({ ...editingAsset, purchaseValue: Number(e.target.value) })}
+                    className="w-full bg-black border border-gray-800 text-white text-xs p-2.5 rounded-xl focus:outline-none focus:border-sky-500 font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingAsset(null)}
+                  className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 font-bold text-xs p-2.5 rounded-xl transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs p-2.5 rounded-xl transition shadow-lg shadow-sky-950/50 cursor-pointer"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Add Asset Modal */}
       {showAddModal && (
