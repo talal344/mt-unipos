@@ -366,10 +366,10 @@ export default function HRPayrollPage() {
                   {(() => {
                     const empLoan = hrLoans.find((l) => l.employeeId === selectedPayslip.employeeId && (l.status === "Active" || l.status === "Completed"));
                     const rep = empLoan?.repayments.find((r) => r.month === (currentBatch ? currentBatch.month : selectedMonth));
-                    if (rep && (rep.status === "Deducted" || rep.status === "Pending")) {
+                    if (empLoan && rep && (rep.status === "Deducted" || rep.status === "Pending")) {
                       return (
                         <div className="flex justify-between bg-amber-500/10 border border-amber-500/20 p-2 rounded-lg text-[10px] text-amber-300">
-                          <span>Loan / Advance Recovery ({empLoan.loanCode}):</span>
+                          <span>Loan / Advance Recovery ({empLoan.loanCode || "Loan"}):</span>
                           <span className="font-bold font-mono">-{currencySymbol} {rep.amount.toLocaleString()} (Bal: {currencySymbol} {empLoan.remainingBalance.toLocaleString()})</span>
                         </div>
                       );
