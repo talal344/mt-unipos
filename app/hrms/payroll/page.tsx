@@ -91,10 +91,10 @@ export default function HRPayrollPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-[#05080d] text-gray-100 font-sans">
+    <div className="flex h-screen bg-[#05080d] text-gray-100 font-sans overflow-hidden">
       <HRMSSidebar />
 
-      <main className="flex-grow p-6 space-y-6 overflow-y-auto max-h-screen">
+      <main className="flex-grow p-6 space-y-6 overflow-y-auto h-full">
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-800 pb-5">
           <div>

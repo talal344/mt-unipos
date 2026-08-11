@@ -3,7 +3,6 @@
 import React, { useState, useMemo } from "react";
 import HRMSSidebar from "@/components/hrms-sidebar";
 import HRMSTopHeader from "@/components/hrms-top-header";
-import AnnouncementsBanner from "@/components/announcements-banner";
 import { useGlobalContext, HRLoan, HRLoanRepayment } from "@/context/global-context";
 import {
   HandCoins,
@@ -173,10 +172,10 @@ export default function HRLoansPage() {
   const pendingApprovalsCount = hrLoans.filter((l) => l.status === "Pending Approval").length;
 
   return (
-    <div className="flex min-h-screen bg-[#05080d] text-gray-100 font-sans">
+    <div className="flex h-screen bg-[#05080d] text-gray-100 font-sans overflow-hidden">
       <HRMSSidebar />
 
-      <main className="flex-grow overflow-y-auto max-h-screen">
+      <main className="flex-grow overflow-y-auto h-full">
         {/* Toast */}
         {toastMsg && (
           <div className="fixed top-6 right-6 z-50 bg-emerald-500 text-black px-4 py-2.5 rounded-xl font-bold text-xs shadow-2xl flex items-center gap-2 animate-bounce border border-emerald-400/50">
@@ -191,8 +190,6 @@ export default function HRLoansPage() {
         />
 
         <div className="p-6 space-y-6">
-          <AnnouncementsBanner />
-
           {/* Top Quick Stats Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="bg-[#0b0f17] border border-emerald-500/20 p-4 rounded-2xl shadow-xl flex items-center justify-between">

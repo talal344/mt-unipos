@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import HRMSSidebar from "@/components/hrms-sidebar";
 import HRMSTopHeader from "@/components/hrms-top-header";
-import AnnouncementsBanner from "@/components/announcements-banner";
 import { useGlobalContext } from "@/context/global-context";
 import {
   FileText,
@@ -35,7 +34,8 @@ import {
   User,
   Users,
   Layers,
-  ArrowRight
+  ArrowRight,
+  ChevronDown
 } from "lucide-react";
 
 export type LetterTemplateType =
@@ -374,10 +374,10 @@ Authorized Signatory: ${signatoryName} (${signatoryDesignation})
   }, [savedLetters, archiveSearch]);
 
   return (
-    <div className="flex min-h-screen bg-[#05080d] text-gray-100 font-sans">
+    <div className="flex h-screen bg-[#05080d] text-gray-100 font-sans overflow-hidden">
       <HRMSSidebar />
 
-      <main className="flex-grow overflow-y-auto max-h-screen">
+      <main className="flex-grow overflow-y-auto h-full">
         {/* Toast */}
         {toastMsg && (
           <div className="fixed top-6 right-6 z-50 bg-emerald-500 text-black px-4 py-2.5 rounded-xl font-bold text-xs shadow-2xl flex items-center gap-2 animate-bounce border border-emerald-400/50">
@@ -393,8 +393,6 @@ Authorized Signatory: ${signatoryName} (${signatoryDesignation})
         />
 
         <div className="p-6 space-y-6">
-          <AnnouncementsBanner />
-
           {/* Top Quick Stats & Studio / Archive Mode Switcher */}
           <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 bg-gradient-to-r from-gray-900 via-gray-900/90 to-gray-950 border border-emerald-500/20 p-4 rounded-2xl shadow-xl">
             <div className="flex items-center gap-3">
@@ -418,7 +416,7 @@ Authorized Signatory: ${signatoryName} (${signatoryDesignation})
             <div className="flex items-center gap-2 bg-black/40 p-1.5 rounded-xl border border-gray-800 self-start md:self-auto">
               <button
                 onClick={() => setActiveTab("studio")}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-xs transition ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-xs transition cursor-pointer ${
                   activeTab === "studio"
                     ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-900/40"
                     : "text-gray-400 hover:text-white hover:bg-gray-800"
@@ -429,7 +427,7 @@ Authorized Signatory: ${signatoryName} (${signatoryDesignation})
               </button>
               <button
                 onClick={() => setActiveTab("archive")}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-xs transition ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-xs transition cursor-pointer ${
                   activeTab === "archive"
                     ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-900/40"
                     : "text-gray-400 hover:text-white hover:bg-gray-800"
@@ -449,7 +447,7 @@ Authorized Signatory: ${signatoryName} (${signatoryDesignation})
           {activeTab === "studio" ? (
             <div className="space-y-6">
               {/* Template Category Pills */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-2.5">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-7 gap-2.5">
                 {[
                   { type: "experience" as LetterTemplateType, label: "Experience Letter", icon: Award, desc: "Service & tenure proof" },
                   { type: "employment" as LetterTemplateType, label: "Employment Cert.", icon: Briefcase, desc: "Visa & bank verification" },
@@ -465,7 +463,7 @@ Authorized Signatory: ${signatoryName} (${signatoryDesignation})
                     <button
                       key={item.type}
                       onClick={() => setTemplateType(item.type)}
-                      className={`flex flex-col items-start p-3 rounded-xl border text-left transition relative overflow-hidden group ${
+                      className={`flex flex-col items-start p-3 rounded-xl border text-left transition relative overflow-hidden group min-w-0 cursor-pointer ${
                         isSelected
                           ? "bg-gradient-to-b from-emerald-500/20 to-teal-500/10 border-emerald-500 text-white shadow-lg shadow-emerald-950/50"
                           : "bg-gray-900/60 border-gray-800/80 text-gray-400 hover:border-gray-700 hover:text-gray-200"
@@ -474,17 +472,17 @@ Authorized Signatory: ${signatoryName} (${signatoryDesignation})
                       {isSelected && (
                         <div className="absolute top-0 right-0 w-2 h-2 bg-emerald-400 rounded-bl-lg shadow-sm" />
                       )}
-                      <div className="flex items-center gap-2 mb-1.5">
+                      <div className="flex items-center gap-2 mb-1.5 w-full">
                         <div
-                          className={`p-1.5 rounded-lg ${
+                          className={`p-1.5 rounded-lg shrink-0 ${
                             isSelected ? "bg-emerald-500 text-black font-bold" : "bg-gray-800 text-gray-400 group-hover:text-emerald-400"
                           }`}
                         >
                           <Icon size={14} />
                         </div>
-                        <span className="font-bold text-xs text-white leading-tight">{item.label}</span>
+                        <span className="font-bold text-xs text-white leading-tight truncate">{item.label}</span>
                       </div>
-                      <span className="text-[10px] text-gray-500 group-hover:text-gray-400 leading-tight">{item.desc}</span>
+                      <span className="text-[10px] text-gray-500 group-hover:text-gray-400 leading-tight truncate w-full block">{item.desc}</span>
                     </button>
                   );
                 })}
@@ -510,7 +508,7 @@ Authorized Signatory: ${signatoryName} (${signatoryDesignation})
                       <select
                         value={selectedEmpId}
                         onChange={(e) => handleSelectEmployee(e.target.value)}
-                        className="w-full bg-black/60 border border-gray-700/80 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500 font-medium cursor-pointer"
+                        className="w-full bg-black/80 border border-gray-700/80 rounded-xl px-3 py-2.5 pr-8 text-xs text-white focus:outline-none focus:border-emerald-500 font-medium cursor-pointer appearance-none"
                       >
                         <option value="">Select an employee to autofill...</option>
                         {hrEmployees.map((emp) => (
@@ -519,6 +517,9 @@ Authorized Signatory: ${signatoryName} (${signatoryDesignation})
                           </option>
                         ))}
                       </select>
+                      <div className="absolute right-3 top-3 pointer-events-none text-gray-400">
+                        <ChevronDown size={14} />
+                      </div>
                     </div>
                   </div>
 
@@ -531,7 +532,7 @@ Authorized Signatory: ${signatoryName} (${signatoryDesignation})
                       </h3>
                       <button
                         onClick={generateNewRef}
-                        className="text-[10px] text-emerald-400 hover:text-emerald-300 flex items-center gap-1 font-bold"
+                        className="text-[10px] text-emerald-400 hover:text-emerald-300 flex items-center gap-1 font-bold cursor-pointer"
                       >
                         <RefreshCw size={10} />
                         <span>Regenerate Ref</span>
@@ -615,13 +616,15 @@ Authorized Signatory: ${signatoryName} (${signatoryDesignation})
                       </div>
                       <div>
                         <label className="block text-[10px] font-bold text-gray-400 mb-1">Basic / Gross Monthly Salary</label>
-                        <div className="relative">
-                          <span className="absolute left-2.5 top-1.5 text-gray-500 text-xs font-bold">{currencySymbol}</span>
+                        <div className="flex items-center rounded-lg border border-gray-700 bg-black/50 overflow-hidden focus-within:border-emerald-500">
+                          <span className="px-2.5 py-1.5 bg-gray-800/80 text-gray-400 font-bold text-xs border-r border-gray-700 select-none shrink-0 font-mono">
+                            {currencySymbol}
+                          </span>
                           <input
                             type="number"
                             value={empSalary}
                             onChange={(e) => setEmpSalary(Number(e.target.value))}
-                            className="w-full bg-black/50 border border-gray-700 rounded-lg pl-7 pr-2.5 py-1.5 text-white text-xs focus:border-emerald-500 focus:outline-none"
+                            className="w-full bg-transparent px-2.5 py-1.5 text-white font-mono text-xs focus:outline-none"
                           />
                         </div>
                       </div>
@@ -694,13 +697,15 @@ Authorized Signatory: ${signatoryName} (${signatoryDesignation})
                         </div>
                         <div>
                           <label className="block text-[10px] font-bold text-gray-400 mb-1">Revised Monthly Salary</label>
-                          <div className="relative">
-                            <span className="absolute left-2.5 top-1.5 text-gray-500 text-xs font-bold">{currencySymbol}</span>
+                          <div className="flex items-center rounded-lg border border-gray-700 bg-black/50 overflow-hidden focus-within:border-emerald-500">
+                            <span className="px-2.5 py-1.5 bg-gray-800/80 text-gray-400 font-bold text-xs border-r border-gray-700 select-none shrink-0 font-mono">
+                              {currencySymbol}
+                            </span>
                             <input
                               type="number"
                               value={revisedSalary}
                               onChange={(e) => setRevisedSalary(Number(e.target.value))}
-                              className="w-full bg-black/50 border border-gray-700 rounded-lg pl-7 pr-2.5 py-1.5 text-white text-xs focus:border-emerald-500 focus:outline-none"
+                              className="w-full bg-transparent px-2.5 py-1.5 text-white font-mono text-xs focus:outline-none"
                             />
                           </div>
                         </div>

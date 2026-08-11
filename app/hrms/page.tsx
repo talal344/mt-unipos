@@ -120,10 +120,10 @@ export default function HRMSDashboardPage() {
   const latestPayroll = hrPayrolls[0];
 
   return (
-    <div className="flex min-h-screen bg-[#05080d] text-gray-100 font-sans">
+    <div className="flex h-screen bg-[#05080d] text-gray-100 font-sans overflow-hidden">
       <HRMSSidebar />
 
-      <main className="flex-grow overflow-y-auto max-h-screen">
+      <main className="flex-grow overflow-y-auto h-full">
         {/* Toast */}
         {toastMsg && (
           <div className="fixed top-6 right-6 z-50 bg-emerald-500 text-black px-4 py-2.5 rounded-xl font-bold text-xs shadow-2xl flex items-center gap-2 animate-bounce">

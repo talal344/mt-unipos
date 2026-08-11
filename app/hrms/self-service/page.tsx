@@ -2,7 +2,6 @@
 
 import React, { useState, useMemo } from "react";
 import HRMSSidebar from "@/components/hrms-sidebar";
-import AnnouncementsBanner from "@/components/announcements-banner";
 import { useGlobalContext } from "@/context/global-context";
 import { 
   User, Calendar, Clock, DollarSign, FileText, 
@@ -144,9 +143,6 @@ export default function SelfServicePortalPage() {
               <Plus size={14} /> Request Time Off
             </button>
           </div>
-
-          {/* Company Announcements Broadcast */}
-          <AnnouncementsBanner />
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Profile & Leave Balances */}

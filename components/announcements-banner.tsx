@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useGlobalContext } from "@/context/global-context";
 import {
   Megaphone,
@@ -29,11 +30,17 @@ export interface AnnouncementItem {
 }
 
 export default function AnnouncementsBanner() {
+  const pathname = usePathname();
   const { currentUser } = useGlobalContext();
   const [announcements, setAnnouncements] = useState<AnnouncementItem[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [dismissed, setDismissed] = useState(false);
   const [selectedAnnouncement, setSelectedAnnouncement] = useState<AnnouncementItem | null>(null);
+
+  // Strictly only show on Main Dashboard
+  if (pathname !== "/hrms" && pathname !== "/dashboard") {
+    return null;
+  }
 
   useEffect(() => {
     if (typeof window === "undefined") return;
