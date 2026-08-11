@@ -94,8 +94,8 @@ export default function POSAlertBanner() {
     }
 
     // 3. Customer Dues / Credit Receivables
-    const debtors = customers.filter((c) => (c.balance || 0) > 0);
-    const totalDues = debtors.reduce((sum, c) => sum + (c.balance || 0), 0);
+    const debtors = customers.filter((c) => (c.creditBalance || 0) > 0);
+    const totalDues = debtors.reduce((sum, c) => sum + (c.creditBalance || 0), 0);
     if (debtors.length > 0) {
       list.push({
         id: "customer-dues",
@@ -109,8 +109,8 @@ export default function POSAlertBanner() {
     }
 
     // 4. Supplier Payables
-    const creditorSuppliers = suppliers.filter((s) => (s.balance || 0) > 0);
-    const totalPayable = creditorSuppliers.reduce((sum, s) => sum + (s.balance || 0), 0);
+    const creditorSuppliers = suppliers.filter((s) => (s.dueAmount || 0) > 0);
+    const totalPayable = creditorSuppliers.reduce((sum, s) => sum + (s.dueAmount || 0), 0);
     if (creditorSuppliers.length > 0) {
       list.push({
         id: "supplier-payables",
