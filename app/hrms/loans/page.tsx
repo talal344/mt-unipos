@@ -94,7 +94,7 @@ export default function HRLoansPage() {
     const actualTenure = isAdvance ? 1 : tenureMonths;
     const monthlyInstallment = Math.round(principalAmount / actualTenure);
 
-    const isAutoApproved = currentUser?.role === "Owner" || currentUser?.role === "HR";
+    const isAutoApproved = currentUser?.role === "Owner" || (currentUser?.role as string) === "HR";
 
     applyHRLoan({
       employeeId: selectedEmp.id,
