@@ -402,20 +402,12 @@ export default function HRMSDashboardPage() {
                 HR EXECUTIVE / OWNER ERP PORTAL VIEW
                ───────────────────────────────────────────────────────────────────────────── */
             <div className="space-y-6">
-              {/* HR Top Bar Header */}
-              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-gray-800/80 pb-5">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-extrabold uppercase tracking-widest flex items-center gap-1">
-                      <Sparkles size={10} /> Enterprise HR Module
-                    </span>
-                  </div>
-                  <h1 className="text-2xl font-black text-white tracking-tight mt-1">
-                    HR Executive Dashboard
-                  </h1>
-                  <p className="text-xs text-gray-400">
-                    Real-time employee management, attendance tracking, leaves, and automated payroll operations.
-                  </p>
+              {/* HR Quick Actions Bar */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-800/80 pb-4">
+                <div className="flex items-center gap-2">
+                  <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-extrabold uppercase tracking-widest flex items-center gap-1.5 shadow-sm">
+                    <Sparkles size={11} /> Enterprise HR Operations Desk
+                  </span>
                 </div>
 
                 <div className="flex items-center gap-3">
