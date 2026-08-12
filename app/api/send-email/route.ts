@@ -173,6 +173,38 @@ export async function POST(req: Request) {
 
     const fromEmail = process.env.NEXT_PUBLIC_RESEND_FROM_EMAIL || "MT UniPOS <billing@updates.mtcore.xyz>";
 
+    // Generate Official Invoice PDF Attachment
+    let attachments: { filename: string; content: string }[] | undefined = undefined;
+    try {
+      const { generateInvoicePdfBase64 } = await import("@/lib/invoice-pdf");
+      const pdfBase64 = generateInvoicePdfBase64({
+        invoiceId,
+        tenantId,
+        businessName,
+        ownerName,
+        to,
+        password,
+        amount,
+        paidAmount,
+        remainingBalance,
+        currency,
+        plan,
+        billingCycle,
+        paymentMethod
+      });
+
+      const safeName = (businessName || tenantId || "Invoice").replace(/[^a-zA-Z0-9_-]/g, "_");
+      const filename = `MT_UniPOS_Invoice_${safeName}_${tenantId || "INV"}.pdf`;
+      attachments = [
+        {
+          filename,
+          content: pdfBase64
+        }
+      ];
+    } catch (pdfErr) {
+      console.warn("Failed to generate PDF attachment:", pdfErr);
+    }
+
     // Send email using Resend HTTP API
     let res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -185,6 +217,7 @@ export async function POST(req: Request) {
         to: Array.isArray(to) ? to : [to],
         subject: emailSubject,
         html: defaultHtml,
+        attachments: attachments
       }),
     });
 
@@ -203,6 +236,7 @@ export async function POST(req: Request) {
           to: Array.isArray(to) ? to : [to],
           subject: emailSubject,
           html: defaultHtml,
+          attachments: attachments
         }),
       });
       const fallbackData = await fallbackRes.json();

@@ -343,6 +343,47 @@ export default function AdminEmailsPage() {
     }
   };
 
+  const handleDownloadPdf = async (entry: EmailLogEntry) => {
+    try {
+      const { generateInvoicePdfBase64 } = await import("@/lib/invoice-pdf");
+      const b64 = generateInvoicePdfBase64({
+        invoiceId: entry.id,
+        tenantId: entry.tenantId,
+        businessName: entry.businessName,
+        ownerName: entry.ownerName,
+        to: entry.to,
+        password: entry.password,
+        amount: entry.amount,
+        paidAmount: entry.paidAmount,
+        remainingBalance: entry.remainingBalance,
+        currency: entry.currency,
+        plan: entry.plan,
+        billingCycle: entry.billingCycle,
+        paymentMethod: entry.paymentMethod
+      });
+
+      const byteCharacters = atob(b64);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const safeName = (entry.businessName || entry.tenantId || "Invoice").replace(/[^a-zA-Z0-9_-]/g, "_");
+      a.download = `MT_UniPOS_Invoice_${safeName}_${entry.tenantId || "INV"}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      triggerToast(`📄 Downloaded PDF Invoice for ${entry.businessName}!`);
+    } catch (e: any) {
+      triggerToast(`⚠️ Failed to generate PDF: ${e.message}`);
+    }
+  };
+
   const handleDeleteLog = (id: string) => {
     if (confirm("Delete this email dispatch log?")) {
       setLogs(prev => prev.filter(l => l.id !== id));
@@ -557,6 +598,16 @@ export default function AdminEmailsPage() {
                             Preview
                           </button>
 
+                          {/* Download Attached PDF */}
+                          <button
+                            onClick={() => handleDownloadPdf(entry)}
+                            className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 rounded-lg text-[10px] font-bold transition"
+                            title="Download official attached PDF invoice"
+                          >
+                            <Download size={11} />
+                            PDF
+                          </button>
+
                           {/* Resend Email Button */}
                           <button
                             onClick={() => handleResendSingle(entry)}
@@ -752,14 +803,25 @@ export default function AdminEmailsPage() {
               </div>
 
               {/* Action Buttons */}
-              <div className="p-4 bg-black/60 border-t border-gray-800 flex justify-between items-center">
-                <button
-                  onClick={() => handleResendSingle(previewLog)}
-                  className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-black text-xs rounded-xl transition flex items-center gap-1.5"
-                >
-                  <Send size={14} />
-                  <span>Resend This Email Now</span>
-                </button>
+              <div className="p-4 bg-black/60 border-t border-gray-800 flex flex-wrap gap-2 justify-between items-center">
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleDownloadPdf(previewLog)}
+                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs rounded-xl transition flex items-center gap-1.5 shadow-lg shadow-emerald-600/20"
+                  >
+                    <Download size={14} />
+                    <span>Download Official PDF Invoice</span>
+                  </button>
+
+                  <button
+                    onClick={() => handleResendSingle(previewLog)}
+                    className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-black text-xs rounded-xl transition flex items-center gap-1.5"
+                  >
+                    <Send size={14} />
+                    <span>Resend Email</span>
+                  </button>
+                </div>
+
                 <button
                   onClick={() => setPreviewLog(null)}
                   className="px-4 py-2 bg-brand-dark-border hover:bg-gray-700 text-gray-300 font-bold text-xs rounded-xl transition"
