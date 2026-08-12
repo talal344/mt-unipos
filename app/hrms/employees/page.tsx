@@ -4,7 +4,7 @@ import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import HRMSSidebar from "@/components/hrms-sidebar";
 import HRMSTopHeader from "@/components/hrms-top-header";
-import { useGlobalContext, calculateDesignationRankAndGrade } from "@/context/global-context";
+import { useGlobalContext, calculateDesignationRankAndGrade, isEligibleForDepartmentHead } from "@/context/global-context";
 import {
   Users,
   UserPlus,
@@ -23,7 +23,9 @@ import {
   Calendar,
   ChevronDown,
   ChevronUp,
-  AlertTriangle
+  AlertTriangle,
+  Crown,
+  Check
 } from "lucide-react";
 
 export default function HREmployeesPage() {
@@ -36,7 +38,8 @@ export default function HREmployeesPage() {
     hrDesignations,
     currencySymbol,
     currentUser,
-    businessSettings
+    businessSettings,
+    assignDepartmentHead
   } = useGlobalContext();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -100,7 +103,8 @@ export default function HREmployeesPage() {
     bankName: "Meezan Bank Ltd",
     accountNumber: "",
     jazzCashNo: "",
-    status: "Active" as const
+    status: "Active" as const,
+    headedDepartments: [] as string[]
   });
 
   // ─── FILTERING & SORTING ──────────────────────────────────────────────
@@ -158,7 +162,8 @@ export default function HREmployeesPage() {
       bankName: emp.bankName || "Meezan Bank Ltd",
       accountNumber: emp.accountNumber || "",
       jazzCashNo: emp.jazzCashNo || "",
-      status: emp.status || "Active"
+      status: emp.status || "Active",
+      headedDepartments: emp.headedDepartments || []
     });
     setShowModal(true);
   };
@@ -166,6 +171,9 @@ export default function HREmployeesPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name || !form.email || !form.phone) return;
+
+    const isEligible = isEligibleForDepartmentHead(form.designation);
+    const validHeadedDepts = isEligible ? form.headedDepartments : [];
 
     const payload = {
       employeeCode: form.employeeCode.trim() || editingEmployee?.employeeCode || "",
@@ -183,11 +191,13 @@ export default function HREmployeesPage() {
       bankName: form.bankName,
       accountNumber: form.accountNumber,
       jazzCashNo: form.jazzCashNo,
-      status: form.status
+      status: form.status,
+      headedDepartments: validHeadedDepts
     };
 
     if (editingEmployee) {
       updateHREmployee(editingEmployee.id, payload);
+      assignDepartmentHead(editingEmployee.id, validHeadedDepts);
     } else {
       addHREmployee(payload);
     }
@@ -325,6 +335,19 @@ export default function HREmployeesPage() {
                         <Briefcase size={12} className="text-gray-500 shrink-0" />
                         <span>Dept: <strong className="text-gray-200">{emp.department}</strong> {emp.subDepartment && <span className="text-emerald-400 font-mono">(&rarr; {emp.subDepartment})</span>} ({emp.employmentType})</span>
                       </div>
+                      {emp.headedDepartments && emp.headedDepartments.length > 0 && (
+                        <div className="py-1 flex flex-wrap gap-1 items-center">
+                          <span className="text-[9px] font-black uppercase tracking-wider text-amber-400 flex items-center gap-1">
+                            <Crown size={10} />
+                            <span>Head of:</span>
+                          </span>
+                          {emp.headedDepartments.map((hd: string) => (
+                            <span key={hd} className="px-1.5 py-0.5 rounded bg-amber-500/15 border border-amber-500/30 text-amber-300 text-[9px] font-bold">
+                              {hd}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                       <div className="flex items-center gap-2">
                         <Calendar size={12} className="text-gray-500 shrink-0" />
                         <span>Joined: <strong className="text-gray-200">{emp.joiningDate}</strong></span>
@@ -639,7 +662,15 @@ export default function HREmployeesPage() {
                       <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Designation</label>
                       <select
                         value={form.designation}
-                        onChange={(e) => setForm({ ...form, designation: e.target.value })}
+                        onChange={(e) => {
+                          const newDesg = e.target.value;
+                          const eligible = isEligibleForDepartmentHead(newDesg);
+                          setForm({ 
+                            ...form, 
+                            designation: newDesg,
+                            headedDepartments: eligible ? form.headedDepartments : []
+                          });
+                        }}
                         className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white focus:outline-none focus:border-emerald-500"
                       >
                         {hrDesignations.map((desg) => (
@@ -648,6 +679,68 @@ export default function HREmployeesPage() {
                       </select>
                     </div>
                   </div>
+
+                  {/* ─── EXECUTIVE LEADERSHIP: MULTI-DEPARTMENT HEAD ASSIGNMENT ─── */}
+                  {isEligibleForDepartmentHead(form.designation) ? (
+                    <div className="p-3.5 bg-gradient-to-r from-amber-950/20 via-purple-950/20 to-emerald-950/20 border border-amber-500/30 rounded-xl space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Crown size={14} className="text-amber-400" />
+                          <span className="text-xs font-black text-white">Executive Head of Department(s) Assignment</span>
+                        </div>
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-500/10 text-amber-300 border border-amber-500/30">
+                          Director / Manager Rank
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-gray-300 leading-relaxed">
+                        This leader qualifies to head <b>one or multiple departments simultaneously</b>. Check all departments this person will lead:
+                      </p>
+                      
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1">
+                        {hrDepartments.map((dept) => {
+                          const isChecked = form.headedDepartments.includes(dept.name);
+                          return (
+                            <button
+                              key={dept.id}
+                              type="button"
+                              onClick={() => {
+                                setForm((prev) => {
+                                  const exists = prev.headedDepartments.includes(dept.name);
+                                  const updated = exists
+                                    ? prev.headedDepartments.filter((d) => d !== dept.name)
+                                    : [...prev.headedDepartments, dept.name];
+                                  return { ...prev, headedDepartments: updated };
+                                });
+                              }}
+                              className={`flex items-center justify-between p-2 rounded-lg text-[10px] font-bold border transition text-left ${
+                                isChecked
+                                  ? "bg-amber-500/20 border-amber-500 text-amber-200 shadow-md shadow-amber-500/10"
+                                  : "bg-black/60 border-gray-800 text-gray-400 hover:border-gray-700 hover:text-white"
+                              }`}
+                            >
+                              <span className="truncate pr-1">{dept.name}</span>
+                              <div className={`w-3.5 h-3.5 rounded flex items-center justify-center border shrink-0 ${
+                                isChecked ? "bg-amber-500 border-amber-400 text-black" : "border-gray-700 bg-black/40"
+                              }`}>
+                                {isChecked && <Check size={10} className="stroke-[3]" />}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {form.headedDepartments.length > 1 && (
+                        <div className="mt-2 text-[10px] font-mono text-emerald-400 bg-emerald-950/30 border border-emerald-500/30 px-2.5 py-1 rounded-lg flex items-center gap-1.5">
+                          <span>👑 <b>Multi-Department Head:</b> Leading {form.headedDepartments.length} Departments simultaneously.</span>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="p-2.5 bg-black/30 border border-gray-800/80 rounded-xl text-[10px] text-gray-500 flex items-center gap-2">
+                      <span className="font-mono text-gray-400">ℹ️</span>
+                      <span>Department Head assignment is reserved strictly for <b>Director</b> and <b>Manager</b> level leadership.</span>
+                    </div>
+                  )}
 
                   {/* Employment Type, Salary, Status */}
                   <div className="grid grid-cols-3 gap-3">

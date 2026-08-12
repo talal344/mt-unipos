@@ -120,6 +120,7 @@ export interface HREmployee {
   avatar?: string;
   reportsTo?: string;
   reportingDesignation?: string;
+  headedDepartments?: string[]; // Array of department names this Director/Manager leads
 }
 
 export interface HRAttendance {
@@ -231,6 +232,7 @@ export interface HRDepartment {
   name: string;
   code: string;
   headOfDepartment?: string;
+  headEmployeeId?: string;
   description?: string;
   subDepartments?: string[];
 }
@@ -856,6 +858,9 @@ interface GlobalContextType {
   updateHRMSTicketStatus: (id: string, status: HRMSTicket["status"], assignedTo?: string) => void;
   deleteHRMSTicket: (id: string) => void;
   addHRMSTicketReply: (ticketId: string, message: string) => void;
+
+  // Department Head & Multi-department assignment handler
+  assignDepartmentHead: (employeeId: string, departmentNames: string[]) => void;
 }
 
 // ─── HRMS DEMO SEED DATA ──────────────────────────────────────────────────────
@@ -938,24 +943,69 @@ export function calculateDesignationRankAndGrade(title: string): { rank: number;
   return { rank: 9, grade: "E-2" };
 }
 
-export function getHeadOfDepartment(deptName: string, employees: HREmployee[], designations: HRDesignation[]): string {
+export function isEligibleForDepartmentHead(designation: string, rank?: number): boolean {
+  if (rank !== undefined && rank !== null && rank > 0) {
+    return rank <= 4; // Rank 1 (Director), Rank 2 (Asst Director), Rank 3 (Manager), Rank 4 (Asst Manager)
+  }
+  const calc = calculateDesignationRankAndGrade(designation || "");
+  return calc.rank <= 4;
+}
+
+export function getDepartmentHeadEmployee(
+  deptName: string,
+  employees: HREmployee[],
+  designations: HRDesignation[],
+  deptObj?: HRDepartment
+): HREmployee | null {
+  if (!deptName) return null;
+
+  // 1. Direct match by deptObj.headEmployeeId
+  if (deptObj?.headEmployeeId) {
+    const directEmp = employees.find(e => e.id === deptObj.headEmployeeId && e.status === "Active");
+    if (directEmp && isEligibleForDepartmentHead(directEmp.designation)) {
+      return directEmp;
+    }
+  }
+
+  // 2. Check if any employee explicitly has headedDepartments array containing deptName (Multi-dept head)
+  const multiHeadEmp = employees.find(e => 
+    e.status === "Active" && 
+    isEligibleForDepartmentHead(e.designation) && 
+    e.headedDepartments && 
+    e.headedDepartments.includes(deptName)
+  );
+  if (multiHeadEmp) return multiHeadEmp;
+
+  // 3. Check if any active employee's name matches deptObj.headOfDepartment
+  if (deptObj?.headOfDepartment) {
+    const nameMatch = employees.find(e => 
+      e.status === "Active" && 
+      isEligibleForDepartmentHead(e.designation) && 
+      deptObj.headOfDepartment?.toLowerCase().includes(e.name.toLowerCase())
+    );
+    if (nameMatch) return nameMatch;
+  }
+
+  // 4. Fallback: Find highest rank Director / Manager belonging to this primary department
   const deptEmps = employees.filter((e) => e.department === deptName && e.status === "Active");
-  if (deptEmps.length === 0) return "Unassigned";
+  const ranked = deptEmps
+    .map((emp) => {
+      const desg = designations.find((d) => d.title.toLowerCase() === emp.designation.toLowerCase());
+      const rankInfo = desg && desg.rank ? { rank: desg.rank, grade: desg.grade } : calculateDesignationRankAndGrade(emp.designation);
+      return { emp, rank: rankInfo.rank };
+    })
+    .filter(r => r.rank <= 4)
+    .sort((a, b) => a.rank - b.rank);
 
-  // Rank each employee based on designation
-  const ranked = deptEmps.map((emp) => {
-    const desg = designations.find((d) => d.title.toLowerCase() === emp.designation.toLowerCase());
-    const rankInfo = desg && desg.rank ? { rank: desg.rank, grade: desg.grade } : calculateDesignationRankAndGrade(emp.designation);
-    return {
-      emp,
-      rank: rankInfo.rank
-    };
-  });
+  return ranked.length > 0 ? ranked[0].emp : null;
+}
 
-  // Sort by rank ascending (1 = highest rank, e.g. Director/Manager)
-  ranked.sort((a, b) => a.rank - b.rank);
-  const top = ranked[0];
-  return `${top.emp.name} (${top.emp.designation})`;
+export function getHeadOfDepartment(deptName: string, employees: HREmployee[], designations: HRDesignation[], deptObj?: HRDepartment): string {
+  const head = getDepartmentHeadEmployee(deptName, employees, designations, deptObj);
+  if (head) {
+    return `${head.name} (${head.designation})`;
+  }
+  return "Direct Owner Supervision / Open";
 }
 
 const SEED_HR_DEPARTMENTS: HRDepartment[] = [
@@ -4766,6 +4816,51 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     saveTenantData("unipos_hr_departments", updated);
   };
 
+  const assignDepartmentHead = (employeeId: string, departmentNames: string[]) => {
+    const targetEmp = hrEmployees.find(e => e.id === employeeId);
+    if (!targetEmp) return;
+
+    if (!isEligibleForDepartmentHead(targetEmp.designation)) {
+      console.warn("Only Director or Manager level staff can be assigned as Department Heads.");
+      return;
+    }
+
+    // 1. Update this employee's headedDepartments
+    const updatedEmps = hrEmployees.map(e => {
+      if (e.id === employeeId) {
+        return { ...e, headedDepartments: departmentNames };
+      }
+      // If another employee previously headed any of these selected departments, remove them
+      if (e.headedDepartments && e.headedDepartments.length > 0) {
+        const remaining = e.headedDepartments.filter(d => !departmentNames.includes(d));
+        return { ...e, headedDepartments: remaining };
+      }
+      return e;
+    });
+    setHrEmployees(updatedEmps);
+    saveTenantData("unipos_hr_employees", updatedEmps);
+
+    // 2. Update the departments with headEmployeeId and headOfDepartment
+    const updatedDepts = hrDepartments.map(dept => {
+      if (departmentNames.includes(dept.name)) {
+        return {
+          ...dept,
+          headEmployeeId: targetEmp.id,
+          headOfDepartment: `${targetEmp.name} (${targetEmp.designation})`
+        };
+      } else if (dept.headEmployeeId === targetEmp.id) {
+        return {
+          ...dept,
+          headEmployeeId: undefined,
+          headOfDepartment: undefined
+        };
+      }
+      return dept;
+    });
+    setHrDepartments(updatedDepts);
+    saveTenantData("unipos_hr_departments", updatedDepts);
+  };
+
   const addHRDesignation = (desg: Omit<HRDesignation, "id">) => {
     const newDesg: HRDesignation = {
       ...desg,
@@ -5164,6 +5259,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         updateHRMSTicketStatus,
         deleteHRMSTicket,
         addHRMSTicketReply,
+        assignDepartmentHead,
 
         currentBranch,
         setCurrentBranch,

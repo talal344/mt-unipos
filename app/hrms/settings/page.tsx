@@ -5,7 +5,8 @@ import HRMSSidebar from "@/components/hrms-sidebar";
 import {
   useGlobalContext,
   calculateDesignationRankAndGrade,
-  getHeadOfDepartment
+  getHeadOfDepartment,
+  isEligibleForDepartmentHead
 } from "@/context/global-context";
 import {
   Settings,
@@ -23,7 +24,8 @@ import {
   X,
   Layers,
   Award,
-  GitBranch
+  GitBranch,
+  Crown
 } from "lucide-react";
 
 export default function HRMSPageSettings() {
@@ -55,6 +57,8 @@ export default function HRMSPageSettings() {
     name: "",
     code: "",
     description: "",
+    headEmployeeId: "",
+    headOfDepartment: "",
     subDepartments: [] as string[]
   });
   const [newSubDeptInput, setNewSubDeptInput] = useState("");
@@ -105,16 +109,25 @@ export default function HRMSPageSettings() {
     e.preventDefault();
     if (!deptForm.name || !deptForm.code) return;
 
+    const chosenEmp = hrEmployees.find((e) => e.id === deptForm.headEmployeeId);
+    const hodString = chosenEmp ? `${chosenEmp.name} (${chosenEmp.designation})` : "";
+
+    const payload = {
+      ...deptForm,
+      headEmployeeId: deptForm.headEmployeeId || undefined,
+      headOfDepartment: hodString || undefined
+    };
+
     if (editingDeptId) {
-      updateHRDepartment(editingDeptId, deptForm);
+      updateHRDepartment(editingDeptId, payload);
       triggerToast(`✅ Updated department '${deptForm.name}'!`);
     } else {
-      addHRDepartment(deptForm);
+      addHRDepartment(payload);
       triggerToast(`✅ Added new department '${deptForm.name}' with ${deptForm.subDepartments.length} sub-units!`);
     }
     setShowDeptModal(false);
     setEditingDeptId(null);
-    setDeptForm({ name: "", code: "", description: "", subDepartments: [] });
+    setDeptForm({ name: "", code: "", description: "", headEmployeeId: "", headOfDepartment: "", subDepartments: [] });
     setNewSubDeptInput("");
   };
 
@@ -307,6 +320,8 @@ export default function HRMSPageSettings() {
                                 name: dept.name,
                                 code: dept.code,
                                 description: dept.description || "",
+                                headEmployeeId: dept.headEmployeeId || "",
+                                headOfDepartment: dept.headOfDepartment || "",
                                 subDepartments: dept.subDepartments || []
                               });
                               setNewSubDeptInput("");
@@ -594,6 +609,37 @@ export default function HRMSPageSettings() {
                     onChange={(e) => setDeptForm({ ...deptForm, description: e.target.value })}
                     className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white focus:outline-none focus:border-emerald-500"
                   />
+                </div>
+
+                {/* ─── HEAD OF DEPARTMENT SELECTION (DIRECTOR / MANAGER ONLY) ─── */}
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-gray-400 font-bold">Head of Department (Director / Manager Rank)</label>
+                    <span className="text-[10px] text-amber-400 font-bold flex items-center gap-1">
+                      <Crown size={11} /> Multi-Dept Supported
+                    </span>
+                  </div>
+                  <select
+                    value={deptForm.headEmployeeId}
+                    onChange={(e) => setDeptForm({ ...deptForm, headEmployeeId: e.target.value })}
+                    className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white focus:outline-none focus:border-emerald-500 text-xs font-bold"
+                  >
+                    <option value="">-- Direct Company Owner Oversight / Auto-Rank Head --</option>
+                    {hrEmployees
+                      .filter((emp) => isEligibleForDepartmentHead(emp.designation) && emp.status === "Active")
+                      .map((emp) => {
+                        const otherDepts = (emp.headedDepartments || []).filter((d) => d !== deptForm.name);
+                        const otherDeptsLabel = otherDepts.length > 0 ? ` (👑 Also Heads: ${otherDepts.join(", ")})` : "";
+                        return (
+                          <option key={emp.id} value={emp.id}>
+                            {emp.name} — {emp.designation} ({emp.department}){otherDeptsLabel}
+                          </option>
+                        );
+                      })}
+                  </select>
+                  <p className="text-[10px] text-gray-500 mt-1">
+                    Only staff with <b>Director</b> or <b>Manager</b> level rankings are eligible to head departments. A single leader can head multiple departments.
+                  </p>
                 </div>
 
                 {/* Sub-Departments / Operational Units Manager */}
