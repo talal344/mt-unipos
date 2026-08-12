@@ -93,10 +93,10 @@ export default function HRMSTopHeader({ title, subtitle }: { title?: string; sub
                 <img
                   src={avatar}
                   alt={name}
-                  className="w-11 h-11 rounded-2xl object-cover border-2 border-emerald-500/40 group-hover:border-emerald-400 transition shadow-md"
+                  className="w-14 h-14 rounded-2xl object-cover border-2 border-emerald-500/40 group-hover:border-emerald-400 transition shadow-md"
                 />
               ) : (
-                <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border-2 border-emerald-500/30 text-emerald-400 flex items-center justify-center font-black text-sm uppercase group-hover:border-emerald-400 transition shadow-md">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border-2 border-emerald-500/30 text-emerald-400 flex items-center justify-center font-black text-base uppercase group-hover:border-emerald-400 transition shadow-md">
                   {name.slice(0, 2)}
                 </div>
               )}

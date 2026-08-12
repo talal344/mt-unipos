@@ -359,58 +359,58 @@ export default function OrgChartPage() {
             if (node.empRef) setSelectedEmployeeDetail(node.empRef);
           }}
           className={`
-            relative z-10 transition-all duration-300 rounded-2xl p-4 shadow-2xl flex flex-col items-center text-center cursor-pointer group
+            relative z-10 transition-all duration-300 rounded-3xl p-5 shadow-2xl flex flex-col items-center text-center cursor-pointer group
             ${
               isOwner
-                ? "w-72 bg-gradient-to-b from-[#161208] via-[#0c0d12] to-[#06080d] border-2 border-amber-400/90 shadow-[0_0_30px_rgba(245,158,11,0.25)] hover:border-amber-300 hover:scale-105"
+                ? "w-80 bg-gradient-to-b from-[#161208] via-[#0c0d12] to-[#06080d] border-2 border-amber-400/90 shadow-[0_0_35px_rgba(245,158,11,0.3)] hover:border-amber-300 hover:scale-105"
                 : isMultiHead
-                ? "w-64 bg-gradient-to-b from-[#180f24] via-[#0e0c18] to-[#07080f] border-2 border-purple-400/90 shadow-[0_0_25px_rgba(168,85,247,0.2)] hover:border-purple-300 hover:scale-105"
+                ? "w-72 bg-gradient-to-b from-[#180f24] via-[#0e0c18] to-[#07080f] border-2 border-purple-400/90 shadow-[0_0_30px_rgba(168,85,247,0.25)] hover:border-purple-300 hover:scale-105"
                 : isDeptHead
-                ? `w-60 bg-[#0a0e17] border-t-4 ${deptStyle.border} border-l border-r border-b border-gray-800 hover:border-emerald-500/60 hover:scale-105`
+                ? `w-72 bg-[#0a0e17] border-t-4 ${deptStyle.border} border-l border-r border-b border-gray-800 hover:border-emerald-500/60 hover:scale-105`
                 : isOpenDept
-                ? "w-56 bg-[#080d16] border-2 border-dashed border-sky-500/50 hover:border-sky-400 hover:scale-105"
-                : `w-52 bg-[#090d14] border-t-2 ${deptStyle.border} border-l border-r border-b border-gray-800/90 hover:border-gray-600 hover:scale-105`
+                ? "w-64 bg-[#080d16] border-2 border-dashed border-sky-500/50 hover:border-sky-400 hover:scale-105"
+                : `w-64 bg-[#090d14] border-t-2 ${deptStyle.border} border-l border-r border-b border-gray-800/90 hover:border-gray-600 hover:scale-105`
             }
             ${isMatch ? "ring-4 ring-white scale-110 shadow-[0_0_35px_rgba(255,255,255,0.4)]" : ""}
           `}
         >
           {/* Header Crown / Rank Badge */}
           {isOwner ? (
-            <div className="absolute -top-3.5 px-3 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shadow-lg shadow-amber-500/30">
-              <Crown size={11} className="fill-black" />
+            <div className="absolute -top-3.5 px-3 py-1 rounded-full bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shadow-lg shadow-amber-500/30">
+              <Crown size={12} className="fill-black" />
               <span>Company Owner &amp; Apex Leader</span>
             </div>
           ) : isMultiHead ? (
-            <div className="absolute -top-3.5 px-2.5 py-0.5 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shadow-lg shadow-purple-900/40">
-              <Crown size={11} className="text-amber-300 fill-amber-300" />
+            <div className="absolute -top-3.5 px-3 py-1 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shadow-lg shadow-purple-900/40">
+              <Crown size={12} className="text-amber-300 fill-amber-300" />
               <span>Multi-Dept Head ({node.headedDepartments?.length || 2})</span>
             </div>
           ) : isDeptHead ? (
-            <div className={`absolute -top-3 px-2 py-0.5 rounded-full bg-black border ${deptStyle.border} ${deptStyle.text} text-[8px] font-black uppercase tracking-wider flex items-center gap-1`}>
-              <ShieldCheck size={10} />
+            <div className={`absolute -top-3 px-2.5 py-0.5 rounded-full bg-black border ${deptStyle.border} ${deptStyle.text} text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shadow-md`}>
+              <ShieldCheck size={11} />
               <span>Head of Department</span>
             </div>
           ) : isOpenDept ? (
-            <div className="absolute -top-3 px-2 py-0.5 rounded-full bg-sky-950 border border-sky-500/40 text-sky-300 text-[8px] font-black uppercase tracking-wider">
+            <div className="absolute -top-3 px-2.5 py-0.5 rounded-full bg-sky-950 border border-sky-500/40 text-sky-300 text-[9px] font-black uppercase tracking-wider">
               <span>Operational Division</span>
             </div>
           ) : (
-            <div className="absolute -top-2.5 right-3 px-1.5 py-0.2 rounded bg-black/60 border border-gray-800 text-[8px] font-mono text-gray-400">
+            <div className="absolute -top-2.5 right-3 px-2 py-0.5 rounded-md bg-black/80 border border-gray-800 text-[9px] font-mono font-bold text-gray-400">
               {node.grade || "E-1"}
             </div>
           )}
 
-          {/* Avatar Icon */}
-          <div className="mt-1">
+          {/* Large Avatar Photo */}
+          <div className="mt-1 flex justify-center">
             {isOwner ? (
               node.avatar || currentUser?.avatar ? (
                 <img
                   src={node.avatar || currentUser?.avatar}
                   alt={node.name}
-                  className="w-14 h-14 rounded-2xl object-cover border-2 border-amber-400 shadow-md"
+                  className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl object-cover border-2 border-amber-400 shadow-xl"
                 />
               ) : (
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400/20 to-yellow-600/20 border-2 border-amber-400 text-amber-300 flex items-center justify-center font-black text-xl shadow-inner">
+                <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-gradient-to-br from-amber-400/20 to-yellow-600/20 border-2 border-amber-400 text-amber-300 flex items-center justify-center font-black text-3xl shadow-xl">
                   👑
                 </div>
               )
@@ -419,25 +419,25 @@ export default function OrgChartPage() {
                 <img
                   src={node.avatar || node.empRef?.avatar}
                   alt={node.name}
-                  className="w-12 h-12 rounded-2xl object-cover border-2 border-purple-400 shadow-md"
+                  className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border-2 border-purple-400 shadow-xl"
                 />
               ) : (
-                <div className="w-12 h-12 rounded-2xl bg-purple-500/20 border-2 border-purple-400 text-purple-200 flex items-center justify-center font-black text-lg shadow-inner">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-purple-500/20 border-2 border-purple-400 text-purple-200 flex items-center justify-center font-black text-2xl shadow-xl">
                   {node.name.charAt(0)}
                 </div>
               )
             ) : isOpenDept ? (
-              <div className="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/30 text-sky-400 flex items-center justify-center font-black text-sm">
-                <Building2 size={18} />
+              <div className="w-14 h-14 rounded-2xl bg-sky-500/10 border border-sky-500/30 text-sky-400 flex items-center justify-center font-black text-xl shadow-md">
+                <Building2 size={24} />
               </div>
             ) : node.avatar || node.empRef?.avatar ? (
               <img
                 src={node.avatar || node.empRef?.avatar}
                 alt={node.name}
-                className={`w-10 h-10 rounded-xl object-cover border ${deptStyle.border} shadow-sm`}
+                className={`w-18 h-18 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 ${deptStyle.border} shadow-lg`}
               />
             ) : (
-              <div className={`w-10 h-10 rounded-xl bg-black border ${deptStyle.border} ${deptStyle.text} flex items-center justify-center font-black text-sm`}>
+              <div className={`w-18 h-18 sm:w-20 sm:h-20 rounded-2xl bg-black border-2 ${deptStyle.border} ${deptStyle.text} flex items-center justify-center font-black text-2xl shadow-md`}>
                 {node.name.charAt(0)}
               </div>
             )}

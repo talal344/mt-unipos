@@ -489,76 +489,76 @@ export default function MyTeamPage() {
             if (node.empRef) setSelectedEmpModal(node.empRef);
           }}
           className={`
-            relative z-10 transition-all duration-300 rounded-2xl p-4 shadow-2xl flex flex-col items-center text-center cursor-pointer group
+            relative z-10 transition-all duration-300 rounded-3xl p-5 shadow-2xl flex flex-col items-center text-center cursor-pointer group
             ${
               isMeNode
-                ? "w-64 bg-gradient-to-b from-[#062c20] via-[#091b15] to-[#050e0c] border-2 border-emerald-400 shadow-[0_0_30px_rgba(16,185,129,0.35)] scale-105 hover:border-emerald-300"
+                ? "w-72 sm:w-80 bg-gradient-to-b from-[#062c20] via-[#091b15] to-[#050e0c] border-2 border-emerald-400 shadow-[0_0_35px_rgba(16,185,129,0.4)] scale-105 hover:border-emerald-300"
                 : isOwnerNode
-                ? "w-64 bg-gradient-to-b from-[#191408] via-[#0c0d12] to-[#06080d] border-2 border-amber-400/90 shadow-[0_0_25px_rgba(245,158,11,0.2)] hover:scale-105"
+                ? "w-72 sm:w-80 bg-gradient-to-b from-[#191408] via-[#0c0d12] to-[#06080d] border-2 border-amber-400/90 shadow-[0_0_30px_rgba(245,158,11,0.25)] hover:scale-105"
                 : isDirector
-                ? "w-60 bg-gradient-to-b from-[#180f24] via-[#0e0c18] to-[#07080f] border-t-4 border-purple-500 border-l border-r border-b border-gray-800 hover:scale-105"
+                ? "w-72 bg-gradient-to-b from-[#180f24] via-[#0e0c18] to-[#07080f] border-t-4 border-purple-500 border-l border-r border-b border-gray-800 hover:scale-105"
                 : isManager
-                ? "w-56 bg-[#090e18] border-t-4 border-sky-500 border-l border-r border-b border-gray-800 hover:scale-105"
+                ? "w-68 bg-[#090e18] border-t-4 border-sky-500 border-l border-r border-b border-gray-800 hover:scale-105"
                 : isSupervisor
-                ? "w-52 bg-[#0a1215] border-t-4 border-teal-500 border-l border-r border-b border-gray-800 hover:scale-105"
+                ? "w-64 bg-[#0a1215] border-t-4 border-teal-500 border-l border-r border-b border-gray-800 hover:scale-105"
                 : isTeamLead
-                ? "w-52 bg-[#17130a] border-t-4 border-amber-500 border-l border-r border-b border-gray-800 hover:scale-105"
+                ? "w-64 bg-[#17130a] border-t-4 border-amber-500 border-l border-r border-b border-gray-800 hover:scale-105"
                 : isPeer
-                ? "w-48 bg-[#090d14] border-t-2 border-cyan-500/70 border-l border-r border-b border-gray-800 hover:scale-105"
-                : `w-48 bg-[#080c14] border-t-2 ${deptStyle.border} border-l border-r border-b border-gray-800/90 hover:scale-105`
+                ? "w-60 bg-[#090d14] border-t-2 border-cyan-500/70 border-l border-r border-b border-gray-800 hover:scale-105"
+                : `w-60 bg-[#080c14] border-t-2 ${deptStyle.border} border-l border-r border-b border-gray-800/90 hover:scale-105`
             }
             ${isMatch ? "ring-4 ring-white scale-110 shadow-[0_0_35px_rgba(255,255,255,0.4)]" : ""}
           `}
         >
           {/* Header Role Badges */}
           {isMeNode ? (
-            <div className="absolute -top-3.5 px-3 py-0.5 rounded-full bg-gradient-to-r from-emerald-500 to-teal-400 text-black text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shadow-lg shadow-emerald-500/40">
-              <Sparkles size={11} className="fill-black" />
+            <div className="absolute -top-3.5 px-3 py-1 rounded-full bg-gradient-to-r from-emerald-500 to-teal-400 text-black text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shadow-lg shadow-emerald-500/40">
+              <Sparkles size={12} className="fill-black" />
               <span>⭐ YOU (Active Profile)</span>
             </div>
           ) : isOwnerNode ? (
-            <div className="absolute -top-3 px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-[8px] font-black uppercase tracking-wider flex items-center gap-1 shadow-md shadow-amber-500/20">
-              <Crown size={10} className="fill-black" />
+            <div className="absolute -top-3 px-3 py-1 rounded-full bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shadow-md shadow-amber-500/20">
+              <Crown size={11} className="fill-black" />
               <span>Company Owner</span>
             </div>
           ) : isDirector ? (
-            <div className="absolute -top-2.5 px-2 py-0.5 rounded-full bg-purple-950 border border-purple-500/40 text-purple-300 text-[8px] font-black uppercase tracking-wider flex items-center gap-1">
-              <ShieldCheck size={9} />
+            <div className="absolute -top-2.5 px-2.5 py-0.5 rounded-full bg-purple-950 border border-purple-500/40 text-purple-300 text-[9px] font-black uppercase tracking-wider flex items-center gap-1">
+              <ShieldCheck size={10} />
               <span>Department Head</span>
             </div>
           ) : isManager ? (
-            <div className="absolute -top-2.5 px-2 py-0.5 rounded-full bg-sky-950 border border-sky-500/40 text-sky-300 text-[8px] font-black uppercase tracking-wider">
+            <div className="absolute -top-2.5 px-2.5 py-0.5 rounded-full bg-sky-950 border border-sky-500/40 text-sky-300 text-[9px] font-black uppercase tracking-wider">
               <span>Department Manager</span>
             </div>
           ) : isSupervisor ? (
-            <div className="absolute -top-2.5 px-2 py-0.5 rounded-full bg-teal-950 border border-teal-500/40 text-teal-300 text-[8px] font-black uppercase tracking-wider">
+            <div className="absolute -top-2.5 px-2.5 py-0.5 rounded-full bg-teal-950 border border-teal-500/40 text-teal-300 text-[9px] font-black uppercase tracking-wider">
               <span>Supervisor</span>
             </div>
           ) : isTeamLead ? (
-            <div className="absolute -top-2.5 px-2 py-0.5 rounded-full bg-amber-950 border border-amber-500/40 text-amber-300 text-[8px] font-black uppercase tracking-wider flex items-center gap-1">
+            <div className="absolute -top-2.5 px-2.5 py-0.5 rounded-full bg-amber-950 border border-amber-500/40 text-amber-300 text-[9px] font-black uppercase tracking-wider flex items-center gap-1">
               <span>⚡ Team Lead</span>
             </div>
           ) : isPeer ? (
-            <div className="absolute -top-2.5 px-2 py-0.5 rounded-full bg-cyan-950 border border-cyan-500/30 text-cyan-300 text-[8px] font-black uppercase tracking-wider">
+            <div className="absolute -top-2.5 px-2.5 py-0.5 rounded-full bg-cyan-950 border border-cyan-500/30 text-cyan-300 text-[9px] font-black uppercase tracking-wider">
               <span>🤝 Team Peer</span>
             </div>
           ) : (
-            <div className="absolute -top-2.5 px-2 py-0.5 rounded-full bg-gray-900 border border-gray-700 text-gray-400 text-[8px] font-mono">
+            <div className="absolute -top-2.5 px-2 py-0.5 rounded-md bg-gray-900 border border-gray-700 text-gray-400 text-[9px] font-mono font-bold">
               {node.grade || "E-1"}
             </div>
           )}
 
-          {/* Avatar Icon */}
-          <div className="mt-1">
+          {/* Large Avatar Photo */}
+          <div className="mt-1 flex justify-center">
             {isMeNode ? (
               empMatch?.avatar || currentUser?.avatar || node.avatar ? (
                 <img
                   src={empMatch?.avatar || currentUser?.avatar || node.avatar}
                   alt={node.name}
-                  className="w-12 h-12 rounded-2xl object-cover border-2 border-emerald-400 shadow-inner"
+                  className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl object-cover border-2 border-emerald-400 shadow-xl"
                 />
               ) : (
-                <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border-2 border-emerald-400 text-emerald-300 flex items-center justify-center font-black text-xl shadow-inner">
+                <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-emerald-500/20 border-2 border-emerald-400 text-emerald-300 flex items-center justify-center font-black text-3xl shadow-xl">
                   {node.name.charAt(0)}
                 </div>
               )
@@ -567,10 +567,10 @@ export default function MyTeamPage() {
                 <img
                   src={currentUser?.avatar || node.avatar}
                   alt={node.name}
-                  className="w-11 h-11 rounded-2xl object-cover border-2 border-amber-400"
+                  className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl object-cover border-2 border-amber-400 shadow-xl"
                 />
               ) : (
-                <div className="w-11 h-11 rounded-2xl bg-amber-400/20 border-2 border-amber-400 text-amber-300 flex items-center justify-center font-black text-lg">
+                <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-amber-400/20 border-2 border-amber-400 text-amber-300 flex items-center justify-center font-black text-3xl shadow-xl">
                   👑
                 </div>
               )
@@ -579,10 +579,34 @@ export default function MyTeamPage() {
                 <img
                   src={node.avatar || node.empRef?.avatar}
                   alt={node.name}
-                  className="w-10 h-10 rounded-xl object-cover border border-purple-400 shadow-sm"
+                  className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border-2 border-purple-400 shadow-xl"
                 />
               ) : (
-                <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-400 text-purple-200 flex items-center justify-center font-black text-sm">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-purple-500/20 border-2 border-purple-400 text-purple-200 flex items-center justify-center font-black text-2xl shadow-xl">
+                  {node.name.charAt(0)}
+                </div>
+              )
+            ) : isManager ? (
+              node.avatar || node.empRef?.avatar ? (
+                <img
+                  src={node.avatar || node.empRef?.avatar}
+                  alt={node.name}
+                  className="w-18 h-18 sm:w-22 sm:h-22 rounded-2xl object-cover border-2 border-sky-400 shadow-lg"
+                />
+              ) : (
+                <div className="w-18 h-18 sm:w-22 sm:h-22 rounded-2xl bg-sky-500/20 border-2 border-sky-400 text-sky-200 flex items-center justify-center font-black text-2xl shadow-lg">
+                  {node.name.charAt(0)}
+                </div>
+              )
+            ) : isSupervisor || isTeamLead ? (
+              node.avatar || node.empRef?.avatar ? (
+                <img
+                  src={node.avatar || node.empRef?.avatar}
+                  alt={node.name}
+                  className={`w-18 h-18 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 ${deptStyle.border} shadow-lg`}
+                />
+              ) : (
+                <div className={`w-18 h-18 sm:w-20 sm:h-20 rounded-2xl bg-black border-2 ${deptStyle.border} ${deptStyle.text} flex items-center justify-center font-black text-2xl shadow-md`}>
                   {node.name.charAt(0)}
                 </div>
               )
@@ -590,10 +614,10 @@ export default function MyTeamPage() {
               <img
                 src={node.avatar || node.empRef?.avatar}
                 alt={node.name}
-                className={`w-9 h-9 rounded-xl object-cover border ${deptStyle.border} shadow-sm`}
+                className={`w-16 h-16 sm:w-18 sm:h-18 rounded-2xl object-cover border-2 ${deptStyle.border} shadow-md`}
               />
             ) : (
-              <div className={`w-9 h-9 rounded-xl bg-black border ${deptStyle.border} ${deptStyle.text} flex items-center justify-center font-bold text-xs`}>
+              <div className={`w-16 h-16 sm:w-18 sm:h-18 rounded-2xl bg-black border-2 ${deptStyle.border} ${deptStyle.text} flex items-center justify-center font-bold text-xl shadow-sm`}>
                 {node.name.charAt(0)}
               </div>
             )}
