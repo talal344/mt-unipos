@@ -46,6 +46,25 @@ export interface EmailLogEntry {
 
 const INITIAL_EMAIL_LOGS: EmailLogEntry[] = [
   {
+    id: "EML-2026-7643",
+    to: "talal.ah895@gmail.com",
+    businessName: "MT RCM Management",
+    tenantId: "MRM-001",
+    ownerName: "Mian Talal",
+    subject: "[MT UniPOS] Official SaaS Billing & Account Setup: MT RCM Management",
+    plan: "Enterprise yearly",
+    billingCycle: "Annual",
+    amount: 120000,
+    paidAmount: 120000,
+    remainingBalance: 0,
+    currency: "PKR",
+    paymentMethod: "Bank Transfer (Meezan / HBL)",
+    sentAt: new Date().toISOString(),
+    status: "Delivered",
+    password: "owner123",
+    notes: "Executive invoice & tenant credentials sent upon paid activation (120,000 PKR Cleared)."
+  },
+  {
     id: "EML-2026-9041",
     to: "codingwithtalal@gmail.com",
     businessName: "Coding Talal",
@@ -59,7 +78,7 @@ const INITIAL_EMAIL_LOGS: EmailLogEntry[] = [
     remainingBalance: 0,
     currency: "PKR",
     paymentMethod: "Bank Transfer (Meezan / HBL)",
-    sentAt: new Date().toISOString(),
+    sentAt: new Date(Date.now() - 3600000 * 12).toISOString(),
     status: "Delivered",
     password: "owner123",
     notes: "Executive invoice & tenant credentials sent upon paid activation."
@@ -124,6 +143,41 @@ export default function AdminEmailsPage() {
 
   const [sending, setSending] = useState(false);
 
+  // Auto-sync email logs with real SaaS invoices on load
+  useEffect(() => {
+    if (typeof window !== "undefined" && saasInvoices.length > 0) {
+      setLogs(prev => {
+        let changed = false;
+        const synced = prev.map(log => {
+          const matchingInv = saasInvoices.find(inv => 
+            (inv.tenantId && log.tenantId && inv.tenantId.toLowerCase() === log.tenantId.toLowerCase()) ||
+            (inv.tenantName && log.businessName && inv.tenantName.trim().toLowerCase() === log.businessName.trim().toLowerCase())
+          );
+          if (matchingInv && matchingInv.amount > 0 && (log.amount !== matchingInv.amount || log.paidAmount !== (matchingInv.paidAmount ?? matchingInv.amount))) {
+            changed = true;
+            const paid = matchingInv.paidAmount !== undefined ? matchingInv.paidAmount : (matchingInv.status === "Paid" ? matchingInv.amount : 0);
+            const rem = matchingInv.remainingBalance !== undefined ? matchingInv.remainingBalance : Math.max(0, matchingInv.amount - paid);
+            return {
+              ...log,
+              amount: matchingInv.amount,
+              paidAmount: paid,
+              remainingBalance: rem,
+              plan: matchingInv.plan || log.plan,
+              currency: (matchingInv.currency as any) || log.currency,
+              paymentMethod: matchingInv.paymentMethod || log.paymentMethod
+            };
+          }
+          return log;
+        });
+        if (changed) {
+          localStorage.setItem("unipos_email_logs", JSON.stringify(synced));
+          return synced;
+        }
+        return prev;
+      });
+    }
+  }, [saasInvoices]);
+
   // Sync to local storage
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -136,11 +190,40 @@ export default function AdminEmailsPage() {
     setTimeout(() => setToastMsg(null), 4000);
   };
 
-  // Handle auto-populating tenant info when selected from dropdown
+  // Handle auto-populating tenant info and their real SaaS invoice when selected from dropdown
   const handleTenantSelect = (tId: string) => {
     const t = tenants.find(x => x.id === tId);
     if (t) {
       const cred = t.credentialPresets?.[0];
+      
+      // Auto-fetch matching SaaS invoice
+      const inv = saasInvoices.find(i => 
+        (i.tenantId && i.tenantId.toLowerCase() === t.id.toLowerCase()) || 
+        (i.tenantName && t.businessName && i.tenantName.trim().toLowerCase() === t.businessName.trim().toLowerCase())
+      );
+
+      let invoiceAmount = "25000";
+      let invoicePaid = "25000";
+      let invoiceCurrency: "PKR" | "USD" = (t.defaultCurrency as any) || "PKR";
+      let invoicePlan = t.plan ? `${t.plan} (${t.billingCycle || 'monthly'})` : "Professional Plan";
+      let invoicePaymentMethod = "Bank Transfer (HBL / Meezan)";
+
+      if (inv) {
+        invoiceAmount = (inv.amount !== undefined ? inv.amount : 0).toString();
+        const paidVal = inv.paidAmount !== undefined ? inv.paidAmount : (inv.status === "Paid" ? inv.amount : 0);
+        invoicePaid = paidVal.toString();
+        if (inv.currency === "USD" || inv.currency === "PKR") {
+          invoiceCurrency = inv.currency;
+        }
+        if (inv.plan) invoicePlan = inv.plan;
+        if (inv.paymentMethod) invoicePaymentMethod = inv.paymentMethod;
+      } else {
+        if (t.plan === "Starter") invoiceAmount = t.billingCycle === "yearly" ? "150000" : "15000";
+        if (t.plan === "Professional") invoiceAmount = t.billingCycle === "yearly" ? "250000" : "25000";
+        if (t.plan === "Enterprise") invoiceAmount = t.billingCycle === "yearly" ? "120000" : "45000";
+        invoicePaid = t.status === "Active" ? invoiceAmount : "0";
+      }
+
       setForm(prev => ({
         ...prev,
         tenantId: t.id,
@@ -148,9 +231,12 @@ export default function AdminEmailsPage() {
         businessName: t.businessName,
         ownerName: t.ownerName,
         password: cred?.pass || "owner123",
-        plan: t.plan || "Professional Plan",
+        plan: invoicePlan,
         billingCycle: t.billingCycle === "yearly" ? "Annual" : "Monthly",
-        currency: (t.defaultCurrency as any) || "PKR",
+        amount: invoiceAmount,
+        paidAmount: invoicePaid,
+        currency: invoiceCurrency,
+        paymentMethod: invoicePaymentMethod,
         subject: `[MT UniPOS] Official SaaS Billing & Account Setup: ${t.businessName}`
       }));
     }
@@ -717,11 +803,21 @@ export default function AdminEmailsPage() {
                     className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-bold focus:outline-none focus:border-purple-500"
                   >
                     <option value="">-- Choose registered tenant or enter manually --</option>
-                    {tenants.map(t => (
-                      <option key={t.id} value={t.id}>
-                        {t.businessName} ({t.id} - {t.email})
-                      </option>
-                    ))}
+                    {tenants.map(t => {
+                      const matchingInv = saasInvoices.find(i => 
+                        (i.tenantId && i.tenantId.toLowerCase() === t.id.toLowerCase()) || 
+                        (i.tenantName && t.businessName && i.tenantName.trim().toLowerCase() === t.businessName.trim().toLowerCase())
+                      );
+                      const invTag = matchingInv 
+                        ? `[Invoice: ${matchingInv.currency || 'PKR'} ${matchingInv.amount.toLocaleString()} • ${matchingInv.status}]`
+                        : `[Plan: ${t.plan || 'Standard'}]`;
+
+                      return (
+                        <option key={t.id} value={t.id}>
+                          {t.businessName} ({t.id}) — {invTag}
+                        </option>
+                      );
+                    })}
                   </select>
                 </div>
 
@@ -806,7 +902,7 @@ export default function AdminEmailsPage() {
                 </div>
 
                 {/* Amount & Currency */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-3 gap-3">
                   <div>
                     <label className="block text-[11px] uppercase font-bold text-gray-400 mb-1">Currency</label>
                     <select
@@ -819,17 +915,76 @@ export default function AdminEmailsPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[11px] uppercase font-bold text-emerald-400 mb-1">Total Bill Amount</label>
+                    <label className="block text-[11px] uppercase font-bold text-emerald-400 mb-1">Total Bill Amount *</label>
                     <input
                       type="number"
                       required
                       min="0"
                       value={form.amount}
-                      onChange={e => setForm({ ...form, amount: e.target.value, paidAmount: e.target.value })}
+                      onChange={e => setForm({ ...form, amount: e.target.value })}
                       className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-emerald-400 font-black text-sm focus:outline-none focus:border-purple-500"
                     />
                   </div>
+                  <div>
+                    <label className="block text-[11px] uppercase font-bold text-sky-400 mb-1">Amount Paid / Received *</label>
+                    <input
+                      type="number"
+                      required
+                      min="0"
+                      value={form.paidAmount}
+                      onChange={e => setForm({ ...form, paidAmount: e.target.value })}
+                      className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-sky-400 font-black text-sm focus:outline-none focus:border-purple-500"
+                    />
+                  </div>
                 </div>
+
+                {/* Payment Method */}
+                <div>
+                  <label className="block text-[11px] uppercase font-bold text-gray-400 mb-1">Payment Method</label>
+                  <select
+                    value={form.paymentMethod}
+                    onChange={e => setForm({ ...form, paymentMethod: e.target.value })}
+                    className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-bold focus:outline-none focus:border-purple-500"
+                  >
+                    <option value="Bank Transfer (HBL / Meezan)">Bank Transfer (HBL / Meezan)</option>
+                    <option value="Cash Payment">Cash Payment</option>
+                    <option value="EasyPaisa / JazzCash">EasyPaisa / JazzCash</option>
+                    <option value="Credit / Debit Card">Credit / Debit Card</option>
+                    <option value="Online Gateway (Stripe)">Online Gateway (Stripe)</option>
+                  </select>
+                </div>
+
+                {/* Live Auto-Calculated Billing Summary */}
+                {(() => {
+                  const billAmt = parseFloat(form.amount) || 0;
+                  const paidAmt = parseFloat(form.paidAmount) || 0;
+                  const remDue = Math.max(0, billAmt - paidAmt);
+                  const isFullyPaid = remDue === 0 && billAmt > 0;
+
+                  return (
+                    <div className="bg-slate-900/90 border border-slate-800 p-3.5 rounded-xl space-y-2">
+                      <div className="flex justify-between items-center text-[11px]">
+                        <span className="text-gray-400">Total Billed: <b className="text-white">{form.currency} {billAmt.toLocaleString()}</b></span>
+                        <span className="text-emerald-400">Paid: <b>{form.currency} {paidAmt.toLocaleString()}</b></span>
+                        <span className={`font-black ${isFullyPaid ? 'text-emerald-400' : 'text-amber-400'}`}>
+                          Remaining Dues: {form.currency} {remDue.toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between pt-1 border-t border-slate-800/80 text-[10px]">
+                        <span className="text-gray-400">Payment Status:</span>
+                        <span className={`px-2 py-0.5 rounded font-black uppercase text-[9px] ${
+                          isFullyPaid 
+                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' 
+                            : remDue < billAmt 
+                            ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                            : 'bg-red-500/20 text-red-300 border border-red-500/30'
+                        }`}>
+                          {isFullyPaid ? "✅ Fully Cleared & Paid" : remDue < billAmt ? "⚠️ Partial Payment Received" : "❌ Unpaid / Pending"}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 <div className="bg-purple-500/10 border border-purple-500/30 p-3 rounded-xl text-[10px] text-purple-300 font-bold flex items-center justify-between">
                   <span>Official Portal Link:</span>

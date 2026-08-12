@@ -2771,17 +2771,58 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     // 4. Automated Resend API Email Dispatch to Client
     if (req.email) {
       try {
+        const paidAmt = options.amount;
+        const remBal = 0;
+        const cur = options.currency;
+        const bCycle = options.billingCycle === "yearly" ? "Annual" : "Monthly";
+        const pMethod = options.paymentMethod || "Bank Transfer (Meezan / HBL)";
+        const ownerPass = existingTenant?.credentialPresets?.[0]?.pass || "owner123";
+
         fetch("/api/send-email", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             to: req.email,
             invoiceId: newInvoice.id,
+            tenantId: targetTenantId,
             businessName: req.businessName,
+            ownerName: req.name,
+            password: ownerPass,
             amount: newInvoice.amount,
-            currency: newInvoice.currency,
+            paidAmount: paidAmt,
+            remainingBalance: remBal,
+            currency: cur,
             plan: newInvoice.plan,
+            billingCycle: bCycle,
+            paymentMethod: pMethod
           }),
+        }).then(async res => {
+          const data = await res.json();
+          try {
+            const rawLogs = localStorage.getItem("unipos_email_logs");
+            const existingLogs = rawLogs ? JSON.parse(rawLogs) : [];
+            const logId = `EML-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+            const newLogEntry = {
+              id: logId,
+              to: req.email,
+              businessName: req.businessName,
+              tenantId: targetTenantId,
+              ownerName: req.name,
+              subject: `[MT UniPOS] Official SaaS Billing & Account Setup: ${req.businessName}`,
+              plan: newInvoice.plan,
+              billingCycle: bCycle,
+              amount: newInvoice.amount,
+              paidAmount: paidAmt,
+              remainingBalance: remBal,
+              currency: cur,
+              paymentMethod: pMethod,
+              sentAt: new Date().toISOString(),
+              status: data?.success ? "Delivered" : "Queued",
+              password: ownerPass,
+              notes: "Automated activation email sent upon demo conversion."
+            };
+            localStorage.setItem("unipos_email_logs", JSON.stringify([newLogEntry, ...existingLogs]));
+          } catch {}
         }).catch(err => console.warn("Resend email dispatch error:", err));
       } catch (e) {
         console.warn("Email API call exception:", e);

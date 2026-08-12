@@ -551,8 +551,19 @@ export default function AdminInvoicesPage() {
   const handleTriggerEmail = async (id: string) => {
     const inv = saasInvoices.find(i => i.id === id);
     if (!inv) return;
-    const tenantObj = tenants.find(t => t.id === inv.tenantId);
-    const email = tenantObj ? tenantObj.email : "billing@tenant.com";
+    const tenantObj = tenants.find(t => 
+      (t.id && inv.tenantId && t.id.toLowerCase() === inv.tenantId.toLowerCase()) || 
+      (t.businessName && inv.tenantName && t.businessName.trim().toLowerCase() === inv.tenantName.trim().toLowerCase())
+    );
+    const email = tenantObj?.email || "billing@tenant.com";
+    const tenantId = tenantObj?.id || inv.tenantId;
+    const ownerName = tenantObj?.ownerName || inv.tenantName;
+    const password = tenantObj?.credentialPresets?.[0]?.pass || "owner123";
+    const paidAmount = inv.paidAmount !== undefined ? inv.paidAmount : (inv.status === "Paid" ? inv.amount : 0);
+    const remainingBalance = inv.remainingBalance !== undefined ? inv.remainingBalance : Math.max(0, inv.amount - paidAmount);
+    const currency = inv.currency || "PKR";
+    const billingCycle = tenantObj?.billingCycle === "yearly" || inv.plan?.toLowerCase().includes("year") ? "Annual" : "Monthly";
+    const paymentMethod = inv.paymentMethod || "Bank Transfer (Meezan / HBL)";
 
     try {
       const res = await fetch("/api/send-email", {
@@ -561,15 +572,50 @@ export default function AdminInvoicesPage() {
         body: JSON.stringify({
           to: email,
           invoiceId: inv.id,
+          tenantId,
           businessName: inv.tenantName,
+          ownerName,
+          password,
           amount: inv.amount,
-          currency: inv.currency || "PKR",
+          paidAmount,
+          remainingBalance,
+          currency,
           plan: inv.plan,
+          billingCycle,
+          paymentMethod,
         }),
       });
       const data = await res.json();
+
+      // Log into SaaS email logs for dispatch center
+      try {
+        const rawLogs = localStorage.getItem("unipos_email_logs");
+        const existingLogs = rawLogs ? JSON.parse(rawLogs) : [];
+        const logId = `EML-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+        const newLogEntry = {
+          id: logId,
+          to: email,
+          businessName: inv.tenantName,
+          tenantId,
+          ownerName,
+          subject: `[MT UniPOS] Official SaaS Billing & Account Setup: ${inv.tenantName}`,
+          plan: inv.plan,
+          billingCycle,
+          amount: inv.amount,
+          paidAmount,
+          remainingBalance,
+          currency,
+          paymentMethod,
+          sentAt: new Date().toISOString(),
+          status: data.success ? "Delivered" : "Queued",
+          password,
+          notes: `Dispatched from SaaS Invoices table for ${inv.id}`
+        };
+        localStorage.setItem("unipos_email_logs", JSON.stringify([newLogEntry, ...existingLogs]));
+      } catch {}
+
       if (data.success) {
-        setSuccessMsg(`⚡ SUCCESS: Invoice ${inv.id} delivered via Resend API to ${email}!`);
+        setSuccessMsg(`⚡ SUCCESS: Invoice ${inv.id} (${currency} ${inv.amount.toLocaleString()}) delivered via Resend API to ${email}!`);
       } else {
         setSuccessMsg(`⚠️ RESEND API NOTICE: ${data.error || "Failed to send email"}`);
       }
