@@ -985,7 +985,7 @@ export default function HRRecruitmentPage() {
                     value={itForm.customEmployeeCode}
                     onChange={(e) => setItForm({ ...itForm, customEmployeeCode: e.target.value })}
                     className="w-full bg-black border border-sky-500/50 p-2.5 rounded-xl text-sky-300 font-mono font-black focus:outline-none focus:border-sky-400"
-                    placeholder="e.g. MTS-1001 / MS-0004"
+                    placeholder="e.g. MTS-001 / MS-002"
                   />
                 </div>
 

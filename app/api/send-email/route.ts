@@ -76,7 +76,7 @@ export async function POST(req: Request) {
                 <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #0284c7; margin-bottom: 6px;">👤 CLIENT / TENANT INFORMATION</div>
                 <div style="font-size: 14px; font-weight: 900; color: #0f172a; margin-bottom: 4px;">${businessName || "Tenant Business"}</div>
                 <div style="font-size: 11px; color: #475569; line-height: 1.6;">
-                  Workspace / Tenant ID: <b style="color: #0284c7;">${tenantId || "CT-9389"}</b><br/>
+                  Workspace / Tenant ID: <b style="color: #0284c7;">${tenantId || "CT-001"}</b><br/>
                   Owner Name: <b>${ownerName || businessName || "Owner"}</b><br/>
                   Registered Email: <b>${to}</b><br/>
                   Status: <b style="color: #166534;">Active</b>
@@ -91,7 +91,7 @@ export async function POST(req: Request) {
             <table style="width: 100%; font-size: 12px; border-collapse: collapse;">
               <tr>
                 <td style="padding: 4px 0; color: #3b82f6; font-weight: bold; width: 140px;">Workspace Tenant ID:</td>
-                <td style="padding: 4px 0; font-family: monospace; font-weight: 900; font-size: 14px; color: #1e3a8a;">${tenantId || "CT-9389"}</td>
+                <td style="padding: 4px 0; font-family: monospace; font-weight: 900; font-size: 14px; color: #1e3a8a;">${tenantId || "CT-001"}</td>
               </tr>
               <tr>
                 <td style="padding: 4px 0; color: #3b82f6; font-weight: bold;">Corporate Email:</td>

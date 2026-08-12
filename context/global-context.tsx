@@ -873,32 +873,56 @@ export function generateNextEmployeeCode(businessName: string, count: number): s
   return `${cleanPrefix}-${numStr}`;
 }
 
-export function generateActiveTenantId(businessName: string, existingTenants: Tenant[] = []): string {
-  if (!businessName) return `MTS-${Math.floor(1000 + Math.random() * 9000)}`;
+export function getNextGlobalTenantSeq(existingTenants: { id?: string }[] = []): number {
+  let maxSeq = 0;
+  for (const t of existingTenants) {
+    if (!t?.id) continue;
+    const match = t.id.match(/-(\d+)$/);
+    if (match) {
+      const num = parseInt(match[1], 10);
+      if (!isNaN(num) && num < 1000 && num > maxSeq) {
+        maxSeq = num;
+      }
+    }
+  }
+  return maxSeq + 1;
+}
 
-  const cleanName = businessName.replace(/[^a-zA-Z0-9\s]/g, "").trim();
+export function generateTenantId(businessName: string, existingTenants: { id?: string; businessName?: string }[] = []): string {
+  const cleanName = (businessName || "").replace(/[^a-zA-Z0-9\s]/g, " ").trim();
   const words = cleanName.split(/\s+/).filter(Boolean);
   let prefix = "";
 
-  if (words.length >= 3) {
-    prefix = (words[0][0] + words[1][0] + words[2][0]).toUpperCase();
-  } else if (words.length === 2) {
-    prefix = (words[0].substring(0, 2) + words[1][0]).toUpperCase();
+  if (words.length >= 2) {
+    prefix = words.map(w => w[0]).join("").toUpperCase();
   } else if (words.length === 1) {
-    prefix = words[0].substring(0, 3).toUpperCase();
-  } else {
-    prefix = "MTS";
+    prefix = words[0].substring(0, Math.min(3, words[0].length)).toUpperCase();
   }
 
-  prefix = prefix.replace(/[^A-Z]/g, "") || "MTS";
-  if (prefix.length < 3) prefix = (prefix + "POS").substring(0, 3);
-
-  let seq = 1001;
-  while (existingTenants.some(t => t.id === `${prefix}-${seq}`)) {
-    seq++;
+  prefix = prefix.replace(/[^A-Z0-9]/g, "") || "TEN";
+  if (prefix.length > 5) {
+    prefix = prefix.substring(0, 5);
   }
-  return `${prefix}-${seq}`;
+
+  let nextSeq = getNextGlobalTenantSeq(existingTenants);
+  const usedNumbers = new Set<number>();
+  for (const t of existingTenants) {
+    if (!t?.id) continue;
+    const m = t.id.match(/-(\d+)$/);
+    if (m) {
+      const n = parseInt(m[1], 10);
+      if (!isNaN(n)) usedNumbers.add(n);
+    }
+  }
+
+  while (usedNumbers.has(nextSeq)) {
+    nextSeq++;
+  }
+
+  return `${prefix}-${nextSeq.toString().padStart(3, "0")}`;
 }
+
+export const generateActiveTenantId = generateTenantId;
 
 export function calculateDesignationRankAndGrade(title: string): { rank: number; grade: string } {
   const t = title.toLowerCase().trim();
@@ -1585,13 +1609,16 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         );
         if (!exists && req.demoEmail && req.demoPassword) {
           tenantsChanged = true;
+          const assignedSoftware = (req.assignedSoftware === "HRMS" || (req.businessType && req.businessType.includes("HRMS"))) ? "HRMS" : "POS";
+          const newId = generateTenantId(req.businessName, currentTenants);
           currentTenants.push({
-            id: `TEN-${Math.floor(100 + Math.random() * 900)}`,
+            id: newId,
             businessName: req.businessName,
             ownerName: req.name,
             email: req.demoEmail,
             phone: req.phone || "",
-            businessType: req.businessType || "Super Markets",
+            businessType: req.businessType || (assignedSoftware === "HRMS" ? "HRMS Enterprise" : "Super Markets"),
+            assignedSoftware,
             plan: "Professional",
             billingCycle: "monthly",
             signupDate: req.approvedAt?.split("T")[0] || new Date().toISOString().split("T")[0],
@@ -1602,7 +1629,10 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
             defaultCurrency: "PKR",
             credentialPresets: [
               { id: `CRED-${Math.floor(1000 + Math.random() * 9000)}`, label: "Demo Owner", email: req.demoEmail, pass: req.demoPassword, role: "Owner" }
-            ]
+            ],
+            isTrial: true,
+            trialDays: req.trialDays || 14,
+            trialEndsAt: req.trialEndsAt?.split("T")[0]
           });
         }
       });
@@ -1635,13 +1665,110 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem("unipos_tenants", JSON.stringify(currentTenants));
     }
 
+    // ── LEGACY TENANT ID NORMALIZATION ───────────────────────────────────────
+    // Normalizes all existing tenants to INITIALS-001 / INITIALS-002 format seamlessly
+    let legacyTenantsMigrated = false;
+    const normalizedTenants: Tenant[] = [];
+    const legacyIdMap: Record<string, string> = {};
+    const seenNumbers = new Set<string>();
+    const ALL_STORAGE_KEYS = [
+      "unipos_products", "unipos_customers", "unipos_suppliers", "unipos_sales",
+      "unipos_expenses", "unipos_employees", "unipos_settings", "unipos_pos",
+      "unipos_batches", "unipos_tables", "unipos_kitchen", "unipos_accounts",
+      "unipos_journal", "unipos_attendance", "unipos_payroll", "unipos_transfers",
+      "unipos_counters", "unipos_hr_employees", "unipos_hr_attendance", "unipos_hr_leaves",
+      "unipos_hr_payrolls", "unipos_hr_jobs", "unipos_hr_candidates", "unipos_hr_appraisals",
+      "unipos_hr_departments", "unipos_hr_designations", "unipos_hr_shifts"
+    ];
+
+    for (const t of currentTenants) {
+      const match = t.id.match(/^([A-Z0-9]+)-(\d{3})$/);
+      const isLegacyPrefix = t.id.startsWith("TEN-") || t.id.startsWith("DEMO-");
+      const numPart = match ? match[2] : null;
+      const isDuplicateNumber = numPart ? seenNumbers.has(numPart) : true;
+
+      if (!match || isLegacyPrefix || isDuplicateNumber) {
+        const newId = generateTenantId(t.businessName, normalizedTenants);
+        legacyIdMap[t.id] = newId;
+        legacyTenantsMigrated = true;
+        const newNumMatch = newId.match(/-(\d{3})$/);
+        if (newNumMatch) seenNumbers.add(newNumMatch[1]);
+        normalizedTenants.push({ ...t, id: newId });
+      } else {
+        if (numPart) seenNumbers.add(numPart);
+        normalizedTenants.push(t);
+      }
+    }
+
+    if (legacyTenantsMigrated) {
+      currentTenants = normalizedTenants;
+      localStorage.setItem("unipos_tenants", JSON.stringify(currentTenants));
+
+      // Remap local storage tenant dataset keys
+      Object.entries(legacyIdMap).forEach(([oldId, newId]) => {
+        ALL_STORAGE_KEYS.forEach((keyPrefix) => {
+          const oldData = localStorage.getItem(`${keyPrefix}_${oldId}`);
+          if (oldData) {
+            localStorage.setItem(`${keyPrefix}_${newId}`, oldData);
+            localStorage.removeItem(`${keyPrefix}_${oldId}`);
+          }
+        });
+      });
+
+      // Migrate invoices
+      const rawInvs = localStorage.getItem("unipos_invoices");
+      if (rawInvs) {
+        try {
+          const parsedInvs: SaaSInvoice[] = JSON.parse(rawInvs);
+          const updatedInvs = parsedInvs.map(inv => {
+            if (legacyIdMap[inv.tenantId]) {
+              return { ...inv, tenantId: legacyIdMap[inv.tenantId] };
+            }
+            return inv;
+          });
+          localStorage.setItem("unipos_invoices", JSON.stringify(updatedInvs));
+        } catch {}
+      }
+
+      // Migrate tickets
+      const rawTickets = localStorage.getItem("unipos_tickets");
+      if (rawTickets) {
+        try {
+          const parsedTickets: SupportTicket[] = JSON.parse(rawTickets);
+          const updatedTickets = parsedTickets.map(ticket => {
+            if (legacyIdMap[ticket.tenantId]) {
+              return { ...ticket, tenantId: legacyIdMap[ticket.tenantId] };
+            }
+            return ticket;
+          });
+          localStorage.setItem("unipos_tickets", JSON.stringify(updatedTickets));
+        } catch {}
+      }
+
+      // Migrate active logged in session user
+      const rawUser = localStorage.getItem("unipos_current_user");
+      if (rawUser) {
+        try {
+          const parsedUser = JSON.parse(rawUser);
+          if (parsedUser?.tenantId && legacyIdMap[parsedUser.tenantId]) {
+            parsedUser.tenantId = legacyIdMap[parsedUser.tenantId];
+            localStorage.setItem("unipos_current_user", JSON.stringify(parsedUser));
+          }
+        } catch {}
+      }
+
+      try {
+        supabase.from('unipos_global').upsert({ key: 'unipos_tenants', value: currentTenants }).then(() => {});
+      } catch {}
+    }
+
     // Auto-Sync: Mark Demo Requests as "Converted" if a matching tenant is already Active
     if (savedDemos) {
       try {
         const parsedDemos: DemoRequest[] = JSON.parse(savedDemos);
         let demosSyncChanged = false;
         const syncedDemos = parsedDemos.map((d) => {
-          const isConvertedActive = uniqueTenantsList.some(
+          const isConvertedActive = currentTenants.some(
             (t) =>
               t.status === "Active" &&
               ((t.email && d.email && t.email.trim().toLowerCase() === d.email.trim().toLowerCase()) ||
@@ -2469,9 +2596,10 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     const dealCurrency = customCurrency || "PKR";
     const isHRMSDemo = (req.assignedSoftware === "HRMS") || (req.businessType && req.businessType.includes("HRMS"));
     const assignedSoftware: "POS" | "HRMS" = isHRMSDemo ? "HRMS" : "POS";
+    const tenantId = generateTenantId(req.businessName, tenants);
 
     const newTenant: Tenant = {
-      id: `TEN-${Math.floor(100 + Math.random() * 900)}`,
+      id: tenantId,
       businessName: req.businessName,
       ownerName: req.name,
       email: demoEmail,
@@ -2556,17 +2684,15 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem("unipos_demos", JSON.stringify(updatedDemos));
 
     // 2. Find or Register Tenant
-    const existingTenant = tenants.find(t => t.email.toLowerCase() === req.email.toLowerCase() || t.businessName.toLowerCase() === req.businessName.toLowerCase());
+    const existingTenant = tenants.find(t => (t.email && req.email && t.email.toLowerCase() === req.email.toLowerCase()) || (t.businessName && req.businessName && t.businessName.toLowerCase() === req.businessName.toLowerCase()));
     let targetTenantId = existingTenant?.id;
 
     if (existingTenant) {
-      // Upgrade existing tenant to Active Paid with brand new Active Tenant ID!
-      const newActiveId = generateActiveTenantId(req.businessName, tenants);
-      targetTenantId = newActiveId;
+      // Upgrade existing tenant to Active Paid - KEEP SAME PERMANENT TENANT ID!
+      targetTenantId = existingTenant.id;
       const updatedTenants = tenants.map(t =>
         t.id === existingTenant.id ? {
           ...t,
-          id: newActiveId,
           status: "Active" as const,
           isTrial: false,
           plan: options.plan as any,
@@ -2578,17 +2704,19 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       setTenants(updatedTenants);
       localStorage.setItem("unipos_tenants", JSON.stringify(updatedTenants));
     } else {
-      // Create new active tenant with format: Business Initials + '-' + 4 digits
+      // Create new active tenant with format: Business Initials + '-' + 001
       const demoEmail = req.email;
       const demoPassword = `Pass@${Math.floor(1000 + Math.random() * 9000)}`;
-      targetTenantId = generateActiveTenantId(req.businessName, tenants);
+      targetTenantId = generateTenantId(req.businessName, tenants);
+      const isHRMS = req.assignedSoftware === "HRMS" || (req.businessType && req.businessType.includes("HRMS"));
       const newTenant: Tenant = {
         id: targetTenantId,
         businessName: req.businessName,
         ownerName: req.name,
         email: demoEmail,
         phone: req.phone || "",
-        businessType: req.businessType || "Super Markets",
+        businessType: req.businessType || (isHRMS ? "HRMS Enterprise" : "Super Markets"),
+        assignedSoftware: isHRMS ? "HRMS" : "POS",
         plan: options.plan as any,
         billingCycle: options.billingCycle,
         signupDate: now.toISOString().split("T")[0],
@@ -2613,7 +2741,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     // 3. Issue Cleared Paid SaaS Invoice
     const newInvoice: SaaSInvoice = {
       id: `INV-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
-      tenantId: targetTenantId || `TEN-ACTIVE`,
+      tenantId: targetTenantId,
       tenantName: req.businessName,
       amount: options.amount,
       currency: options.currency,
@@ -2738,20 +2866,12 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
   const registerTenant = (tenant: Omit<Tenant, "id" | "signupDate" | "status" | "usersCount" | "monthlyRevenue" | "branches"> & { id?: string; customDealAmount?: number; customCurrency?: "PKR" | "USD" }) => {
     let finalId = tenant.id;
     if (!finalId) {
-      // Generate initials from businessName
-      const words = tenant.businessName.split(" ").filter(Boolean);
-      let initials = "";
-      if (words.length === 1) {
-        initials = words[0].substring(0, 3).toUpperCase();
-      } else {
-        initials = words.map(w => w[0]).join("").toUpperCase();
+      finalId = generateTenantId(tenant.businessName, tenants);
+    } else {
+      // Ensure uniqueness
+      while (tenants.some(t => t.id === finalId)) {
+        finalId = generateTenantId(tenant.businessName, tenants);
       }
-      finalId = `${initials}-${Math.floor(1000 + Math.random() * 9000)}`;
-    }
-
-    // Ensure uniqueness
-    while (tenants.some(t => t.id === finalId)) {
-      finalId = `${finalId}-${Math.floor(Math.random() * 100)}`;
     }
 
     const signupDateStr = new Date().toISOString().split("T")[0];
@@ -2824,51 +2944,13 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
 
   const updateTenantStatus = async (id: string, status: Tenant["status"]) => {
     const targetTenant = tenants.find(t => t.id === id);
-    let newTenantId = id;
+    if (!targetTenant) return;
 
-    // Rule: When tenant is updated to Active from Trial/Demo/Pending, transform Tenant ID to Company Initials + '-' + 4 digits
-    if (targetTenant && status === "Active" && (targetTenant.isTrial || (targetTenant.status as string) === "Trial" || (targetTenant.status as string) === "Pending Payment" || id.startsWith("DEMO-") || id.startsWith("TEN-"))) {
-      newTenantId = generateActiveTenantId(targetTenant.businessName, tenants);
-
-      // Migrate all tenant localStorage datasets from old tenant ID to new active tenant ID
-      const ALL_KEYS = [
-        "unipos_products", "unipos_customers", "unipos_suppliers", "unipos_sales",
-        "unipos_expenses", "unipos_employees", "unipos_settings", "unipos_pos",
-        "unipos_batches", "unipos_tables", "unipos_kitchen", "unipos_accounts",
-        "unipos_journal", "unipos_attendance", "unipos_payroll", "unipos_transfers",
-        "unipos_counters", "unipos_hr_employees", "unipos_hr_attendance", "unipos_hr_leaves",
-        "unipos_hr_payrolls", "unipos_hr_jobs", "unipos_hr_candidates", "unipos_hr_appraisals",
-        "unipos_hr_departments", "unipos_hr_designations", "unipos_hr_shifts"
-      ];
-
-      ALL_KEYS.forEach((keyPrefix) => {
-        const oldData = localStorage.getItem(`${keyPrefix}_${id}`);
-        if (oldData) {
-          localStorage.setItem(`${keyPrefix}_${newTenantId}`, oldData);
-          localStorage.removeItem(`${keyPrefix}_${id}`);
-        }
-      });
-
-      // Update associated SaaS Invoices
-      setSaasInvoices(prev => {
-        const updatedInvs = prev.map(inv => inv.tenantId === id ? { ...inv, tenantId: newTenantId } : inv);
-        localStorage.setItem("unipos_invoices", JSON.stringify(updatedInvs));
-        return updatedInvs;
-      });
-
-      // Update active user session if this tenant is logged in
-      if (currentUser?.tenantId === id) {
-        const updatedUser = { ...currentUser, tenantId: newTenantId };
-        setCurrentUser(updatedUser);
-        localStorage.setItem("unipos_current_user", JSON.stringify(updatedUser));
-      }
-    }
-
+    // Rule: Tenant ID NEVER changes before or after payment/trial/activation.
     const updated = tenants.map(t => {
       if (t.id === id) {
         return {
           ...t,
-          id: newTenantId,
           status,
           isTrial: status === "Active" ? false : t.isTrial
         };
