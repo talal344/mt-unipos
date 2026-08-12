@@ -57,28 +57,21 @@ export default function HRDisciplinaryPage() {
       const key = `hr_disciplinary_${currentUser.tenantId}`;
       const saved = localStorage.getItem(key);
       if (saved) {
-        setRecords(JSON.parse(saved));
-      } else {
-        const initial: HRDisciplinaryRecord[] = [
-          {
-            id: "DISC-1",
-            recordNumber: "DISC-001",
-            employeeId: hrEmployees[0]?.id || "EMP-001",
-            employeeName: hrEmployees[0]?.name || "Sample Employee",
-            department: hrEmployees[0]?.department || "IT & Software Operations",
-            type: "Written Warning",
-            date: "2025-02-14",
-            reason: "Unannounced Absenteeism & Missed Standup",
-            description: "Consecutive absence for 2 business days without prior notification to reporting manager.",
-            issuedBy: "HR Compliance Unit",
-            status: "Active"
+        try {
+          const parsed: HRDisciplinaryRecord[] = JSON.parse(saved);
+          const filtered = parsed.filter(r => r.id !== "DISC-1" && r.recordNumber !== "DISC-001");
+          setRecords(filtered);
+          if (filtered.length !== parsed.length) {
+            localStorage.setItem(key, JSON.stringify(filtered));
           }
-        ];
-        setRecords(initial);
-        localStorage.setItem(key, JSON.stringify(initial));
+        } catch {
+          setRecords([]);
+        }
+      } else {
+        setRecords([]);
       }
     }
-  }, [currentUser?.tenantId, hrEmployees]);
+  }, [currentUser?.tenantId]);
 
   const saveRecords = (data: HRDisciplinaryRecord[]) => {
     setRecords(data);

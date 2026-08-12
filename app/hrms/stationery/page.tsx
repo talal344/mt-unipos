@@ -57,72 +57,18 @@ export default function StationeryPage() {
       const key = `hr_stationery_${currentUser.tenantId}`;
       const saved = localStorage.getItem(key);
       if (saved) {
-        setItems(JSON.parse(saved));
-      } else {
-        const initial: StationeryItem[] = [
-          {
-            id: "ST-1",
-            itemCode: "STN-001",
-            name: "A4 Executive Printing Paper (80gsm)",
-            category: "Paper & Printing",
-            currentStock: 45,
-            unit: "Reams",
-            minThreshold: 10,
-            unitCost: 6.5,
-            lastRestocked: "2025-02-01",
-            status: "In Stock"
-          },
-          {
-            id: "ST-2",
-            itemCode: "STN-002",
-            name: "80mm Thermal POS Receipt Rolls (BPA Free)",
-            category: "POS Thermal Rolls",
-            currentStock: 8,
-            unit: "Boxes (50 rolls)",
-            minThreshold: 15,
-            unitCost: 35,
-            lastRestocked: "2025-01-20",
-            status: "Low Stock"
-          },
-          {
-            id: "ST-3",
-            itemCode: "STN-003",
-            name: "HP LaserJet Pro Black Toner Cartridge",
-            category: "Paper & Printing",
-            currentStock: 3,
-            unit: "Units",
-            minThreshold: 2,
-            unitCost: 65,
-            lastRestocked: "2025-01-15",
-            status: "In Stock"
-          },
-          {
-            id: "ST-4",
-            itemCode: "STN-004",
-            name: "Staff Corporate Embroidered Polo Shirts (M/L)",
-            category: "Uniforms & Badges",
-            currentStock: 25,
-            unit: "Pieces",
-            minThreshold: 5,
-            unitCost: 14,
-            lastRestocked: "2025-02-10",
-            status: "In Stock"
-          },
-          {
-            id: "ST-5",
-            itemCode: "STN-005",
-            name: "Premium Roast Coffee Beans & Sugar Sticks",
-            category: "Pantry & Cleaning",
-            currentStock: 12,
-            unit: "Kg Bags",
-            minThreshold: 4,
-            unitCost: 18,
-            lastRestocked: "2025-02-05",
-            status: "In Stock"
+        try {
+          const parsed: StationeryItem[] = JSON.parse(saved);
+          const filtered = parsed.filter(s => s.id !== "ST-1" && s.id !== "ST-2" && s.id !== "ST-3" && s.id !== "ST-4" && s.id !== "ST-5");
+          setItems(filtered);
+          if (filtered.length !== parsed.length) {
+            localStorage.setItem(key, JSON.stringify(filtered));
           }
-        ];
-        setItems(initial);
-        localStorage.setItem(key, JSON.stringify(initial));
+        } catch {
+          setItems([]);
+        }
+      } else {
+        setItems([]);
       }
     }
   }, [currentUser?.tenantId]);

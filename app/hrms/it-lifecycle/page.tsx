@@ -60,59 +60,18 @@ export default function ITLifecyclePage() {
       const key = `hr_saas_licenses_${currentUser.tenantId}`;
       const saved = localStorage.getItem(key);
       if (saved) {
-        setLicenses(JSON.parse(saved));
-      } else {
-        const initial: SoftwareLicense[] = [
-          {
-            id: "LIC-1",
-            name: "Microsoft 365 Business Standard",
-            vendor: "Microsoft Corp",
-            category: "Productivity",
-            seatsTotal: 25,
-            seatsUsed: 18,
-            annualCost: 3600,
-            renewalDate: "2025-11-15",
-            status: "Active",
-            licenseKey: "MSFT-365-ENT-88992"
-          },
-          {
-            id: "LIC-2",
-            name: "Adobe Creative Cloud All Apps",
-            vendor: "Adobe Inc.",
-            category: "Design",
-            seatsTotal: 5,
-            seatsUsed: 4,
-            annualCost: 3200,
-            renewalDate: "2025-08-30",
-            status: "Expiring Soon",
-            licenseKey: "ADBE-CC-VIP-0021"
-          },
-          {
-            id: "LIC-3",
-            name: "MT-UniPOS Enterprise Cloud Engine",
-            vendor: "MT Core",
-            category: "Cloud / POS",
-            seatsTotal: 50,
-            seatsUsed: 32,
-            annualCost: 1800,
-            renewalDate: "2026-01-01",
-            status: "Active",
-            licenseKey: "UNIPOS-PROD-LIVE-KEY"
-          },
-          {
-            id: "LIC-4",
-            name: "Zoom Workplace Enterprise",
-            vendor: "Zoom Video Communications",
-            category: "Communication",
-            seatsTotal: 10,
-            seatsUsed: 8,
-            annualCost: 1500,
-            renewalDate: "2025-10-01",
-            status: "Active"
+        try {
+          const parsed: SoftwareLicense[] = JSON.parse(saved);
+          const filtered = parsed.filter(l => l.id !== "LIC-1" && l.id !== "LIC-2" && l.id !== "LIC-3" && l.id !== "LIC-4");
+          setLicenses(filtered);
+          if (filtered.length !== parsed.length) {
+            localStorage.setItem(key, JSON.stringify(filtered));
           }
-        ];
-        setLicenses(initial);
-        localStorage.setItem(key, JSON.stringify(initial));
+        } catch {
+          setLicenses([]);
+        }
+      } else {
+        setLicenses([]);
       }
     }
   }, [currentUser?.tenantId]);

@@ -44,48 +44,18 @@ export default function HRAnnouncementsPage() {
       const key = `hr_announcements_${currentUser.tenantId}`;
       const saved = localStorage.getItem(key);
       if (saved) {
-        setAnnouncements(JSON.parse(saved));
-      } else {
-        const initial: HRAnnouncement[] = [
-          {
-            id: "ANN-1",
-            title: "🌟 Annual Performance Bonus & Salary Review Announcement",
-            content:
-              "We are pleased to announce that annual performance appraisals and market adjustment increments for Q3/Q4 have been finalized. Payslips will reflect revised compensation from the upcoming billing cycle.",
-            targetAudience: "All",
-            priority: "Urgent",
-            postedBy: "Executive Leadership",
-            postedAt: "2025-03-01",
-            isPinned: true,
-            isActive: true
-          },
-          {
-            id: "ANN-2",
-            title: "🏢 Office System Upgrade & Scheduled Maintenance Downtime",
-            content:
-              "Cloud ERP and on-premise local servers will undergo routine security patching this Sunday from 02:00 AM to 05:00 AM. No action required from operational staff.",
-            targetAudience: "All",
-            priority: "Important",
-            postedBy: "IT & Software Operations",
-            postedAt: "2025-02-26",
-            isPinned: false,
-            isActive: true
-          },
-          {
-            id: "ANN-3",
-            title: "🎉 Public Holiday Notice — Eid Ul Fitr Holidays",
-            content:
-              "Corporate offices and retail backoffices will observe official holidays next week. Emergency support teams will remain on standby as per the duty roster.",
-            targetAudience: "All",
-            priority: "Normal",
-            postedBy: "Human Resources",
-            postedAt: "2025-02-20",
-            isPinned: false,
-            isActive: true
+        try {
+          const parsed: HRAnnouncement[] = JSON.parse(saved);
+          const filtered = parsed.filter(a => a.id !== "ANN-1" && a.id !== "ANN-2" && a.id !== "ANN-3" && !a.id.startsWith("ANN-DEFAULT"));
+          setAnnouncements(filtered);
+          if (filtered.length !== parsed.length) {
+            localStorage.setItem(key, JSON.stringify(filtered));
           }
-        ];
-        setAnnouncements(initial);
-        localStorage.setItem(key, JSON.stringify(initial));
+        } catch {
+          setAnnouncements([]);
+        }
+      } else {
+        setAnnouncements([]);
       }
     }
   }, [currentUser?.tenantId]);

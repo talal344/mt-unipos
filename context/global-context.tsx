@@ -2365,6 +2365,34 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
 
       const savedHrLoans = getTenantData("unipos_hr_loans", currentUser.tenantId);
       setHrLoans(savedHrLoans || []);
+
+      // Clean up legacy demo records across all HR modules for this tenant
+      try {
+        const tid = currentUser.tenantId;
+        const purgeKeys = [
+          { key: `hr_expense_claims_${tid}`, check: (item: any) => item.id === "CLM-1" || item.id === "CLM-2" || item.claimCode === "EXP-1001" },
+          { key: `hr_fleet_vehicles_${tid}`, check: (item: any) => item.id === "VEH-1" || item.id === "VEH-2" || item.plateNumber === "LEA-2024-4412" },
+          { key: `hr_assets_${tid}`, check: (item: any) => item.id === "ASSET-1" || item.id === "ASSET-2" || item.assetCode === "AST-001" },
+          { key: `hr_disciplinary_${tid}`, check: (item: any) => item.id === "DISC-1" || item.recordNumber === "DISC-001" },
+          { key: `hr_announcements_${tid}`, check: (item: any) => item.id === "ANN-1" || item.id === "ANN-2" || item.id === "ANN-3" || (item.id && item.id.startsWith("ANN-DEFAULT")) },
+          { key: `hr_documents_${tid}`, check: (item: any) => item.id === "DOC-1" || item.id === "DOC-2" || item.id === "DOC-3" },
+          { key: `hr_saas_licenses_${tid}`, check: (item: any) => item.id === "LIC-1" || item.id === "LIC-2" },
+          { key: `hr_stationery_${tid}`, check: (item: any) => item.id === "ST-1" || item.id === "ST-2" }
+        ];
+
+        purgeKeys.forEach(({ key, check }) => {
+          const raw = localStorage.getItem(key);
+          if (raw) {
+            try {
+              const arr: any[] = JSON.parse(raw);
+              const clean = arr.filter((x: any) => !check(x));
+              if (clean.length !== arr.length) {
+                localStorage.setItem(key, JSON.stringify(clean));
+              }
+            } catch {}
+          }
+        });
+      } catch {}
     }
 
   }, [currentUser?.tenantId]);

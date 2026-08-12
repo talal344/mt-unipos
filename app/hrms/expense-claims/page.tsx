@@ -59,44 +59,21 @@ export default function ExpenseClaimsPage() {
       const key = `hr_expense_claims_${currentUser.tenantId}`;
       const saved = localStorage.getItem(key);
       if (saved) {
-        setClaims(JSON.parse(saved));
-      } else {
-        const initial: ExpenseClaim[] = [
-          {
-            id: "CLM-1",
-            claimCode: "EXP-1001",
-            employeeId: hrEmployees[0]?.id || "EMP-001",
-            employeeName: hrEmployees[0]?.name || "Mian Talal",
-            department: hrEmployees[0]?.department || "IT & Software Operations",
-            category: "Fuel & Travel",
-            amount: 45,
-            date: "2025-02-10",
-            description: "Inter-branch client server maintenance travel fuel.",
-            receiptFileName: "Fuel_Shell_Tax_Receipt.jpg",
-            status: "Approved",
-            approvedBy: "Operations Director"
-          },
-          {
-            id: "CLM-2",
-            claimCode: "EXP-1002",
-            employeeId: hrEmployees[1]?.id || "EMP-002",
-            employeeName: hrEmployees[1]?.name || "Sarah Ahmed",
-            department: hrEmployees[1]?.department || "Retail Sales & Cashiers",
-            category: "Office Supplies",
-            amount: 28,
-            date: "2025-02-12",
-            description: "Emergency thermal receipt roll purchase for POS cashier registers.",
-            receiptFileName: "Paper_Mart_Bill.pdf",
-            status: "Disbursed",
-            approvedBy: "Finance Lead",
-            disbursedDate: "2025-02-13"
+        try {
+          const parsed: ExpenseClaim[] = JSON.parse(saved);
+          const filtered = parsed.filter(c => c.id !== "CLM-1" && c.id !== "CLM-2" && c.claimCode !== "EXP-1001" && c.claimCode !== "EXP-1002");
+          setClaims(filtered);
+          if (filtered.length !== parsed.length) {
+            localStorage.setItem(key, JSON.stringify(filtered));
           }
-        ];
-        setClaims(initial);
-        localStorage.setItem(key, JSON.stringify(initial));
+        } catch {
+          setClaims([]);
+        }
+      } else {
+        setClaims([]);
       }
     }
-  }, [currentUser?.tenantId, hrEmployees]);
+  }, [currentUser?.tenantId]);
 
   const saveClaims = (data: ExpenseClaim[]) => {
     setClaims(data);

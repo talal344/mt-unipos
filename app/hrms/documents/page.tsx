@@ -61,57 +61,21 @@ export default function HRDocumentsPage() {
       const key = `hr_documents_${currentUser.tenantId}`;
       const saved = localStorage.getItem(key);
       if (saved) {
-        setDocuments(JSON.parse(saved));
-      } else {
-        const initial: HRDocument[] = [
-          {
-            id: "DOC-1",
-            documentCode: "DOC-001",
-            title: "Corporate HR Policy & Employee Code of Conduct 2025",
-            type: "Policy",
-            description: "Standard operating procedures, attendance guidelines, and code of ethics.",
-            fileName: "MT_Core_HR_Policy_2025.pdf",
-            fileSize: "2.4 MB",
-            uploadedBy: "Executive HR",
-            uploadedAt: "2025-01-01",
-            isConfidential: false,
-            status: "Active"
-          },
-          {
-            id: "DOC-2",
-            documentCode: "DOC-002",
-            title: "Standard Employment & Non-Disclosure Agreement (NDA)",
-            type: "NDA",
-            description: "Template legal contract for technical and operational hires.",
-            fileName: "Standard_NDA_Template_v2.docx",
-            fileSize: "680 KB",
-            uploadedBy: "Legal & Compliance",
-            uploadedAt: "2025-01-10",
-            isConfidential: true,
-            status: "Active"
-          },
-          {
-            id: "DOC-3",
-            documentCode: "DOC-003",
-            employeeId: hrEmployees[0]?.id || "EMP-001",
-            employeeName: hrEmployees[0]?.name || "Sample Employee",
-            title: "Employment Contract — Lead Engineer",
-            type: "Contract",
-            description: "Signed executive employment agreement.",
-            fileName: "Contract_Mian_Talal_Signed.pdf",
-            fileSize: "1.8 MB",
-            uploadedBy: "HR Talent Ops",
-            uploadedAt: "2025-01-15",
-            expiresAt: "2026-01-15",
-            isConfidential: true,
-            status: "Active"
+        try {
+          const parsed: HRDocument[] = JSON.parse(saved);
+          const filtered = parsed.filter(d => d.id !== "DOC-1" && d.id !== "DOC-2" && d.id !== "DOC-3" && d.documentCode !== "DOC-001" && d.documentCode !== "DOC-002" && d.documentCode !== "DOC-003");
+          setDocuments(filtered);
+          if (filtered.length !== parsed.length) {
+            localStorage.setItem(key, JSON.stringify(filtered));
           }
-        ];
-        setDocuments(initial);
-        localStorage.setItem(key, JSON.stringify(initial));
+        } catch {
+          setDocuments([]);
+        }
+      } else {
+        setDocuments([]);
       }
     }
-  }, [currentUser?.tenantId, hrEmployees]);
+  }, [currentUser?.tenantId]);
 
   const saveDocuments = (data: HRDocument[]) => {
     setDocuments(data);

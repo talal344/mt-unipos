@@ -52,40 +52,13 @@ export default function AnnouncementsBanner() {
     if (saved) {
       try {
         const parsed: AnnouncementItem[] = JSON.parse(saved);
-        const active = parsed.filter((a) => a.isActive !== false);
-        if (active.length > 0) {
-          setAnnouncements(active);
-          return;
-        }
+        const active = parsed.filter((a) => a.isActive !== false && a.id !== "ANN-1" && a.id !== "ANN-2" && a.id !== "ANN-3" && !a.id.startsWith("ANN-DEFAULT"));
+        setAnnouncements(active);
+        return;
       } catch (e) {}
     }
 
-    // Default announcement fallback
-    const fallback: AnnouncementItem[] = [
-      {
-        id: "ANN-DEFAULT-1",
-        title: "🌟 Annual Performance Bonus & Salary Review Announcement",
-        content:
-          "We are pleased to announce that annual performance appraisals and market adjustment increments for Q3/Q4 have been finalized. Payslips will reflect revised compensation from the upcoming billing cycle.",
-        priority: "Urgent",
-        postedBy: "Executive Leadership",
-        postedAt: new Date().toISOString().split("T")[0],
-        isPinned: true,
-        isActive: true
-      },
-      {
-        id: "ANN-DEFAULT-2",
-        title: "🏢 Office System Upgrade & Scheduled Maintenance Notice",
-        content:
-          "Cloud ERP and on-premise local servers will undergo routine security patching this weekend. No disruption expected for POS checkout registers.",
-        priority: "Important",
-        postedBy: "IT Operations",
-        postedAt: new Date().toISOString().split("T")[0],
-        isPinned: false,
-        isActive: true
-      }
-    ];
-    setAnnouncements(fallback);
+    setAnnouncements([]);
   }, [currentUser?.tenantId]);
 
   // Auto rotate banner if multiple announcements

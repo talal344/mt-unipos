@@ -65,73 +65,21 @@ export default function FleetPage() {
       const key = `hr_fleet_vehicles_${currentUser.tenantId}`;
       const saved = localStorage.getItem(key);
       if (saved) {
-        setVehicles(JSON.parse(saved));
-      } else {
-        const initial: FleetVehicle[] = [
-          {
-            id: "VEH-1",
-            plateNumber: "LEA-2024-4412",
-            type: "Delivery Bike",
-            model: "Honda CG 125 Self Start",
-            year: 2024,
-            assignedDriverId: hrEmployees[0]?.id,
-            assignedDriverName: hrEmployees[0]?.name || "Sample Driver",
-            odometerKm: 8450,
-            fuelType: "Petrol",
-            tokenTaxExpiry: "2026-06-30",
-            insuranceExpiry: "2025-12-31",
-            lastOilChangeKm: 7500,
-            status: "Active & On Road",
-            fuelLogs: [
-              {
-                id: "FL-1",
-                date: "2025-02-10",
-                liters: 8.5,
-                cost: 22,
-                kmReading: 8200,
-                station: "Shell Main Blvd"
-              },
-              {
-                id: "FL-2",
-                date: "2025-02-14",
-                liters: 9.0,
-                cost: 24,
-                kmReading: 8450,
-                station: "Total Parco Express"
-              }
-            ]
-          },
-          {
-            id: "VEH-2",
-            plateNumber: "KHI-2023-9901",
-            type: "Van / Pickup",
-            model: "Suzuki Carry / Bolan Cargo",
-            year: 2023,
-            assignedDriverId: hrEmployees[1]?.id,
-            assignedDriverName: hrEmployees[1]?.name || "Store Courier",
-            odometerKm: 24300,
-            fuelType: "Petrol",
-            tokenTaxExpiry: "2025-10-15",
-            insuranceExpiry: "2025-11-20",
-            lastOilChangeKm: 23000,
-            status: "Active & On Road",
-            fuelLogs: [
-              {
-                id: "FL-3",
-                date: "2025-02-12",
-                liters: 25,
-                cost: 65,
-                kmReading: 24300,
-                station: "PSO Hub"
-              }
-            ]
+        try {
+          const parsed: FleetVehicle[] = JSON.parse(saved);
+          const filtered = parsed.filter(v => v.id !== "VEH-1" && v.id !== "VEH-2" && v.plateNumber !== "LEA-2024-4412" && v.plateNumber !== "KHI-2023-9901");
+          setVehicles(filtered);
+          if (filtered.length !== parsed.length) {
+            localStorage.setItem(key, JSON.stringify(filtered));
           }
-        ];
-        setVehicles(initial);
-        localStorage.setItem(key, JSON.stringify(initial));
+        } catch {
+          setVehicles([]);
+        }
+      } else {
+        setVehicles([]);
       }
     }
-  }, [currentUser?.tenantId, hrEmployees]);
+  }, [currentUser?.tenantId]);
 
   const saveVehicles = (data: FleetVehicle[]) => {
     setVehicles(data);

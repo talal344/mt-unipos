@@ -63,69 +63,21 @@ export default function HRAssetsPage() {
       const key = `hr_assets_${currentUser.tenantId}`;
       const saved = localStorage.getItem(key);
       if (saved) {
-        setAssets(JSON.parse(saved));
-      } else {
-        // Initial seed assets
-        const initial: HRAsset[] = [
-          {
-            id: "ASSET-1",
-            assetCode: "AST-001",
-            name: "MacBook Pro M2 14-inch",
-            category: "Laptop",
-            brand: "Apple",
-            serialNumber: "C02XYZ1234AB",
-            purchaseDate: "2025-01-15",
-            purchaseValue: 2200,
-            assignedTo: hrEmployees[0]?.id || "EMP-001",
-            assignedToName: hrEmployees[0]?.name || "Mian Talal",
-            assignedDate: "2025-01-20",
-            condition: "Good",
-            status: "Assigned"
-          },
-          {
-            id: "ASSET-2",
-            assetCode: "AST-002",
-            name: "Dell UltraSharp 27-inch Monitor",
-            category: "Other",
-            brand: "Dell",
-            serialNumber: "DL-987654",
-            purchaseDate: "2025-02-10",
-            purchaseValue: 450,
-            assignedTo: hrEmployees[1]?.id,
-            assignedToName: hrEmployees[1]?.name,
-            assignedDate: "2025-02-15",
-            condition: "New",
-            status: "Assigned"
-          },
-          {
-            id: "ASSET-3",
-            assetCode: "AST-003",
-            name: "Corporate 5G Postpaid SIM",
-            category: "SIM Card",
-            brand: "Jazz/Zong",
-            serialNumber: "8992011234567890",
-            purchaseDate: "2025-03-01",
-            purchaseValue: 30,
-            condition: "New",
-            status: "Available"
-          },
-          {
-            id: "ASSET-4",
-            assetCode: "AST-004",
-            name: "Ergonomic Mesh Executive Chair",
-            category: "Furniture",
-            brand: "Featherlite",
-            purchaseDate: "2024-11-20",
-            purchaseValue: 280,
-            condition: "Good",
-            status: "Available"
+        try {
+          const parsed: HRAsset[] = JSON.parse(saved);
+          const filtered = parsed.filter(a => a.id !== "ASSET-1" && a.id !== "ASSET-2" && a.id !== "ASSET-3" && a.id !== "ASSET-4" && a.assetCode !== "AST-001" && a.assetCode !== "AST-002" && a.assetCode !== "AST-003" && a.assetCode !== "AST-004");
+          setAssets(filtered);
+          if (filtered.length !== parsed.length) {
+            localStorage.setItem(key, JSON.stringify(filtered));
           }
-        ];
-        setAssets(initial);
-        localStorage.setItem(key, JSON.stringify(initial));
+        } catch {
+          setAssets([]);
+        }
+      } else {
+        setAssets([]);
       }
     }
-  }, [currentUser?.tenantId, hrEmployees]);
+  }, [currentUser?.tenantId]);
 
   const saveAssets = (data: HRAsset[]) => {
     setAssets(data);
