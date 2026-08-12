@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef } from "react";
 import Link from "next/link";
 import HRMSSidebar from "@/components/hrms-sidebar";
 import HRMSTopHeader from "@/components/hrms-top-header";
 import { useGlobalContext, calculateDesignationRankAndGrade, isEligibleForDepartmentHead } from "@/context/global-context";
+import * as XLSX from "xlsx";
 import {
   Users,
   UserPlus,
@@ -26,7 +27,12 @@ import {
   Crown,
   Check,
   Camera,
-  UploadCloud
+  UploadCloud,
+  FileSpreadsheet,
+  Download,
+  AlertCircle,
+  CheckCircle2,
+  FileUp
 } from "lucide-react";
 
 export default function HREmployeesPage() {
@@ -49,6 +55,14 @@ export default function HREmployeesPage() {
   const [editingEmployee, setEditingEmployee] = useState<any>(null);
   const [sortField, setSortField] = useState<string>("name");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+
+  // ─── BULK IMPORT STATE ───────────────────────────────────────────────────
+  const [showBulkModal, setShowBulkModal] = useState(false);
+  const [bulkRows, setBulkRows] = useState<any[]>([]);
+  const [bulkErrors, setBulkErrors] = useState<string[]>([]);
+  const [bulkImporting, setBulkImporting] = useState(false);
+  const [bulkDone, setBulkDone] = useState(false);
+  const bulkFileRef = useRef<HTMLInputElement>(null);
 
   // ─── ROLE DETECTION ────────────────────────────────────────────────────
   const empMatch = hrEmployees.find(
@@ -291,6 +305,150 @@ export default function HREmployeesPage() {
     return sortDir === "asc" ? <ChevronUp size={10} /> : <ChevronDown size={10} />;
   };
 
+  // ─── BULK IMPORT: Download Template ──────────────────────────────────────
+  const handleDownloadTemplate = () => {
+    const templateHeaders = [
+      ["Employee Code", "Full Name", "Work Email", "Personal Email", "Phone", "CNIC",
+       "Department", "Designation", "Joining Date (YYYY-MM-DD)", "Employment Type",
+       "Basic Salary", "Bank Name", "Account Number", "JazzCash No", "Status"]
+    ];
+    const sampleRows = [
+      ["MRM-001", "Waqas Ali", "waqas@company.com", "waqas@gmail.com", "03001234567",
+       "35202-1234567-1", "Human Resources", "HR Officer", "2024-01-01", "Full-time",
+       "50000", "Meezan Bank Ltd", "01234567890", "", "Active"],
+      ["MRM-002", "Ayesha Khan", "ayesha@company.com", "", "03111234567",
+       "", "IT & Software Operations", "Software Engineer", "2024-03-15", "Full-time",
+       "80000", "HBL", "09876543210", "", "Active"]
+    ];
+
+    const wsData = [...templateHeaders, ...sampleRows];
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+    // Column widths
+    ws["!cols"] = [
+      { wch: 14 }, { wch: 22 }, { wch: 28 }, { wch: 26 }, { wch: 14 },
+      { wch: 18 }, { wch: 24 }, { wch: 22 }, { wch: 22 }, { wch: 15 },
+      { wch: 13 }, { wch: 22 }, { wch: 18 }, { wch: 14 }, { wch: 12 }
+    ];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Employees");
+    XLSX.writeFile(wb, "UniPOS_Employee_Import_Template.xlsx");
+  };
+
+  // ─── BULK IMPORT: Parse uploaded Excel ───────────────────────────────────
+  const handleBulkFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setBulkRows([]);
+    setBulkErrors([]);
+    setBulkDone(false);
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const data = new Uint8Array(event.target?.result as ArrayBuffer);
+      const wb = XLSX.read(data, { type: "array" });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1 });
+
+      if (rows.length < 2) {
+        setBulkErrors(["Excel file is empty or has only header row. Please add at least 1 employee row."]);
+        return;
+      }
+
+      const header = rows[0];
+      const dataRows = rows.slice(1).filter((r) => r.some((cell) => cell !== undefined && cell !== ""));
+
+      const parsed: any[] = [];
+      const errors: string[] = [];
+
+      dataRows.forEach((row, idx) => {
+        const rowNum = idx + 2;
+        const get = (colIdx: number) => (row[colIdx] !== undefined ? String(row[colIdx]).trim() : "");
+
+        const employeeCode = get(0);
+        const name = get(1);
+        const email = get(2);
+        const personalEmail = get(3);
+        const phone = get(4);
+        const cnic = get(5);
+        const department = get(6);
+        const designation = get(7);
+        const joiningDate = get(8);
+        const employmentType = get(9) || "Full-time";
+        const basicSalary = parseFloat(get(10)) || 50000;
+        const bankName = get(11) || "Meezan Bank Ltd";
+        const accountNumber = get(12);
+        const jazzCashNo = get(13);
+        const status = get(14) || "Active";
+
+        const rowErrors: string[] = [];
+        if (!name) rowErrors.push(`Row ${rowNum}: Full Name is required`);
+        if (!email) rowErrors.push(`Row ${rowNum}: Work Email is required`);
+        if (!phone) rowErrors.push(`Row ${rowNum}: Phone is required`);
+        if (!department) rowErrors.push(`Row ${rowNum}: Department is required`);
+        if (!designation) rowErrors.push(`Row ${rowNum}: Designation is required`);
+        if (rowErrors.length > 0) {
+          errors.push(...rowErrors);
+          return;
+        }
+
+        const validEmploymentTypes = ["Full-time", "Part-time", "Contract", "Daily Wager"];
+        const validStatuses = ["Active", "On Leave", "Terminated"];
+
+        parsed.push({
+          employeeCode,
+          name,
+          email,
+          personalEmail,
+          phone,
+          cnic,
+          department,
+          designation,
+          joiningDate: joiningDate || new Date().toISOString().split("T")[0],
+          employmentType: (validEmploymentTypes.includes(employmentType) ? employmentType : "Full-time") as any,
+          basicSalary,
+          bankName,
+          accountNumber,
+          jazzCashNo,
+          status: (validStatuses.includes(status) ? status : "Active") as any,
+          headedDepartments: []
+        });
+      });
+
+      setBulkRows(parsed);
+      setBulkErrors(errors);
+    };
+    reader.readAsArrayBuffer(file);
+
+    // Reset input so same file can be re-uploaded
+    e.target.value = "";
+  };
+
+  // ─── BULK IMPORT: Confirm & Save ─────────────────────────────────────────
+  const handleBulkImportConfirm = async () => {
+    if (bulkRows.length === 0) return;
+    setBulkImporting(true);
+
+    for (const emp of bulkRows) {
+      addHREmployee(emp);
+      // Small delay to avoid flooding state updates
+      await new Promise((r) => setTimeout(r, 30));
+    }
+
+    setBulkImporting(false);
+    setBulkDone(true);
+
+    // Auto-close after 2 seconds
+    setTimeout(() => {
+      setShowBulkModal(false);
+      setBulkRows([]);
+      setBulkErrors([]);
+      setBulkDone(false);
+    }, 2000);
+  };
+
   // ─── STATS ─────────────────────────────────────────────────────────────
   const activeCount = hrEmployees.filter((e) => e.status === "Active").length;
   const totalCount = hrEmployees.length;
@@ -320,13 +478,22 @@ export default function HREmployeesPage() {
               </div>
             </div>
             {canEditDelete && (
-              <Link
-                href="/hrms/recruitment"
-                className="flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-lg transition"
-              >
-                <UserPlus size={15} />
-                <span>Recruit &amp; Onboard New Staff</span>
-              </Link>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => { setShowBulkModal(true); setBulkRows([]); setBulkErrors([]); setBulkDone(false); }}
+                  className="flex items-center gap-2 bg-[#0b0f17] border border-indigo-500/40 hover:border-indigo-400 text-indigo-300 hover:text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-lg transition"
+                >
+                  <FileSpreadsheet size={14} />
+                  <span>Bulk Import Excel</span>
+                </button>
+                <Link
+                  href="/hrms/recruitment"
+                  className="flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-lg transition"
+                >
+                  <UserPlus size={15} />
+                  <span>Recruit &amp; Onboard New Staff</span>
+                </Link>
+              </div>
             )}
           </div>
 
@@ -978,6 +1145,215 @@ export default function HREmployeesPage() {
             </div>
           )}
         </div>
+        {/* ── BULK IMPORT MODAL ────────────────────────────────────────── */}
+        {showBulkModal && canEditDelete && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 font-sans">
+            <div className="bg-[#0b0f17] border border-indigo-500/40 rounded-2xl w-full max-w-5xl shadow-2xl overflow-hidden animate-fade-in-up max-h-[92vh] flex flex-col">
+
+              {/* Modal Header */}
+              <div className="p-5 border-b border-gray-800 flex justify-between items-center bg-black/50 sticky top-0 z-10">
+                <div className="flex items-center gap-3">
+                  <span className="p-2 rounded-xl bg-indigo-500/10 border border-indigo-500/30">
+                    <FileSpreadsheet size={18} className="text-indigo-400" />
+                  </span>
+                  <div>
+                    <h3 className="font-black text-white text-base">Bulk Employee Import — Excel Upload</h3>
+                    <p className="text-[10px] text-gray-400 mt-0.5">Download the template, fill it in Excel, then upload here to add all employees at once.</p>
+                  </div>
+                </div>
+                <button onClick={() => { setShowBulkModal(false); setBulkRows([]); setBulkErrors([]); setBulkDone(false); }} className="text-gray-400 hover:text-white p-1">
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div className="overflow-y-auto p-6 space-y-5 flex-1">
+
+                {/* Step 1: Download Template */}
+                <div className="p-4 bg-black/60 border border-gray-800 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-indigo-500/20 border border-indigo-500/30 text-indigo-400 flex items-center justify-center font-black text-sm">1</div>
+                    <div>
+                      <h4 className="font-bold text-white text-sm">Download Excel Template</h4>
+                      <p className="text-[10px] text-gray-400">Contains all required columns with 2 sample rows. Fill your employees data in this format.</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleDownloadTemplate}
+                    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl transition shadow-md shrink-0"
+                  >
+                    <Download size={13} />
+                    <span>Download Template.xlsx</span>
+                  </button>
+                </div>
+
+                {/* Step 2: Upload Filled Excel */}
+                <div className="p-4 bg-black/60 border border-gray-800 rounded-2xl space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-indigo-500/20 border border-indigo-500/30 text-indigo-400 flex items-center justify-center font-black text-sm">2</div>
+                    <div>
+                      <h4 className="font-bold text-white text-sm">Upload Your Filled Excel File</h4>
+                      <p className="text-[10px] text-gray-400">Upload the .xlsx / .xls file. System will validate and preview all rows before import.</p>
+                    </div>
+                  </div>
+
+                  <label className="flex flex-col items-center justify-center gap-3 border-2 border-dashed border-indigo-500/30 hover:border-indigo-400/60 bg-indigo-500/5 hover:bg-indigo-500/10 rounded-2xl p-8 cursor-pointer transition group">
+                    <FileUp size={32} className="text-indigo-400 group-hover:text-indigo-300 transition" />
+                    <div className="text-center">
+                      <p className="text-sm font-bold text-white">Click to browse or drag & drop your Excel file</p>
+                      <p className="text-[10px] text-gray-500 mt-1">Supports .xlsx and .xls format</p>
+                    </div>
+                    <input
+                      ref={bulkFileRef}
+                      type="file"
+                      accept=".xlsx,.xls"
+                      onChange={handleBulkFileUpload}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+
+                {/* Validation Errors */}
+                {bulkErrors.length > 0 && (
+                  <div className="p-4 bg-red-950/40 border border-red-500/30 rounded-2xl space-y-2">
+                    <div className="flex items-center gap-2 text-red-400 font-bold text-xs uppercase">
+                      <AlertCircle size={14} />
+                      <span>{bulkErrors.length} Validation Error{bulkErrors.length > 1 ? "s" : ""} Found</span>
+                    </div>
+                    <ul className="space-y-1">
+                      {bulkErrors.map((err, i) => (
+                        <li key={i} className="text-[11px] text-red-300 font-mono bg-red-950/60 border border-red-500/20 px-3 py-1.5 rounded-lg">
+                          {err}
+                        </li>
+                      ))}
+                    </ul>
+                    <p className="text-[10px] text-gray-500">Fix these rows in your Excel file and re-upload.</p>
+                  </div>
+                )}
+
+                {/* Step 3: Preview & Confirm */}
+                {bulkRows.length > 0 && (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 flex items-center justify-center font-black text-sm">3</div>
+                        <div>
+                          <h4 className="font-bold text-white text-sm">Preview & Confirm Import</h4>
+                          <p className="text-[10px] text-gray-400">{bulkRows.length} employee{bulkRows.length > 1 ? "s" : ""} ready to be imported.</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/30 rounded-xl">
+                        <CheckCircle2 size={13} className="text-emerald-400" />
+                        <span className="text-emerald-400 font-bold text-xs">{bulkRows.length} Valid Rows</span>
+                      </div>
+                    </div>
+
+                    {/* Preview Table */}
+                    <div className="overflow-x-auto rounded-xl border border-gray-800">
+                      <table className="w-full text-[10px] text-gray-300">
+                        <thead>
+                          <tr className="bg-black/80 text-[9px] uppercase text-gray-500">
+                            <th className="px-3 py-2 text-left font-bold">#</th>
+                            <th className="px-3 py-2 text-left font-bold">Code</th>
+                            <th className="px-3 py-2 text-left font-bold">Name</th>
+                            <th className="px-3 py-2 text-left font-bold">Work Email</th>
+                            <th className="px-3 py-2 text-left font-bold">Phone</th>
+                            <th className="px-3 py-2 text-left font-bold">Department</th>
+                            <th className="px-3 py-2 text-left font-bold">Designation</th>
+                            <th className="px-3 py-2 text-left font-bold">Type</th>
+                            <th className="px-3 py-2 text-left font-bold">Salary</th>
+                            <th className="px-3 py-2 text-left font-bold">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {bulkRows.map((row, i) => (
+                            <tr key={i} className={`border-t border-gray-800/80 hover:bg-white/5 transition ${i % 2 === 0 ? "bg-black/20" : ""}`}>
+                              <td className="px-3 py-2 font-mono text-gray-600">{i + 1}</td>
+                              <td className="px-3 py-2 font-mono text-emerald-400 font-bold">{row.employeeCode || "—"}</td>
+                              <td className="px-3 py-2 font-bold text-white">{row.name}</td>
+                              <td className="px-3 py-2 text-sky-400 font-mono">{row.email}</td>
+                              <td className="px-3 py-2">{row.phone}</td>
+                              <td className="px-3 py-2 text-gray-300">{row.department}</td>
+                              <td className="px-3 py-2 text-gray-300">{row.designation}</td>
+                              <td className="px-3 py-2">
+                                <span className="px-1.5 py-0.5 rounded bg-sky-500/10 border border-sky-500/20 text-sky-300 text-[9px] font-bold">
+                                  {row.employmentType}
+                                </span>
+                              </td>
+                              <td className="px-3 py-2 font-mono text-gray-300">
+                                {row.basicSalary.toLocaleString()}
+                              </td>
+                              <td className="px-3 py-2">
+                                <span className={`px-1.5 py-0.5 rounded border text-[9px] font-bold ${
+                                  row.status === "Active"
+                                    ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+                                    : row.status === "On Leave"
+                                    ? "bg-amber-500/10 border-amber-500/30 text-amber-400"
+                                    : "bg-red-500/10 border-red-500/30 text-red-400"
+                                }`}>
+                                  {row.status}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {/* Success Banner */}
+                {bulkDone && (
+                  <div className="p-4 bg-emerald-950/50 border border-emerald-500/40 rounded-2xl flex items-center gap-3 animate-fade-in-up">
+                    <CheckCircle2 size={22} className="text-emerald-400 shrink-0" />
+                    <div>
+                      <p className="font-black text-emerald-300 text-sm">Import Successful!</p>
+                      <p className="text-[11px] text-emerald-400/70">{bulkRows.length} employees have been added to the system. Closing...</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Modal Footer */}
+              <div className="p-5 border-t border-gray-800 bg-black/50 flex justify-between items-center gap-3 sticky bottom-0">
+                <button
+                  onClick={() => { setShowBulkModal(false); setBulkRows([]); setBulkErrors([]); setBulkDone(false); }}
+                  className="px-5 py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white font-bold text-xs rounded-xl transition"
+                >
+                  Cancel
+                </button>
+
+                <div className="flex items-center gap-3">
+                  {bulkRows.length === 0 && !bulkDone && (
+                    <span className="text-[10px] text-gray-500 italic">Upload a file to see the preview</span>
+                  )}
+                  {bulkRows.length > 0 && !bulkDone && (
+                    <button
+                      onClick={handleBulkImportConfirm}
+                      disabled={bulkImporting}
+                      className={`flex items-center gap-2 px-6 py-2.5 font-black text-xs rounded-xl transition shadow-lg shadow-emerald-900/30 ${
+                        bulkImporting
+                          ? "bg-emerald-800 text-emerald-300 cursor-not-allowed"
+                          : "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white"
+                      }`}
+                    >
+                      {bulkImporting ? (
+                        <>
+                          <span className="w-3.5 h-3.5 border-2 border-emerald-300 border-t-transparent rounded-full animate-spin" />
+                          <span>Importing {bulkRows.length} employees...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Check size={14} />
+                          <span>Confirm Import {bulkRows.length} Employee{bulkRows.length > 1 ? "s" : ""}</span>
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
