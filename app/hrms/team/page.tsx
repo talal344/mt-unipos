@@ -48,6 +48,7 @@ interface TeamTreeNode {
   grade?: string;
   status?: string;
   isMe?: boolean;
+  avatar?: string;
   empRef?: HREmployee;
   children: TeamTreeNode[];
   collapsed?: boolean;
@@ -194,6 +195,7 @@ export default function MyTeamPage() {
       grade: "FOUNDER",
       status: "Active",
       isMe: isOwner,
+      avatar: currentUser?.avatar,
       children: []
     };
 
@@ -227,6 +229,7 @@ export default function MyTeamPage() {
         rank: rankInfo.rank,
         grade: rankInfo.grade,
         status: emp.status,
+        avatar: emp.avatar,
         isMe,
         empRef: emp,
         children: []
@@ -548,17 +551,47 @@ export default function MyTeamPage() {
           {/* Avatar Icon */}
           <div className="mt-1">
             {isMeNode ? (
-              <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border-2 border-emerald-400 text-emerald-300 flex items-center justify-center font-black text-xl shadow-inner">
-                {node.name.charAt(0)}
-              </div>
+              empMatch?.avatar || currentUser?.avatar || node.avatar ? (
+                <img
+                  src={empMatch?.avatar || currentUser?.avatar || node.avatar}
+                  alt={node.name}
+                  className="w-12 h-12 rounded-2xl object-cover border-2 border-emerald-400 shadow-inner"
+                />
+              ) : (
+                <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border-2 border-emerald-400 text-emerald-300 flex items-center justify-center font-black text-xl shadow-inner">
+                  {node.name.charAt(0)}
+                </div>
+              )
             ) : isOwnerNode ? (
-              <div className="w-11 h-11 rounded-2xl bg-amber-400/20 border-2 border-amber-400 text-amber-300 flex items-center justify-center font-black text-lg">
-                👑
-              </div>
+              currentUser?.avatar || node.avatar ? (
+                <img
+                  src={currentUser?.avatar || node.avatar}
+                  alt={node.name}
+                  className="w-11 h-11 rounded-2xl object-cover border-2 border-amber-400"
+                />
+              ) : (
+                <div className="w-11 h-11 rounded-2xl bg-amber-400/20 border-2 border-amber-400 text-amber-300 flex items-center justify-center font-black text-lg">
+                  👑
+                </div>
+              )
             ) : isDirector ? (
-              <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-400 text-purple-200 flex items-center justify-center font-black text-sm">
-                {node.name.charAt(0)}
-              </div>
+              node.avatar || node.empRef?.avatar ? (
+                <img
+                  src={node.avatar || node.empRef?.avatar}
+                  alt={node.name}
+                  className="w-10 h-10 rounded-xl object-cover border border-purple-400 shadow-sm"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-400 text-purple-200 flex items-center justify-center font-black text-sm">
+                  {node.name.charAt(0)}
+                </div>
+              )
+            ) : node.avatar || node.empRef?.avatar ? (
+              <img
+                src={node.avatar || node.empRef?.avatar}
+                alt={node.name}
+                className={`w-9 h-9 rounded-xl object-cover border ${deptStyle.border} shadow-sm`}
+              />
             ) : (
               <div className={`w-9 h-9 rounded-xl bg-black border ${deptStyle.border} ${deptStyle.text} flex items-center justify-center font-bold text-xs`}>
                 {node.name.charAt(0)}
@@ -777,9 +810,17 @@ export default function MyTeamPage() {
             <div className="bg-[#0b0f17] border border-emerald-500/40 rounded-2xl w-full max-w-md shadow-2xl p-6 space-y-4 animate-fade-in-up">
               <div className="flex justify-between items-start border-b border-gray-800 pb-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border-2 border-emerald-400 text-emerald-300 flex items-center justify-center font-black text-xl">
-                    {selectedEmpModal.name.charAt(0)}
-                  </div>
+                  {selectedEmpModal.avatar ? (
+                    <img
+                      src={selectedEmpModal.avatar}
+                      alt={selectedEmpModal.name}
+                      className="w-12 h-12 rounded-2xl object-cover border-2 border-emerald-400 shadow-md"
+                    />
+                  ) : (
+                    <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border-2 border-emerald-400 text-emerald-300 flex items-center justify-center font-black text-xl">
+                      {selectedEmpModal.name.charAt(0)}
+                    </div>
+                  )}
                   <div>
                     <h3 className="font-black text-white text-base leading-tight">
                       {selectedEmpModal.name}

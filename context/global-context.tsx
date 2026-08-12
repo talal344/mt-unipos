@@ -678,8 +678,10 @@ interface GlobalContextType {
     businessName?: string;
     tenantId?: string;
     assignedSoftware?: "POS" | "HRMS";
+    avatar?: string;
   } | null;
   setCurrentUser: React.Dispatch<React.SetStateAction<any>>;
+  updateCurrentUserAvatar: (avatarUrl: string) => void;
   localReceiptsDirHandle: any;
   setLocalReceiptsDirHandle: React.Dispatch<React.SetStateAction<any>>;
   logout: () => void;
@@ -4861,6 +4863,21 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     saveTenantData("unipos_hr_departments", updatedDepts);
   };
 
+  const updateCurrentUserAvatar = (avatarUrl: string) => {
+    if (!currentUser) return;
+    const updated = { ...currentUser, avatar: avatarUrl };
+    setCurrentUser(updated);
+    localStorage.setItem("unipos_current_user", JSON.stringify(updated));
+
+    // If an employee profile matches currentUser email, also sync employee avatar
+    if (currentUser.email) {
+      const match = hrEmployees.find((e) => e.email?.toLowerCase().trim() === currentUser.email?.toLowerCase().trim());
+      if (match) {
+        updateHREmployee(match.id, { avatar: avatarUrl });
+      }
+    }
+  };
+
   const addHRDesignation = (desg: Omit<HRDesignation, "id">) => {
     const newDesg: HRDesignation = {
       ...desg,
@@ -5201,6 +5218,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         
         currentUser,
         setCurrentUser,
+        updateCurrentUserAvatar,
         localReceiptsDirHandle,
         setLocalReceiptsDirHandle,
         logout,

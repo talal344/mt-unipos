@@ -1,11 +1,12 @@
 "use client";
 
-import React from "react";
+import React, { useRef } from "react";
 import { useGlobalContext } from "@/context/global-context";
-import { User, Award, Calendar, Building2, ShieldCheck, Clock, Sparkles } from "lucide-react";
+import { User, Award, Calendar, Building2, ShieldCheck, Clock, Sparkles, Camera } from "lucide-react";
 
 export default function HRMSTopHeader({ title, subtitle }: { title?: string; subtitle?: string }) {
-  const { currentUser, hrEmployees, businessSettings } = useGlobalContext();
+  const { currentUser, hrEmployees, updateCurrentUserAvatar, updateHREmployee } = useGlobalContext();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Find employee matching logged-in user email
   const empMatch = hrEmployees.find(
@@ -16,6 +17,7 @@ export default function HRMSTopHeader({ title, subtitle }: { title?: string; sub
   const designation = empMatch?.designation || (currentUser?.role === "Owner" ? "Business Owner / Executive Director" : `${currentUser?.role || 'Executive'} Administrator`);
   const department = empMatch?.department || (currentUser?.email?.includes("it@") ? "IT & Software Operations" : currentUser?.email?.includes("hr@") ? "Human Resources" : "Executive Board");
   const joiningDateStr = empMatch?.joiningDate || "2024-01-15";
+  const avatar = empMatch?.avatar || currentUser?.avatar;
 
   // Calculate Tenure
   const startDate = new Date(joiningDateStr);
@@ -37,17 +39,84 @@ export default function HRMSTopHeader({ title, subtitle }: { title?: string; sub
     year: "numeric"
   });
 
+  const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const maxDim = 350;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height && width > maxDim) {
+          height = Math.round((height * maxDim) / width);
+          width = maxDim;
+        } else if (height > maxDim) {
+          width = Math.round((width * maxDim) / height);
+          height = maxDim;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx?.drawImage(img, 0, 0, width, height);
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+
+        // Update both session user and employee object
+        updateCurrentUserAvatar(dataUrl);
+        if (empMatch) {
+          updateHREmployee(empMatch.id, { avatar: dataUrl });
+        }
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
+
   return (
     <div className="bg-[#090d16] border-b border-emerald-500/20 p-4 space-y-3">
       {/* Logged-In User Corporate Profile & Tenure Bar */}
       <div className="flex flex-wrap items-center justify-between gap-3 bg-black/60 p-3 rounded-2xl border border-gray-800/80 shadow-lg">
         <div className="flex flex-wrap items-center gap-4">
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-400">
-              <User size={18} />
+          {/* Avatar with Quick Upload Trigger */}
+          <div className="flex items-center gap-3">
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              className="relative group cursor-pointer"
+              title="Click to change your profile picture"
+            >
+              {avatar ? (
+                <img
+                  src={avatar}
+                  alt={name}
+                  className="w-11 h-11 rounded-2xl object-cover border-2 border-emerald-500/40 group-hover:border-emerald-400 transition shadow-md"
+                />
+              ) : (
+                <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border-2 border-emerald-500/30 text-emerald-400 flex items-center justify-center font-black text-sm uppercase group-hover:border-emerald-400 transition shadow-md">
+                  {name.slice(0, 2)}
+                </div>
+              )}
+              <div className="absolute inset-0 bg-black/60 rounded-2xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition backdrop-blur-[1px]">
+                <Camera size={14} className="text-white" />
+              </div>
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleAvatarUpload}
+                accept="image/*"
+                className="hidden"
+              />
             </div>
+
             <div>
-              <span className="text-[9px] text-gray-400 font-bold uppercase tracking-wider block">Logged-In User</span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[9px] text-gray-400 font-bold uppercase tracking-wider block">Logged-In Profile</span>
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              </div>
               <strong className="text-sm font-black text-white">{name}</strong>
             </div>
           </div>

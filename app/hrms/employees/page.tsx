@@ -23,9 +23,10 @@ import {
   Calendar,
   ChevronDown,
   ChevronUp,
-  AlertTriangle,
   Crown,
-  Check
+  Check,
+  Camera,
+  UploadCloud
 } from "lucide-react";
 
 export default function HREmployeesPage() {
@@ -104,7 +105,8 @@ export default function HREmployeesPage() {
     accountNumber: "",
     jazzCashNo: "",
     status: "Active" as const,
-    headedDepartments: [] as string[]
+    headedDepartments: [] as string[],
+    avatar: ""
   });
 
   // ─── FILTERING & SORTING ──────────────────────────────────────────────
@@ -163,9 +165,78 @@ export default function HREmployeesPage() {
       accountNumber: emp.accountNumber || "",
       jazzCashNo: emp.jazzCashNo || "",
       status: emp.status || "Active",
-      headedDepartments: emp.headedDepartments || []
+      headedDepartments: emp.headedDepartments || [],
+      avatar: emp.avatar || ""
     });
     setShowModal(true);
+  };
+
+  const handleFormAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const maxDim = 350;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height && width > maxDim) {
+          height = Math.round((height * maxDim) / width);
+          width = maxDim;
+        } else if (height > maxDim) {
+          width = Math.round((width * maxDim) / height);
+          height = maxDim;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx?.drawImage(img, 0, 0, width, height);
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+
+        setForm((prev) => ({ ...prev, avatar: dataUrl }));
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleDirectCardAvatarUpload = (empId: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const maxDim = 350;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height && width > maxDim) {
+          height = Math.round((height * maxDim) / width);
+          width = maxDim;
+        } else if (height > maxDim) {
+          width = Math.round((width * maxDim) / height);
+          height = maxDim;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx?.drawImage(img, 0, 0, width, height);
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+
+        updateHREmployee(empId, { avatar: dataUrl });
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -192,7 +263,8 @@ export default function HREmployeesPage() {
       accountNumber: form.accountNumber,
       jazzCashNo: form.jazzCashNo,
       status: form.status,
-      headedDepartments: validHeadedDepts
+      headedDepartments: validHeadedDepts,
+      avatar: form.avatar || undefined
     };
 
     if (editingEmployee) {
@@ -305,8 +377,32 @@ export default function HREmployeesPage() {
                     {/* Employee Header */}
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 text-emerald-400 flex items-center justify-center font-black text-sm uppercase">
-                          {emp.name.slice(0, 2)}
+                        <div className="relative group">
+                          {emp.avatar ? (
+                            <img
+                              src={emp.avatar}
+                              alt={emp.name}
+                              className="w-11 h-11 rounded-xl object-cover border border-emerald-500/40 shadow-sm"
+                            />
+                          ) : (
+                            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 text-emerald-400 flex items-center justify-center font-black text-sm uppercase">
+                              {emp.name.slice(0, 2)}
+                            </div>
+                          )}
+                          {canEditDelete && (
+                            <label
+                              className="absolute inset-0 bg-black/60 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition cursor-pointer backdrop-blur-[1px]"
+                              title="Quick upload profile photo"
+                            >
+                              <Camera size={13} className="text-white" />
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => handleDirectCardAvatarUpload(emp.id, e)}
+                                className="hidden"
+                              />
+                            </label>
+                          )}
                         </div>
                         <div>
                           <h3 className="font-bold text-white text-sm">{emp.name}</h3>
@@ -501,9 +597,17 @@ export default function HREmployeesPage() {
                           <td className="px-4 py-3 font-mono font-bold text-emerald-400">{emp.employeeCode}</td>
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-2">
-                              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/20 text-emerald-400 flex items-center justify-center font-black text-[10px] uppercase shrink-0">
-                                {emp.name.slice(0, 2)}
-                              </div>
+                              {emp.avatar ? (
+                                <img
+                                  src={emp.avatar}
+                                  alt={emp.name}
+                                  className="w-7 h-7 rounded-lg object-cover border border-emerald-500/30 shrink-0"
+                                />
+                              ) : (
+                                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/20 text-emerald-400 flex items-center justify-center font-black text-[10px] uppercase shrink-0">
+                                  {emp.name.slice(0, 2)}
+                                </div>
+                              )}
                               <span className="font-bold text-white">{emp.name}</span>
                             </div>
                           </td>
@@ -569,6 +673,55 @@ export default function HREmployeesPage() {
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-6 space-y-4 text-xs">
+                  {/* Profile Picture Upload Section */}
+                  <div className="p-3.5 bg-black/60 border border-gray-800 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md">
+                    <div className="flex items-center gap-3">
+                      <div className="relative group">
+                        {form.avatar ? (
+                          <img
+                            src={form.avatar}
+                            alt="Preview"
+                            className="w-14 h-14 rounded-2xl object-cover border-2 border-emerald-500 shadow-md"
+                          />
+                        ) : (
+                          <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border-2 border-dashed border-emerald-500/30 text-emerald-400 flex flex-col items-center justify-center">
+                            <Camera size={18} />
+                            <span className="text-[8px] font-bold uppercase mt-0.5">No Photo</span>
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-white text-xs">Employee Profile Photo</h4>
+                        <p className="text-[10px] text-gray-400">Synced across Org Chart, My Team &amp; Directory.</p>
+                        <span className="inline-block mt-0.5 text-[8px] font-mono text-emerald-400 font-bold uppercase bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.2 rounded">
+                          HR &amp; Owner Managed
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <label className="cursor-pointer px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl transition flex items-center gap-1.5 shadow-md">
+                        <UploadCloud size={13} />
+                        <span>{form.avatar ? "Change Photo" : "Upload Photo"}</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleFormAvatarUpload}
+                          className="hidden"
+                        />
+                      </label>
+                      {form.avatar && (
+                        <button
+                          type="button"
+                          onClick={() => setForm((prev) => ({ ...prev, avatar: "" }))}
+                          className="px-3 py-2 bg-gray-800 hover:bg-red-500/20 text-gray-400 hover:text-red-400 font-bold text-xs rounded-xl transition"
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
                   {/* Name & Email */}
                   <div className="grid grid-cols-2 gap-3">
                     <div>

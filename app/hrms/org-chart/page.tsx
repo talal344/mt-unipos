@@ -144,6 +144,7 @@ export default function OrgChartPage() {
       rank: 0,
       grade: "FOUNDER",
       status: "Active",
+      avatar: currentUser?.avatar,
       children: []
     };
 
@@ -208,6 +209,7 @@ export default function OrgChartPage() {
           rank: rankAndGrade.rank,
           grade: rankAndGrade.grade,
           status: emp.status,
+          avatar: emp.avatar,
           empRef: emp,
           children: []
         });
@@ -252,6 +254,7 @@ export default function OrgChartPage() {
           rank: rankAndGrade.rank,
           grade: rankAndGrade.grade,
           status: head.status,
+          avatar: head.avatar,
           empRef: head,
           children: []
         };
@@ -293,6 +296,7 @@ export default function OrgChartPage() {
           rank: rankAndGrade.rank,
           grade: rankAndGrade.grade,
           status: head.status,
+          avatar: head.avatar,
           empRef: head,
           children: deptSubordinates
         };
@@ -399,17 +403,39 @@ export default function OrgChartPage() {
           {/* Avatar Icon */}
           <div className="mt-1">
             {isOwner ? (
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400/20 to-yellow-600/20 border-2 border-amber-400 text-amber-300 flex items-center justify-center font-black text-xl shadow-inner">
-                👑
-              </div>
+              node.avatar || currentUser?.avatar ? (
+                <img
+                  src={node.avatar || currentUser?.avatar}
+                  alt={node.name}
+                  className="w-14 h-14 rounded-2xl object-cover border-2 border-amber-400 shadow-md"
+                />
+              ) : (
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400/20 to-yellow-600/20 border-2 border-amber-400 text-amber-300 flex items-center justify-center font-black text-xl shadow-inner">
+                  👑
+                </div>
+              )
             ) : isMultiHead ? (
-              <div className="w-12 h-12 rounded-2xl bg-purple-500/20 border-2 border-purple-400 text-purple-200 flex items-center justify-center font-black text-lg shadow-inner">
-                {node.name.charAt(0)}
-              </div>
+              node.avatar || node.empRef?.avatar ? (
+                <img
+                  src={node.avatar || node.empRef?.avatar}
+                  alt={node.name}
+                  className="w-12 h-12 rounded-2xl object-cover border-2 border-purple-400 shadow-md"
+                />
+              ) : (
+                <div className="w-12 h-12 rounded-2xl bg-purple-500/20 border-2 border-purple-400 text-purple-200 flex items-center justify-center font-black text-lg shadow-inner">
+                  {node.name.charAt(0)}
+                </div>
+              )
             ) : isOpenDept ? (
               <div className="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/30 text-sky-400 flex items-center justify-center font-black text-sm">
                 <Building2 size={18} />
               </div>
+            ) : node.avatar || node.empRef?.avatar ? (
+              <img
+                src={node.avatar || node.empRef?.avatar}
+                alt={node.name}
+                className={`w-10 h-10 rounded-xl object-cover border ${deptStyle.border} shadow-sm`}
+              />
             ) : (
               <div className={`w-10 h-10 rounded-xl bg-black border ${deptStyle.border} ${deptStyle.text} flex items-center justify-center font-black text-sm`}>
                 {node.name.charAt(0)}
@@ -726,9 +752,17 @@ export default function OrgChartPage() {
             <div className="bg-[#0b0f17] border border-emerald-500/40 rounded-2xl w-full max-w-md shadow-2xl p-6 space-y-4 animate-fade-in-up">
               <div className="flex justify-between items-start border-b border-gray-800 pb-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border-2 border-emerald-400 text-emerald-300 flex items-center justify-center font-black text-xl">
-                    {selectedEmployeeDetail.name.charAt(0)}
-                  </div>
+                  {selectedEmployeeDetail.avatar ? (
+                    <img
+                      src={selectedEmployeeDetail.avatar}
+                      alt={selectedEmployeeDetail.name}
+                      className="w-12 h-12 rounded-2xl object-cover border-2 border-emerald-400 shadow-md"
+                    />
+                  ) : (
+                    <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border-2 border-emerald-400 text-emerald-300 flex items-center justify-center font-black text-xl">
+                      {selectedEmployeeDetail.name.charAt(0)}
+                    </div>
+                  )}
                   <div>
                     <h3 className="font-black text-white text-base leading-tight">
                       {selectedEmployeeDetail.name}
