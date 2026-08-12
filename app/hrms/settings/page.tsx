@@ -282,7 +282,7 @@ export default function HRMSPageSettings() {
               <button
                 onClick={() => {
                   setEditingDeptId(null);
-                  setDeptForm({ name: "", code: "", description: "", subDepartments: [] });
+                  setDeptForm({ name: "", code: "", description: "", headEmployeeId: "", headOfDepartment: "", subDepartments: [] });
                   setNewSubDeptInput("");
                   setShowDeptModal(true);
                 }}
@@ -294,7 +294,7 @@ export default function HRMSPageSettings() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {hrDepartments.map((dept) => {
-                const autoHod = getHeadOfDepartment(dept.name, hrEmployees, hrDesignations);
+                const autoHod = getHeadOfDepartment(dept.name, hrEmployees, hrDesignations, dept);
                 return (
                   <div
                     key={dept.id}
