@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useGlobalContext } from "@/context/global-context";
 import { supabase } from "@/lib/supabase";
+import MTCoreLogo from "@/components/mt-logo";
 import {
   Laptop, ArrowRight, CheckCircle2, AlertCircle, Eye, EyeOff, Building2, Lock
 } from "lucide-react";
@@ -416,9 +417,11 @@ function LoginContent() {
         )}
 
         {/* Logo */}
-        <Link href="/" className="flex flex-col items-center justify-center mb-6 group">
-          <img src="/logo.png" alt="MT Core Logo" className="h-20 sm:h-24 w-auto max-w-[340px] object-contain transition-all duration-300 group-hover:scale-105 drop-shadow-[0_0_20px_rgba(14,165,233,0.45)]" />
-          <span className="text-[10px] text-gray-400 font-medium mt-1">The core technology behind your business.</span>
+        <Link href="/" className="flex flex-col items-center justify-center mb-8 group cursor-pointer">
+          <div className="transition-all duration-300 group-hover:scale-105 group-hover:drop-shadow-[0_0_32px_rgba(16,185,129,0.5)]">
+            <MTCoreLogo variant="emerald" size="lg" showText={true} collapsed={false} />
+          </div>
+          <span className="text-[10px] text-gray-500 font-medium mt-3 tracking-wider uppercase">The core technology behind your business.</span>
         </Link>
 
         {/* Sign In Box */}
