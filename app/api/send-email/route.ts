@@ -30,7 +30,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: "Resend API Key is missing." }, { status: 400 });
     }
 
-    const emailSubject = subject || `[MT UniPOS] Official SaaS Billing & Account Setup: ${businessName || tenantId}`;
+    const emailSubject = subject || `[MT Core] Official SaaS Billing & Account Setup: ${businessName || tenantId}`;
 
     const defaultHtml = html || `
       <div style="font-family: Arial, Helvetica, sans-serif; background-color: #f8fafc; color: #0f172a; padding: 30px 15px; width: 100%; box-sizing: border-box;">
@@ -40,8 +40,8 @@ export async function POST(req: Request) {
           <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">
             <tr>
               <td style="vertical-align: top;">
-                <h1 style="color: #0284c7; font-size: 24px; font-weight: 900; margin: 0;">MT UniPOS</h1>
-                <div style="color: #475569; font-size: 11px; font-weight: 800; text-transform: uppercase; margin-top: 2px;">ENTERPRISE SAAS POS &amp; ERP SYSTEM</div>
+                <h1 style="color: #0284c7; font-size: 24px; font-weight: 900; margin: 0;">MT Core</h1>
+                <div style="color: #475569; font-size: 11px; font-weight: 800; text-transform: uppercase; margin-top: 2px;">THE CORE TECHNOLOGY BEHIND YOUR BUSINESS</div>
                 <div style="color: #94a3b8; font-size: 10px; font-weight: 600; margin-top: 2px;">Super Admin Billing Statement &amp; Tenant Credentials</div>
               </td>
               <td style="vertical-align: top; text-align: right;">
@@ -62,9 +62,10 @@ export async function POST(req: Request) {
               <!-- Billed Provider (Left) -->
               <td style="width: 48%; vertical-align: top; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px;">
                 <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #0284c7; margin-bottom: 6px;">🏢 BILLED PROVIDER</div>
-                <div style="font-size: 14px; font-weight: 900; color: #0f172a; margin-bottom: 4px;">MT UniPOS Software Suite</div>
+                <div style="font-size: 14px; font-weight: 900; color: #0f172a; margin-bottom: 4px;">MT Core Software Suite</div>
                 <div style="font-size: 11px; color: #475569; line-height: 1.6;">
                   Engineered by Founder <b>Mian Talal</b><br/>
+                  Slogan: <i>The core technology behind your business.</i><br/>
                   Support Contact: <b>03396399895</b><br/>
                   Corporate Email: <b>miantalal2@gmail.com</b><br/>
                   Official Portal: <a href="https://pos.mtcore.xyz" style="color: #0284c7; text-decoration: none; font-weight: bold;">pos.mtcore.xyz</a>
@@ -157,8 +158,8 @@ export async function POST(req: Request) {
           <table style="width: 100%; font-size: 10px; color: #64748b;">
             <tr>
               <td>
-                <b>MT UniPOS SaaS Management</b> • Payment Method: <b>${paymentMethod || "Bank Transfer"}</b><br/>
-                Notes: <i>Tenant account active. Invoice cleared.</i>
+                <b>MT Core SaaS Management</b> • Payment Method: <b>${paymentMethod || "Bank Transfer"}</b><br/>
+                Notes: <i>Tenant account active. The core technology behind your business.</i>
               </td>
               <td style="text-align: right;">
                 Verification: <b style="color: #0284c7;">AUTHENTICATED SAAS RECEIPT</b><br/>
@@ -171,7 +172,7 @@ export async function POST(req: Request) {
       </div>
     `;
 
-    const fromEmail = process.env.NEXT_PUBLIC_RESEND_FROM_EMAIL || "MT UniPOS <billing@updates.mtcore.xyz>";
+    const fromEmail = process.env.NEXT_PUBLIC_RESEND_FROM_EMAIL || "MT Core <billing@updates.mtcore.xyz>";
 
     // Generate Official Invoice PDF Attachment
     let attachments: { filename: string; content: string }[] | undefined = undefined;
@@ -194,7 +195,7 @@ export async function POST(req: Request) {
       });
 
       const safeName = (businessName || tenantId || "Invoice").replace(/[^a-zA-Z0-9_-]/g, "_");
-      const filename = `MT_UniPOS_Invoice_${safeName}_${tenantId || "INV"}.pdf`;
+      const filename = `MT_Core_Invoice_${safeName}_${tenantId || "INV"}.pdf`;
       attachments = [
         {
           filename,
@@ -232,7 +233,7 @@ export async function POST(req: Request) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          from: "MT UniPOS <onboarding@resend.dev>",
+          from: "MT Core <onboarding@resend.dev>",
           to: Array.isArray(to) ? to : [to],
           subject: emailSubject,
           html: defaultHtml,

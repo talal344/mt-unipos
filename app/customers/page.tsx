@@ -112,8 +112,8 @@ export default function CustomersPage() {
       </head><body>
       <div class="center">
         <div class="bold big">CREDIT SALE RECEIPT</div>
-        <div class="bold">MT UNIPOS</div>
-        <div class="sm">Mian Talal UniPOS ERP</div>
+        <div class="bold">MT CORE</div>
+        <div class="sm">The core technology behind your business.</div>
       </div>
       <div class="line"></div>
       <div class="row"><span>Date:</span><span>${new Date(sale.date).toLocaleString()}</span></div>
@@ -136,7 +136,7 @@ export default function CustomersPage() {
         <div class="signature-box sm">Authorized By</div>
       </div>
       <div class="line" style="margin-top: 30px;"></div>
-      <div class="center sm">Please keep this receipt for credit clearance.<br/>Powered by MT UniPOS</div>
+      <div class="center sm">Please keep this receipt for credit clearance.<br/>Powered by MT Core</div>
       </body></html>
     `);
     win.document.close();
@@ -179,8 +179,8 @@ export default function CustomersPage() {
       </head><body>
       <div class="center">
         <div class="bold big">CREDIT STATEMENT REPORT</div>
-        <div class="bold">MT UNIPOS</div>
-        <div class="sm">Gulberg III, Main Boulevard, Lahore</div>
+        <div class="bold">MT CORE</div>
+        <div class="sm">The core technology behind your business.</div>
       </div>
       <div class="line"></div>
       <div class="row"><span>Customer:</span><span class="bold">${cust.name}</span></div>
@@ -209,7 +209,7 @@ export default function CustomersPage() {
         <div class="signature-box sm">Authorized Cashier</div>
       </div>
       <div class="line" style="margin-top: 30px;"></div>
-      <div class="center sm">Thank you for your business!<br/>Powered by MT UniPOS</div>
+      <div class="center sm">Thank you for your business!<br/>Powered by MT Core</div>
       </body></html>
     `);
     win.document.close();
@@ -234,8 +234,8 @@ export default function CustomersPage() {
       </head><body>
       <div class="center">
         <div class="bold big">CREDIT RECOVERY SLIP</div>
-        <div class="bold">MT UNIPOS</div>
-        <div class="sm">Mian Talal UniPOS ERP</div>
+        <div class="bold">MT CORE</div>
+        <div class="sm">The core technology behind your business.</div>
       </div>
       <div class="line"></div>
       <div class="row"><span>Payment Date:</span><span>${new Date().toLocaleString()}</span></div>
@@ -288,7 +288,7 @@ export default function CustomersPage() {
       </head><body>
       <div class="center">
         <div class="bold big">ALL-CUSTOMER CREDIT REPORT</div>
-        <div class="bold">MT UNIPOS</div>
+        <div class="bold">MT CORE</div>
         <div class="sm">Report generated: ${new Date().toLocaleString()}</div>
       </div>
       <div class="line"></div>
@@ -305,7 +305,7 @@ export default function CustomersPage() {
       </div>
       <div class="line"></div>
       <div class="center sm" style="margin-top: 20px;">
-        End of report.<br/>Powered by MT UniPOS
+        End of report.<br/>Powered by MT Core — The core technology behind your business.
       </div>
       </body></html>
     `);
@@ -930,8 +930,8 @@ export default function CustomersPage() {
                                   .bold{font-weight:bold}.big{font-size:14px}.sm{font-size:9px}</style>
                                   </head><body>
                                   <div class="center">
-                                    <div class="bold big">MT UNIPOS</div>
-                                    <div class="sm">Mian Talal UniPOS ERP</div>
+                                    <div class="bold big">MT CORE</div>
+                                    <div class="sm">The core technology behind your business.</div>
                                     <div class="sm">Hotline: +92 321 5550100</div>
                                   </div>
                                   <div class="line"></div>
@@ -951,7 +951,7 @@ export default function CustomersPage() {
                                   ${sale.loyaltyPointsEarned !== undefined ? `<div class="row"><span>Points Earned:</span><span>+${sale.loyaltyPointsEarned} pts</span></div>
                                   <div class="row"><span>Points Balance:</span><span>${sale.loyaltyPointsBalance} pts</span></div>` : ""}
                                   <div class="line"></div>
-                                  <div class="center sm">Thank you for shopping!<br/>Powered by MT UniPOS</div>
+                                  <div class="center sm">Thank you for shopping!<br/>Powered by MT Core</div>
                                   </body></html>
                                 `);
                                 win.document.close();
@@ -965,8 +965,8 @@ export default function CustomersPage() {
 
                           {/* Mini receipt preview */}
                           <div className="bg-white text-black rounded-lg p-4 font-mono text-[9px] space-y-1 leading-relaxed">
-                            <div className="text-center font-sans font-black text-[11px]">MT UNIPOS</div>
-                            <div className="text-center text-gray-500 text-[8px]">Mian Talal UniPOS ERP</div>
+                            <div className="text-center font-sans font-black text-[11px]">MT CORE</div>
+                            <div className="text-center text-gray-500 text-[8px]">The core technology behind your business.</div>
                             <div className="border-t border-dashed border-gray-300 my-1.5" />
                             <div className="flex justify-between"><span className="text-gray-500">Receipt</span><span className="font-bold">{sale.receiptNumber}</span></div>
                             <div className="flex justify-between"><span className="text-gray-500">Customer</span><span className="font-bold">{sale.customerName}</span></div>

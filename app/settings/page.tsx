@@ -33,8 +33,8 @@ export default function SettingsPage() {
     city: businessSettings.city || "",
     country: businessSettings.country || "Pakistan",
     taxNumber: businessSettings.taxNumber || "",
-    receiptHeader: businessSettings.receiptHeader || "MT UniPOS ERP",
-    receiptFooter: businessSettings.receiptFooter || "Thank you for shopping! Powered by MT UniPOS.",
+    receiptHeader: businessSettings.receiptHeader || "MT Core",
+    receiptFooter: businessSettings.receiptFooter || "Thank you for shopping! Powered by MT Core — The core technology behind your business.",
     defaultTaxRate: businessSettings.defaultTaxRate !== undefined ? businessSettings.defaultTaxRate.toString() : "17",
     defaultCurrency: businessSettings.defaultCurrency || "PKR",
     lowStockAlert: businessSettings.lowStockAlert !== undefined ? businessSettings.lowStockAlert.toString() : "10",
@@ -55,8 +55,8 @@ export default function SettingsPage() {
       city: businessSettings.city || "",
       country: businessSettings.country || "Pakistan",
       taxNumber: businessSettings.taxNumber || "",
-      receiptHeader: businessSettings.receiptHeader || "MT UniPOS ERP",
-      receiptFooter: businessSettings.receiptFooter || "Thank you for shopping! Powered by MT UniPOS.",
+      receiptHeader: businessSettings.receiptHeader || "MT Core",
+      receiptFooter: businessSettings.receiptFooter || "Thank you for shopping! Powered by MT Core — The core technology behind your business.",
       defaultTaxRate: businessSettings.defaultTaxRate !== undefined ? businessSettings.defaultTaxRate.toString() : "17",
       defaultCurrency: businessSettings.defaultCurrency || "PKR",
       lowStockAlert: businessSettings.lowStockAlert !== undefined ? businessSettings.lowStockAlert.toString() : "10",
@@ -254,7 +254,8 @@ export default function SettingsPage() {
     // Everything Backup Payload
     const backupData = {
       backupMeta: {
-        appName: "MT UniPOS ERP",
+        appName: "MT Core Enterprise Platform",
+        slogan: "The core technology behind your business.",
         version: "1.2",
         exportedAt: new Date().toISOString(),
         exportedBy: currentUser?.name || "Store Owner",
@@ -292,7 +293,7 @@ export default function SettingsPage() {
     const safeName = (businessSettings?.businessName || "store").replace(/\s+/g, '-').toLowerCase();
     const dateStr = new Date().toISOString().split('T')[0];
     a.href = url;
-    a.download = `MT-UniPOS-Full-Backup-${safeName}-${dateStr}.json`;
+    a.download = `MT-Core-Full-Backup-${safeName}-${dateStr}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -315,7 +316,7 @@ export default function SettingsPage() {
         const salesCount = Array.isArray(data.sales) ? data.sales.length : 0;
         const custCount = Array.isArray(data.customers) ? data.customers.length : 0;
         const expCount = Array.isArray(data.expenses) ? data.expenses.length : 0;
-        const bName = data.businessSettings?.businessName || data.backupMeta?.appName || "MT UniPOS Store";
+        const bName = data.businessSettings?.businessName || data.backupMeta?.appName || "MT Core Store";
 
         const confirmMsg = `Are you sure you want to RESTORE this full system backup?\n\n` +
           `🏢 Store Name: ${bName}\n` +
@@ -375,7 +376,7 @@ export default function SettingsPage() {
               Settings Panel
             </h1>
             <p className="text-[10px] text-gray-500 mt-0.5">
-              Configure your MT UniPOS business environment, tax rates, receipt thermal configurations, and loyalty programs.
+              Configure your MT Core business environment (The core technology behind your business), tax rates, receipt thermal configurations, and loyalty programs.
             </p>
           </div>
         </div>
@@ -679,7 +680,7 @@ export default function SettingsPage() {
                         <Folder size={14} className="text-emerald-400" /> Auto-Save Receipts &amp; Reports Storage Folder
                       </h4>
                       <p className="text-[10px] text-gray-400 mt-1">
-                        Select a folder on your PC (e.g. Documents). MT UniPOS will automatically create subfolders (<span className="font-mono text-emerald-400 font-bold">Sale Receipts</span>, <span className="font-mono text-emerald-400 font-bold">Reports</span>, etc.) and save files directly into it!
+                        Select a folder on your PC (e.g. Documents). MT Core will automatically create subfolders (<span className="font-mono text-emerald-400 font-bold">Sale Receipts</span>, <span className="font-mono text-emerald-400 font-bold">Reports</span>, etc.) and save files directly into it!
                       </p>
                     </div>
                   </div>

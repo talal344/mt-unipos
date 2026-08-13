@@ -218,9 +218,9 @@ export default function GoogleDriveBackupModal({
                     </label>
                     <input
                       type="text"
-                      value={config.rootFolderId || "MT_UniPOS_Master_Backups"}
-                      onChange={(e) => setConfig({ ...config, rootFolderId: e.target.value })}
-                      placeholder="e.g. MT_UniPOS_Master_Backups or Folder ID"
+                      value={config.rootFolderId || "MT_Core_Master_Backups"}
+                      onChange={e => setConfig(prev => ({ ...prev, rootFolderId: e.target.value }))}
+                      placeholder="e.g. MT_Core_Master_Backups or Folder ID"
                       className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white text-xs font-mono focus:outline-none focus:border-sky-500"
                     />
                     <p className="text-[10px] text-gray-500 mt-1">
@@ -358,7 +358,7 @@ export default function GoogleDriveBackupModal({
             <div className="space-y-4 text-xs text-gray-300 leading-relaxed">
               <div className="bg-sky-500/10 border border-sky-500/30 p-4 rounded-xl text-sky-300 font-medium">
                 <span className="font-black block mb-1">📖 Apni Google Drive Connect Karne Ka Tarika:</span>
-                Google Drive ko MT UniPOS ke sath 3 aasan steps mein connect karein taakay roz raat aap ke tamaam stores ka backup automatically aap ki Google Drive par save ho sakay:
+                Google Drive ko MT Core ke sath 3 aasan steps mein connect karein taakay roz raat aap ke tamaam stores ka backup automatically aap ki Google Drive par save ho sakay:
               </div>
 
               <div className="space-y-3">
@@ -367,7 +367,7 @@ export default function GoogleDriveBackupModal({
                   <p className="text-gray-400">
                     1. Google par <a href="https://console.cloud.google.com/" target="_blank" rel="noreferrer" className="text-sky-400 underline">Google Cloud Console</a> khol kar apni Gmail ID se login karein.
                     <br />
-                    2. Naya Project banayein (e.g. <b>MT-UniPOS-Backup</b>).
+                    2. Naya Project banayein (e.g. <b>MT-Core-Backup</b>).
                   </p>
                 </div>
 

@@ -50,11 +50,11 @@ export function generateInvoicePdfBase64(data: InvoicePdfData): string {
 
   let y = margin + 10;
 
-  // Header Left: MT UniPOS
+  // Header Left: MT Core
   doc.setTextColor(2, 132, 199);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(22);
-  doc.text("MT UniPOS", margin + 6, y);
+  doc.text("MT Core", margin + 6, y);
 
   // Header Right: Invoice No & Date
   doc.setTextColor(15, 23, 42); // #0f172a
@@ -66,7 +66,7 @@ export function generateInvoicePdfBase64(data: InvoicePdfData): string {
   doc.setTextColor(71, 85, 105);
   doc.setFontSize(8);
   doc.setFont("helvetica", "bold");
-  doc.text("ENTERPRISE SAAS POS & ERP SYSTEM", margin + 6, y);
+  doc.text("THE CORE TECHNOLOGY BEHIND YOUR BUSINESS", margin + 6, y);
 
   doc.setTextColor(100, 116, 139);
   doc.setFontSize(8);
@@ -116,13 +116,13 @@ export function generateInvoicePdfBase64(data: InvoicePdfData): string {
 
   doc.setTextColor(15, 23, 42);
   doc.setFontSize(10);
-  doc.text("MT UniPOS Software Suite", margin + 10, y + 12);
+  doc.text("MT Core Software Suite", margin + 10, y + 12);
 
   doc.setTextColor(71, 85, 105);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
   doc.text("Engineered by Founder Mian Talal", margin + 10, y + 18);
-  doc.text("Support Contact: 03396399895", margin + 10, y + 23);
+  doc.text("Slogan: The core technology behind your business.", margin + 10, y + 23);
   doc.text("Corporate Email: miantalal2@gmail.com", margin + 10, y + 28);
   doc.setTextColor(2, 132, 199);
   doc.setFont("helvetica", "bold");
@@ -280,11 +280,11 @@ export function generateInvoicePdfBase64(data: InvoicePdfData): string {
   doc.setTextColor(100, 116, 139);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(7);
-  doc.text(`MT UniPOS SaaS Management • Payment Method: ${paymentMethod || "Bank Transfer"}`, margin + 6, y);
+  doc.text(`MT Core SaaS Management • Payment Method: ${paymentMethod || "Bank Transfer"}`, margin + 6, y);
   doc.text("Verification: AUTHENTICATED SAAS RECEIPT", pageWidth - margin - 6, y, { align: "right" });
 
   y += 4;
-  doc.text("Notes: Tenant account active. Official tax receipt & credentials statement.", margin + 6, y);
+  doc.text("Notes: Tenant account active. The core technology behind your business.", margin + 6, y);
   doc.text("Official Web Portal: pos.mtcore.xyz", pageWidth - margin - 6, y, { align: "right" });
 
   const arrayBuffer = doc.output("arraybuffer");

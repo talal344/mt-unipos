@@ -51,7 +51,7 @@ const INITIAL_EMAIL_LOGS: EmailLogEntry[] = [
     businessName: "MT RCM Management",
     tenantId: "MRM-001",
     ownerName: "Mian Talal",
-    subject: "[MT UniPOS] Official SaaS Billing & Account Setup: MT RCM Management",
+    subject: "[MT Core] Official SaaS Billing & Account Setup: MT RCM Management",
     plan: "Enterprise yearly",
     billingCycle: "Annual",
     amount: 120000,
@@ -70,7 +70,7 @@ const INITIAL_EMAIL_LOGS: EmailLogEntry[] = [
     businessName: "Coding Talal",
     tenantId: "CT-003",
     ownerName: "Coding with Talal",
-    subject: "[MT UniPOS] Official SaaS Billing & Account Setup: Coding Talal",
+    subject: "[MT Core] Official SaaS Billing & Account Setup: Coding Talal",
     plan: "Enterprise yearly",
     billingCycle: "Annual",
     amount: 100000,
@@ -89,7 +89,7 @@ const INITIAL_EMAIL_LOGS: EmailLogEntry[] = [
     businessName: "Waqas Karyana Store",
     tenantId: "WKS-004",
     ownerName: "Waqas Ahmad",
-    subject: "[MT UniPOS] Official SaaS Billing & Account Setup: Waqas Karyana Store",
+    subject: "[MT Core] Official SaaS Billing & Account Setup: Waqas Karyana Store",
     plan: "Professional Monthly",
     billingCycle: "Monthly",
     amount: 25000,
@@ -237,7 +237,7 @@ export default function AdminEmailsPage() {
         paidAmount: invoicePaid,
         currency: invoiceCurrency,
         paymentMethod: invoicePaymentMethod,
-        subject: `[MT UniPOS] Official SaaS Billing & Account Setup: ${t.businessName}`
+        subject: `[MT Core] Official SaaS Billing & Account Setup: ${t.businessName}`
       }));
     }
   };
@@ -257,7 +257,7 @@ export default function AdminEmailsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           to: form.to,
-          subject: form.subject || `[MT UniPOS] Official SaaS Billing & Account Setup: ${form.businessName}`,
+          subject: form.subject || `[MT Core] Official SaaS Billing & Account Setup: ${form.businessName}`,
           tenantId: form.tenantId || "CT-001",
           businessName: form.businessName,
           ownerName: form.ownerName,
@@ -280,7 +280,7 @@ export default function AdminEmailsPage() {
         businessName: form.businessName,
         tenantId: form.tenantId || "CT-001",
         ownerName: form.ownerName,
-        subject: form.subject || `[MT UniPOS] Official SaaS Billing & Account Setup: ${form.businessName}`,
+        subject: form.subject || `[MT Core] Official SaaS Billing & Account Setup: ${form.businessName}`,
         plan: form.plan,
         billingCycle: form.billingCycle,
         amount: amt,
@@ -373,7 +373,7 @@ export default function AdminEmailsPage() {
       const a = document.createElement("a");
       a.href = url;
       const safeName = (entry.businessName || entry.tenantId || "Invoice").replace(/[^a-zA-Z0-9_-]/g, "_");
-      a.download = `MT_UniPOS_Invoice_${safeName}_${entry.tenantId || "INV"}.pdf`;
+      a.download = `MT_Core_Invoice_${safeName}_${entry.tenantId || "INV"}.pdf`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -663,9 +663,9 @@ export default function AdminEmailsPage() {
                   {/* Top Header */}
                   <div className="flex justify-between items-start mb-6">
                     <div>
-                      <h1 className="text-2xl font-black text-sky-600 m-0">MT UniPOS</h1>
+                      <h1 className="text-2xl font-black text-sky-600 m-0">MT Core</h1>
                       <div className="text-[11px] font-extrabold uppercase text-slate-600 tracking-wider mt-0.5">
-                        ENTERPRISE SAAS POS &amp; ERP SYSTEM
+                        THE CORE TECHNOLOGY BEHIND YOUR BUSINESS
                       </div>
                       <div className="text-[10px] font-semibold text-slate-500 mt-0.5">
                         Super Admin Billing Statement &amp; Tenant Credentials
@@ -689,9 +689,10 @@ export default function AdminEmailsPage() {
                     {/* Billed Provider */}
                     <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs">
                       <div className="font-black uppercase text-sky-600 text-[10px] mb-1">🏢 BILLED PROVIDER</div>
-                      <div className="font-black text-slate-900 text-sm mb-1">MT UniPOS Software Suite</div>
+                      <div className="font-black text-slate-900 text-sm mb-1">MT Core Software Suite</div>
                       <div className="text-slate-600 space-y-0.5">
                         <div>Engineered by Founder <b>Mian Talal</b></div>
+                        <div>Slogan: <i>The core technology behind your business.</i></div>
                         <div>Support Contact: <b>03396399895</b></div>
                         <div>Corporate Email: <b>miantalal2@gmail.com</b></div>
                         <div>Official Portal: <b className="text-sky-600">pos.mtcore.xyz</b></div>
@@ -790,8 +791,8 @@ export default function AdminEmailsPage() {
                   <hr className="border-slate-200 my-4" />
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center text-[10px] text-slate-500 gap-2">
                     <div>
-                      <b>MT UniPOS SaaS Management</b> • Payment Method: <b>{previewLog.paymentMethod}</b><br/>
-                      Notes: <i>Tenant account active. Invoice cleared.</i>
+                      <b>MT Core SaaS Management</b> • Payment Method: <b>{previewLog.paymentMethod}</b><br/>
+                      Notes: <i>Tenant account active. The core technology behind your business.</i>
                     </div>
                     <div className="sm:text-right">
                       Verification: <b className="text-sky-600">AUTHENTICATED SAAS RECEIPT</b><br/>

@@ -491,7 +491,7 @@ export default function ReportsPage() {
     });
 
     const printContent = cloned.innerHTML;
-    const title = `MT UniPOS - ${activeTab.toUpperCase()} Report (${PERIOD_LABELS[period]})`;
+    const title = `MT Core - ${activeTab.toUpperCase()} Report (${PERIOD_LABELS[period]})`;
 
     const fullHtmlDoc = `
       <!DOCTYPE html>
@@ -1136,7 +1136,7 @@ export default function ReportsPage() {
                   </div>
                   <div className="text-right text-[10px] font-mono text-gray-500">
                     Auto Generated Report<br />
-                    MT UniPOS Financial Engine
+                    MT Core Financial Engine — The core technology behind your business.
                   </div>
                 </div>
 
@@ -1815,7 +1815,7 @@ export default function ReportsPage() {
                   A4 PDF Report Preview &amp; Direct Export
                 </h3>
                 <p className="text-[10px] text-gray-400 font-mono">
-                  MT UniPOS · {PERIOD_LABELS[period]} · Direct Target: Documents/MT POS/Reports/PDF/
+                  MT Core · The core technology behind your business. · {PERIOD_LABELS[period]}
                 </p>
               </div>
             </div>
@@ -1851,26 +1851,26 @@ export default function ReportsPage() {
               {/* Header Logo 2 */}
               <div className="flex justify-between items-center border-b-2 border-gray-200 pb-5 mb-6">
                 <div className="flex items-center gap-3">
-                  <img src="/logo.png" style={{ height: "50px", width: "auto", objectFit: "contain" }} alt="MT UniPOS Logo" />
+                  <img src="/logo.png" style={{ height: "50px", width: "auto", objectFit: "contain" }} alt="MT Core Logo" />
                   <div>
                     <h1 className="text-xl font-black uppercase tracking-tight text-gray-900">
-                      MT UniPOS - {activeTab.toUpperCase()} REPORT
+                      MT Core - {activeTab.toUpperCase()} REPORT
                     </h1>
                     <p className="text-[11px] text-gray-500 mt-0.5">
-                      Branch: {currentBranch} · Period: {PERIOD_LABELS[period]}
+                      The core technology behind your business. · Branch: {currentBranch} · Period: {PERIOD_LABELS[period]}
                     </p>
                   </div>
                 </div>
                 <div className="text-right text-[10px] text-gray-400 font-mono">
                   Report Date: {new Date().toLocaleDateString()}<br/>
-                  MT UniPOS ERP System
+                  MT Core Enterprise Platform
                 </div>
               </div>
 
               {/* Notice Banner */}
               <div className="bg-purple-50 border border-purple-200 text-purple-900 p-3 rounded-lg text-xs font-mono mb-6 flex justify-between items-center">
-                <span>📄 Direct Target: Documents/MT POS/Reports/PDF/</span>
-                <span className="font-bold">MT UniPOS ERP</span>
+                <span>📄 Direct Target: Documents/MT Core/Reports/PDF/</span>
+                <span className="font-bold">MT Core Enterprise</span>
               </div>
 
               {/* Active Tab Preview Notice */}

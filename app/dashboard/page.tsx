@@ -223,7 +223,7 @@ export default function ClientDashboardPage() {
     win.document.write(`
       <html>
         <head>
-          <title>${title} - ${activeTenant?.businessName || "MT UniPOS"}</title>
+          <title>${title} - ${activeTenant?.businessName || "MT Core"}</title>
           <style>
             body { font-family: monospace; padding: 20px; color: #000; }
             h2 { margin-bottom: 4px; }
@@ -236,8 +236,8 @@ export default function ClientDashboardPage() {
           </style>
         </head>
         <body>
-          <h2>${activeTenant?.businessName || "MT UniPOS"} — ${title}</h2>
-          <div class="meta">Generated Date: ${new Date().toLocaleString()} | Total Records: ${rows.length}</div>
+          <h2>${activeTenant?.businessName || "MT Core"} — ${title}</h2>
+          <div class="meta">The core technology behind your business. | Generated Date: ${new Date().toLocaleString()} | Total Records: ${rows.length}</div>
           <table>
             <thead>
               <tr>${headers.map(h => `<th>${h}</th>`).join("")}</tr>
@@ -246,7 +246,7 @@ export default function ClientDashboardPage() {
               ${rows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join("")}</tr>`).join("")}
             </tbody>
           </table>
-          <div class="footer">Powered by MT UniPOS ERP Engine</div>
+          <div class="footer">Powered by MT Core | The core technology behind your business.</div>
         </body>
       </html>
     `);

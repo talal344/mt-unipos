@@ -146,7 +146,7 @@ export async function selectAndInitRootFolder(): Promise<{ success: boolean; fol
           if (resolved) return;
           resolved = true;
           const files = e.target.files;
-          let folderName = "MT UNIPOS";
+          let folderName = "MT CORE";
           if (files && files.length > 0 && files[0].webkitRelativePath) {
             const topDir = files[0].webkitRelativePath.split("/")[0];
             if (topDir) folderName = topDir;
@@ -162,7 +162,7 @@ export async function selectAndInitRootFolder(): Promise<{ success: boolean; fol
           setTimeout(() => {
             if (!resolved) {
               resolved = true;
-              const saved = localStorage.getItem("unipos_selected_folder_name") || "MT UNIPOS";
+              const saved = localStorage.getItem("unipos_selected_folder_name") || "MT CORE";
               localStorage.setItem("unipos_selected_folder_name", saved);
               localStorage.setItem("unipos_safari_mode", "true");
               if (document.body.contains(input)) document.body.removeChild(input);
@@ -175,7 +175,7 @@ export async function selectAndInitRootFolder(): Promise<{ success: boolean; fol
         window.addEventListener("focus", onFocus, { once: true });
         input.click();
       } catch (err: any) {
-        const folderName = "MT UNIPOS";
+        const folderName = "MT CORE";
         localStorage.setItem("unipos_selected_folder_name", folderName);
         localStorage.setItem("unipos_safari_mode", "true");
         resolve({ success: true, folderName, isSafari: true });

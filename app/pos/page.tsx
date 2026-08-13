@@ -841,7 +841,7 @@ export default function PosPage() {
       setShowCheckoutModal(false);
       autoSaveReceiptToDisk(finalSale, businessSettings, currencySymbol).then(res => {
         if (res.success) {
-          triggerToast(`✅ Receipt auto-saved to Documents/MT UniPOS/Sale Receipts!`);
+          triggerToast(`✅ Receipt auto-saved to Documents/MT Core/Sale Receipts!`);
         } else {
           console.warn("Receipt auto-save warning:", res.error);
         }
@@ -902,7 +902,7 @@ export default function PosPage() {
       setShowCheckoutModal(false);
       autoSaveReceiptToDisk(finalSale, businessSettings, currencySymbol).then(res => {
         if (res.success) {
-          triggerToast(`✅ Receipt auto-saved to Documents/MT UniPOS/Sale Receipts!`);
+          triggerToast(`✅ Receipt auto-saved to Documents/MT Core/Sale Receipts!`);
         } else {
           console.warn("Receipt auto-save warning:", res.error);
         }
@@ -972,7 +972,7 @@ export default function PosPage() {
                 <DollarSign size={26} className="text-brand-sky" />
               </div>
               <div className="flex items-center gap-2 justify-center">
-                <img src="/logo.png" alt="MT UniPOS Logo" className="h-9 w-auto object-contain drop-shadow-[0_0_10px_rgba(14,165,233,0.35)]" />
+                <img src="/logo.png" alt="MT Core Logo" className="h-9 w-auto object-contain drop-shadow-[0_0_10px_rgba(14,165,233,0.35)]" />
               </div>
               <p className="text-[10px] text-brand-sky uppercase tracking-widest font-bold mt-0.5">Point of Sale — Shift Control</p>
             </div>
@@ -2093,7 +2093,7 @@ export default function PosPage() {
                 <Printer size={13} /> View Slip
               </button>
               <button onClick={async () => {
-                  // Save receipt to Documents\MT UniPOS folder + auto-print
+                  // Save receipt to Documents\MT Core folder + auto-print
                   try {
                     const { default: html2canvas } = await import("html2canvas-pro");
                     // Build a temporary hidden slip to capture
@@ -2104,7 +2104,7 @@ export default function PosPage() {
                       <div>Receipt: ${successReceipt.receiptNumber}</div>
                       <div>Total: ${currencySymbol} ${successReceipt.total.toFixed(2)}</div>
                       <div>Items: ${successReceipt.items?.length || 0}</div>
-                      <div style="margin-top:8px;font-size:9px;color:#555">Powered by MT UniPOS</div>
+                      <div style="margin-top:8px;font-size:9px;color:#555">Powered by MT Core | The core technology behind your business.</div>
                     </div>`;
                     document.body.appendChild(tempDiv);
                     const canvas = await html2canvas(tempDiv, { backgroundColor: "#ffffff", scale: 2, logging: false });
@@ -2117,21 +2117,22 @@ export default function PosPage() {
                     if (printWin) {
                       printWin.document.write(`<!DOCTYPE html><html><head><style>@page{size:80mm auto;margin:0}body{font-family:Arial;font-size:11px;padding:10px;width:80mm}</style></head><body>
                         <div style="text-align:center">
-                          <img src="/logo.png" style="height:40px;max-width:140px;object-fit:contain;margin:0 auto 4px auto;display:block" alt="MT UniPOS" />
-                          <div style="font-size:13px;font-weight:900">MT UniPOS</div>
+                          <img src="/logo.png" style="height:40px;max-width:140px;object-fit:contain;margin:0 auto 4px auto;display:block" alt="MT Core" />
+                          <div style="font-size:13px;font-weight:900">MT Core</div>
+                          <div style="font-size:8px;color:#666">The core technology behind your business.</div>
                           <div style="font-weight:700">${successReceipt.customerName}</div>
                           <div>Receipt: <b>${successReceipt.receiptNumber}</b></div>
                           <div>Total: <b>${currencySymbol} ${successReceipt.total.toFixed(2)}</b></div>
                           <hr/>
                           ${successReceipt.items?.map((i: any) => `<div style="display:flex;justify-content:space-between"><span>${i.productName} x${i.qty}</span><span>${currencySymbol} ${i.subtotal}</span></div>`).join("") || ""}
                           <hr/>
-                          <div style="font-size:9px;color:#555">Powered by MT UniPOS</div>
+                          <div style="font-size:9px;color:#555">Powered by MT Core | The core technology behind your business.</div>
                         </div>
                         <script>window.onload=function(){window.print();}<\/script>
                       </body></html>`);
                       printWin.document.close();
                     }
-                    setToastMsg("✅ Receipt saved to Documents/MT UniPOS & sent to printer!");
+                    setToastMsg("✅ Receipt saved to Documents/MT Core & sent to printer!");
                     setTimeout(() => setToastMsg(null), 3000);
                   } catch (e) {
                     console.error("Direct print error:", e);

@@ -333,7 +333,7 @@ export default function HREmployeesPage() {
 
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Employees");
-    XLSX.writeFile(wb, "UniPOS_Employee_Import_Template.xlsx");
+    XLSX.writeFile(wb, "MTCore_Employee_Import_Template.xlsx");
   };
 
   // ─── BULK IMPORT: Parse uploaded Excel ───────────────────────────────────

@@ -1063,9 +1063,9 @@ export default function AdminClientsPage() {
   <div class="card">
     <div class="header">
       <div>
-        <img src="/logo.png" style="height:48px;max-width:180px;object-fit:contain;margin-bottom:6px;display:block" alt="MT UniPOS" />
-        <div class="brand-title">MT UniPOS</div>
-        <div class="brand-sub">Enterprise SaaS POS &amp; ERP Platform</div>
+        <img src="/logo.png" style="height:48px;max-width:180px;object-fit:contain;margin-bottom:6px;display:block" alt="MT Core" />
+        <div class="brand-title">MT Core</div>
+        <div class="brand-sub">THE CORE TECHNOLOGY BEHIND YOUR BUSINESS</div>
         <div style="font-size: 12px; color: #475569; margin-top: 4px;">SuperAdmin Provider: Mian Talal (03396399895 | miantalal2@gmail.com)</div>
       </div>
       <div class="meta-right">
@@ -1110,8 +1110,8 @@ export default function AdminClientsPage() {
 
     <div class="footer">
       <div>
-        <b>Official Verification Stamp:</b> MT UniPOS Enterprise Authority<br/>
-        This document serves as an official invoice and lifetime license activation certificate.
+        <b>Official Verification Stamp:</b> MT Core Enterprise Authority<br/>
+        The core technology behind your business. Lifetime license activation certificate.
       </div>
       <div style="text-align:right">
         <b>Founder Signature:</b> Mian Talal<br/>

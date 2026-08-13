@@ -324,12 +324,12 @@ function LoginContent() {
 
   const handleDownloadCredentialsFile = () => {
     if (!activatedCredentials) return;
-    const content = `==============================================\nMT UniPOS Offline License Activation Record\n==============================================\nBusiness Name   : ${activatedCredentials.businessName}\nWorkspace ID    : ${activatedCredentials.tenantId}\nCorporate Email : ${activatedCredentials.email}\nDefault Password: ${activatedCredentials.pass}\nLicense Status  : ACTIVATED & LIFETIME VERIFIED\nActivation Date : ${new Date().toLocaleDateString()}\nSystem ID       : UNIPOS-OFFLINE-LOCAL\n==============================================\n`;
+    const content = `==============================================\nMT Core Offline License Activation Record\nThe core technology behind your business.\n==============================================\nBusiness Name   : ${activatedCredentials.businessName}\nWorkspace ID    : ${activatedCredentials.tenantId}\nCorporate Email : ${activatedCredentials.email}\nDefault Password: ${activatedCredentials.pass}\nLicense Status  : ACTIVATED & LIFETIME VERIFIED\nActivation Date : ${new Date().toLocaleDateString()}\nSystem ID       : MTCORE-OFFLINE-LOCAL\n==============================================\n`;
     const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `MT_UniPOS_Credentials_${activatedCredentials.tenantId}.txt`;
+    link.download = `MT_Core_Credentials_${activatedCredentials.tenantId}.txt`;
     link.click();
     URL.revokeObjectURL(url);
   };
@@ -357,13 +357,13 @@ function LoginContent() {
       <div className="hidden lg:flex flex-col max-w-lg space-y-6 relative z-10">
         <div>
           <span className="bg-brand-sky/10 border border-brand-sky/30 text-brand-sky font-bold text-[10px] uppercase tracking-widest px-3 py-1 rounded-full">
-            All-In-One ERP & POS Platform
+            MT Core — The core technology behind your business.
           </span>
           <h1 className="text-3xl xl:text-4xl font-black tracking-tight text-white mt-4 leading-tight">
             Streamline your store, dining floor & sharded databases.
           </h1>
           <p className="text-gray-400 text-xs mt-3 leading-relaxed">
-            MT UniPOS provides enterprise-grade sharded database tenancy, real-time inventory tracking, dual ledger accounting, and interactive kitchen routing in one unified suite.
+            MT Core provides enterprise-grade sharded database tenancy, real-time inventory tracking, dual ledger accounting, and interactive kitchen routing in one unified suite.
           </p>
         </div>
 
@@ -416,8 +416,9 @@ function LoginContent() {
         )}
 
         {/* Logo */}
-        <Link href="/" className="flex items-center justify-center mb-6 group">
-          <img src="/logo.png" alt="MT UniPOS Logo" className="h-20 sm:h-24 w-auto max-w-[340px] object-contain transition-all duration-300 group-hover:scale-105 drop-shadow-[0_0_20px_rgba(14,165,233,0.45)]" />
+        <Link href="/" className="flex flex-col items-center justify-center mb-6 group">
+          <img src="/logo.png" alt="MT Core Logo" className="h-20 sm:h-24 w-auto max-w-[340px] object-contain transition-all duration-300 group-hover:scale-105 drop-shadow-[0_0_20px_rgba(14,165,233,0.45)]" />
+          <span className="text-[10px] text-gray-400 font-medium mt-1">The core technology behind your business.</span>
         </Link>
 
         {/* Sign In Box */}

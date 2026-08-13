@@ -158,7 +158,9 @@ function buildSlipHTML(
 
   <!-- Header -->
   <div style="text-align:center;margin-bottom:8px">
-    <img src="/logo.png" style="height:48px;max-width:170px;object-fit:contain;margin:0 auto 4px auto;display:block" alt="MT UniPOS" />
+    <img src="/logo.png" style="height:48px;max-width:170px;object-fit:contain;margin:0 auto 4px auto;display:block" alt="MT Core" />
+    <div style="font-size:10px;font-weight:700;letter-spacing:1px;color:#555;margin-bottom:2px">MT CORE</div>
+    <div style="font-size:7px;color:#888;margin-bottom:4px">The core technology behind your business.</div>
     <div style="font-size:13px;font-weight:900;letter-spacing:1px;margin-top:4px;text-transform:uppercase">${businessName}</div>
     ${city ? `<div style="font-size:9px">${city}</div>` : ""}
     ${phone ? `<div style="font-size:9px">Ph: ${phone}</div>` : ""}
@@ -179,7 +181,6 @@ function buildSlipHTML(
     ${sale.customerName ? `<div style="display:flex;justify-content:space-between;margin-top:2px"><span>Customer Name:</span><span style="font-weight:900">${sale.customerName}</span></div>` : ""}
     ${sale.customerNo && sale.customerNo !== "N/A" ? `<div style="display:flex;justify-content:space-between"><span>Customer ID:</span><span style="font-weight:700">${sale.customerNo}</span></div>` : ""}
     ${((sale as any).customerPhone || (sale as any).phone || (sale as any).mobile) ? `<div style="display:flex;justify-content:space-between"><span>Customer Phone:</span><span style="font-weight:700;font-family:monospace">${(() => { const p = (((sale as any).customerPhone || (sale as any).phone || (sale as any).mobile) || "").trim(); return p.length >= 7 ? p.slice(0, 4) + "****" + p.slice(-3) : p; })()}</span></div>` : ""}
-  </div>
   </div>
 
   <!-- Items Table -->
@@ -248,7 +249,8 @@ function buildSlipHTML(
 
   <!-- Footer -->
   <div style="text-align:center;font-size:8px;color:#555;margin-top:8px;border-top:1px dashed #aaa;padding-top:5px">
-    Powered By: MT UniPOS | Developed By: MT Softwares
+    Powered By: MT Core | The core technology behind your business.<br/>
+    Developed By: MT Softwares
   </div>
 
   <script>
@@ -288,7 +290,7 @@ export default function ThermalSlipModal({
 
   const slipHTML = buildSlipHTML(sale, currencySymbol || "PKR", branch, businessSettings);
 
-  // Auto-save logic — saves receipt to MT UniPOS folder on disk automatically
+  // Auto-save logic — saves receipt to MT Core folder on disk automatically
   useEffect(() => {
     if (hasAutoSaved.current) return;
     hasAutoSaved.current = true;
@@ -333,7 +335,7 @@ export default function ThermalSlipModal({
       });
       const dataUrl = canvas.toDataURL("image/jpeg", 0.95);
       const a = document.createElement("a");
-      a.href = dataUrl;  // ← was missing — this is what triggers the download
+      a.href = dataUrl;
       a.download = `${sale.receiptNumber}.jpg`;
       document.body.appendChild(a);
       a.click();
@@ -423,9 +425,9 @@ export default function ThermalSlipModal({
                 {autoSaveStatus === "success" && (
                   <span
                     className="text-[9px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-500/30 cursor-pointer"
-                    title={autoSavedPath ? `Saved to: ${autoSavedPath}` : "Saved to MT UniPOS folder"}
+                    title={autoSavedPath ? `Saved to: ${autoSavedPath}` : "Saved to MT Core folder"}
                   >
-                    ✅ Auto-saved
+                    ✅ MT Core Saved
                   </span>
                 )}
                 {autoSaveStatus === "error" && <span className="text-[9px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded border border-red-500/30">Save Failed</span>}
@@ -459,7 +461,9 @@ export default function ThermalSlipModal({
           >
             {/* ── Store Header ── */}
             <div style={{ textAlign: "center", marginBottom: "8px" }}>
-              <img src="/logo.png" style={{ height: "48px", maxWidth: "170px", objectFit: "contain", margin: "0 auto 4px auto", display: "block" }} alt="MT UniPOS Logo" />
+              <img src="/logo.png" style={{ height: "48px", maxWidth: "170px", objectFit: "contain", margin: "0 auto 4px auto", display: "block" }} alt="MT Core Logo" />
+              <span className="text-[10px] font-mono tracking-widest text-gray-500 uppercase font-bold block">MT Core</span>
+              <span className="text-[7px] text-gray-400 block">The core technology behind your business.</span>
               <div style={{ fontSize: "14px", fontWeight: 900, letterSpacing: "0.5px", marginTop: "4px", textTransform: "uppercase" }}>{businessName}</div>
               {city && <div style={{ fontSize: "9px" }}>{city}</div>}
               {phone && <div style={{ fontSize: "9px" }}>Ph: {phone}</div>}
@@ -656,7 +660,8 @@ export default function ThermalSlipModal({
 
             {/* ── Footer ── */}
             <div style={{ textAlign: "center", fontSize: "8px", color: "#555", marginTop: "8px", borderTop: "1px dashed #aaa", paddingTop: "5px" }}>
-              Powered By: MT UniPOS | Developed By: MT Softwares
+              Powered By: MT Core | The core technology behind your business.<br/>
+              Developed By: MT Softwares
             </div>
           </div>
         </div>

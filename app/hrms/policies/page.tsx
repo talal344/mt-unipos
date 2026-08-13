@@ -83,7 +83,7 @@ export default function CompanyPoliciesPage() {
         {
           heading: "2. Conflict of Interest",
           content: [
-            "Employees must not engage in any outside commercial activity or secondary employment that competes with MT-UniPOS or impairs job performance.",
+            "Employees must not engage in any outside commercial activity or secondary employment that competes with MT-Core or impairs job performance.",
             "Any familial or financial relationship with vendors or direct subordinates must be formally declared to the HR Department."
           ]
         },
@@ -162,7 +162,7 @@ export default function CompanyPoliciesPage() {
         {
           heading: "1. Non-Discrimination Commitment",
           content: [
-            "MT-UniPOS provides equal employment opportunities regardless of gender, race, religion, age, disability, or marital status.",
+            "MT-Core provides equal employment opportunities regardless of gender, race, religion, age, disability, or marital status.",
             "Hiring, promotions, salary increments, and terminations are determined solely on merit, competence, and performance."
           ]
         },
@@ -198,7 +198,7 @@ export default function CompanyPoliciesPage() {
         {
           heading: "1. Confidentiality of Customer & Financial Data",
           content: [
-            "Customer phone numbers, purchase history, and payment details stored within MT-UniPOS POS system are classified as Strictly Confidential.",
+            "Customer phone numbers, purchase history, and payment details stored within MT-Core POS system are classified as Strictly Confidential.",
             "Exporting, photocopying, or transferring customer data to personal email or flash drives is a criminal breach of contract."
           ]
         },
@@ -426,7 +426,7 @@ export default function CompanyPoliciesPage() {
       <body>
         <div class="header">
           <div>
-            <div class="logo">MT-UNIPOS GLOBAL</div>
+            <div class="logo">MT-CORE GLOBAL</div>
             <div class="title">${policy.title}</div>
           </div>
           <div class="meta" style="text-align: right;">
@@ -459,7 +459,7 @@ export default function CompanyPoliciesPage() {
 
         <div class="footer">
           <div>Authorized by: Executive Committee &amp; HR Compliance Unit</div>
-          <div>Confidential &amp; Proprietary &bull; MT-UniPOS Enterprise</div>
+          <div>Confidential &amp; Proprietary &bull; MT-Core Enterprise</div>
         </div>
 
         <script>

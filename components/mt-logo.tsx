@@ -184,7 +184,7 @@ export default function MTCoreLogo({
               opacity: 0.85,
             }}
           >
-            UniPOS · ERP
+            Enterprise Platform
           </span>
         </div>
       )}

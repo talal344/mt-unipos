@@ -276,8 +276,8 @@ export default function AdminSupportPage() {
                       </div>
                       <button
                         onClick={() => {
-                          const name = selectedTicket.softwareRequestData!.name;
-                          const username = name.split(" ")[0].toLowerCase() + "@unipos.mt";
+                          const name = selectedTicket.softwareRequestData?.name || "Client";
+                          const username = name.split(" ")[0].toLowerCase() + "@mtcore.xyz";
                           const password = "Pass@" + Math.floor(1000 + Math.random() * 9000);
                           
                           const newTenantId = registerTenant({
@@ -294,7 +294,7 @@ export default function AdminSupportPage() {
                             ]
                           });
 
-                          const replyMessage = `Your ${provisionVertical} POS is ready! Here are your credentials:\n\nLogin URL: /login\nWorkspace ID: ${newTenantId}\nUsername: ${username}\nPassword: ${password}\n\nPlease keep these credentials safe. Welcome to UniPOS!`;
+                          const replyMessage = `Your ${provisionVertical} POS is ready! Here are your credentials:\n\nLogin URL: /login\nWorkspace ID: ${newTenantId}\nUsername: ${username}\nPassword: ${password}\n\nPlease keep these credentials safe. Welcome to MT Core — The core technology behind your business.`;
                           replyToTicket(selectedTicket.id, replyMessage, "Admin");
                           updateSupportTicket(selectedTicket.id, { status: "Resolved" });
                         }}

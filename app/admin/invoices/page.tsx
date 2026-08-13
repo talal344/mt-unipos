@@ -56,8 +56,9 @@ function buildThermalInvoiceHTML(invoice: any, tenantEmail: string): string {
 </head>
 <body>
   <div class="center" style="margin-bottom:10px">
-    <img src="/logo.png" style="height:44px;max-width:160px;object-fit:contain;margin:0 auto 6px auto;display:block" alt="MT UniPOS" />
-    <div style="font-size:14px;font-weight:900;font-family:Arial,sans-serif;letter-spacing:1px">MT UNIPOS</div>
+    <img src="/logo.png" style="height:44px;max-width:160px;object-fit:contain;margin:0 auto 6px auto;display:block" alt="MT Core" />
+    <div style="font-size:14px;font-weight:900;font-family:Arial,sans-serif;letter-spacing:1px">MT CORE</div>
+    <div style="font-size:8px;color:#666;margin-top:2px;">The core technology behind your business.</div>
     <div style="font-size:8px;text-transform:uppercase;letter-spacing:2px;color:#555">SaaS Enterprise Billing</div>
     <div style="font-size:9px">Superadmin Master Console</div>
   </div>
@@ -104,7 +105,8 @@ function buildThermalInvoiceHTML(invoice: any, tenantEmail: string): string {
     ─────────────────<br/>
     Engineered by Founder Mian Talal<br/>
     Support: 03396399895 | miantalal2@gmail.com<br/>
-    Thank you for choosing MT UniPOS System!<br/>
+    Thank you for choosing MT Core!<br/>
+    <i>The core technology behind your business.</i><br/>
     ─────────────────
   </div>
 </body>
@@ -298,9 +300,9 @@ function buildA4ExecutiveInvoiceHTML(invoice: any, tenant: any): string {
   <div class="invoice-card">
     <div class="header">
       <div>
-        <img src="/logo.png" style="height:52px;max-width:200px;object-fit:contain;margin-bottom:8px;display:block" alt="MT UniPOS" />
-        <div class="brand-title">MT UniPOS</div>
-        <div class="brand-sub">Enterprise SaaS POS & ERP System</div>
+        <img src="/logo.png" style="height:52px;max-width:200px;object-fit:contain;margin-bottom:8px;display:block" alt="MT Core" />
+        <div class="brand-title">MT Core</div>
+        <div class="brand-sub">THE CORE TECHNOLOGY BEHIND YOUR BUSINESS</div>
         <div style="font-size: 10px; color: #64748b; margin-top: 4px;">Super Admin Billing Statement & Receipt</div>
       </div>
       <div class="inv-meta">
@@ -317,7 +319,7 @@ function buildA4ExecutiveInvoiceHTML(invoice: any, tenant: any): string {
     <div class="parties-grid">
       <div class="party-box">
         <div class="party-title">🏢 Billed Provider</div>
-        <div class="party-name">MT UniPOS Software Suite</div>
+        <div class="party-name">MT Core Software Suite</div>
         <div class="party-detail">
           Engineered by Founder <b>Mian Talal</b><br/>
           Support Contact: <b>03396399895</b><br/>
@@ -377,8 +379,8 @@ function buildA4ExecutiveInvoiceHTML(invoice: any, tenant: any): string {
 
     <div class="footer">
       <div>
-        <span class="footer-bold">MT UniPOS SaaS Management</span> • Payment Method: <b>${invoice.paymentMethod || 'Direct Payment'}</b><br/>
-        Notes: <i>${invoice.notes || 'Thank you for subscribing to MT UniPOS Enterprise System!'}</i>
+        <span class="footer-bold">MT Core SaaS Management</span> • Payment Method: <b>${invoice.paymentMethod || 'Direct Payment'}</b><br/>
+        Notes: <i>${invoice.notes || 'Thank you for choosing MT Core — The core technology behind your business.'}</i>
       </div>
       <div style="text-align: right;">
         <span class="footer-bold">Verification:</span> AUTHENTICATED SaaS RECEIPT<br/>
@@ -598,7 +600,7 @@ export default function AdminInvoicesPage() {
           businessName: inv.tenantName,
           tenantId,
           ownerName,
-          subject: `[MT UniPOS] Official SaaS Billing & Account Setup: ${inv.tenantName}`,
+          subject: `[MT Core] Official SaaS Billing & Account Setup: ${inv.tenantName}`,
           plan: inv.plan,
           billingCycle,
           amount: inv.amount,
@@ -690,8 +692,8 @@ export default function AdminInvoicesPage() {
     
     container.innerHTML = `
       <div style="text-align:center;margin-bottom:10px;">
-        <img src="/logo.png" style="height:44px;max-width:160px;object-fit:contain;margin:0 auto 6px auto;display:block" alt="MT UniPOS" />
-        <div style="font-size:14px;font-weight:900;font-family:Arial,sans-serif;letter-spacing:1px">MT UNIPOS</div>
+        <img src="/logo.png" style="height:44px;max-width:160px;object-fit:contain;margin:0 auto 6px auto;display:block" alt="MT Core" />
+        <div style="font-size:14px;font-weight:900;font-family:Arial,sans-serif;letter-spacing:1px">MT CORE</div>
         <div style="font-size:8px;text-transform:uppercase;letter-spacing:2px;color:#555">SaaS Platform Billing</div>
         <div style="font-size:9px">Superadmin Console</div>
       </div>
@@ -727,7 +729,8 @@ export default function AdminInvoicesPage() {
       <div style="border-top:1px solid #000;margin:6px 0;"></div>
       <div style="text-align:center;font-size:8px;margin-top:10px;">
         ─────────────────<br/>
-        Thank you for subscribing to MT UniPOS!<br/>
+        Thank you for subscribing to MT Core!<br/>
+        <i>The core technology behind your business.</i><br/>
         Automated Tenant Provisioning Shards<br/>
         ─────────────────
       </div>
@@ -1258,7 +1261,8 @@ export default function AdminInvoicesPage() {
                   >
                     {/* Header */}
                     <div className="text-center mb-3 space-y-0.5">
-                      <div className="font-sans font-black text-sm tracking-tight">MT UNIPOS</div>
+                      <div className="font-sans font-black text-sm tracking-tight">MT CORE</div>
+                      <div className="text-[9px] text-gray-500 font-sans">The core technology behind your business.</div>
                       <div className="text-[8px] uppercase tracking-widest text-gray-500">SaaS Platform Billing</div>
                       <div className="text-[9px] text-gray-700">Superadmin Console</div>
                     </div>
@@ -1305,7 +1309,8 @@ export default function AdminInvoicesPage() {
 
                     <div className="border-t border-black pt-2 text-center text-[8px] space-y-0.5">
                       <div>─────────────────</div>
-                      <div>Thank you for subscribing to MT UniPOS!</div>
+                      <div>Thank you for subscribing to MT Core!</div>
+                      <div className="text-[9px] text-gray-500">The core technology behind your business.</div>
                       <div>Automated Tenant Provisioning Shards</div>
                       <div>─────────────────</div>
                     </div>
@@ -1584,7 +1589,7 @@ export default function AdminInvoicesPage() {
                   <textarea
                     rows={6}
                     readOnly
-                    value={`[MT UniPOS ERP] Dear ${smsModalInvoice.tenantName},\nYour SaaS Invoice ${smsModalInvoice.id} status is ${smsModalInvoice.status.toUpperCase()}!\nPlan: ${smsModalInvoice.plan}\nTotal Amount: ${smsModalInvoice.currency || "PKR"} ${smsModalInvoice.amount.toLocaleString()}\nAmount Paid: ${smsModalInvoice.currency || "PKR"} ${(smsModalInvoice.paidAmount ?? (smsModalInvoice.status === "Paid" ? smsModalInvoice.amount : 0)).toLocaleString()}\nRemaining Dues: ${smsModalInvoice.currency || "PKR"} ${(smsModalInvoice.remainingBalance ?? 0).toLocaleString()}\n\nTrack & Download Digital Receipt Slip:\nhttps://pos.mtcore.xyz/tracking?id=${smsModalInvoice.id}\n\nSupport: 03396399895 | Web: pos.mtcore.xyz`}
+                    value={`[MT Core ERP] Dear ${smsModalInvoice.tenantName},\nYour SaaS Invoice ${smsModalInvoice.id} status is ${smsModalInvoice.status.toUpperCase()}!\nPlan: ${smsModalInvoice.plan}\nTotal Amount: ${smsModalInvoice.currency || "PKR"} ${smsModalInvoice.amount.toLocaleString()}\nAmount Paid: ${smsModalInvoice.currency || "PKR"} ${(smsModalInvoice.paidAmount ?? (smsModalInvoice.status === "Paid" ? smsModalInvoice.amount : 0)).toLocaleString()}\nRemaining Dues: ${smsModalInvoice.currency || "PKR"} ${(smsModalInvoice.remainingBalance ?? 0).toLocaleString()}\n\nTrack & Download Digital Receipt Slip:\nhttps://pos.mtcore.xyz/tracking?id=${smsModalInvoice.id}\n\nSupport: 03396399895 | Web: pos.mtcore.xyz`}
                     className="w-full bg-black border border-gray-800 p-3 rounded-xl text-gray-200 font-mono text-[11px] leading-relaxed focus:outline-none"
                   />
                 </div>
@@ -1592,7 +1597,7 @@ export default function AdminInvoicesPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2">
                   <button
                     onClick={() => {
-                      const text = encodeURIComponent(`[MT UniPOS ERP] Dear ${smsModalInvoice.tenantName},\nYour SaaS Invoice ${smsModalInvoice.id} status is ${smsModalInvoice.status.toUpperCase()}!\nPlan: ${smsModalInvoice.plan}\nTotal Amount: ${smsModalInvoice.currency || "PKR"} ${smsModalInvoice.amount.toLocaleString()}\nAmount Paid: ${smsModalInvoice.currency || "PKR"} ${(smsModalInvoice.paidAmount ?? (smsModalInvoice.status === "Paid" ? smsModalInvoice.amount : 0)).toLocaleString()}\n\nTrack & Download Digital Receipt:\nhttps://pos.mtcore.xyz/tracking?id=${smsModalInvoice.id}`);
+                      const text = encodeURIComponent(`[MT Core ERP] Dear ${smsModalInvoice.tenantName},\nYour SaaS Invoice ${smsModalInvoice.id} status is ${smsModalInvoice.status.toUpperCase()}!\nPlan: ${smsModalInvoice.plan}\nTotal Amount: ${smsModalInvoice.currency || "PKR"} ${smsModalInvoice.amount.toLocaleString()}\nAmount Paid: ${smsModalInvoice.currency || "PKR"} ${(smsModalInvoice.paidAmount ?? (smsModalInvoice.status === "Paid" ? smsModalInvoice.amount : 0)).toLocaleString()}\nRemaining Dues: ${smsModalInvoice.currency || "PKR"} ${(smsModalInvoice.remainingBalance ?? 0).toLocaleString()}\n\nTrack & Download Digital Receipt:\nhttps://pos.mtcore.xyz/tracking?id=${smsModalInvoice.id}`);
                       window.open(`https://wa.me/?text=${text}`, "_blank");
                     }}
                     className="py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase text-[11px] rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20"
@@ -1603,7 +1608,7 @@ export default function AdminInvoicesPage() {
 
                   <button
                     onClick={() => {
-                      const msg = `[MT UniPOS ERP] Dear ${smsModalInvoice.tenantName},\nInvoice ${smsModalInvoice.id} status: ${smsModalInvoice.status.toUpperCase()}.\nTrack Slip: https://pos.mtcore.xyz/tracking?id=${smsModalInvoice.id}`;
+                      const msg = `[MT Core ERP] Dear ${smsModalInvoice.tenantName},\nInvoice ${smsModalInvoice.id} status: ${smsModalInvoice.status.toUpperCase()}.\nTrack Slip: https://pos.mtcore.xyz/tracking?id=${smsModalInvoice.id}`;
                       navigator.clipboard.writeText(msg);
                       setCopiedSms(true);
                       setTimeout(() => setCopiedSms(false), 3000);

@@ -229,8 +229,8 @@ export default function SelfServicePortalPage() {
       <body>
         <div class="header">
           <div>
-            <div class="title">MT-UNIPOS CORPORATE PAYSLIP</div>
-            <div style="font-size: 12px; color: #64748b;">Month: <strong>${slip.month}</strong></div>
+            <div class="title">MT-CORE CORPORATE PAYSLIP</div>
+            <div style="font-size: 12px; color: #64748b;">The core technology behind your business. &bull; Month: <strong>${slip.month}</strong></div>
           </div>
           <div style="text-align: right; font-size: 11px; font-family: monospace;">
             <div>Status: <span style="color: #16a34a; font-weight: bold;">DISBURSED</span></div>
@@ -296,7 +296,7 @@ export default function SelfServicePortalPage() {
 
         <div class="footer">
           <div>This is a computer-generated digital payslip and requires no physical signature.</div>
-          <div>MT-UniPOS Human Resources &bull; Confidential</div>
+          <div>MT-Core Human Resources &bull; Confidential</div>
         </div>
 
         <script>

@@ -5,7 +5,7 @@ const savedReceiptsSet = new Set<string>();
 
 /**
  * Automatically captures a rich, full thermal receipt image matching Picture 2
- * (with MT UniPOS header, Customer ID, totals breakdown, payment details,
+ * (with MT Core header, Customer ID, totals breakdown, payment details,
  * loyalty ledger, customer credit statement, thank you notes, and barcode)
  * and saves it directly into the local disk folder.
  */
@@ -123,7 +123,8 @@ export async function autoSaveReceiptToDisk(
     container.innerHTML = `
       <!-- Header -->
       <div style="text-align:center;margin-bottom:8px">
-        <div style="font-size:16px;font-weight:900;letter-spacing:0.5px">🛒 MT UniPOS</div>
+        <div style="font-size:16px;font-weight:900;letter-spacing:0.5px">⚡ MT Core</div>
+        <div style="font-size:8px;color:#666">The core technology behind your business.</div>
         <div style="font-size:8px;color:#666;margin-bottom:2px">Smart POS for Smart Business</div>
         <div style="font-size:14px;font-weight:900;letter-spacing:0.5px;margin-top:4px;text-transform:uppercase">${businessName}</div>
         ${city ? `<div style="font-size:9px">${city}</div>` : ""}
@@ -213,7 +214,8 @@ export async function autoSaveReceiptToDisk(
 
       <!-- Footer -->
       <div style="text-align:center;font-size:8px;color:#555;margin-top:8px;border-top:1px dashed #aaa;padding-top:5px">
-        Powered By: MT UniPOS | Developed By: MT Softwares
+        Powered By: MT Core | The core technology behind your business.<br/>
+        Developed By: MT Softwares
       </div>
     `;
 

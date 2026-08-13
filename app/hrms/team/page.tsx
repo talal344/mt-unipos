@@ -181,7 +181,7 @@ export default function MyTeamPage() {
   const teamTree: TeamTreeNode = useMemo(() => {
     // 1. Apex Root: Company Owner
     const ownerName = currentUser?.name || currentUser?.businessName?.split(" ")?.[0] || "Company Owner";
-    const businessTitle = currentUser?.businessName || "MT UniPOS Enterprise";
+    const businessTitle = currentUser?.businessName || "MT Core Enterprise";
 
     const ownerNode: TeamTreeNode = {
       id: "TEAM-OWNER",

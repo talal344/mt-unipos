@@ -1,7 +1,7 @@
 {
-  "name": "MT UniPOS",
-  "short_name": "MT UniPOS",
-  "description": "Unified POS & Enterprise ERP System",
+  "name": "MT Core",
+  "short_name": "MT Core",
+  "description": "MT Core — The core technology behind your business.",
   "start_url": "/pos",
   "display": "standalone",
   "background_color": "#000000",

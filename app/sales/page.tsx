@@ -104,7 +104,8 @@ function buildStaffReportHTML(
 </style>
 </head><body>
   <div class="center" style="margin-bottom:8px">
-    <div style="font-size:13px;font-weight:900;font-family:Arial,sans-serif">MT UNIPOS</div>
+    <div style="font-size:13px;font-weight:900;font-family:Arial,sans-serif">MT CORE</div>
+    <div style="font-size:7px;color:#666">The core technology behind your business.</div>
     <div style="font-size:8px;text-transform:uppercase;letter-spacing:2px;color:#555">Staff Sales Report</div>
     <div style="font-size:9px">${branch}</div>
   </div>
@@ -138,7 +139,7 @@ function buildStaffReportHTML(
     <tbody>${saleRows}</tbody>
   </table>
   <div class="divider"></div>
-  <div class="center" style="font-size:8px;margin-top:6px">Powered by MT UniPOS SaaS ERP</div>
+  <div class="center" style="font-size:8px;margin-top:6px">Powered by MT Core | The core technology behind your business.</div>
 </body></html>`;
 }
 
@@ -404,7 +405,8 @@ export default function SalesPage() {
   .divider { border-top:1px solid #000; margin:5px 0; }
 </style></head><body>
   <div class="center" style="margin-bottom:8px">
-    <div style="font-size:13px;font-weight:900;font-family:Arial,sans-serif">MT UNIPOS</div>
+    <div style="font-size:13px;font-weight:900;font-family:Arial,sans-serif">MT CORE</div>
+    <div style="font-size:7px;color:#666">The core technology behind your business.</div>
     <div style="font-size:8px;text-transform:uppercase;letter-spacing:2px;color:#555">Sales Summary Report</div>
     <div style="font-size:9px">${currentBranch}</div>
   </div>
@@ -425,7 +427,7 @@ export default function SalesPage() {
     </tr>
   </table>
   <div class="divider"></div>
-  <div class="center" style="font-size:8px;margin-top:6px">Powered by MT UniPOS SaaS ERP</div>
+  <div class="center" style="font-size:8px;margin-top:6px">Powered by MT Core | The core technology behind your business.</div>
 </body></html>`;
 
     const win = window.open("", "_blank", "width=400,height=700");

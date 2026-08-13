@@ -59,11 +59,11 @@ const pricingPlans = [
 
 const testimonials = [
   { stars: 5, name: "Dr. Zainab Ghafoor",  role: "Director, MedCare Pharmacy Networks", initials: "DR", color: "bg-brand-sky",
-    text: "MT UniPOS solved our worst stock leakages. The drug batch expiry tracker alerts us 60 days before expiry, saving thousands in waste. Excellent ERP!" },
+    text: "MT Core solved our worst stock leakages. The drug batch expiry tracker alerts us 60 days before expiry, saving thousands in waste. Excellent ERP!" },
   { stars: 5, name: "Mian Talal",          role: "CEO & Owner, Al-Fatah Superstores",   initials: "MT", color: "bg-pink-500",
     text: "Lightning-fast POS terminal, retail/wholesale pricing toggle, cash drawers auto-feeding balance sheets. Mian Talal and team built a powerhouse." },
   { stars: 5, name: "Kamran Ishfaq",       role: "GM, Kamran Brothers Wholesale",        initials: "KI", color: "bg-emerald-500",
-    text: "Managing 200+ dealers' credit accounts was a nightmare. Now MT UniPOS tracks every rupee. The due-payment recovery feature alone paid for itself." },
+    text: "Managing 200+ dealers' credit accounts was a nightmare. Now MT Core tracks every rupee. The due-payment recovery feature alone paid for itself." },
   { stars: 5, name: "Sana Mirza",          role: "Owner, Glamour Clothing Boutique",     initials: "SM", color: "bg-purple-500",
     text: "The color/size matrix inventory is exactly what boutiques need. Barcode labels, loyalty points, CRM — we scaled from 1 to 3 branches effortlessly." },
 ];
@@ -131,16 +131,16 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
           <div className="inline-flex items-center gap-2 bg-brand-dark-surface/90 border border-emerald-500/30 px-3.5 py-1.5 rounded-full mb-6 animate-fade-in-up">
             <Sparkles className="text-emerald-400 animate-bounce" size={13} />
-            <span className="text-[11px] font-black uppercase tracking-wider text-emerald-400">MTCore Multi-SaaS Platform — Enterprise ERP Suite v1.2</span>
+            <span className="text-[11px] font-black uppercase tracking-wider text-emerald-400">MT Core — The core technology behind your business.</span>
           </div>
 
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-none mb-6">
-            <span className="sky-gradient-text">MTCore Enterprise Suite</span>
-            <br /><span className="text-white">Multi-SaaS Software Platform</span>
+            <span className="sky-gradient-text">MT Core Enterprise Suite</span>
+            <br /><span className="text-white">The Core Technology Behind Your Business</span>
           </h1>
 
           <p className="max-w-2xl mx-auto text-sm sm:text-base text-gray-400 leading-relaxed mb-10">
-            Power your entire business operations with MTCore. From retail POS ERP and HRMS Payroll to upcoming School, Hospital, and Real Estate enterprise modules.
+            Power your entire business operations with MT Core. From retail POS ERP and HRMS Payroll to upcoming School, Hospital, and Real Estate enterprise modules.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
@@ -167,7 +167,7 @@ export default function HomePage() {
                 </div>
                 <div className="mx-auto flex items-center gap-2 text-[10px] text-gray-400 font-mono bg-black/40 px-3 py-1 rounded border border-white/5">
                   <Lock size={10} className="text-emerald-400" />
-                  mt-unipos.com/pos
+                  pos.mtcore.xyz/pos
                 </div>
               </div>
               {/* Fake POS Interface */}
@@ -416,7 +416,7 @@ export default function HomePage() {
           <div className="text-center mb-12">
             <h2 className="text-2xl sm:text-4xl font-black text-white mb-4">Loved by Leading Businesses</h2>
             <p className="text-xs sm:text-sm text-gray-500 max-w-xl mx-auto">
-              Retail owners, pharmacy directors, and wholesale bosses share how MT UniPOS transformed their operations.
+              Retail owners, pharmacy directors, and wholesale bosses share how MT Core transformed their operations.
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -545,7 +545,7 @@ export default function HomePage() {
             Ready to transform your business?
           </h2>
           <p className="text-sm text-gray-400 mb-8 max-w-xl mx-auto">
-            Join 500+ businesses already running on MT UniPOS. No credit card required for the 14-day trial.
+            Join 500+ businesses already running on MT Core. The core technology behind your business. No credit card required for the 14-day trial.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link href="/demo"
@@ -587,11 +587,11 @@ export default function HomePage() {
 
             {/* Header band */}
             <div className="bg-brand-sky px-6 py-4 text-center">
-              <img src="/logo.png" style={{ height: "36px", width: "auto", objectFit: "contain", margin: "0 auto 4px auto", display: "block" }} alt="MT UniPOS" />
+              <img src="/logo.png" style={{ height: "36px", width: "auto", objectFit: "contain", margin: "0 auto 4px auto", display: "block" }} alt="MT Core" />
               <div className="flex items-center justify-center gap-2 mb-0.5">
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-black">MT UniPOS</span>
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-black">MT Core</span>
               </div>
-              <p className="text-[9px] text-black/70 uppercase tracking-widest">Demo Request Ticket</p>
+              <p className="text-[9px] text-black/70 uppercase tracking-widest">The core technology behind your business</p>
             </div>
 
             {/* Zigzag edge */}

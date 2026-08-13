@@ -40,15 +40,15 @@ export default function BlogPage() {
       author: "Mian Talal",
       date: "2026-05-20",
       slug: "streamlining-supermarket-checkout-speed",
-      summary: "Explore how weight-scale APIs, multi-lane barcode buffering, and fluid keyboard shortcuts combine in MT UniPOS to reduce transaction queues by 40%.",
+      summary: "Explore how weight-scale APIs, multi-lane barcode buffering, and fluid keyboard shortcuts combine in MT Core to reduce transaction queues by 40%.",
       content: `In high-volume departmental stores, cashier bottlenecks represent the single greatest source of customer dissatisfaction. Every extra second spent searching for an unbarcoded item, waiting for a receipt printer buffer, or manual taxing calculations accumulates into massive queues during peak hours.
 
-      To solve this, MT UniPOS introduces key hardware abstractions:
+      To solve this, MT Core introduces key hardware abstractions:
       1. Dual-Core Barcode Buffer Buffers: Rather than querying the centralized network database on every single scan, the POS client maintains an offline-first indexed cache, recognizing products in less than 5 milliseconds.
       2. Automated Weight-Scale APIs: Fresh products are weighed directly at checkout, with the scale transmitting weight outputs directly to the cart, eliminating human manual entry errors.
       3. Custom Hotkey Matrix: Cashiers can close out standard cash checkouts using the spacebar or number pads without needing to touch a mouse.
 
-      By optimizing the interface to require minimal visual shifts, MT UniPOS enables cashiers to process up to 35 transactions per hour, compared to the industry average of 22.`,
+      By optimizing the interface to require minimal visual shifts, MT Core enables cashiers to process up to 35 transactions per hour, compared to the industry average of 22.`,
       tags: ["Checkout Velocity", "Hardware", "Super Markets"],
       comments: [
         { author: "Hassan Cashier", text: "The spacebar hotkey is a lifesaver in rush hours! Super helpful guide.", date: "2026-05-21" }
@@ -64,7 +64,7 @@ export default function BlogPage() {
       summary: "Manual pharmacy logs fail when managing 10,000+ medicine SKU lines. Learn how batch-tracking registry databases prevent waste.",
       content: `Expired medicines are not just financial losses; they represent extreme regulatory liability. For pharmacies managing thousands of drug lines, traditional physical checks lead to human errors.
 
-      MT UniPOS features a dedicated Pharmaceutical Batch Registry:
+      MT Core features a dedicated Pharmaceutical Batch Registry:
       - Multi-Batch Product Records: A single drug SKU (e.g. Panadol) can have multiple batches (PAN-01, PAN-02) each tied to a distinct expiration date.
       - First-Expiry First-Out (FEFO): The POS screen automatically suggests the batch closest to expiration when cashiers search, ensuring older stock clears first.
       - 60-Day Expiry Warnings: The dashboard features a real-time warning grid listing drugs expiring soon, triggering automatic wholesale return forms.
@@ -83,15 +83,15 @@ export default function BlogPage() {
       summary: "Why simple cash drawers hold retail businesses back, and how live debit-credit POS journals automate Balance Sheets.",
       content: `Many store owners assume a POS is simply a fast cash register. However, at the end of the month, they are forced to manually reconcile cashier receipts, supplier invoices, and utility payments in separate accounting books.
 
-      MT UniPOS operates as a real-time ERP using direct Double-Entry Bookkeeping:
-      - Automatic Journal Entries: The instant a cashier clicks 'Confirm Sale', MT UniPOS fires a live Journal Entry. It debits Cash/Bank assets, credits POS Revenue, debits Cost of Goods Sold (COGS), and credits Product Stock Asset Valuation.
+      MT Core operates as a real-time ERP using direct Double-Entry Bookkeeping:
+      - Automatic Journal Entries: The instant a cashier clicks 'Confirm Sale', MT Core fires a live Journal Entry. It debits Cash/Bank assets, credits POS Revenue, debits Cost of Goods Sold (COGS), and credits Product Stock Asset Valuation.
       - Instant Profit & Loss: Since the general ledger updates in real-time, owners can access their exact P&L statement, Trial Balance, and Balance Sheet instantly.
       - Supplier Credit Tracking: Stock purchases are logged under Accounts Payable, automatically recording debt ledgers.
 
       By eliminating manual bookkeeping, retail owners save up to 40 hours of accounting time each month.`,
       tags: ["Double Entry", "ERP Books", "Accounting Ledger"],
       comments: [
-        { author: "Zahid Ali", text: "This is exactly why we switched our mobile shop branches to UniPOS. The real-time general ledger is perfect.", date: "2026-05-30" }
+        { author: "Zahid Ali", text: "This is exactly why we switched our mobile shop branches to MT Core. The real-time general ledger is perfect.", date: "2026-05-30" }
       ]
     }
   ]);
@@ -142,10 +142,10 @@ export default function BlogPage() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(14,165,233,0.08),transparent_60%)] pointer-events-none" />
         <div className="max-w-4xl mx-auto px-4 sm:px-6 relative z-10">
           <h1 className="text-3xl sm:text-5xl font-black mb-4">
-            MT UniPOS <span className="sky-gradient-text">Commercial Blog</span>
+            MT Core <span className="sky-gradient-text">Commercial Blog</span>
           </h1>
           <p className="text-xs sm:text-sm text-gray-400 max-w-xl mx-auto leading-relaxed">
-            Technical guides, compliance standards, and ERP strategies written by retail specialists and software architects.
+            The core technology behind your business — technical guides, compliance standards, and ERP strategies.
           </p>
         </div>
       </section>

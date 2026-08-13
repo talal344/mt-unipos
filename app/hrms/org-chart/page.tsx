@@ -131,7 +131,7 @@ export default function OrgChartPage() {
   const corporateTree: TreeNode = useMemo(() => {
     // 1. Apex Root: Company Owner
     const ownerName = currentUser?.name || currentUser?.businessName?.split(" ")?.[0] || "Company Owner";
-    const businessTitle = currentUser?.businessName || "MT UniPOS Enterprise";
+    const businessTitle = currentUser?.businessName || "MT Core Enterprise";
 
     const ownerNode: TreeNode = {
       id: "ROOT-OWNER",

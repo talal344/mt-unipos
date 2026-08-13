@@ -105,7 +105,7 @@ export default function GratuityAndPFPage() {
       </head>
       <body>
         <div class="header">
-          <div class="title">MT-UNIPOS END-OF-SERVICE BENEFIT CERTIFICATE</div>
+          <div class="title">MT-CORE END-OF-SERVICE BENEFIT CERTIFICATE</div>
           <div style="font-size: 12px; color: #64748b;">Statutory Gratuity &amp; Provident Fund Statement</div>
         </div>
 
@@ -149,7 +149,7 @@ export default function GratuityAndPFPage() {
 
         <div class="footer">
           <div>Authorized by: Corporate Finance &amp; HR Compliance</div>
-          <div>Strictly Confidential &bull; MT-UniPOS Enterprise</div>
+          <div>Strictly Confidential &bull; MT-Core Enterprise</div>
         </div>
 
         <script>

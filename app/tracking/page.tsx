@@ -145,7 +145,7 @@ function StatusTimeline({ status }: { status: DemoRequest["status"] }) {
 
 function maskEmail(email: string): string {
   const [local, domain] = email.split("@");
-  return (local ? local.slice(0, 4) : "user") + "***@" + (domain || "unipos.com");
+  return (local ? local.slice(0, 4) : "user") + "***@" + (domain || "mtcore.xyz");
 }
 function maskPassword(pw: string): string {
   return pw.slice(0, 5) + "***";
@@ -450,8 +450,8 @@ export default function TrackingPage() {
         </head>
         <body>
           <div class="center">
-            <img src="/logo.png" style="height:44px;max-width:160px;object-fit:contain;margin:0 auto 4px auto;display:block" alt="MT UniPOS" />
-            <h2 style="margin:0;">${businessSettings?.businessName || "MT UNIPOS STORE"}</h2>
+            <img src="/logo.png" style="height:44px;max-width:160px;object-fit:contain;margin:0 auto 4px auto;display:block" alt="MT Core" />
+            <h2 style="margin:0;">${businessSettings?.businessName || "MT CORE STORE"}</h2>
             <p style="margin:2px 0;font-size:10px;">${businessSettings?.address || "Official Retail Outlet"}</p>
             <p style="margin:2px 0;font-size:9px;">Ph: ${businessSettings?.phone || "0300-1234567"}</p>
             <div class="line"></div>
@@ -487,7 +487,7 @@ export default function TrackingPage() {
 
           <div class="center" style="font-size:9px;margin-top:10px;">
             <p>Thank you for your business!</p>
-            <p>Powered by MT UniPOS SaaS ERP</p>
+            <p>Powered by MT Core | The core technology behind your business.</p>
           </div>
         </body>
       </html>
@@ -517,8 +517,9 @@ export default function TrackingPage() {
 </head>
 <body>
   <div class="header">
-    <img src="/logo.png" style="height:46px;max-width:180px;object-fit:contain;margin:0 auto 6px auto;display:block" alt="MT UniPOS" />
-    <h2 style="margin:0;color:#0284c7;">MT UniPOS Software Suite</h2>
+    <img src="/logo.png" style="height:46px;max-width:180px;object-fit:contain;margin:0 auto 6px auto;display:block" alt="MT Core" />
+    <h2 style="margin:0;color:#0284c7;">MT Core Software Suite</h2>
+    <div style="font-size:8px;color:#64748b;margin-top:2px;">The core technology behind your business.</div>
     <p style="margin:4px 0;font-size:11px;">Official SaaS Invoice Receipt: <b>${inv.id}</b></p>
     <p style="margin:0;font-size:11px;">Official Web Portal: <b>pos.mtcore.xyz</b></p>
   </div>
@@ -550,7 +551,7 @@ export default function TrackingPage() {
   </div>
 
   <div style="margin-top:30px;text-align:center;font-size:10px;color:#666;border-top:1px solid #ddd;padding-top:10px;">
-    MT UniPOS SaaS Management • Support: 03396399895 • pos.mtcore.xyz
+    MT Core SaaS Management • The core technology behind your business. • Support: 03396399895 • pos.mtcore.xyz
   </div>
 
   <script>
@@ -960,7 +961,8 @@ export default function TrackingPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-sans">
                   <div className="bg-black/50 border border-brand-dark-border/80 p-4 rounded-xl space-y-1">
                     <div className="text-[10px] uppercase font-bold text-sky-400">🏢 BILLED PROVIDER</div>
-                    <div className="font-black text-white text-sm">MT UniPOS Software Suite</div>
+                    <div className="font-black text-white text-sm">MT Core Software Suite</div>
+                    <div className="text-[10px] text-gray-400">The core technology behind your business.</div>
                     <div className="text-gray-400 text-[11px] leading-relaxed">
                       Engineered by Founder <b>Mian Talal</b><br/>
                       Support Contact: <b>03396399895</b><br/>

@@ -11,8 +11,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "MT UniPOS - Enterprise SaaS POS ERP",
-  description: "The ultimate cloud-based POS and SaaS ERP system for Supermarkets, Pharmacies, Restaurants, and Multi-branch Retailers. Created by Founder Mian Talal.",
+  title: "MT Core - The core technology behind your business.",
+  description: "MT Core — The core technology behind your business. The ultimate multi-tenant enterprise SaaS platform for POS ERP, HRMS, and modern business management. Founded by Mian Talal.",
   icons: {
     icon: [
       { url: "/favicon.ico" },

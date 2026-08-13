@@ -97,7 +97,7 @@ export default function DemoPage() {
               <p className="text-xs text-gray-400 leading-relaxed">
                 {submitted
                   ? "Your demo request has been received. Save your ticket number to track status."
-                  : "MT UniPOS provides an instant secure demo environment sharded specifically for your industry line."}
+                  : "MT Core provides an instant secure demo environment sharded specifically for your industry line. The core technology behind your business."}
               </p>
             </div>
 
@@ -290,11 +290,11 @@ export default function DemoPage() {
               <div className="flex items-center justify-center gap-2 mb-1">
                 <Receipt size={18} className="text-black" />
                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-black">
-                  MT UniPOS
+                  MT Core
                 </span>
               </div>
               <p className="text-[9px] text-black/70 uppercase tracking-widest">
-                Demo Request Ticket
+                The core technology behind your business.
               </p>
             </div>
 

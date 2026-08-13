@@ -35,7 +35,7 @@ const METHOD_STYLE: Record<MethodType, string> = {
   PATCH:  "bg-purple-500/20 text-purple-400 border border-purple-500/30",
 };
 
-const BASE_URL = "https://api.unipos.mt/v1";
+const BASE_URL = "https://api.mtcore.xyz/v1";
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
 const ROUTES: Route[] = [
@@ -422,7 +422,7 @@ curl -X POST ${BASE_URL}/sales/checkout \\
       {/* Steps */}
       <div>
         <h2 className="text-base font-black text-white mb-4 flex items-center gap-2">
-          <BookOpen size={16} className="text-brand-sky" /> How to Use the MT UniPOS API
+          <BookOpen size={16} className="text-brand-sky" /> How to Use the MT Core API — The Core Technology Behind Your Business
         </h2>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {steps.map(step => {
@@ -600,7 +600,7 @@ export default function ApiDocsPage() {
             <div className="w-6 h-6 rounded-lg bg-brand-sky/20 border border-brand-sky/30 flex items-center justify-center">
               <Terminal size={12} className="text-brand-sky" />
             </div>
-            <span className="font-black text-white text-xs whitespace-nowrap">MT UniPOS API <span className="text-brand-sky">v1</span></span>
+            <span className="font-black text-white text-xs whitespace-nowrap">MT Core API <span className="text-brand-sky">v1</span></span>
           </div>
           {NAV.map(n => {
             const Icon = n.icon;

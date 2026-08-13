@@ -15,7 +15,7 @@ export default function AboutPage() {
       name: "Mian Talal",
       role: "Founder, CEO & Chief Architect",
       location: "Kohinoor, Faisalabad, Pakistan",
-      desc: "Visionary retail strategist and enterprise software architect. Designed and engineered MT UniPOS from the ground up to replace outdated, fragmented point-of-sale systems with a unified, real-time double-entry ERP platform.",
+      desc: "Visionary enterprise software architect. Designed and engineered MT Core — The core technology behind your business — from the ground up to replace outdated, fragmented systems with a unified, real-time enterprise SaaS ERP & HRMS platform.",
       initial: "MT",
       email: "miantalal2@gmail.com",
       phone: "03396399895"
@@ -47,10 +47,10 @@ export default function AboutPage() {
           </div>
 
           <h1 className="text-4xl sm:text-6xl font-black tracking-tight mb-4 leading-none">
-            About <span className="sky-gradient-text">MTCore Ecosystem</span>
+            About <span className="sky-gradient-text">MT Core</span>
           </h1>
           <p className="text-xs sm:text-sm text-gray-400 max-w-2xl mx-auto leading-relaxed">
-            MT UniPOS (Mian Talal UniPOS) is engineered to solve retail stock leakages, streamline checkout speeds, and automate double-entry accounting for supermarkets, pharmacies, F&amp;B outlets, and corporate trade networks.
+            MT Core — The core technology behind your business. Engineered to solve retail stock leakages, streamline checkout speeds, automate double-entry accounting, and manage complete HR operations for growing enterprises.
           </p>
         </div>
       </section>
@@ -106,7 +106,7 @@ export default function AboutPage() {
               Meet Mian Talal
             </h2>
             <p className="text-xs sm:text-sm text-gray-400 leading-relaxed">
-              Mian Talal founded MT UniPOS with a clear mission: to eliminate disjointed legacy software that requires manual cash book tallying. Having observed the operational hassles of supermarket cashiers, wholesale dealer ledgers, and pharmacy stores, he architected a unified POS &amp; ERP platform.
+              Mian Talal founded MT Core with a clear mission: to eliminate disjointed legacy software with cutting-edge technology. Having observed the operational hassles of multi-branch stores, wholesale dealers, pharmacies, and growing businesses, he architected MT Core — The core technology behind your business.
             </p>
             <blockquote className="border-l-2 border-brand-sky pl-4 italic text-xs text-gray-300 leading-relaxed">
               "We didn't just build a cash register. We built a real-time double-entry ledger that empowers store owners to understand their exact cash velocity, profit margins, and inventory restock timelines automatically."
@@ -138,7 +138,7 @@ export default function AboutPage() {
               <div className="p-4 bg-black/60 border border-brand-sky/20 rounded-2xl shadow-xl backdrop-blur-md mb-4 group-hover:scale-105 transition-transform duration-300">
                 <img
                   src="/logo.png"
-                  alt="MT UniPOS Logo"
+                  alt="MT Core Logo"
                   className="h-16 sm:h-20 w-auto object-contain drop-shadow-[0_0_16px_rgba(14,165,233,0.4)]"
                 />
               </div>
@@ -148,9 +148,9 @@ export default function AboutPage() {
             </div>
 
             <div className="relative z-10 border-t border-white/10 pt-4 w-full text-center">
-              <h4 className="text-base font-black text-white tracking-tight">Mian Talal UniPOS</h4>
+              <h4 className="text-base font-black text-white tracking-tight">MT Core</h4>
               <p className="text-[11px] text-brand-sky font-semibold flex items-center justify-center gap-1 mt-0.5">
-                <MapPin size={12} /> Crafted in Kohinoor, Faisalabad, Pakistan for global scale.
+                <MapPin size={12} /> The core technology behind your business. Crafted in Faisalabad.
               </p>
             </div>
           </div>
@@ -166,7 +166,7 @@ export default function AboutPage() {
             Engineered Capabilities
           </div>
           <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tight mb-3">
-            Why Store Owners Trust MT UniPOS
+            Why Business Owners Trust MT Core
           </h2>
           <p className="text-xs sm:text-sm text-gray-400 max-w-xl mx-auto leading-relaxed">
             Built with modern web technologies, real-time database synchronization, and local disk export security.

@@ -42,7 +42,8 @@ export default function AdminSettingsPage() {
   });
 
   // Form settings states
-  const [platformTitle, setPlatformTitle] = useState("MT UniPOS");
+  const [platformTitle, setPlatformTitle] = useState("MT Core");
+  const [platformTagline, setPlatformTagline] = useState("The core technology behind your business.");
   const [founderCredit, setFounderCredit] = useState("Mian Talal");
   const [baseCurrency, setBaseCurrency] = useState("PKR");
   const [neonIntensity, setNeonIntensity] = useState("Medium");

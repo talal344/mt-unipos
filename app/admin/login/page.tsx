@@ -45,8 +45,9 @@ export default function SuperAdminLoginPage() {
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(168,85,247,0.08),transparent_65%)] pointer-events-none" />
 
       {/* Brand Header */}
-      <Link href="/" className="flex items-center justify-center mb-6 group">
-        <img src="/logo.png" alt="MT UniPOS Logo" className="h-20 sm:h-24 w-auto max-w-[340px] object-contain transition-all duration-300 group-hover:scale-105 drop-shadow-[0_0_20px_rgba(168,85,247,0.45)]" />
+      <Link href="/" className="flex flex-col items-center justify-center mb-6 group">
+        <img src="/logo.png" alt="MT Core Logo" className="h-20 sm:h-24 w-auto max-w-[340px] object-contain transition-all duration-300 group-hover:scale-105 drop-shadow-[0_0_20px_rgba(168,85,247,0.45)]" />
+        <span className="text-[10px] text-gray-400 font-medium mt-1">The core technology behind your business.</span>
       </Link>
 
       <div className="bg-brand-dark-surface border border-purple-500/20 w-full max-w-md p-7 rounded-2xl glass-panel relative z-10 shadow-2xl shadow-purple-500/5 space-y-6">
@@ -58,9 +59,9 @@ export default function SuperAdminLoginPage() {
             </div>
             <span className="text-[9px] font-black uppercase tracking-widest text-purple-400">Restricted Access</span>
           </div>
-          <h2 className="text-lg font-black text-white">Super Admin Gate</h2>
+          <h2 className="text-lg font-black text-white">MT Core Super Admin Gate</h2>
           <p className="text-[10px] text-gray-500 mt-1">
-            Global SaaS management — tenants, billing, analytics &amp; platform settings.
+            Global MT Core SaaS management — tenants, billing, analytics &amp; platform settings.
           </p>
         </div>
 
