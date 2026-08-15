@@ -6,25 +6,12 @@ import {
   Laptop,
   Users,
   GraduationCap,
-  Stethoscope,
-  Building2,
-  ShoppingCart,
-  ArrowRight,
   Sparkles,
   CheckCircle2,
-  Clock,
   Zap,
-  ShieldCheck,
-  Award,
-  BarChart3,
-  TrendingUp,
-  Receipt,
-  FileText,
-  Calendar,
-  Layers,
   ChevronRight,
-  Printer,
-  QrCode
+  ShieldCheck,
+  Building2
 } from "lucide-react";
 
 export default function SoftwareShowcase() {
@@ -40,7 +27,6 @@ export default function SoftwareShowcase() {
       glowColor: "from-sky-600/30 via-blue-600/10 to-transparent",
       borderColor: "border-sky-500/40 hover:border-sky-400",
       accentBg: "bg-sky-500/10 text-sky-400",
-      demoLink: "/pos",
       requestLink: "/demo?line=POS",
       icon: Laptop,
       stats: [
@@ -65,7 +51,6 @@ export default function SoftwareShowcase() {
       glowColor: "from-emerald-600/30 via-teal-600/10 to-transparent",
       borderColor: "border-emerald-500/40 hover:border-emerald-400",
       accentBg: "bg-emerald-500/10 text-emerald-400",
-      demoLink: "/hrms",
       requestLink: "/demo?line=HRMS",
       icon: Users,
       stats: [
@@ -90,7 +75,6 @@ export default function SoftwareShowcase() {
       glowColor: "from-purple-600/30 via-indigo-600/10 to-transparent",
       borderColor: "border-purple-500/40 hover:border-purple-400",
       accentBg: "bg-purple-500/10 text-purple-400",
-      demoLink: "/sms",
       requestLink: "/demo?line=SMS",
       icon: GraduationCap,
       stats: [
@@ -111,33 +95,74 @@ export default function SoftwareShowcase() {
   const filtered = activeTab === "all" ? flagshipProducts : flagshipProducts.filter(p => p.id === activeTab);
 
   return (
-    <section className="relative py-20 bg-black font-sans border-b border-gray-800/80 overflow-hidden">
+    <section className="relative py-16 bg-black font-sans border-b border-gray-800/80 overflow-hidden">
       {/* Background Ambient Glows */}
       <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-96 h-96 bg-sky-500/5 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute top-1/2 right-1/4 -translate-y-1/2 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl pointer-events-none" />
 
       {/* ───────────────────────────────────────────────────────────────────────────── */}
-      {/* 1. ANIMATED LIVE TICKER MARQUEE                                              */}
+      {/* 1. SMOOTH ANIMATED LIVE TICKER MARQUEE (CENTERED VERTICALLY)                 */}
       {/* ───────────────────────────────────────────────────────────────────────────── */}
-      <div className="w-full bg-[#080d15] border-y border-gray-800 py-3 mb-16 overflow-hidden relative">
-        <div className="flex gap-8 whitespace-nowrap animate-marquee text-xs font-mono font-bold text-gray-400">
-          <span className="flex items-center gap-2 text-sky-400">
-            <Sparkles size={14} /> MT CORE 3.0: UNIFIED ENTERPRISE SOFTWARE SUITE
-          </span>
-          <span>•</span>
-          <span className="flex items-center gap-2 text-emerald-400">
-            <CheckCircle2 size={14} /> 1. MT RETAIL &amp; SUPERMARKET POS ERP
-          </span>
-          <span>•</span>
-          <span className="flex items-center gap-2 text-teal-400">
-            <Users size={14} /> 2. MT PEOPLE &amp; ENTERPRISE HRMS SUITE
-          </span>
-          <span>•</span>
-          <span className="flex items-center gap-2 text-purple-400">
-            <GraduationCap size={14} /> 3. MT CAMPUS &amp; SCHOOL MANAGEMENT ERP (SMS)
-          </span>
-          <span>•</span>
-          <span className="text-yellow-400">★ 100% INDEPENDENT ARCHITECTURES • REAL-TIME DATA SYNC • MULTI-TENANT ISOLATED SAAS</span>
+      <div className="w-full bg-[#080d15] border-y border-gray-800 h-14 flex items-center justify-center mb-16 overflow-hidden relative shadow-inner">
+        <style dangerouslySetInnerHTML={{__html: `
+          @keyframes marqueeSlide {
+            0% { transform: translateX(0%); }
+            100% { transform: translateX(-50%); }
+          }
+          .animate-marquee-smooth {
+            display: flex;
+            width: max-content;
+            animation: marqueeSlide 30s linear infinite;
+          }
+          .animate-marquee-smooth:hover {
+            animation-play-state: paused;
+          }
+        `}} />
+
+        <div className="animate-marquee-smooth items-center gap-8 text-xs font-mono font-bold text-gray-300">
+          {/* Ticker items block 1 */}
+          <div className="flex items-center gap-8 shrink-0">
+            <span className="flex items-center gap-2 text-sky-400">
+              <Sparkles size={14} /> MT CORE 3.0: 3 STANDALONE ENTERPRISE SUITES
+            </span>
+            <span className="text-gray-600">•</span>
+            <span className="flex items-center gap-2 text-sky-300">
+              <Laptop size={14} /> 1. MT RETAIL &amp; SUPERMARKET POS ERP
+            </span>
+            <span className="text-gray-600">•</span>
+            <span className="flex items-center gap-2 text-emerald-400">
+              <Users size={14} /> 2. MT PEOPLE &amp; ENTERPRISE HRMS SUITE
+            </span>
+            <span className="text-gray-600">•</span>
+            <span className="flex items-center gap-2 text-purple-400">
+              <GraduationCap size={14} /> 3. MT CAMPUS &amp; SCHOOL MANAGEMENT ERP (SMS)
+            </span>
+            <span className="text-gray-600">•</span>
+            <span className="text-amber-400 font-sans font-black">★ 100% INDEPENDENT SAAS ARCHITECTURES • ULTRA SECURE</span>
+            <span className="text-gray-600">•</span>
+          </div>
+
+          {/* Ticker items duplicate block 2 for seamless infinite loop */}
+          <div className="flex items-center gap-8 shrink-0">
+            <span className="flex items-center gap-2 text-sky-400">
+              <Sparkles size={14} /> MT CORE 3.0: 3 STANDALONE ENTERPRISE SUITES
+            </span>
+            <span className="text-gray-600">•</span>
+            <span className="flex items-center gap-2 text-sky-300">
+              <Laptop size={14} /> 1. MT RETAIL &amp; SUPERMARKET POS ERP
+            </span>
+            <span className="text-gray-600">•</span>
+            <span className="flex items-center gap-2 text-emerald-400">
+              <Users size={14} /> 2. MT PEOPLE &amp; ENTERPRISE HRMS SUITE
+            </span>
+            <span className="text-gray-600">•</span>
+            <span className="flex items-center gap-2 text-purple-400">
+              <GraduationCap size={14} /> 3. MT CAMPUS &amp; SCHOOL MANAGEMENT ERP (SMS)
+            </span>
+            <span className="text-gray-600">•</span>
+            <span className="text-amber-400 font-sans font-black">★ 100% INDEPENDENT SAAS ARCHITECTURES • ULTRA SECURE</span>
+            <span className="text-gray-600">•</span>
+          </div>
         </div>
       </div>
 
@@ -146,13 +171,13 @@ export default function SoftwareShowcase() {
         <div className="text-center max-w-3xl mx-auto space-y-3">
           <div className="inline-flex items-center gap-2 bg-[#0b121e] border border-sky-500/30 px-3.5 py-1.5 rounded-full text-xs font-black uppercase text-sky-400">
             <Zap size={14} className="text-sky-400" />
-            <span>3 Industry-Leading Standalone Systems — One Unified Ecosystem</span>
+            <span>Our 3 Core Systems</span>
           </div>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight">
             Engineered for <span className="bg-gradient-to-r from-sky-400 via-emerald-400 to-purple-400 bg-clip-text text-transparent">Total Operational Mastery</span>
           </h2>
           <p className="text-sm text-gray-400 leading-relaxed">
-            Whether powering multi-branch retail superstores, corporate workforce payrolls, or high-tier educational campuses, MT Core provides uncompromising speed and deep domain architecture.
+            Powering multi-branch retail superstores, corporate workforce payrolls, and high-tier educational campuses with 3 independent, dedicated enterprise architectures.
           </p>
 
           {/* Interactive Filter Pills */}
@@ -176,7 +201,7 @@ export default function SoftwareShowcase() {
               }`}
             >
               <Laptop size={14} />
-              <span>Retail POS ERP</span>
+              <span>1. Retail POS ERP</span>
             </button>
             <button
               onClick={() => setActiveTab("hrms")}
@@ -187,7 +212,7 @@ export default function SoftwareShowcase() {
               }`}
             >
               <Users size={14} />
-              <span>HRMS &amp; Payroll</span>
+              <span>2. HRMS &amp; Payroll</span>
             </button>
             <button
               onClick={() => setActiveTab("sms")}
@@ -198,7 +223,7 @@ export default function SoftwareShowcase() {
               }`}
             >
               <GraduationCap size={14} />
-              <span>School ERP (SMS)</span>
+              <span>3. School ERP (SMS)</span>
             </button>
           </div>
         </div>
@@ -261,70 +286,19 @@ export default function SoftwareShowcase() {
                   </div>
                 </div>
 
-                {/* Call to Actions */}
-                <div className="pt-8 space-y-2 relative z-10 border-t border-gray-800/60 mt-6">
-                  <Link
-                    href={prod.demoLink}
-                    className="w-full py-3 px-4 bg-white hover:bg-gray-100 text-black font-black text-xs uppercase rounded-xl flex items-center justify-center gap-2 shadow-lg transition duration-200"
-                  >
-                    <span>Launch Live Interactive Sandbox</span>
-                    <ArrowRight size={14} />
-                  </Link>
-
+                {/* Call to Action */}
+                <div className="pt-6 relative z-10 border-t border-gray-800/60 mt-6">
                   <Link
                     href={prod.requestLink}
-                    className="w-full py-2.5 px-4 bg-[#0b121e] hover:bg-gray-800 text-gray-300 hover:text-white border border-gray-800 font-bold text-xs uppercase rounded-xl flex items-center justify-center gap-1.5 transition duration-200"
+                    className="w-full py-3.5 px-4 bg-gradient-to-r from-sky-500 via-emerald-500 to-purple-500 hover:opacity-90 text-black font-black text-xs uppercase rounded-xl flex items-center justify-center gap-2 shadow-lg transition duration-200"
                   >
-                    <span>Request Custom Commercial License</span>
-                    <ChevronRight size={14} />
+                    <span>Request Demo &amp; Commercial License</span>
+                    <ChevronRight size={15} />
                   </Link>
                 </div>
               </div>
             );
           })}
-        </div>
-
-        {/* ───────────────────────────────────────────────────────────────────────────── */}
-        {/* 3. FUTURE PIPELINE VERTICALS                                                 */}
-        {/* ───────────────────────────────────────────────────────────────────────────── */}
-        <div className="pt-8 border-t border-gray-800/80">
-          <div className="text-center mb-6">
-            <h4 className="text-xs font-black uppercase tracking-widest text-gray-500 font-mono">
-              In Active Development • Upcoming Enterprise Suites
-            </h4>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-            <div className="bg-[#0b121e]/60 border border-pink-500/20 rounded-2xl p-5 flex items-center gap-4">
-              <div className="p-3 bg-pink-500/10 text-pink-400 rounded-xl">
-                <Stethoscope size={24} />
-              </div>
-              <div className="space-y-0.5">
-                <div className="flex items-center gap-2">
-                  <h4 className="text-sm font-black text-white">Hospital &amp; Clinic ERP (HMS)</h4>
-                  <span className="text-[9px] font-bold bg-pink-500/10 text-pink-400 border border-pink-500/30 px-2 py-0.5 rounded">
-                    Q4 2026
-                  </span>
-                </div>
-                <p className="text-xs text-gray-400">OPD Patient Token Registry, Doctor E-Prescriptions &amp; Pathology Lab Sync.</p>
-              </div>
-            </div>
-
-            <div className="bg-[#0b121e]/60 border border-amber-500/20 rounded-2xl p-5 flex items-center gap-4">
-              <div className="p-3 bg-amber-500/10 text-amber-400 rounded-xl">
-                <Building2 size={24} />
-              </div>
-              <div className="space-y-0.5">
-                <div className="flex items-center gap-2">
-                  <h4 className="text-sm font-black text-white">Real Estate &amp; Property ERP</h4>
-                  <span className="text-[9px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded">
-                    Q1 2027
-                  </span>
-                </div>
-                <p className="text-xs text-gray-400">Housing Scheme Installments, Tenant Rent Agreements &amp; Plot Verification.</p>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </section>

@@ -24,7 +24,7 @@ export default function DemoPage() {
     email: "",
     phone: "",
     country: "Pakistan",
-    businessType: "Super Markets",
+    businessType: "POS (Supermarkets & Retail)",
   });
 
   const [submitted, setSubmitted]               = useState(false);
@@ -73,7 +73,7 @@ export default function DemoPage() {
       email: "",
       phone: "",
       country: "Pakistan",
-      businessType: "Super Markets",
+      businessType: "POS (Supermarkets & Retail)",
     });
   };
 

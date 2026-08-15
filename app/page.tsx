@@ -94,7 +94,7 @@ export default function HomePage() {
   const [demoTicketTime, setDemoTicketTime]       = useState("");
   const [showReceiptModal, setShowReceiptModal]   = useState(false);
   const [demoForm, setDemoForm]                   = useState({
-    name: "", businessName: "", email: "", phone: "", country: "Pakistan", businessType: "Super Markets"
+    name: "", businessName: "", email: "", phone: "", country: "Pakistan", businessType: "POS (Supermarkets, Retail & Restaurant ERP)"
   });
   const [counter, setCounter] = useState({ businesses: 0, txns: 0, uptime: 0 });
 
@@ -502,7 +502,7 @@ export default function HomePage() {
                   onClick={() => {
                     setDemoSubmitted(false);
                     setDemoTicketNo("");
-                    setDemoForm({ name: "", businessName: "", email: "", phone: "", country: "Pakistan", businessType: "Super Markets" });
+                    setDemoForm({ name: "", businessName: "", email: "", phone: "", country: "Pakistan", businessType: "POS (Supermarkets, Retail & Restaurant ERP)" });
                   }}
                   className="text-[10px] text-gray-600 hover:text-gray-400 transition"
                 >
@@ -536,10 +536,12 @@ export default function HomePage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[10px] uppercase tracking-wider font-bold text-gray-500 mb-1.5">Business Type</label>
+                    <label className="block text-[10px] uppercase tracking-wider font-bold text-gray-500 mb-1.5">Select Software System</label>
                     <select value={demoForm.businessType} onChange={e => setDemoForm({...demoForm, businessType: e.target.value})}
-                      className="w-full bg-black border border-brand-dark-border p-3 rounded-xl text-xs text-white focus:outline-none focus:border-brand-sky transition">
-                      {["Super Markets","Pharmacy Stores","Restaurants / Cafes","Clothing & Shoes","Electronics","Wholesale","Other"].map(c => <option key={c}>{c}</option>)}
+                      className="w-full bg-black border border-brand-dark-border p-3 rounded-xl text-xs text-white font-bold focus:outline-none focus:border-brand-sky transition">
+                      <option value="POS (Supermarkets, Retail & Restaurant ERP)">🏬 1. POS (Supermarkets, Retail &amp; Restaurants)</option>
+                      <option value="HRMS (Human Resources & Payroll Suite)">👥 2. HRMS (Human Resources &amp; Payroll Suite)</option>
+                      <option value="SMS (School & College Management ERP)">🎓 3. SMS (School &amp; College Management ERP)</option>
                     </select>
                   </div>
                 </div>
