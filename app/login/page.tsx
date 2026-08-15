@@ -7,7 +7,8 @@ import { useGlobalContext } from "@/context/global-context";
 import { supabase } from "@/lib/supabase";
 import MTCoreLogo from "@/components/mt-logo";
 import {
-  Laptop, ArrowRight, CheckCircle2, AlertCircle, Eye, EyeOff, Building2, Lock
+  Laptop, ArrowRight, CheckCircle2, AlertCircle, Eye, EyeOff, Building2, Lock,
+  Users, GraduationCap, Zap, Sparkles
 } from "lucide-react";
 
 
@@ -322,6 +323,72 @@ function LoginContent() {
     }
   };
 
+  // ─── 1-CLICK INSTANT DEMO LOGIN HANDLER (POS, HRMS, SMS) ─────────────────
+  const handleDemoLogin = (type: "POS" | "HRMS" | "SMS") => {
+    setErrorMessage("");
+    setLoading(true);
+
+    if (type === "POS") {
+      const posTenant = tenants.find((t) => t.assignedSoftware !== "HRMS") || tenants[0] || {
+        id: "AFS-1234",
+        businessName: "Al-Fatah Supermarket",
+        ownerName: "Mian Talal Ahmad",
+        email: "owner@alfatah.com",
+        assignedSoftware: "POS"
+      };
+      const user = {
+        name: posTenant.ownerName || "Al-Fatah (Owner)",
+        role: "Owner",
+        email: posTenant.email || "owner@alfatah.com",
+        businessName: posTenant.businessName || "Al-Fatah Supermarket",
+        tenantId: posTenant.id || "AFS-1234",
+        assignedSoftware: "POS" as const
+      };
+      localStorage.setItem("unipos_last_activated_tenant", user.tenantId);
+      localStorage.setItem("unipos_current_user", JSON.stringify(user));
+      setCurrentUser(user);
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 300);
+    } else if (type === "HRMS") {
+      const hrmsTenant = tenants.find((t) => t.assignedSoftware === "HRMS") || {
+        id: "HRMS-2026",
+        businessName: "MT Global HRMS Enterprise",
+        ownerName: "HR Director",
+        email: "director@hrms.com",
+        assignedSoftware: "HRMS"
+      };
+      const user = {
+        name: "HR Director",
+        role: "Owner",
+        email: "director@hrms.com",
+        businessName: hrmsTenant.businessName || "MT Global HRMS Enterprise",
+        tenantId: hrmsTenant.id || "HRMS-2026",
+        assignedSoftware: "HRMS" as const
+      };
+      localStorage.setItem("unipos_last_activated_tenant", user.tenantId);
+      localStorage.setItem("unipos_current_user", JSON.stringify(user));
+      setCurrentUser(user);
+      setTimeout(() => {
+        router.push("/hrms");
+      }, 300);
+    } else if (type === "SMS") {
+      const smsUser = {
+        name: "Principal (SMS Admin)",
+        role: "Owner",
+        email: "principal@mtcoreschool.edu.pk",
+        businessName: "MT Core Model School & College",
+        tenantId: "SMS-2026",
+        assignedSoftware: "POS" as const
+      };
+      localStorage.setItem("unipos_current_user", JSON.stringify(smsUser));
+      setCurrentUser(smsUser);
+      setTimeout(() => {
+        router.push("/sms");
+      }, 300);
+    }
+  };
+
 
   const handleDownloadCredentialsFile = () => {
     if (!activatedCredentials) return;
@@ -446,6 +513,65 @@ function LoginContent() {
               <AlertCircle size={15} className="shrink-0 mt-0.5" /> {errorMessage}
             </div>
           )}
+
+          {/* ── 1-CLICK INSTANT DEMO ACCESS CARDS (POS • HRMS • SMS) ── */}
+          <div className="p-3.5 rounded-2xl bg-gradient-to-b from-[#0e1626] to-[#080d14] border border-sky-500/30 space-y-2.5">
+            <div className="flex items-center justify-between text-[11px] font-black text-sky-400">
+              <div className="flex items-center gap-1.5">
+                <Zap size={14} className="text-amber-400 fill-amber-400 animate-pulse" />
+                <span>1-CLICK INSTANT DEMO LOGIN</span>
+              </div>
+              <span className="text-[9px] bg-sky-500/10 text-sky-300 font-mono px-2 py-0.5 rounded-md border border-sky-500/20">
+                FAST ACCESS
+              </span>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2">
+              {/* POS DEMO */}
+              <button
+                type="button"
+                onClick={() => handleDemoLogin("POS")}
+                className="p-2.5 rounded-xl bg-sky-500/10 hover:bg-sky-600 border border-sky-500/30 text-sky-300 hover:text-white transition flex flex-col items-center justify-center gap-1 group shadow-sm hover:scale-[1.02] cursor-pointer"
+                title="Instant 1-Click Login to POS & Retail System"
+              >
+                <Laptop size={16} className="text-sky-400 group-hover:text-white transition" />
+                <span className="text-[11px] font-black leading-none">POS ERP</span>
+                <span className="text-[8px] text-gray-400 group-hover:text-sky-100 uppercase font-mono">Retail &amp; Store</span>
+              </button>
+
+              {/* HRMS DEMO */}
+              <button
+                type="button"
+                onClick={() => handleDemoLogin("HRMS")}
+                className="p-2.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-600 border border-emerald-500/30 text-emerald-300 hover:text-white transition flex flex-col items-center justify-center gap-1 group shadow-sm hover:scale-[1.02] cursor-pointer"
+                title="Instant 1-Click Login to HRMS & Payroll Suite"
+              >
+                <Users size={16} className="text-emerald-400 group-hover:text-white transition" />
+                <span className="text-[11px] font-black leading-none">HRMS</span>
+                <span className="text-[8px] text-gray-400 group-hover:text-emerald-100 uppercase font-mono">Staff &amp; Payroll</span>
+              </button>
+
+              {/* SMS DEMO */}
+              <button
+                type="button"
+                onClick={() => handleDemoLogin("SMS")}
+                className="p-2.5 rounded-xl bg-purple-500/10 hover:bg-purple-600 border border-purple-500/30 text-purple-300 hover:text-white transition flex flex-col items-center justify-center gap-1 group shadow-sm hover:scale-[1.02] cursor-pointer"
+                title="Instant 1-Click Login to School Management ERP"
+              >
+                <GraduationCap size={16} className="text-purple-400 group-hover:text-white transition" />
+                <span className="text-[11px] font-black leading-none">School SMS</span>
+                <span className="text-[8px] text-gray-400 group-hover:text-purple-100 uppercase font-mono">Academic ERP</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="relative flex items-center justify-center py-1">
+            <div className="border-t border-gray-800 w-full" />
+            <span className="bg-brand-dark-surface px-3 text-[9px] font-bold text-gray-500 uppercase tracking-wider shrink-0">
+              OR SIGN IN WITH CREDENTIALS
+            </span>
+            <div className="border-t border-gray-800 w-full" />
+          </div>
 
           {/* ── LOGIN FORM ── */}
           <form onSubmit={handleCredentialsSubmit} className="space-y-4 text-xs">
