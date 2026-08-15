@@ -462,10 +462,18 @@ interface SMSContextType {
   // Teacher Actions
   addTeacher: (teacher: Omit<TeacherRecord, "id" | "employeeCode">) => TeacherRecord;
   updateTeacher: (id: string, updates: Partial<TeacherRecord>) => void;
+  deleteTeacher: (id: string) => void;
   
   // Class & Section Actions
   addClassSection: (section: Omit<SMSClassSection, "id" | "enrolledCount">) => SMSClassSection;
   updateClassSection: (id: string, updates: Partial<SMSClassSection>) => void;
+  deleteClassSection: (id: string) => void;
+  reassignStudentSection: (studentId: string, targetClassId: string, targetClassName: string, targetSectionId: string, targetSectionName: string) => void;
+  
+  // Timetable Actions
+  addTimetablePeriod: (period: Omit<TimetablePeriod, "id">) => TimetablePeriod;
+  updateTimetablePeriod: (id: string, updates: Partial<TimetablePeriod>) => void;
+  deleteTimetablePeriod: (id: string) => void;
   
   // Attendance Actions
   markAttendanceBatch: (records: Omit<SMSAttendanceRecord, "id">[]) => void;
@@ -488,6 +496,7 @@ interface SMSContextType {
   
   // Notice Actions
   addNotice: (notice: Omit<SchoolNotice, "id" | "date">) => SchoolNotice;
+  deleteNotice: (id: string) => void;
   
   // Enterprise Module Actions
   sendWhatsAppAlert: (phone: string, recipientName: string, category: WhatsAppLog["category"], message: string, studentAdmissionNo?: string) => void;
@@ -1074,6 +1083,12 @@ export function SMSProvider({ children }: { children: ReactNode }) {
     persist("mt_sms_teachers", updated);
   };
 
+  const deleteTeacher = (id: string) => {
+    const updated = teachers.filter((t) => t.id !== id);
+    setTeachers(updated);
+    persist("mt_sms_teachers", updated);
+  };
+
   const addClassSection = (secData: Omit<SMSClassSection, "id" | "enrolledCount">): SMSClassSection => {
     const newSec: SMSClassSection = {
       ...secData,
@@ -1090,6 +1105,54 @@ export function SMSProvider({ children }: { children: ReactNode }) {
     const updated = classes.map((c) => (c.id === id ? { ...c, ...updates } : c));
     setClasses(updated);
     persist("mt_sms_classes", updated);
+  };
+
+  const deleteClassSection = (id: string) => {
+    const updated = classes.filter((c) => c.id !== id);
+    setClasses(updated);
+    persist("mt_sms_classes", updated);
+  };
+
+  const reassignStudentSection = (
+    studentId: string,
+    targetClassId: string,
+    targetClassName: string,
+    targetSectionId: string,
+    targetSectionName: string
+  ) => {
+    const updated = students.map((s) =>
+      s.id === studentId
+        ? {
+            ...s,
+            classId: targetClassId,
+            className: targetClassName,
+            sectionId: targetSectionId,
+            sectionName: targetSectionName
+          }
+        : s
+    );
+    setStudents(updated);
+    persist("mt_sms_students", updated);
+  };
+
+  const addTimetablePeriod = (periodData: Omit<TimetablePeriod, "id">): TimetablePeriod => {
+    const newPeriod: TimetablePeriod = {
+      ...periodData,
+      id: `TT-${Date.now()}`
+    };
+    const updated = [...timetable, newPeriod];
+    setTimetable(updated);
+    return newPeriod;
+  };
+
+  const updateTimetablePeriod = (id: string, updates: Partial<TimetablePeriod>) => {
+    const updated = timetable.map((tt) => (tt.id === id ? { ...tt, ...updates } : tt));
+    setTimetable(updated);
+  };
+
+  const deleteTimetablePeriod = (id: string) => {
+    const updated = timetable.filter((tt) => tt.id !== id);
+    setTimetable(updated);
   };
 
   const markAttendanceBatch = (records: Omit<SMSAttendanceRecord, "id">[]) => {
@@ -1229,6 +1292,11 @@ export function SMSProvider({ children }: { children: ReactNode }) {
     };
     setNotices([newNotice, ...notices]);
     return newNotice;
+  };
+
+  const deleteNotice = (id: string) => {
+    const updated = notices.filter((n) => n.id !== id);
+    setNotices(updated);
   };
 
   // Enterprise Module Actions
@@ -1452,8 +1520,14 @@ export function SMSProvider({ children }: { children: ReactNode }) {
         issueSchoolLeavingCertificate,
         addTeacher,
         updateTeacher,
+        deleteTeacher,
         addClassSection,
         updateClassSection,
+        deleteClassSection,
+        reassignStudentSection,
+        addTimetablePeriod,
+        updateTimetablePeriod,
+        deleteTimetablePeriod,
         markAttendanceBatch,
         addExamTerm,
         saveMarksBatch,
@@ -1464,6 +1538,7 @@ export function SMSProvider({ children }: { children: ReactNode }) {
         issueBook,
         returnBook,
         addNotice,
+        deleteNotice,
         sendWhatsAppAlert,
         registerGateVisitor,
         checkoutGateVisitor,

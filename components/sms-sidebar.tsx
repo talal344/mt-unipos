@@ -134,7 +134,8 @@ export default function SMSSidebar() {
       icon: Building2,
       color: "text-emerald-400",
       items: [
-        { href: "/sms/classes", label: "Campus Wings & Classes", icon: Building2 },
+        { href: "/sms/classes", label: "Classes & Student Allocation", icon: Building2, badge: "Alloc" },
+        { href: "/sms/teachers", label: "Teachers Faculty Matrix", icon: GraduationCap, badge: "Schedule" },
         { href: "/sms/attendance", label: "Morning Live Attendance", icon: CalendarCheck2 },
         { href: "/sms/gate", label: "Smart Gate RFID & Passes", icon: ShieldAlert, badge: "Live" },
         { href: "/sms/lesson-planner", label: "Lesson Plan & Syllabus", icon: Target, badge: "Syllabus" },
@@ -148,6 +149,7 @@ export default function SMSSidebar() {
       icon: Award,
       color: "text-purple-400",
       items: [
+        { href: "/sms/leaderboard", label: "Positions & Hall of Fame", icon: Trophy, badge: "1st/2nd" },
         { href: "/sms/exams", label: "Examinations & A4 Cards", icon: Award },
         { href: "/sms/omr-grader", label: "AI OMR Bubble Sheet Grader", icon: ScanLine, badge: "AI OMR" },
         { href: "/sms/paper-generator", label: "Board Exam Paper Builder", icon: FileText, badge: "Builder" },
