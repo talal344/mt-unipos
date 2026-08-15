@@ -418,8 +418,8 @@ function LoginContent() {
 
         {/* Logo */}
         <Link href="/" className="flex flex-col items-center justify-center mb-8 group cursor-pointer">
-          <div className="transition-all duration-300 group-hover:scale-105 group-hover:drop-shadow-[0_0_32px_rgba(16,185,129,0.5)]">
-            <MTCoreLogo variant="emerald" size="lg" showText={true} collapsed={false} />
+          <div className="transition-all duration-300 group-hover:scale-105 group-hover:drop-shadow-[0_0_32px_rgba(14,165,233,0.5)]">
+            <MTCoreLogo variant="sky" size="lg" showText={true} collapsed={false} />
           </div>
           <span className="text-[10px] text-gray-500 font-medium mt-3 tracking-wider uppercase">The core technology behind your business.</span>
         </Link>
