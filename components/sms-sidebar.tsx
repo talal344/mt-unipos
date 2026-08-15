@@ -10,7 +10,7 @@ import {
   Users,
   Building2,
   CalendarCheck2,
-  FileCheck2,
+  Award,
   FileText,
   CreditCard,
   Clock,
@@ -19,12 +19,17 @@ import {
   Library,
   Settings,
   ChevronDown,
-  Sparkles,
   ShieldCheck,
-  Award,
-  ChevronRight,
-  School,
-  ArrowLeft
+  ArrowLeft,
+  MessageSquare,
+  ShieldAlert,
+  ScanLine,
+  UserPlus,
+  Trophy,
+  CalendarRange,
+  BedDouble,
+  Stethoscope,
+  Sparkles
 } from "lucide-react";
 
 export default function SMSSidebar() {
@@ -52,19 +57,57 @@ export default function SMSSidebar() {
     Finance: { bg: "bg-teal-500/10", text: "text-teal-400", border: "border-teal-500/30", label: "💳 Accounts & Fees" }
   };
 
-  const navItems = [
-    { href: "/sms", label: "Dashboard", icon: LayoutDashboard, badge: "Hub" },
-    { href: "/sms/students", label: "Students & Admissions", icon: Users, badge: "New" },
-    { href: "/sms/classes", label: "Campus & Classes", icon: Building2 },
-    { href: "/sms/attendance", label: "Live Attendance", icon: CalendarCheck2 },
-    { href: "/sms/exams", label: "Exams & Results", icon: Award },
-    { href: "/sms/paper-generator", label: "Exam Paper Builder", icon: FileText, badge: "AI" },
-    { href: "/sms/fees", label: "Fee Management", icon: CreditCard },
-    { href: "/sms/timetable", label: "Timetable & Matrix", icon: Clock },
-    { href: "/sms/lms", label: "LMS & Diary", icon: BookOpen },
-    { href: "/sms/transport", label: "Transport Fleet", icon: Bus },
-    { href: "/sms/library", label: "Library Catalog", icon: Library },
-    { href: "/sms/settings", label: "SMS Configuration", icon: Settings }
+  const navGroups = [
+    {
+      groupTitle: "Main Command Hub",
+      items: [
+        { href: "/sms", label: "Dashboard", icon: LayoutDashboard },
+        { href: "/sms/whatsapp", label: "WhatsApp Gateway", icon: MessageSquare, badge: "Auto" }
+      ]
+    },
+    {
+      groupTitle: "Students & Admissions",
+      items: [
+        { href: "/sms/students", label: "Student 360 & Directory", icon: Users, badge: "Core" },
+        { href: "/sms/admissions-online", label: "Online Admissions & Merit", icon: UserPlus, badge: "CRM" }
+      ]
+    },
+    {
+      groupTitle: "Academics & Operations",
+      items: [
+        { href: "/sms/classes", label: "Campus & Classes", icon: Building2 },
+        { href: "/sms/attendance", label: "Morning Attendance", icon: CalendarCheck2 },
+        { href: "/sms/gate", label: "Gate RFID & Visitor Pass", icon: ShieldAlert, badge: "Pass" },
+        { href: "/sms/timetable", label: "Timetable & Matrix", icon: Clock },
+        { href: "/sms/lms", label: "Digital LMS & Diary", icon: BookOpen }
+      ]
+    },
+    {
+      groupTitle: "Exams & Evaluation",
+      items: [
+        { href: "/sms/exams", label: "Exams & A4 Report Cards", icon: Award },
+        { href: "/sms/omr-grader", label: "OMR Bubble Sheet Grader", icon: ScanLine, badge: "AI OMR" },
+        { href: "/sms/paper-generator", label: "Board Exam Paper Builder", icon: FileText, badge: "Builder" }
+      ]
+    },
+    {
+      groupTitle: "Finance & Accounts",
+      items: [
+        { href: "/sms/fees", label: "3-Copy Challan & Cashier", icon: CreditCard }
+      ]
+    },
+    {
+      groupTitle: "Campus Life & Facilities",
+      items: [
+        { href: "/sms/house-system", label: "House Points & Merits", icon: Trophy },
+        { href: "/sms/ptm", label: "PTM Slot Scheduler", icon: CalendarRange },
+        { href: "/sms/hostel", label: "Hostel & Mess Dining", icon: BedDouble },
+        { href: "/sms/clinic", label: "School Clinic & Health", icon: Stethoscope },
+        { href: "/sms/transport", label: "Transport Fleet", icon: Bus },
+        { href: "/sms/library", label: "Library Catalog", icon: Library },
+        { href: "/sms/settings", label: "SMS Configuration", icon: Settings }
+      ]
+    }
   ];
 
   return (
@@ -84,7 +127,7 @@ export default function SMSSidebar() {
                   SMS
                 </span>
               </div>
-              <span className="text-[10px] text-gray-400 block font-medium">School ERP Suite</span>
+              <span className="text-[10px] text-gray-400 block font-medium">Enterprise School ERP</span>
             </div>
           </Link>
         </div>
@@ -164,42 +207,49 @@ export default function SMSSidebar() {
           </div>
         </div>
 
-        {/* Navigation Items */}
-        <nav className="p-2 space-y-1 overflow-y-auto max-h-[calc(100vh-340px)]">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = pathname === item.href || (item.href !== "/sms" && pathname.startsWith(item.href));
+        {/* Navigation Groups */}
+        <nav className="p-2 space-y-4 overflow-y-auto max-h-[calc(100vh-340px)] custom-scrollbar">
+          {navGroups.map((group, gIdx) => (
+            <div key={gIdx} className="space-y-1">
+              <div className="px-3 text-[9px] font-black uppercase tracking-wider text-gray-500">
+                {group.groupTitle}
+              </div>
+              {group.items.map((item) => {
+                const Icon = item.icon;
+                const isActive = pathname === item.href || (item.href !== "/sms" && pathname.startsWith(item.href));
 
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition ${
-                  isActive
-                    ? "bg-gradient-to-r from-sky-600 to-indigo-600 text-white font-bold shadow-md shadow-sky-600/20"
-                    : "text-gray-400 hover:text-white hover:bg-white/5"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <Icon size={16} className={isActive ? "text-white" : "text-gray-400"} />
-                  <span>{item.label}</span>
-                </div>
-                {item.badge && (
-                  <span
-                    className={`text-[9px] font-black px-1.5 py-0.5 rounded-md uppercase ${
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition ${
                       isActive
-                        ? "bg-white/20 text-white"
-                        : item.badge === "AI"
-                        ? "bg-purple-500/20 text-purple-400 border border-purple-500/40"
-                        : "bg-sky-500/20 text-sky-400 border border-sky-500/40"
+                        ? "bg-gradient-to-r from-sky-600 to-indigo-600 text-white font-bold shadow-md shadow-sky-600/20"
+                        : "text-gray-400 hover:text-white hover:bg-white/5"
                     }`}
                   >
-                    {item.badge}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
+                    <div className="flex items-center gap-2.5">
+                      <Icon size={15} className={isActive ? "text-white" : "text-gray-400"} />
+                      <span>{item.label}</span>
+                    </div>
+                    {item.badge && (
+                      <span
+                        className={`text-[8px] font-black px-1.5 py-0.2 rounded uppercase ${
+                          isActive
+                            ? "bg-white/20 text-white"
+                            : item.badge.includes("OMR") || item.badge === "Auto"
+                            ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
+                            : "bg-sky-500/20 text-sky-300 border border-sky-500/40"
+                        }`}
+                      >
+                        {item.badge}
+                      </span>
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+          ))}
         </nav>
       </div>
 

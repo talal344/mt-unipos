@@ -741,6 +741,93 @@ export default function SMSStudentsPage() {
           </div>
         </div>
       )}
+
+      {/* ───────────────────────────────────────────────────────────────────────────── */}
+      {/* STUDENT 360 COMPREHENSIVE PROFILE MODAL                                       */}
+      {/* ───────────────────────────────────────────────────────────────────────────── */}
+      {selectedStudent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="bg-[#0b121e] border border-sky-500/40 rounded-3xl w-full max-w-3xl shadow-2xl p-6 my-8 animate-fade-in-up space-y-5">
+            {/* Header */}
+            <div className="flex justify-between items-start border-b border-gray-800 pb-4">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-sky-600 to-indigo-600 flex items-center justify-center font-black text-white text-2xl shadow-lg shadow-sky-600/30">
+                  {selectedStudent.firstName[0]}
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-xl font-black text-white">
+                      {selectedStudent.firstName} {selectedStudent.lastName}
+                    </h2>
+                    <span className="text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2.5 py-0.5 rounded-full">
+                      {selectedStudent.status}
+                    </span>
+                  </div>
+                  <div className="text-xs text-gray-400 mt-0.5">
+                    Admission ID: <b className="text-sky-400 font-mono">{selectedStudent.admissionNo}</b> • Roll #{selectedStudent.rollNo} • {selectedStudent.className} ({selectedStudent.sectionName})
+                  </div>
+                </div>
+              </div>
+              <button onClick={() => setSelectedStudent(null)} className="text-gray-400 hover:text-white p-1">
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* 3-Column Info Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+              <div className="bg-black/40 border border-gray-800 p-4 rounded-xl space-y-1.5">
+                <span className="text-[10px] uppercase font-bold text-sky-400 block">Guardian / Father Info</span>
+                <div>Name: <b className="text-white">{selectedStudent.fatherName}</b></div>
+                <div>CNIC: <span className="text-gray-300 font-mono">{selectedStudent.fatherCnic || 'N/A'}</span></div>
+                <div>Phone: <b className="text-emerald-400">{selectedStudent.fatherPhone}</b></div>
+                <div>Address: <span className="text-gray-400">{selectedStudent.residentialAddress}</span></div>
+              </div>
+
+              <div className="bg-black/40 border border-gray-800 p-4 rounded-xl space-y-1.5">
+                <span className="text-[10px] uppercase font-bold text-emerald-400 block">Financial &amp; Transport</span>
+                <div>Category: <b className="text-sky-300">{selectedStudent.feeCategory}</b></div>
+                <div>Monthly Fee: <b className="text-emerald-400">Rs {(selectedStudent.customMonthlyFee || 18500).toLocaleString()}</b></div>
+                <div>Transport: <span className="text-gray-300">{selectedStudent.transportEnrolled ? 'Enrolled (Bus)' : 'Private Pickup'}</span></div>
+                <div>House: <b className="text-purple-300">{selectedStudent.houseName || 'Jinnah House'}</b></div>
+              </div>
+
+              <div className="bg-black/40 border border-gray-800 p-4 rounded-xl space-y-1.5">
+                <span className="text-[10px] uppercase font-bold text-rose-400 block">Health &amp; Demographics</span>
+                <div>Blood Group: <b className="text-red-400">{selectedStudent.bloodGroup || 'B+'}</b></div>
+                <div>DOB: <span className="text-gray-300">{selectedStudent.dob}</span></div>
+                <div>Gender: <span className="text-gray-300">{selectedStudent.gender}</span></div>
+                <div>Medical Alert: <span className="text-gray-400">{selectedStudent.medicalNotes || 'No known allergies'}</span></div>
+              </div>
+            </div>
+
+            {/* Quick Action Footer */}
+            <div className="pt-2 border-t border-gray-800 flex flex-wrap justify-between items-center gap-3">
+              <div className="text-[10px] text-gray-500 font-mono">
+                Enrolled On: {selectedStudent.admissionDate}
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handlePrintIdCard(selectedStudent)}
+                  className="px-3.5 py-2 bg-sky-600/20 hover:bg-sky-600 text-sky-300 hover:text-white rounded-xl font-bold text-xs transition flex items-center gap-1.5"
+                >
+                  <QrCode size={14} />
+                  <span>Print PVC Card</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setSlcTargetStudent(selectedStudent);
+                    setSelectedStudent(null);
+                  }}
+                  className="px-3.5 py-2 bg-purple-600/20 hover:bg-purple-600 text-purple-300 hover:text-white rounded-xl font-bold text-xs transition flex items-center gap-1.5"
+                >
+                  <FileCheck2 size={14} />
+                  <span>Issue SLC</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

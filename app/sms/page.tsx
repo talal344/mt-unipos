@@ -25,7 +25,16 @@ import {
   Bell,
   ArrowRight,
   ShieldCheck,
-  Printer
+  Printer,
+  MessageSquare,
+  ScanLine,
+  Trophy,
+  ShieldAlert,
+  CalendarRange,
+  BedDouble,
+  Stethoscope,
+  Sparkles,
+  Zap
 } from "lucide-react";
 
 export default function SMSDashboard() {
@@ -40,7 +49,11 @@ export default function SMSDashboard() {
     examTerms,
     marks,
     notices,
-    timetable
+    timetable,
+    whatsappLogs,
+    gateVisitors,
+    gatePunchLogs,
+    houses
   } = useSMS();
 
   const activeCampus = campuses.find((c) => c.id === selectedCampus) || campuses[0];
@@ -54,14 +67,15 @@ export default function SMSDashboard() {
   const totalFeeExpected = useMemo(() => feeVouchers.reduce((acc, v) => acc + v.totalPayable, 0), [feeVouchers]);
   const totalFeeCollected = useMemo(() => feeVouchers.reduce((acc, v) => acc + (v.paidAmount || 0), 0), [feeVouchers]);
   const totalDefaulters = useMemo(() => feeVouchers.filter((v) => v.status === "Unpaid" || v.status === "Overdue").length, [feeVouchers]);
+  const collectionRate = totalFeeExpected > 0 ? Math.round((totalFeeCollected / totalFeeExpected) * 100) : 0;
 
   // Primary demo student for Student/Parent portal perspective
   const demoStudent = students[0];
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto pb-12 font-sans">
+    <div className="space-y-8 max-w-7xl mx-auto pb-16 font-sans">
       {/* Top Welcome Banner */}
-      <div className="relative overflow-hidden rounded-3xl p-6 sm:p-8 bg-gradient-to-r from-[#0b1329] via-[#091e3a] to-[#042838] border border-sky-500/20 shadow-2xl">
+      <div className="relative overflow-hidden rounded-3xl p-6 sm:p-8 bg-gradient-to-r from-[#071326] via-[#0b1d3a] to-[#042838] border border-sky-500/20 shadow-2xl">
         <div className="absolute right-0 top-0 w-96 h-96 bg-sky-500/10 rounded-full blur-3xl pointer-events-none" />
         
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -74,21 +88,28 @@ export default function SMSDashboard() {
               {activeCampus.name}
             </h1>
             <p className="text-xs text-gray-300 max-w-2xl leading-relaxed">
-              Complete academic governance, student lifecycle pipeline, board exam grading, question bank engine, and multi-tier fee management system.
+              Unified School ERP Suite: Multi-Campus Governance, AI OMR Sheet Auto-Grading, Smart Turnstile RFID Gate, 3-Copy Bank Challan Billing &amp; Automated WhatsApp Broadcasts.
             </p>
           </div>
 
           <div className="flex flex-wrap gap-2.5 shrink-0">
             <Link
-              href="/sms/students?action=new"
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-black text-xs shadow-lg shadow-sky-600/20 transition cursor-pointer"
+              href="/sms/whatsapp"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-lg shadow-emerald-600/20 transition cursor-pointer"
             >
-              <PlusCircle size={14} />
-              <span>New Admission</span>
+              <MessageSquare size={14} />
+              <span>WhatsApp Alerts</span>
+            </Link>
+            <Link
+              href="/sms/omr-grader"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-black text-xs shadow-lg shadow-purple-600/20 transition cursor-pointer"
+            >
+              <ScanLine size={14} />
+              <span>AI OMR Grader</span>
             </Link>
             <Link
               href="/sms/fees?action=collect"
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-lg shadow-emerald-600/20 transition cursor-pointer"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-black text-xs shadow-lg shadow-sky-600/20 transition cursor-pointer"
             >
               <CreditCard size={14} />
               <span>Fee Counter</span>
@@ -100,7 +121,7 @@ export default function SMSDashboard() {
       {/* Global Metric Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Students */}
-        <div className="bg-[#0b121e]/80 border border-[#1e293b] rounded-2xl p-5 hover:border-sky-500/30 transition group">
+        <div className="bg-[#0b121e]/90 border border-[#1e293b] rounded-2xl p-5 hover:border-sky-500/40 transition group shadow-xl">
           <div className="flex items-center justify-between mb-3">
             <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Enrolled Students</span>
             <div className="p-2.5 rounded-xl bg-sky-500/10 text-sky-400 group-hover:scale-110 transition">
@@ -110,12 +131,12 @@ export default function SMSDashboard() {
           <div className="text-2xl sm:text-3xl font-black text-white">{totalStudents}</div>
           <div className="text-[10px] text-emerald-400 font-semibold mt-1 flex items-center gap-1">
             <TrendingUp size={12} />
-            <span>100% Verified Admissions</span>
+            <span>100% Verified GR Registry</span>
           </div>
         </div>
 
         {/* Total Faculty */}
-        <div className="bg-[#0b121e]/80 border border-[#1e293b] rounded-2xl p-5 hover:border-indigo-500/30 transition group">
+        <div className="bg-[#0b121e]/90 border border-[#1e293b] rounded-2xl p-5 hover:border-indigo-500/40 transition group shadow-xl">
           <div className="flex items-center justify-between mb-3">
             <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Teaching Faculty</span>
             <div className="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-400 group-hover:scale-110 transition">
@@ -124,14 +145,14 @@ export default function SMSDashboard() {
           </div>
           <div className="text-2xl sm:text-3xl font-black text-white">{totalTeachers}</div>
           <div className="text-[10px] text-gray-400 font-semibold mt-1">
-            <span>Subject Specialists &amp; Masters</span>
+            <span>Subject Masters Appointed</span>
           </div>
         </div>
 
         {/* Total Fee Collected */}
-        <div className="bg-[#0b121e]/80 border border-[#1e293b] rounded-2xl p-5 hover:border-emerald-500/30 transition group">
+        <div className="bg-[#0b121e]/90 border border-[#1e293b] rounded-2xl p-5 hover:border-emerald-500/40 transition group shadow-xl">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Fee Received</span>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Fee Collection</span>
             <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 group-hover:scale-110 transition">
               <CreditCard size={18} />
             </div>
@@ -140,12 +161,12 @@ export default function SMSDashboard() {
             Rs {totalFeeCollected.toLocaleString()}
           </div>
           <div className="text-[10px] text-gray-400 font-semibold mt-1">
-            <span>Total Expected: Rs {totalFeeExpected.toLocaleString()}</span>
+            <span>{collectionRate}% Collected • Rs {totalFeeExpected.toLocaleString()} Expected</span>
           </div>
         </div>
 
         {/* Classes & Sections */}
-        <div className="bg-[#0b121e]/80 border border-[#1e293b] rounded-2xl p-5 hover:border-purple-500/30 transition group">
+        <div className="bg-[#0b121e]/90 border border-[#1e293b] rounded-2xl p-5 hover:border-purple-500/40 transition group shadow-xl">
           <div className="flex items-center justify-between mb-3">
             <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Active Sections</span>
             <div className="p-2.5 rounded-xl bg-purple-500/10 text-purple-400 group-hover:scale-110 transition">
@@ -160,6 +181,91 @@ export default function SMSDashboard() {
       </div>
 
       {/* ───────────────────────────────────────────────────────────────────────────── */}
+      {/* ENTERPRISE REAL-TIME WIDGETS ROW                                              */}
+      {/* ───────────────────────────────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Widget 1: Gate Security Live Feed */}
+        <div className="bg-[#0b121e] border border-[#1e293b] rounded-2xl p-5 space-y-3 shadow-xl">
+          <div className="flex justify-between items-center border-b border-gray-800 pb-3">
+            <div className="flex items-center gap-2 text-sky-400 font-black text-xs uppercase">
+              <ShieldAlert size={15} />
+              <span>Smart Gate Turnstile Feed</span>
+            </div>
+            <Link href="/sms/gate" className="text-[10px] text-sky-400 hover:text-sky-300 font-bold">
+              View All →
+            </Link>
+          </div>
+
+          <div className="space-y-2">
+            {gatePunchLogs.slice(0, 3).map((p) => (
+              <div key={p.id} className="p-3 bg-black/40 border border-gray-800 rounded-xl flex justify-between items-center text-xs">
+                <div>
+                  <div className="font-bold text-white">{p.studentName}</div>
+                  <div className="text-[10px] text-gray-400">{p.className} • ID: {p.admissionNo}</div>
+                </div>
+                <div className="text-right">
+                  <div className="font-mono text-emerald-400 font-bold">{p.timestamp}</div>
+                  <div className="text-[9px] text-gray-500">{p.punchType.split(" ")[0]}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Widget 2: WhatsApp Broadcast Status */}
+        <div className="bg-[#0b121e] border border-[#1e293b] rounded-2xl p-5 space-y-3 shadow-xl">
+          <div className="flex justify-between items-center border-b border-gray-800 pb-3">
+            <div className="flex items-center gap-2 text-emerald-400 font-black text-xs uppercase">
+              <MessageSquare size={15} />
+              <span>WhatsApp Parent Gateway</span>
+            </div>
+            <Link href="/sms/whatsapp" className="text-[10px] text-emerald-400 hover:text-emerald-300 font-bold">
+              Compose →
+            </Link>
+          </div>
+
+          <div className="space-y-2">
+            {whatsappLogs.slice(0, 3).map((log) => (
+              <div key={log.id} className="p-3 bg-black/40 border border-gray-800 rounded-xl space-y-1 text-xs">
+                <div className="flex justify-between items-center">
+                  <span className="font-bold text-white">{log.recipientName}</span>
+                  <span className="text-[9px] bg-emerald-500/10 text-emerald-300 px-2 py-0.5 rounded font-bold">
+                    ✓✓ {log.status}
+                  </span>
+                </div>
+                <div className="text-[10px] text-gray-400 truncate">{log.message}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Widget 3: Inter-House Championship Standings */}
+        <div className="bg-[#0b121e] border border-[#1e293b] rounded-2xl p-5 space-y-3 shadow-xl">
+          <div className="flex justify-between items-center border-b border-gray-800 pb-3">
+            <div className="flex items-center gap-2 text-amber-400 font-black text-xs uppercase">
+              <Trophy size={15} />
+              <span>House Championship Standings</span>
+            </div>
+            <Link href="/sms/house-system" className="text-[10px] text-amber-400 hover:text-amber-300 font-bold">
+              Leaderboard →
+            </Link>
+          </div>
+
+          <div className="space-y-2">
+            {[...houses].sort((a, b) => b.totalPoints - a.totalPoints).map((h, i) => (
+              <div key={h.id} className="p-2.5 bg-black/40 border border-gray-800 rounded-xl flex justify-between items-center text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="font-black text-xs w-4" style={{ color: h.color }}>#{i + 1}</span>
+                  <span className="font-bold text-white">{h.name}</span>
+                </div>
+                <span className="font-black text-white font-mono">{h.totalPoints} PTS</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ───────────────────────────────────────────────────────────────────────────── */}
       {/* ROLE SPECIFIC VIEW ADAPTER                                                    */}
       {/* ───────────────────────────────────────────────────────────────────────────── */}
 
@@ -168,7 +274,7 @@ export default function SMSDashboard() {
         <div className="space-y-6">
           <div className="flex items-center justify-between border-b border-gray-800 pb-3">
             <div>
-              <h2 className="text-base font-black text-white">Campus Wings &amp; Academic Overview</h2>
+              <h2 className="text-base font-black text-white">Campus Wings &amp; Academic Hierarchy</h2>
               <p className="text-xs text-gray-400">Hierarchical breakdown by Wings, Class Sections, and Incharge Masters.</p>
             </div>
             <Link
@@ -202,7 +308,7 @@ export default function SMSDashboard() {
           <div className="bg-[#0b121e] border border-[#1e293b] rounded-2xl overflow-hidden shadow-xl">
             <div className="p-4 border-b border-gray-800 flex justify-between items-center bg-black/30">
               <h3 className="font-black text-white text-xs uppercase tracking-wider">
-                Class Sections Directory &amp; Student Leaders (CR &amp; GR)
+                Class Sections Directory &amp; Appointed Student Leaders (CR &amp; GR)
               </h3>
               <span className="text-[10px] text-gray-400 font-mono">Strict Section Isolation</span>
             </div>
@@ -292,7 +398,7 @@ export default function SMSDashboard() {
                     {demoStudent.firstName} {demoStudent.lastName}
                   </h3>
                   <p className="text-xs text-gray-400">
-                    {demoStudent.className} • {demoStudent.sectionName} • Roll #{demoStudent.rollNo}
+                    {demoStudent.className} • {demoStudent.sectionName} • Roll #{demoStudent.rollNo} • House: {demoStudent.houseName || "Jinnah House"}
                   </p>
                 </div>
               </div>
