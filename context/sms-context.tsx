@@ -411,6 +411,21 @@ export interface OMRGradingResult {
   gradedAt: string;
 }
 
+export interface SMSUserAccount {
+  id: string;
+  username: string;
+  fullName: string;
+  email: string;
+  password: string;
+  role: SMSRole;
+  linkedEntityId?: string; // studentId or teacherId
+  linkedEntityName?: string;
+  phone?: string;
+  status: "Active" | "Suspended" | "Pending";
+  createdAt: string;
+  lastLogin?: string;
+}
+
 // ─── CONTEXT PROPS ────────────────────────────────────────────────────────────
 
 interface SMSContextType {
@@ -427,6 +442,7 @@ interface SMSContextType {
   classes: SMSClassSection[];
   students: StudentRecord[];
   teachers: TeacherRecord[];
+  users: SMSUserAccount[];
   attendance: SMSAttendanceRecord[];
   examTerms: SMSExamTerm[];
   marks: SMSMarksEntry[];
@@ -464,6 +480,13 @@ interface SMSContextType {
   updateTeacher: (id: string, updates: Partial<TeacherRecord>) => void;
   deleteTeacher: (id: string) => void;
   
+  // User Management Actions
+  addUserAccount: (user: Omit<SMSUserAccount, "id" | "createdAt">) => SMSUserAccount;
+  updateUserAccount: (id: string, updates: Partial<SMSUserAccount>) => void;
+  deleteUserAccount: (id: string) => void;
+  generateStudentCredentialsBatch: () => number;
+  generateTeacherCredentialsBatch: () => number;
+
   // Class & Section Actions
   addClassSection: (section: Omit<SMSClassSection, "id" | "enrolledCount">) => SMSClassSection;
   updateClassSection: (id: string, updates: Partial<SMSClassSection>) => void;
@@ -926,6 +949,92 @@ const INITIAL_NOTICES: SchoolNotice[] = [
   { id: "NOT-02", title: "Annual Science Olympiad Registration Open", category: "Academic", targetAudience: "Students", date: "2026-08-10", content: "Registrations for BISE National Science Olympiad 2026 are now open. Interested students contact Sir Shahid Mehmood before 25th August.", isPinned: false }
 ];
 
+const INITIAL_USERS: SMSUserAccount[] = [
+  {
+    id: "USR-001",
+    username: "owner",
+    fullName: "Mian Talal (Patron-in-Chief)",
+    email: "owner@mtcore.edu.pk",
+    password: "Owner@123",
+    role: "Owner",
+    phone: "0300-1234567",
+    status: "Active",
+    createdAt: "2025-04-01"
+  },
+  {
+    id: "USR-002",
+    username: "principal",
+    fullName: "Prof. Muhammad Aslam (Principal)",
+    email: "principal@mtcore.edu.pk",
+    password: "Head@123",
+    role: "Principal",
+    phone: "0321-7654321",
+    status: "Active",
+    createdAt: "2025-04-01"
+  },
+  {
+    id: "USR-003",
+    username: "teacher.shahid",
+    fullName: "Sir Shahid Mehmood (Physics)",
+    email: "teacher.shahid@mtcore.edu.pk",
+    password: "Teacher@123",
+    role: "Teacher",
+    linkedEntityId: "TCH-01",
+    linkedEntityName: "Sir Shahid Mehmood",
+    phone: "0300-1234567",
+    status: "Active",
+    createdAt: "2025-04-01"
+  },
+  {
+    id: "USR-004",
+    username: "student.ahmed",
+    fullName: "Ahmed Talal (Class 9)",
+    email: "student.ahmed@mtcore.edu.pk",
+    password: "Student@123",
+    role: "Student",
+    linkedEntityId: "STU-001",
+    linkedEntityName: "Ahmed Talal",
+    phone: "0300-1122334",
+    status: "Active",
+    createdAt: "2025-04-01"
+  },
+  {
+    id: "USR-005",
+    username: "parent.tariq",
+    fullName: "Tariq Mahmood (Father of Ahmed)",
+    email: "parent.tariq@gmail.com",
+    password: "Parent@123",
+    role: "Parent",
+    linkedEntityId: "STU-001",
+    linkedEntityName: "Ahmed Talal",
+    phone: "0300-1122334",
+    status: "Active",
+    createdAt: "2025-04-01"
+  },
+  {
+    id: "USR-006",
+    username: "accountant",
+    fullName: "Kashif Nisar (Accounts Incharge)",
+    email: "finance@mtcore.edu.pk",
+    password: "Finance@123",
+    role: "Finance",
+    phone: "0322-9988776",
+    status: "Active",
+    createdAt: "2025-04-01"
+  },
+  {
+    id: "USR-007",
+    username: "hr.manager",
+    fullName: "Sobia Akram (HR Officer)",
+    email: "hr@mtcore.edu.pk",
+    password: "HR@123",
+    role: "HR",
+    phone: "0333-5566778",
+    status: "Active",
+    createdAt: "2025-04-01"
+  }
+];
+
 // ─── PROVIDER COMPONENT ───────────────────────────────────────────────────────
 
 export function SMSProvider({ children }: { children: ReactNode }) {
@@ -939,6 +1048,7 @@ export function SMSProvider({ children }: { children: ReactNode }) {
   const [classes, setClasses] = useState<SMSClassSection[]>(INITIAL_CLASSES);
   const [students, setStudents] = useState<StudentRecord[]>(INITIAL_STUDENTS);
   const [teachers, setTeachers] = useState<TeacherRecord[]>(INITIAL_TEACHERS);
+  const [users, setUsers] = useState<SMSUserAccount[]>(INITIAL_USERS);
   const [attendance, setAttendance] = useState<SMSAttendanceRecord[]>([]);
   const [examTerms, setExamTerms] = useState<SMSExamTerm[]>(INITIAL_EXAM_TERMS);
   const [marks, setMarks] = useState<SMSMarksEntry[]>(INITIAL_MARKS);
@@ -1501,6 +1611,114 @@ export function SMSProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const addUserAccount = (userData: Omit<SMSUserAccount, "id" | "createdAt">): SMSUserAccount => {
+    const newUser: SMSUserAccount = {
+      ...userData,
+      id: `USR-${Date.now()}-${Math.floor(10 + Math.random() * 90)}`,
+      createdAt: new Date().toISOString().split("T")[0]
+    };
+    const updated = [newUser, ...users];
+    setUsers(updated);
+    persist("mt_sms_users", updated);
+    return newUser;
+  };
+
+  const updateUserAccount = (id: string, updates: Partial<SMSUserAccount>) => {
+    const updated = users.map((u) => (u.id === id ? { ...u, ...updates } : u));
+    setUsers(updated);
+    persist("mt_sms_users", updated);
+  };
+
+  const deleteUserAccount = (id: string) => {
+    const updated = users.filter((u) => u.id !== id);
+    setUsers(updated);
+    persist("mt_sms_users", updated);
+  };
+
+  const generateStudentCredentialsBatch = (): number => {
+    let createdCount = 0;
+    const newUsers = [...users];
+    
+    students.forEach((st) => {
+      // 1. Check if student already has a user account
+      const studentExists = newUsers.some((u) => u.role === "Student" && u.linkedEntityId === st.id);
+      if (!studentExists) {
+        const cleanAdm = st.admissionNo.toLowerCase().replace(/[^a-z0-9]/g, "");
+        const studentUser: SMSUserAccount = {
+          id: `USR-STU-${st.id}`,
+          username: cleanAdm,
+          fullName: `${st.firstName} ${st.lastName}`,
+          email: `${cleanAdm}@student.mtcore.edu.pk`,
+          password: `Student@${st.rollNo.padStart(2, "0")}`,
+          role: "Student",
+          linkedEntityId: st.id,
+          linkedEntityName: `${st.firstName} ${st.lastName}`,
+          phone: st.fatherPhone,
+          status: "Active",
+          createdAt: new Date().toISOString().split("T")[0]
+        };
+        newUsers.push(studentUser);
+        createdCount++;
+      }
+
+      // 2. Check if parent already has a user account
+      const parentExists = newUsers.some((u) => u.role === "Parent" && (u.linkedEntityId === st.id || (st.fatherPhone && u.phone === st.fatherPhone)));
+      if (!parentExists) {
+        const cleanAdm = st.admissionNo.toLowerCase().replace(/[^a-z0-9]/g, "");
+        const parentUser: SMSUserAccount = {
+          id: `USR-PAR-${st.id}`,
+          username: `p_${cleanAdm}`,
+          fullName: `${st.fatherName} (P/O ${st.firstName})`,
+          email: `parent.${cleanAdm}@parent.mtcore.edu.pk`,
+          password: `Parent@${st.rollNo.padStart(2, "0")}`,
+          role: "Parent",
+          linkedEntityId: st.id,
+          linkedEntityName: `${st.firstName} ${st.lastName}`,
+          phone: st.fatherPhone,
+          status: "Active",
+          createdAt: new Date().toISOString().split("T")[0]
+        };
+        newUsers.push(parentUser);
+        createdCount++;
+      }
+    });
+
+    setUsers(newUsers);
+    persist("mt_sms_users", newUsers);
+    return createdCount;
+  };
+
+  const generateTeacherCredentialsBatch = (): number => {
+    let createdCount = 0;
+    const newUsers = [...users];
+
+    teachers.forEach((t) => {
+      const exists = newUsers.some((u) => u.role === "Teacher" && (u.linkedEntityId === t.id || u.email === t.email));
+      if (!exists) {
+        const cleanCode = t.employeeCode.toLowerCase().replace(/[^a-z0-9]/g, "");
+        const teacherUser: SMSUserAccount = {
+          id: `USR-TCH-${t.id}`,
+          username: cleanCode,
+          fullName: t.fullName,
+          email: t.email || `${cleanCode}@faculty.mtcore.edu.pk`,
+          password: `Faculty@123`,
+          role: "Teacher",
+          linkedEntityId: t.id,
+          linkedEntityName: t.fullName,
+          phone: t.phone,
+          status: "Active",
+          createdAt: new Date().toISOString().split("T")[0]
+        };
+        newUsers.push(teacherUser);
+        createdCount++;
+      }
+    });
+
+    setUsers(newUsers);
+    persist("mt_sms_users", newUsers);
+    return createdCount;
+  };
+
   return (
     <SMSContext.Provider
       value={{
@@ -1515,6 +1733,7 @@ export function SMSProvider({ children }: { children: ReactNode }) {
         classes,
         students,
         teachers,
+        users,
         attendance,
         examTerms,
         marks,
@@ -1545,6 +1764,11 @@ export function SMSProvider({ children }: { children: ReactNode }) {
         addTeacher,
         updateTeacher,
         deleteTeacher,
+        addUserAccount,
+        updateUserAccount,
+        deleteUserAccount,
+        generateStudentCredentialsBatch,
+        generateTeacherCredentialsBatch,
         addClassSection,
         updateClassSection,
         deleteClassSection,

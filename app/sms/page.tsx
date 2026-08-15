@@ -94,6 +94,13 @@ export default function SMSDashboard() {
 
           <div className="flex flex-wrap gap-2.5 shrink-0">
             <Link
+              href="/sms/users"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs shadow-lg shadow-indigo-600/20 transition cursor-pointer"
+            >
+              <Users size={14} />
+              <span>User Credentials &amp; RBAC</span>
+            </Link>
+            <Link
               href="/sms/whatsapp"
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-lg shadow-emerald-600/20 transition cursor-pointer"
             >

@@ -113,7 +113,8 @@ export default function SMSSidebar() {
       icon: LayoutDashboard,
       color: "text-sky-400",
       items: [
-        { href: "/sms", label: "Main Executive Dashboard", icon: LayoutDashboard },
+        { href: "/sms", label: "Executive Dashboard", icon: LayoutDashboard },
+        { href: "/sms/users", label: "User Accounts & Logins", icon: Users, badge: "Auth" },
         { href: "/sms/whatsapp", label: "WhatsApp Broadcast Hub", icon: MessageSquare, badge: "Auto" }
       ]
     },
@@ -183,6 +184,99 @@ export default function SMSSidebar() {
       ]
     }
   ];
+
+  // Strict Role-Based Access Control Filtering (RBAC)
+  const allowedGroups = navGroups
+    .map((group) => {
+      const allowedItems = group.items.filter((item) => {
+        // Owner & Principal have 100% full access
+        if (activeRole === "Owner" || activeRole === "Principal") return true;
+
+        if (activeRole === "Student") {
+          const studentAllowed = [
+            "/sms",
+            "/sms/lms",
+            "/sms/attendance",
+            "/sms/exams",
+            "/sms/fees",
+            "/sms/timetable",
+            "/sms/leaderboard",
+            "/sms/certificates",
+            "/sms/library",
+            "/sms/transport",
+            "/sms/house-system"
+          ];
+          return studentAllowed.includes(item.href);
+        }
+
+        if (activeRole === "Parent") {
+          const parentAllowed = [
+            "/sms",
+            "/sms/students",
+            "/sms/fees",
+            "/sms/exams",
+            "/sms/attendance",
+            "/sms/ptm",
+            "/sms/gate",
+            "/sms/leaderboard",
+            "/sms/transport"
+          ];
+          return parentAllowed.includes(item.href);
+        }
+
+        if (activeRole === "Teacher") {
+          const teacherAllowed = [
+            "/sms",
+            "/sms/classes",
+            "/sms/teachers",
+            "/sms/attendance",
+            "/sms/exams",
+            "/sms/lesson-planner",
+            "/sms/paper-generator",
+            "/sms/omr-grader",
+            "/sms/timetable",
+            "/sms/lms",
+            "/sms/ptm",
+            "/sms/leaderboard"
+          ];
+          return teacherAllowed.includes(item.href);
+        }
+
+        if (activeRole === "Finance") {
+          const financeAllowed = [
+            "/sms",
+            "/sms/fees",
+            "/sms/faculty-payroll",
+            "/sms/hostel",
+            "/sms/transport"
+          ];
+          return financeAllowed.includes(item.href);
+        }
+
+        if (activeRole === "HR") {
+          const hrAllowed = [
+            "/sms",
+            "/sms/teachers",
+            "/sms/attendance",
+            "/sms/faculty-payroll",
+            "/sms/gate",
+            "/sms/clinic",
+            "/sms/hostel",
+            "/sms/transport",
+            "/sms/users"
+          ];
+          return hrAllowed.includes(item.href);
+        }
+
+        return false;
+      });
+
+      return {
+        ...group,
+        items: allowedItems
+      };
+    })
+    .filter((group) => group.items.length > 0);
 
   return (
     <aside className="w-64 bg-[#080d14] border-r border-[#1e293b] flex flex-col justify-between shrink-0 min-h-screen font-sans select-none">
@@ -281,9 +375,9 @@ export default function SMSSidebar() {
           </div>
         </div>
 
-        {/* Accordion Collapsible Navigation Groups */}
+        {/* Accordion Collapsible Navigation Groups (Role-Based Filtered) */}
         <nav className="p-2 space-y-2 overflow-y-auto max-h-[calc(100vh-340px)] custom-scrollbar">
-          {navGroups.map((group) => {
+          {allowedGroups.map((group) => {
             const isOpen = !!openGroups[group.id];
             const hasActiveChild = group.items.some(
               (i) => pathname === i.href || (i.href !== "/sms" && pathname.startsWith(i.href))
