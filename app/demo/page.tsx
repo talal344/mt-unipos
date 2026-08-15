@@ -239,6 +239,7 @@ export default function DemoPage() {
                     >
                       <option value="POS (Supermarkets & Retail)">🏬 POS (Supermarkets &amp; Retail Stores)</option>
                       <option value="HRMS (Human Resources & Payroll)">👥 HRMS (Human Resources &amp; Payroll)</option>
+                      <option value="SMS (School & College ERP)">🎓 SMS (School &amp; College Management ERP)</option>
                     </select>
                   </div>
                 </div>

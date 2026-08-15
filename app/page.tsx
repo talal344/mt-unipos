@@ -11,7 +11,7 @@ import {
   Layers, Award, ShieldCheck, BarChart3, Users, Package, Receipt,
   Brain, Smartphone, Globe, CreditCard, Building2, Banknote,
   HeadphonesIcon, RefreshCw, Database, Clock, ChevronRight,
-  Play, Sparkles, Activity, Lock, Server,
+  Play, Sparkles, Activity, Lock, Server, GraduationCap,
   X, Printer, ExternalLink
 } from "lucide-react";
 
@@ -129,28 +129,46 @@ export default function HomePage() {
         <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[900px] h-[400px] bg-brand-sky/4 rounded-full blur-[130px] pointer-events-none" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-          <div className="inline-flex items-center gap-2 bg-brand-dark-surface/90 border border-emerald-500/30 px-3.5 py-1.5 rounded-full mb-6 animate-fade-in-up">
-            <Sparkles className="text-emerald-400 animate-bounce" size={13} />
-            <span className="text-[11px] font-black uppercase tracking-wider text-emerald-400">MT Core — The core technology behind your business.</span>
+          <div className="inline-flex items-center gap-2 bg-[#0b121e] border border-sky-500/30 px-4 py-1.5 rounded-full mb-6 shadow-lg shadow-sky-500/10 animate-fade-in-up">
+            <Sparkles className="text-sky-400 animate-bounce" size={14} />
+            <span className="text-xs font-black uppercase tracking-wider text-sky-400">
+              MT Core 3.0 — The Unified Autonomous Enterprise Ecosystem
+            </span>
           </div>
 
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-none mb-6">
-            <span className="sky-gradient-text">MT Core Enterprise Suite</span>
-            <br /><span className="text-white">The Core Technology Behind Your Business</span>
+          <h1 className="text-4xl sm:text-5xl lg:text-7xl font-black tracking-tight leading-tight mb-6">
+            <span className="bg-gradient-to-r from-sky-400 via-emerald-400 to-purple-400 bg-clip-text text-transparent">
+              One Unified Engine.
+            </span>
+            <br />
+            <span className="text-white">Three Standalone Super-Systems.</span>
           </h1>
 
+          {/* 3 Flagship Pills */}
+          <div className="flex flex-wrap justify-center items-center gap-3 mb-8">
+            <span className="px-3.5 py-1.5 rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/30 text-xs font-bold flex items-center gap-1.5 shadow-sm">
+              <Laptop size={14} /> 🏬 Retail &amp; Supermarket POS ERP
+            </span>
+            <span className="px-3.5 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs font-bold flex items-center gap-1.5 shadow-sm">
+              <Users size={14} /> 👥 Corporate HRMS &amp; Payroll
+            </span>
+            <span className="px-3.5 py-1.5 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/30 text-xs font-bold flex items-center gap-1.5 shadow-sm">
+              <GraduationCap size={14} /> 🎓 School &amp; Campus ERP (SMS)
+            </span>
+          </div>
+
           <p className="max-w-2xl mx-auto text-sm sm:text-base text-gray-400 leading-relaxed mb-10">
-            Power your entire business operations with MT Core. From retail POS ERP and HRMS Payroll to upcoming School, Hospital, and Real Estate enterprise modules.
+            MT Core powers high-volume retail transactions, corporate employee lifecycles, and academic institutional governance through independent, ultra-secure, multi-tenant architectures.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
             <Link href="/demo"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-7 py-3.5 text-sm font-black text-white hover:from-emerald-500 hover:to-teal-500 transition-all transform hover:scale-105 shadow-2xl shadow-emerald-900/30">
-              Request Live Demo <ArrowRight size={16} />
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 via-emerald-500 to-purple-500 px-8 py-4 text-sm font-black text-black hover:opacity-95 transition-all transform hover:scale-105 shadow-2xl shadow-emerald-900/30">
+              Request Free Demo Sandbox <ArrowRight size={16} />
             </Link>
             <Link href="/login"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-brand-dark-border bg-brand-dark-surface/60 hover:bg-brand-dark-surface px-7 py-3.5 text-sm font-bold text-white transition">
-              <Laptop size={14} /> Portal Sign In
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-gray-800 bg-[#0b121e] hover:bg-[#121c2e] px-8 py-4 text-sm font-bold text-white transition">
+              <Laptop size={14} /> Instant Access Portals
             </Link>
           </div>
 

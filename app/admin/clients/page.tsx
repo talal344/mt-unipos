@@ -1261,7 +1261,7 @@ export default function AdminClientsPage() {
     connectivityPlan: "hybrid" as "offline-only" | "online-only" | "hybrid",
     customDealAmount: "",
     customCurrency: "PKR" as "PKR" | "USD",
-    assignedSoftware: "POS" as "POS" | "HRMS",
+    assignedSoftware: "POS" as "POS" | "HRMS" | "SMS",
   });
 
   const [editForm, setEditForm] = useState({
@@ -1809,16 +1809,19 @@ export default function AdminClientsPage() {
                             <div className="font-bold text-white font-sans flex items-center gap-2">
                               <span>{tenant.businessName}</span>
                               {(() => {
-                                const isHRMS = tenant.assignedSoftware === "HRMS" || (tenant.businessType && tenant.businessType.includes("HRMS"));
+                                const isSMS = tenant.assignedSoftware === "SMS" || (tenant.businessType && (tenant.businessType.includes("SMS") || tenant.businessType.includes("School") || tenant.businessType.includes("Campus")));
+                                const isHRMS = tenant.assignedSoftware === "HRMS" || (tenant.businessType && (tenant.businessType.includes("HRMS") || tenant.businessType.includes("Human Resources")));
                                 return (
                                   <span
                                     className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
-                                      isHRMS
+                                      isSMS
+                                        ? "bg-purple-500/20 text-purple-300 border border-purple-500/40"
+                                        : isHRMS
                                         ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
                                         : "bg-sky-500/20 text-sky-400 border border-sky-500/30"
                                     }`}
                                   >
-                                    {isHRMS ? "👥 HRMS" : "🏬 POS"}
+                                    {isSMS ? "🎓 SMS" : isHRMS ? "👥 HRMS" : "🏬 POS"}
                                   </span>
                                 );
                               })()}
@@ -2197,11 +2200,12 @@ export default function AdminClientsPage() {
                   </label>
                   <select
                     value={addForm.assignedSoftware || "POS"}
-                    onChange={(e) => setAddForm({ ...addForm, assignedSoftware: e.target.value as "POS" | "HRMS", businessType: e.target.value === "HRMS" ? "HRMS Enterprise" : "Super Markets" })}
+                    onChange={(e) => setAddForm({ ...addForm, assignedSoftware: e.target.value as "POS" | "HRMS" | "SMS", businessType: e.target.value === "SMS" ? "School Management System" : e.target.value === "HRMS" ? "HRMS Enterprise" : "Super Markets" })}
                     className="w-full bg-black border border-emerald-500/40 p-2.5 rounded text-white font-bold focus:outline-none focus:border-emerald-400 font-sans"
                   >
-                    <option value="POS">🏬 POS (Stores, Retail & Dept Stores)</option>
-                    <option value="HRMS">👥 HRMS (Human Resource & Payroll)</option>
+                    <option value="POS">🏬 POS (Stores, Retail &amp; Dept Stores)</option>
+                    <option value="HRMS">👥 HRMS (Human Resource &amp; Payroll)</option>
+                    <option value="SMS">🎓 SMS (School &amp; College ERP)</option>
                   </select>
                 </div>
               </div>

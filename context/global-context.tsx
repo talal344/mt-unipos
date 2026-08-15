@@ -47,7 +47,7 @@ export interface DemoRequest {
   email: string;
   phone: string;
   country: string;
-  assignedSoftware?: "POS" | "HRMS";
+  assignedSoftware?: "POS" | "HRMS" | "SMS";
   businessType: string;
   date: string;
   status: "Pending" | "Reviewed" | "Under Review" | "Approved" | "Rejected" | "Converted";
@@ -94,7 +94,7 @@ export interface Tenant {
   trialEndsAt?: string;
   connectivityPlan?: "offline-only" | "online-only" | "hybrid";
   licenseExpiresAt?: string;
-  assignedSoftware?: "POS" | "HRMS";
+  assignedSoftware?: "POS" | "HRMS" | "SMS";
 }
 
 // ─── HRMS DATA MODELS ────────────────────────────────────────────────────────
@@ -2619,9 +2619,14 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       throw new Error(`⚠️ Demo Request Blocked: A trial demo request matching ${matchField} already exists! (Ticket: ${pendingDup.ticketNumber})`);
     }
 
+    const isSMS = req.businessType && (req.businessType.includes("SMS") || req.businessType.includes("School") || req.businessType.includes("Campus"));
+    const isHRMS = req.businessType && (req.businessType.includes("HRMS") || req.businessType.includes("Human Resources"));
+    const assignedSoftware: "POS" | "HRMS" | "SMS" = isSMS ? "SMS" : isHRMS ? "HRMS" : "POS";
+
     const ticketNumber = `TKT-${Date.now().toString().slice(-6)}-${Math.floor(10 + Math.random() * 90)}`;
     const newReq: DemoRequest = {
       ...req,
+      assignedSoftware,
       id: `DEMO-${Math.floor(100 + Math.random() * 900)}`,
       ticketNumber,
       date: new Date().toISOString().split("T")[0],
@@ -2675,8 +2680,9 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
 
     // Also auto-register a Trial Tenant so the user can actually log in
     const dealCurrency = customCurrency || "PKR";
-    const isHRMSDemo = (req.assignedSoftware === "HRMS") || (req.businessType && req.businessType.includes("HRMS"));
-    const assignedSoftware: "POS" | "HRMS" = isHRMSDemo ? "HRMS" : "POS";
+    const isSMSDemo = (req.assignedSoftware === "SMS") || (req.businessType && (req.businessType.includes("SMS") || req.businessType.includes("School") || req.businessType.includes("Campus")));
+    const isHRMSDemo = (req.assignedSoftware === "HRMS") || (req.businessType && (req.businessType.includes("HRMS") || req.businessType.includes("Human Resources")));
+    const assignedSoftware: "POS" | "HRMS" | "SMS" = isSMSDemo ? "SMS" : isHRMSDemo ? "HRMS" : "POS";
     const tenantId = generateTenantId(req.businessName, tenants);
 
     const newTenant: Tenant = {
@@ -2685,7 +2691,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       ownerName: req.name,
       email: demoEmail,
       phone: req.phone || "",
-      businessType: req.businessType || (isHRMSDemo ? "HRMS Enterprise" : "Super Markets"),
+      businessType: req.businessType || (isSMSDemo ? "School Management System" : isHRMSDemo ? "HRMS Enterprise" : "Super Markets"),
       assignedSoftware,
       plan: "Professional",
       billingCycle: "monthly",
@@ -2693,7 +2699,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       status: "Trial",
       usersCount: 1,
       monthlyRevenue: 0,
-      branches: ["Main Branch"],
+      branches: ["Main Campus / Branch"],
       defaultCurrency: dealCurrency,
       credentialPresets: [
         { id: `CRED-${Math.floor(1000 + Math.random() * 9000)}`, label: "Demo Owner", email: demoEmail, pass: demoPassword, role: "Owner" }
@@ -2794,15 +2800,17 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       const demoEmail = req.email;
       const demoPassword = `Pass@${Math.floor(1000 + Math.random() * 9000)}`;
       targetTenantId = generateTenantId(req.businessName, tenants);
-      const isHRMS = req.assignedSoftware === "HRMS" || (req.businessType && req.businessType.includes("HRMS"));
+      const isSMS = req.assignedSoftware === "SMS" || (req.businessType && (req.businessType.includes("SMS") || req.businessType.includes("School") || req.businessType.includes("Campus")));
+      const isHRMS = req.assignedSoftware === "HRMS" || (req.businessType && (req.businessType.includes("HRMS") || req.businessType.includes("Human Resources")));
+      const assignedSoftware: "POS" | "HRMS" | "SMS" = isSMS ? "SMS" : isHRMS ? "HRMS" : "POS";
       const newTenant: Tenant = {
         id: targetTenantId,
         businessName: req.businessName,
         ownerName: req.name,
         email: demoEmail,
         phone: req.phone || "",
-        businessType: req.businessType || (isHRMS ? "HRMS Enterprise" : "Super Markets"),
-        assignedSoftware: isHRMS ? "HRMS" : "POS",
+        businessType: req.businessType || (isSMS ? "School Management System" : isHRMS ? "HRMS Enterprise" : "Super Markets"),
+        assignedSoftware,
         plan: options.plan as any,
         billingCycle: options.billingCycle,
         signupDate: now.toISOString().split("T")[0],
@@ -3006,8 +3014,9 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     }
 
     const dealCurrency = tenant.customCurrency || tenant.defaultCurrency || "PKR";
-    const isHRMSTenant = tenant.assignedSoftware === "HRMS" || (tenant.businessType && tenant.businessType.includes("HRMS"));
-    const assignedSoftware: "POS" | "HRMS" = isHRMSTenant ? "HRMS" : (tenant.assignedSoftware || "POS");
+    const isSMSTenant = tenant.assignedSoftware === "SMS" || (tenant.businessType && (tenant.businessType.includes("SMS") || tenant.businessType.includes("School") || tenant.businessType.includes("Campus")));
+    const isHRMSTenant = tenant.assignedSoftware === "HRMS" || (tenant.businessType && (tenant.businessType.includes("HRMS") || tenant.businessType.includes("Human Resources")));
+    const assignedSoftware: "POS" | "HRMS" | "SMS" = isSMSTenant ? "SMS" : isHRMSTenant ? "HRMS" : (tenant.assignedSoftware || "POS");
 
     const newTenant: Tenant = {
       ...tenant,

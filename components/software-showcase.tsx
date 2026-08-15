@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import {
   Laptop,
@@ -12,229 +12,319 @@ import {
   ArrowRight,
   Sparkles,
   CheckCircle2,
-  Clock
+  Clock,
+  Zap,
+  ShieldCheck,
+  Award,
+  BarChart3,
+  TrendingUp,
+  Receipt,
+  FileText,
+  Calendar,
+  Layers,
+  ChevronRight,
+  Printer,
+  QrCode
 } from "lucide-react";
 
 export default function SoftwareShowcase() {
-  const products = [
+  const [activeTab, setActiveTab] = useState<"all" | "pos" | "hrms" | "sms">("all");
+
+  const flagshipProducts = [
     {
       id: "pos",
-      name: "POS & Retail ERP Engine",
-      subtitle: "Point of Sale, Inventory, Multi-Branch & Supermarket Management",
-      icon: Laptop,
-      color: "from-sky-500/20 to-blue-500/20",
+      name: "MT Retail & Supermarket POS ERP",
+      tagline: "Sub-Second Barcode Register, Multi-Branch & Auto Accounting",
+      badge: "Flagship POS ⚡",
+      badgeClass: "bg-sky-500/10 text-sky-400 border-sky-500/30",
+      glowColor: "from-sky-600/30 via-blue-600/10 to-transparent",
       borderColor: "border-sky-500/40 hover:border-sky-400",
-      accentColor: "text-sky-400",
-      badge: "LIVE & ACTIVE ⚡",
-      badgeStyle: "bg-sky-500/10 text-sky-400 border-sky-500/30",
-      description:
-        "Sub-second barcode sales checkout, weight-scale integration, batch expiry tracking, supplier purchase orders, and automated double-entry accounting ledger.",
-      features: [
-        "Sub-second Barcode Checkout",
-        "Multi-Branch Stock Transfer",
-        "Pharmacy Batch & Expiry Alerts",
-        "Double-Entry Accounting & P&L"
+      accentBg: "bg-sky-500/10 text-sky-400",
+      demoLink: "/pos",
+      requestLink: "/demo?line=POS",
+      icon: Laptop,
+      stats: [
+        { label: "Scan Speed", val: "0.12s" },
+        { label: "Branch Sync", val: "Real-time" },
+        { label: "Ledger", val: "Double-Entry" }
       ],
-      link: "/demo?line=POS",
-      cta: "Test POS Demo",
-      active: true
+      features: [
+        "Multi-Lane Barcode Cart Checkout & Weight-Scale",
+        "Pharmacy 60-Day Expiry Alerts & Drug Batch Tracking",
+        "Restaurant Table Grid, Visual KDS & Waiter App",
+        "Multi-Branch Stock Transfers & Auto Reorder POs",
+        "Customer Loyalty Tier Points & Credit Sales Ledger"
+      ]
     },
     {
       id: "hrms",
-      name: "HRMS & Payroll Suite",
-      subtitle: "Human Resource Information System, Attendance, Leaves & Payroll",
-      icon: Users,
-      color: "from-emerald-500/20 to-teal-500/20",
+      name: "MT People & Enterprise HRMS Suite",
+      tagline: "Complete Employee Lifecycle, Biometric Shifts & Payroll",
+      badge: "Enterprise HRMS 👥",
+      badgeClass: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
+      glowColor: "from-emerald-600/30 via-teal-600/10 to-transparent",
       borderColor: "border-emerald-500/40 hover:border-emerald-400",
-      accentColor: "text-emerald-400",
-      badge: "LIVE & ACTIVE ⚡",
-      badgeStyle: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
-      description:
-        "Complete employee lifecycle management, attendance check-in/out roster, manager leave approvals, performance KPIs, and automated month-end salary slip engine.",
-      features: [
-        "Employee Profile Directory (EIS)",
-        "Daily Attendance & Overtime Log",
-        "1-Click Leave Approvals",
-        "Automated Salary & Payslip Engine"
+      accentBg: "bg-emerald-500/10 text-emerald-400",
+      demoLink: "/hrms",
+      requestLink: "/demo?line=HRMS",
+      icon: Users,
+      stats: [
+        { label: "Payroll Gen", val: "1-Click" },
+        { label: "Attendance", val: "Biometric" },
+        { label: "Portals", val: "Employee + Admin" }
       ],
-      link: "/demo?line=HRMS",
-      cta: "Test HRMS Demo",
-      active: true
+      features: [
+        "Employee Information System (EIS) & Digital Dossiers",
+        "Shift Planner, Overtime Matrix & Geofenced Punching",
+        "Multi-Level Leave Approval Hierarchy & Quotas",
+        "Automated Tax, EOBI, PF & Payslip PDF Distribution",
+        "KPI Performance Appraisals & Attrition Analytics"
+      ]
     },
     {
       id: "sms",
-      name: "School Management System (SMS)",
-      subtitle: "Multi-Campus, Student 360, Board Paper Maker, Fee Challans & Results",
-      icon: GraduationCap,
-      color: "from-purple-500/20 to-indigo-500/20",
+      name: "MT Campus & College Management ERP",
+      tagline: "Student 360, Board Paper Maker, 3-Copy Challans & Leaderboard",
+      badge: "Autonomous SMS 🎓",
+      badgeClass: "bg-purple-500/10 text-purple-400 border-purple-500/30",
+      glowColor: "from-purple-600/30 via-indigo-600/10 to-transparent",
       borderColor: "border-purple-500/40 hover:border-purple-400",
-      accentColor: "text-purple-400",
-      badge: "LIVE & ACTIVE ⚡",
-      badgeStyle: "bg-purple-500/10 text-purple-400 border-purple-500/30",
-      description:
-        "Comprehensive academic governance for schools & colleges. Unique GR admission IDs, PVC cards, 3-copy bank fee vouchers, 1-click exam paper builder, smart teacher substitution, and printable A4 report cards.",
-      features: [
-        "Unique Admission GR # & PVC ID Cards",
-        "3-Copy Bank Fee Challan Generator",
-        "Automated Board Exam Paper Builder",
-        "7 Multi-Role Switchable Portals"
+      accentBg: "bg-purple-500/10 text-purple-400",
+      demoLink: "/sms",
+      requestLink: "/demo?line=SMS",
+      icon: GraduationCap,
+      stats: [
+        { label: "Positions", val: "Auto 3D Podium" },
+        { label: "Bank Challan", val: "3-Copy Auto" },
+        { label: "Portals", val: "7 Switchable Roles" }
       ],
-      link: "/sms",
-      cta: "Launch SMS Portal",
-      active: true
-    },
-    {
-      id: "hms",
-      name: "Hospital & Clinic ERP (HMS)",
-      subtitle: "OPD Patient Registry, Doctor Appointments & Lab Reports",
-      icon: Stethoscope,
-      color: "from-pink-500/10 to-rose-500/10",
-      borderColor: "border-pink-500/20",
-      accentColor: "text-pink-400",
-      badge: "COMING SOON 🚀",
-      badgeStyle: "bg-pink-500/10 text-pink-400 border-pink-500/30",
-      description:
-        "End-to-end healthcare system for hospitals and diagnostic labs. E-Prescriptions, patient history, bed management, and medical inventory.",
       features: [
-        "OPD Patient Token System",
-        "Doctor E-Prescriptions",
-        "Diagnostic Lab Test Reports",
-        "Bed & Ward Management"
-      ],
-      link: "#",
-      cta: "In Development",
-      active: false
-    },
-    {
-      id: "realestate",
-      name: "Real Estate & Property ERP",
-      subtitle: "Property Listings, Tenant Rent Agreements & Installments",
-      icon: Building2,
-      color: "from-amber-500/10 to-yellow-500/10",
-      borderColor: "border-amber-500/20",
-      accentColor: "text-amber-400",
-      badge: "COMING SOON 🚀",
-      badgeStyle: "bg-amber-500/10 text-amber-400 border-amber-500/30",
-      description:
-        "Property management software for housing societies and realtors. Rent collection, installment schedules, buyer verification, and commission tracking.",
-      features: [
-        "Property Inventory Ledger",
-        "Rent Agreement Management",
-        "Installment Plan Tracker",
-        "Agent Commission Payouts"
-      ],
-      link: "#",
-      cta: "In Development",
-      active: false
-    },
-    {
-      id: "ecommerce",
-      name: "Omnichannel E-Commerce Engine",
-      subtitle: "Online Store Builder, Inventory Sync & Payment Gateways",
-      icon: ShoppingCart,
-      color: "from-teal-500/10 to-cyan-500/10",
-      borderColor: "border-teal-500/20",
-      accentColor: "text-teal-400",
-      badge: "COMING SOON 🚀",
-      badgeStyle: "bg-teal-500/10 text-teal-400 border-teal-500/30",
-      description:
-        "Direct-to-consumer online webstore seamlessly synchronized with MTCore inventory. Instant checkout, order tracking, and local payment integration.",
-      features: [
-        "Instant Webstore Builder",
-        "Real-Time Inventory Sync",
-        "JazzCash / EasyPaisa / Cards",
-        "Order Delivery Tracking"
-      ],
-      link: "#",
-      cta: "In Development",
-      active: false
+        "Unique Admission GR Numbers, B-Form & PVC Smart ID Cards",
+        "Automated Board Exam Paper Generator from Question Bank",
+        "Dynamic Academic Hall of Fame with 1st/2nd/3rd Podiums",
+        "Smart RFID Gate Attendance, Visitor Passes & SMS Alerts",
+        "Faculty Class-Period Matrix & Student Section Shifting"
+      ]
     }
   ];
 
+  const filtered = activeTab === "all" ? flagshipProducts : flagshipProducts.filter(p => p.id === activeTab);
+
   return (
-    <section className="py-16 bg-[#03060a] border-y border-gray-800/80 font-sans">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-        {/* Section Header */}
+    <section className="relative py-20 bg-black font-sans border-b border-gray-800/80 overflow-hidden">
+      {/* Background Ambient Glows */}
+      <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-96 h-96 bg-sky-500/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/2 right-1/4 -translate-y-1/2 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl pointer-events-none" />
+
+      {/* ───────────────────────────────────────────────────────────────────────────── */}
+      {/* 1. ANIMATED LIVE TICKER MARQUEE                                              */}
+      {/* ───────────────────────────────────────────────────────────────────────────── */}
+      <div className="w-full bg-[#080d15] border-y border-gray-800 py-3 mb-16 overflow-hidden relative">
+        <div className="flex gap-8 whitespace-nowrap animate-marquee text-xs font-mono font-bold text-gray-400">
+          <span className="flex items-center gap-2 text-sky-400">
+            <Sparkles size={14} /> MT CORE 3.0: UNIFIED ENTERPRISE SOFTWARE SUITE
+          </span>
+          <span>•</span>
+          <span className="flex items-center gap-2 text-emerald-400">
+            <CheckCircle2 size={14} /> 1. MT RETAIL &amp; SUPERMARKET POS ERP
+          </span>
+          <span>•</span>
+          <span className="flex items-center gap-2 text-teal-400">
+            <Users size={14} /> 2. MT PEOPLE &amp; ENTERPRISE HRMS SUITE
+          </span>
+          <span>•</span>
+          <span className="flex items-center gap-2 text-purple-400">
+            <GraduationCap size={14} /> 3. MT CAMPUS &amp; SCHOOL MANAGEMENT ERP (SMS)
+          </span>
+          <span>•</span>
+          <span className="text-yellow-400">★ 100% INDEPENDENT ARCHITECTURES • REAL-TIME DATA SYNC • MULTI-TENANT ISOLATED SAAS</span>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-12">
+        {/* Section Title */}
         <div className="text-center max-w-3xl mx-auto space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] font-extrabold uppercase tracking-widest">
-            <Sparkles size={12} /> The MTCore Enterprise Suite
+          <div className="inline-flex items-center gap-2 bg-[#0b121e] border border-sky-500/30 px-3.5 py-1.5 rounded-full text-xs font-black uppercase text-sky-400">
+            <Zap size={14} className="text-sky-400" />
+            <span>3 Industry-Leading Standalone Systems — One Unified Ecosystem</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
-            One Unified Platform. Multiple Specialized SaaS Solutions.
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight">
+            Engineered for <span className="bg-gradient-to-r from-sky-400 via-emerald-400 to-purple-400 bg-clip-text text-transparent">Total Operational Mastery</span>
           </h2>
-          <p className="text-sm text-gray-400">
-            MTCore powers your entire business operations. From high-volume retail POS and enterprise HRMS to upcoming education and healthcare ERPs.
+          <p className="text-sm text-gray-400 leading-relaxed">
+            Whether powering multi-branch retail superstores, corporate workforce payrolls, or high-tier educational campuses, MT Core provides uncompromising speed and deep domain architecture.
           </p>
+
+          {/* Interactive Filter Pills */}
+          <div className="flex flex-wrap justify-center gap-2 pt-4">
+            <button
+              onClick={() => setActiveTab("all")}
+              className={`px-4 py-2 rounded-xl text-xs font-black transition ${
+                activeTab === "all"
+                  ? "bg-white text-black shadow-lg"
+                  : "bg-[#0b121e] text-gray-400 hover:text-white border border-gray-800"
+              }`}
+            >
+              All 3 Systems
+            </button>
+            <button
+              onClick={() => setActiveTab("pos")}
+              className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-1.5 ${
+                activeTab === "pos"
+                  ? "bg-sky-500 text-black shadow-lg shadow-sky-500/20"
+                  : "bg-[#0b121e] text-gray-400 hover:text-sky-400 border border-gray-800"
+              }`}
+            >
+              <Laptop size={14} />
+              <span>Retail POS ERP</span>
+            </button>
+            <button
+              onClick={() => setActiveTab("hrms")}
+              className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-1.5 ${
+                activeTab === "hrms"
+                  ? "bg-emerald-500 text-black shadow-lg shadow-emerald-500/20"
+                  : "bg-[#0b121e] text-gray-400 hover:text-emerald-400 border border-gray-800"
+              }`}
+            >
+              <Users size={14} />
+              <span>HRMS &amp; Payroll</span>
+            </button>
+            <button
+              onClick={() => setActiveTab("sms")}
+              className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-1.5 ${
+                activeTab === "sms"
+                  ? "bg-purple-500 text-black shadow-lg shadow-purple-500/20"
+                  : "bg-[#0b121e] text-gray-400 hover:text-purple-400 border border-gray-800"
+              }`}
+            >
+              <GraduationCap size={14} />
+              <span>School ERP (SMS)</span>
+            </button>
+          </div>
         </div>
 
-        {/* Products Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {products.map((p) => {
-            const Icon = p.icon;
+        {/* ───────────────────────────────────────────────────────────────────────────── */}
+        {/* 2. THE 3 FLAGSHIP SYSTEM CARDS                                               */}
+        {/* ───────────────────────────────────────────────────────────────────────────── */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
+          {filtered.map((prod) => {
+            const Icon = prod.icon;
             return (
               <div
-                key={p.id}
-                className={`bg-[#0b0f17] border ${p.borderColor} p-6 rounded-2xl space-y-4 transition duration-300 relative group flex flex-col justify-between shadow-xl`}
+                key={prod.id}
+                className={`bg-gradient-to-b from-[#0e1626] to-[#080d15] border ${prod.borderColor} rounded-3xl p-7 flex flex-col justify-between shadow-2xl relative overflow-hidden group transition duration-300 transform hover:-translate-y-1.5`}
               >
-                <div className="space-y-4">
-                  {/* Top Bar */}
-                  <div className="flex items-start justify-between gap-2">
-                    <div className={`p-3 rounded-xl bg-gradient-to-br ${p.color} border border-gray-800 ${p.accentColor}`}>
-                      <Icon size={24} />
+                <div className={`absolute top-0 right-0 w-64 h-64 bg-gradient-to-br ${prod.glowColor} rounded-full blur-3xl pointer-events-none`} />
+
+                <div className="space-y-6 relative z-10">
+                  {/* Header Badge */}
+                  <div className="flex justify-between items-center">
+                    <div className={`p-3.5 rounded-2xl ${prod.accentBg} border border-white/10 shadow-lg`}>
+                      <Icon size={26} />
                     </div>
-                    <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider border ${p.badgeStyle}`}>
-                      {p.badge}
+                    <span className={`text-[10px] font-black uppercase px-3 py-1 rounded-full border ${prod.badgeClass}`}>
+                      {prod.badge}
                     </span>
                   </div>
 
-                  {/* Title & Description */}
-                  <div>
-                    <h3 className="text-lg font-extrabold text-white group-hover:text-emerald-400 transition">
-                      {p.name}
+                  {/* Title & Tagline */}
+                  <div className="space-y-1">
+                    <h3 className="text-xl font-black text-white group-hover:text-sky-300 transition">
+                      {prod.name}
                     </h3>
-                    <p className="text-[11px] font-medium text-gray-500 mt-0.5">
-                      {p.subtitle}
+                    <p className="text-xs text-gray-400 font-medium leading-relaxed">
+                      {prod.tagline}
                     </p>
                   </div>
 
-                  <p className="text-xs text-gray-300 leading-relaxed">
-                    {p.description}
-                  </p>
-
-                  {/* Features List */}
-                  <ul className="space-y-2 pt-2 border-t border-gray-800/80 text-xs">
-                    {p.features.map((f, i) => (
-                      <li key={i} className="flex items-center gap-2 text-gray-400">
-                        <CheckCircle2 size={13} className={p.accentColor} />
-                        <span>{f}</span>
-                      </li>
+                  {/* Micro Stats Bar */}
+                  <div className="grid grid-cols-3 gap-2 py-3 border-y border-gray-800/80 bg-black/40 rounded-xl px-3 text-center">
+                    {prod.stats.map((s, idx) => (
+                      <div key={idx} className="space-y-0.5">
+                        <div className="text-[10px] text-gray-500 uppercase font-mono">{s.label}</div>
+                        <div className="text-xs font-black text-white">{s.val}</div>
+                      </div>
                     ))}
-                  </ul>
+                  </div>
+
+                  {/* Feature Checklist */}
+                  <div className="space-y-2.5 pt-1">
+                    <div className="text-[10px] uppercase font-mono font-bold text-gray-500 tracking-wider">
+                      Key Architectural Capabilities
+                    </div>
+                    {prod.features.map((feat, i) => (
+                      <div key={i} className="flex items-start gap-2 text-xs text-gray-300">
+                        <CheckCircle2 size={14} className="shrink-0 text-emerald-400 mt-0.5" />
+                        <span>{feat}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
-                {/* CTA Button */}
-                <div className="pt-4">
-                  {p.active ? (
-                    <Link
-                      href={p.link}
-                      className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs uppercase rounded-xl transition shadow-lg shadow-emerald-900/20"
-                    >
-                      <span>{p.cta}</span>
-                      <ArrowRight size={14} />
-                    </Link>
-                  ) : (
-                    <button
-                      disabled
-                      className="w-full py-3 bg-gray-800/50 text-gray-500 border border-gray-800 font-bold text-xs uppercase rounded-xl cursor-not-allowed flex items-center justify-center gap-2"
-                    >
-                      <Clock size={14} />
-                      <span>{p.cta}</span>
-                    </button>
-                  )}
+                {/* Call to Actions */}
+                <div className="pt-8 space-y-2 relative z-10 border-t border-gray-800/60 mt-6">
+                  <Link
+                    href={prod.demoLink}
+                    className="w-full py-3 px-4 bg-white hover:bg-gray-100 text-black font-black text-xs uppercase rounded-xl flex items-center justify-center gap-2 shadow-lg transition duration-200"
+                  >
+                    <span>Launch Live Interactive Sandbox</span>
+                    <ArrowRight size={14} />
+                  </Link>
+
+                  <Link
+                    href={prod.requestLink}
+                    className="w-full py-2.5 px-4 bg-[#0b121e] hover:bg-gray-800 text-gray-300 hover:text-white border border-gray-800 font-bold text-xs uppercase rounded-xl flex items-center justify-center gap-1.5 transition duration-200"
+                  >
+                    <span>Request Custom Commercial License</span>
+                    <ChevronRight size={14} />
+                  </Link>
                 </div>
               </div>
             );
           })}
+        </div>
+
+        {/* ───────────────────────────────────────────────────────────────────────────── */}
+        {/* 3. FUTURE PIPELINE VERTICALS                                                 */}
+        {/* ───────────────────────────────────────────────────────────────────────────── */}
+        <div className="pt-8 border-t border-gray-800/80">
+          <div className="text-center mb-6">
+            <h4 className="text-xs font-black uppercase tracking-widest text-gray-500 font-mono">
+              In Active Development • Upcoming Enterprise Suites
+            </h4>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+            <div className="bg-[#0b121e]/60 border border-pink-500/20 rounded-2xl p-5 flex items-center gap-4">
+              <div className="p-3 bg-pink-500/10 text-pink-400 rounded-xl">
+                <Stethoscope size={24} />
+              </div>
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <h4 className="text-sm font-black text-white">Hospital &amp; Clinic ERP (HMS)</h4>
+                  <span className="text-[9px] font-bold bg-pink-500/10 text-pink-400 border border-pink-500/30 px-2 py-0.5 rounded">
+                    Q4 2026
+                  </span>
+                </div>
+                <p className="text-xs text-gray-400">OPD Patient Token Registry, Doctor E-Prescriptions &amp; Pathology Lab Sync.</p>
+              </div>
+            </div>
+
+            <div className="bg-[#0b121e]/60 border border-amber-500/20 rounded-2xl p-5 flex items-center gap-4">
+              <div className="p-3 bg-amber-500/10 text-amber-400 rounded-xl">
+                <Building2 size={24} />
+              </div>
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <h4 className="text-sm font-black text-white">Real Estate &amp; Property ERP</h4>
+                  <span className="text-[9px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded">
+                    Q1 2027
+                  </span>
+                </div>
+                <p className="text-xs text-gray-400">Housing Scheme Installments, Tenant Rent Agreements &amp; Plot Verification.</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>

@@ -32,11 +32,13 @@ export default function SMSSettingsPage() {
     classes,
     addClassSection,
     updateClassSection,
-    deleteClassSection
+    deleteClassSection,
+    clearAllDemoData
   } = useSMS();
 
   const [activeTab, setActiveTab] = useState<"classes" | "timetable" | "grading" | "wings" | "general">("classes");
   const [toastMsg, setToastMsg] = useState("");
+  const [showPurgeConfirm, setShowPurgeConfirm] = useState(false);
 
   // Edit / Add Class Modal State
   const [showClassModal, setShowClassModal] = useState(false);
@@ -365,6 +367,87 @@ export default function SMSSettingsPage() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* ───────────────────────────────────────────────────────────────────────────── */}
+      {/* TAB 5: GENERAL & CLEAN SLATE DATA MANAGEMENT                                 */}
+      {/* ───────────────────────────────────────────────────────────────────────────── */}
+      {activeTab === "general" && (
+        <div className="space-y-6 max-w-3xl">
+          <div className="bg-[#0b121e] border border-[#1e293b] rounded-2xl p-6 space-y-4">
+            <h3 className="text-base font-black text-white flex items-center gap-2">
+              <Building2 className="text-sky-400" size={20} />
+              <span>Campus Brand &amp; Affiliation Metadata</span>
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+              <div>
+                <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Institution Name</label>
+                <input
+                  type="text"
+                  defaultValue="MT Core Army Public &amp; Model Higher Secondary System"
+                  className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-bold"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">BISE / FBISE Affiliation Code</label>
+                <input
+                  type="text"
+                  defaultValue="BISE-LHR-99824"
+                  className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-mono"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Danger Zone / Clean Slate */}
+          <div className="bg-gradient-to-r from-red-950/40 to-[#0b121e] border border-red-500/30 rounded-2xl p-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-red-500/20 text-red-400 flex items-center justify-center font-bold">
+                ⚠️
+              </div>
+              <div>
+                <h3 className="text-base font-black text-white">Clean Slate: Purge All Demo &amp; Sample Data</h3>
+                <p className="text-xs text-gray-400">
+                  Wipes all dummy students, sample marks, test fee vouchers, gate visits and OMR grades so you can start with a 100% clean production database.
+                </p>
+              </div>
+            </div>
+
+            {showPurgeConfirm ? (
+              <div className="p-4 bg-red-950/70 border border-red-500/50 rounded-xl space-y-3">
+                <p className="text-xs font-bold text-red-200">
+                  Are you sure you want to delete all sample demo data? This action will reset students, marks, and fees to clean empty states.
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      clearAllDemoData();
+                      setShowPurgeConfirm(false);
+                      setToastMsg("🧹 All demo dummy data has been successfully purged!");
+                      setTimeout(() => setToastMsg(""), 4000);
+                    }}
+                    className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-black text-xs rounded-xl shadow-lg transition"
+                  >
+                    Yes, Purge All Demo Data
+                  </button>
+                  <button
+                    onClick={() => setShowPurgeConfirm(false)}
+                    className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 font-bold text-xs rounded-xl transition"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowPurgeConfirm(true)}
+                className="px-4 py-2.5 bg-red-500/20 hover:bg-red-600 text-red-300 hover:text-white border border-red-500/40 rounded-xl text-xs font-black transition flex items-center gap-2"
+              >
+                <span>🧹 Purge All Demo Dummy Data</span>
+              </button>
+            )}
+          </div>
         </div>
       )}
 

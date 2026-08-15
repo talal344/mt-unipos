@@ -508,6 +508,7 @@ interface SMSContextType {
   bookPTMSlot: (slotId: string, studentId: string, studentName: string, parentName: string) => void;
   logClinicVisit: (visit: Omit<ClinicVisit, "id" | "date" | "time">) => void;
   gradeOMRSheet: (studentId: string, subject: string, answers: Record<number, string>, key: Record<number, string>) => OMRGradingResult;
+  clearAllDemoData: () => void;
 }
 
 const SMSContext = createContext<SMSContextType | undefined>(undefined);
@@ -1477,6 +1478,29 @@ export function SMSProvider({ children }: { children: ReactNode }) {
     return result;
   };
 
+  const clearAllDemoData = () => {
+    setStudents([]);
+    setMarks([]);
+    setAttendance([]);
+    setFeeVouchers([]);
+    setWhatsappLogs([]);
+    setGateVisitors([]);
+    setGatePunchLogs([]);
+    setOnlineApplicants([]);
+    setClinicVisits([]);
+    setOmrResults([]);
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("mt_sms_students");
+      localStorage.removeItem("mt_sms_marks");
+      localStorage.removeItem("mt_sms_attendance");
+      localStorage.removeItem("mt_sms_feevouchers");
+      localStorage.removeItem("mt_sms_whatsapp");
+      localStorage.removeItem("mt_sms_visitors");
+      localStorage.removeItem("mt_sms_applicants");
+      localStorage.removeItem("mt_sms_clinic");
+    }
+  };
+
   return (
     <SMSContext.Provider
       value={{
@@ -1547,7 +1571,8 @@ export function SMSProvider({ children }: { children: ReactNode }) {
         awardHousePoints,
         bookPTMSlot,
         logClinicVisit,
-        gradeOMRSheet
+        gradeOMRSheet,
+        clearAllDemoData
       }}
     >
       {children}
