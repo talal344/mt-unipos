@@ -430,6 +430,9 @@ export interface SMSUserAccount {
 // ─── CONTEXT PROPS ────────────────────────────────────────────────────────────
 
 interface SMSContextType {
+  theme: "light" | "dark";
+  setTheme: (theme: "light" | "dark") => void;
+  toggleTheme: () => void;
   activeRole: SMSRole;
   setActiveRole: (role: SMSRole) => void;
   selectedCampus: string;
@@ -1044,9 +1047,21 @@ const INITIAL_USERS: SMSUserAccount[] = [
 // ─── PROVIDER COMPONENT ───────────────────────────────────────────────────────
 
 export function SMSProvider({ children }: { children: ReactNode }) {
+  const [theme, setThemeState] = useState<"light" | "dark">("light");
   const [activeRole, setActiveRole] = useState<SMSRole>("Owner");
   const [selectedCampus, setSelectedCampus] = useState<string>("CAMP-01");
   const [selectedSession, setSelectedSession] = useState<string>("SESS-2025-26");
+
+  const setTheme = (newTheme: "light" | "dark") => {
+    setThemeState(newTheme);
+    try {
+      localStorage.setItem("mt_sms_theme", newTheme);
+    } catch {}
+  };
+
+  const toggleTheme = () => {
+    setTheme(theme === "light" ? "dark" : "light");
+  };
 
   // State Collections
   const [campuses, setCampuses] = useState<SMSCampus[]>(INITIAL_CAMPUSES);
@@ -1083,6 +1098,9 @@ export function SMSProvider({ children }: { children: ReactNode }) {
   // Load from localStorage
   useEffect(() => {
     try {
+      const storedTheme = localStorage.getItem("mt_sms_theme");
+      if (storedTheme === "light" || storedTheme === "dark") setThemeState(storedTheme);
+
       const storedCampuses = localStorage.getItem("mt_sms_campuses");
       if (storedCampuses) setCampuses(JSON.parse(storedCampuses));
 
@@ -1804,6 +1822,9 @@ export function SMSProvider({ children }: { children: ReactNode }) {
   return (
     <SMSContext.Provider
       value={{
+        theme,
+        setTheme,
+        toggleTheme,
         activeRole,
         setActiveRole,
         selectedCampus,

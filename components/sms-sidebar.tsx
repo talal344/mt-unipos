@@ -58,6 +58,7 @@ interface NavGroup {
 export default function SMSSidebar() {
   const pathname = usePathname();
   const {
+    theme,
     activeRole,
     setActiveRole,
     campuses,
@@ -67,6 +68,8 @@ export default function SMSSidebar() {
     selectedSession,
     setSelectedSession
   } = useSMS();
+
+  const isLight = theme === "light";
 
   const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
 
@@ -272,32 +275,34 @@ export default function SMSSidebar() {
     .filter((group) => group.items.length > 0);
 
   return (
-    <aside className="w-64 bg-[#080d14] border-r border-[#1e293b] flex flex-col justify-between shrink-0 min-h-screen font-sans select-none">
+    <aside className={`w-64 transition-colors duration-200 ${
+      isLight ? "bg-white border-r border-slate-200 text-slate-900 shadow-sm" : "bg-[#080d14] border-r border-[#1e293b] text-white"
+    } flex flex-col justify-between shrink-0 min-h-screen font-sans select-none`}>
       {/* Top Section */}
       <div className="flex flex-col">
         {/* Brand Header */}
-        <div className="p-4 border-b border-[#1e293b] flex items-center justify-between">
+        <div className={`p-4 border-b ${isLight ? "border-slate-200" : "border-[#1e293b]"} flex items-center justify-between`}>
           <Link href="/sms" className="flex items-center gap-3 group">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-600 via-indigo-600 to-cyan-400 flex items-center justify-center text-white shadow-lg shadow-sky-600/20 group-hover:scale-105 transition duration-300">
               <GraduationCap size={22} className="animate-pulse" />
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="font-black tracking-tight text-white text-base">MT CORE</span>
-                <span className="text-[10px] bg-sky-500/20 border border-sky-500/40 text-sky-400 font-black px-1.5 py-0.2 rounded uppercase">
+                <span className={`font-black tracking-tight ${isLight ? "text-slate-900" : "text-white"} text-base`}>MT CORE</span>
+                <span className="text-[10px] bg-sky-500/20 border border-sky-500/40 text-sky-500 font-black px-1.5 py-0.2 rounded uppercase">
                   SMS
                 </span>
               </div>
-              <span className="text-[10px] text-gray-400 block font-medium">Enterprise School ERP</span>
+              <span className={`text-[10px] ${isLight ? "text-slate-500" : "text-gray-400"} block font-medium`}>Enterprise School ERP</span>
             </div>
           </Link>
         </div>
 
         {/* Multi-Role Switcher */}
-        <div className="p-3 border-b border-[#1e293b] bg-black/30">
-          <div className="text-[9px] uppercase font-bold text-gray-400 mb-1.5 flex items-center justify-between">
+        <div className={`p-3 border-b ${isLight ? "border-slate-200 bg-slate-50" : "border-[#1e293b] bg-black/30"}`}>
+          <div className={`text-[9px] uppercase font-bold ${isLight ? "text-slate-500" : "text-gray-400"} mb-1.5 flex items-center justify-between`}>
             <span>Active Perspective</span>
-            <span className="text-[9px] text-sky-400 font-mono">RBAC</span>
+            <span className="text-[9px] text-sky-500 font-mono">RBAC</span>
           </div>
 
           <div className="relative">
@@ -310,7 +315,9 @@ export default function SMSSidebar() {
             </button>
 
             {roleDropdownOpen && (
-              <div className="absolute top-full left-0 right-0 mt-1.5 bg-[#0e1624] border border-[#1e293b] rounded-xl shadow-2xl z-50 p-1 space-y-0.5 animate-fade-in-up">
+              <div className={`absolute top-full left-0 right-0 mt-1.5 ${
+                isLight ? "bg-white border-slate-200 shadow-2xl text-slate-900" : "bg-[#0e1624] border-[#1e293b] shadow-2xl text-white"
+              } border rounded-xl z-50 p-1 space-y-0.5 animate-fade-in-up`}>
                 {(["Owner", "Principal", "Teacher", "Student", "Parent", "HR", "Finance"] as SMSRole[]).map((r) => (
                   <button
                     key={r}
@@ -319,7 +326,11 @@ export default function SMSSidebar() {
                       setRoleDropdownOpen(false);
                     }}
                     className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition flex items-center justify-between ${
-                      activeRole === r ? "bg-sky-600 text-white" : "text-gray-300 hover:bg-white/5 hover:text-white"
+                      activeRole === r
+                        ? "bg-sky-600 text-white"
+                        : isLight
+                        ? "text-slate-700 hover:bg-slate-100"
+                        : "text-gray-300 hover:bg-white/5 hover:text-white"
                     }`}
                   >
                     <span>{roleColors[r].label}</span>
@@ -332,15 +343,17 @@ export default function SMSSidebar() {
         </div>
 
         {/* Campus & Session Quick Selector */}
-        <div className="p-3 border-b border-[#1e293b] space-y-2 text-xs">
+        <div className={`p-3 border-b ${isLight ? "border-slate-200" : "border-[#1e293b]"} space-y-2 text-xs`}>
           <div>
-            <div className="flex justify-between text-[9px] font-bold text-gray-400 uppercase mb-1">
+            <div className={`flex justify-between text-[9px] font-bold ${isLight ? "text-slate-500" : "text-gray-400"} uppercase mb-1`}>
               <span>Campus Branch</span>
             </div>
             <select
               value={selectedCampus}
               onChange={(e) => setSelectedCampus(e.target.value)}
-              className="w-full bg-black/60 border border-[#1e293b] p-1.5 rounded-lg text-[11px] text-white font-semibold focus:outline-none focus:border-sky-500"
+              className={`w-full ${
+                isLight ? "bg-slate-50 border-slate-200 text-slate-900" : "bg-black/60 border-[#1e293b] text-white"
+              } border p-1.5 rounded-lg text-[11px] font-semibold focus:outline-none focus:border-sky-500`}
             >
               {campuses.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -351,13 +364,15 @@ export default function SMSSidebar() {
           </div>
 
           <div>
-            <div className="flex justify-between text-[9px] font-bold text-gray-400 uppercase mb-1">
+            <div className={`flex justify-between text-[9px] font-bold ${isLight ? "text-slate-500" : "text-gray-400"} uppercase mb-1`}>
               <span>Academic Session</span>
             </div>
             <select
               value={selectedSession}
               onChange={(e) => setSelectedSession(e.target.value)}
-              className="w-full bg-black/60 border border-[#1e293b] p-1.5 rounded-lg text-[11px] text-emerald-400 font-mono font-bold focus:outline-none focus:border-emerald-500"
+              className={`w-full ${
+                isLight ? "bg-slate-50 border-slate-200 text-emerald-700" : "bg-black/60 border-[#1e293b] text-emerald-400"
+              } border p-1.5 rounded-lg text-[11px] font-mono font-bold focus:outline-none focus:border-emerald-500`}
             >
               {sessions.map((s) => (
                 <option key={s.id} value={s.id}>
@@ -378,13 +393,17 @@ export default function SMSSidebar() {
             const GroupIcon = group.icon;
 
             return (
-              <div key={group.id} className="rounded-xl overflow-hidden border border-transparent hover:border-gray-800/80 transition">
+              <div key={group.id} className="rounded-xl overflow-hidden border border-transparent transition">
                 {/* Accordion Header Button */}
                 <button
                   onClick={() => toggleGroup(group.id)}
                   className={`w-full flex items-center justify-between px-3 py-2 text-xs font-black tracking-wide uppercase transition rounded-xl ${
                     hasActiveChild
-                      ? "bg-white/[0.04] text-white"
+                      ? isLight
+                        ? "bg-slate-100 text-slate-950 font-black"
+                        : "bg-white/[0.04] text-white"
+                      : isLight
+                      ? "text-slate-600 hover:text-slate-950 hover:bg-slate-100/70"
                       : "text-gray-400 hover:text-white hover:bg-white/[0.02]"
                   }`}
                 >
@@ -394,15 +413,15 @@ export default function SMSSidebar() {
                   </div>
                   <ChevronDown
                     size={13}
-                    className={`text-gray-500 transition-transform duration-200 ${
-                      isOpen ? "rotate-0 text-white" : "-rotate-90"
+                    className={`${isLight ? "text-slate-400" : "text-gray-500"} transition-transform duration-200 ${
+                      isOpen ? "rotate-0 text-sky-600" : "-rotate-90"
                     }`}
                   />
                 </button>
 
                 {/* Dropdown Items (Collapsible body) */}
                 {isOpen && (
-                  <div className="mt-1 pl-2 space-y-0.5 border-l-2 border-gray-800/60 ml-3.5 mb-1 animate-fade-in-up">
+                  <div className={`mt-1 pl-2 space-y-0.5 border-l-2 ${isLight ? "border-slate-200" : "border-gray-800/60"} ml-3.5 mb-1 animate-fade-in-up`}>
                     {group.items.map((item) => {
                       const Icon = item.icon;
                       const isActive =
@@ -415,11 +434,13 @@ export default function SMSSidebar() {
                           className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-semibold transition ${
                             isActive
                               ? "bg-gradient-to-r from-sky-600 to-indigo-600 text-white font-bold shadow-md shadow-sky-600/20"
+                              : isLight
+                              ? "text-slate-600 hover:text-slate-950 hover:bg-slate-100"
                               : "text-gray-400 hover:text-white hover:bg-white/5"
                           }`}
                         >
                           <div className="flex items-center gap-2">
-                            <Icon size={14} className={isActive ? "text-white" : "text-gray-400"} />
+                            <Icon size={14} className={isActive ? "text-white" : isLight ? "text-slate-500" : "text-gray-400"} />
                             <span className="text-[11px]">{item.label}</span>
                           </div>
                           {item.badge && (
@@ -428,8 +449,8 @@ export default function SMSSidebar() {
                                 isActive
                                   ? "bg-white/20 text-white"
                                   : item.badge.includes("OMR") || item.badge === "Auto"
-                                  ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
-                                  : "bg-sky-500/20 text-sky-300 border border-sky-500/40"
+                                  ? "bg-emerald-500/20 text-emerald-600 border border-emerald-500/40"
+                                  : "bg-sky-500/20 text-sky-600 border border-sky-500/40"
                               }`}
                             >
                               {item.badge}
@@ -447,16 +468,18 @@ export default function SMSSidebar() {
       </div>
 
       {/* Footer Return Navigation */}
-      <div className="p-3 border-t border-[#1e293b] bg-black/40 space-y-2">
+      <div className={`p-3 border-t ${isLight ? "border-slate-200 bg-slate-50" : "border-[#1e293b] bg-black/40"} space-y-2`}>
         <Link
           href="/"
-          className="flex items-center justify-between p-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white text-xs font-bold transition group border border-white/5"
+          className={`flex items-center justify-between p-2.5 rounded-xl ${
+            isLight ? "bg-white hover:bg-slate-100 text-slate-700 hover:text-slate-950 border border-slate-200" : "bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white border border-white/5"
+          } text-xs font-bold transition group`}
         >
           <div className="flex items-center gap-2">
             <ArrowLeft size={14} className="group-hover:-translate-x-1 transition" />
             <span>Main Platform</span>
           </div>
-          <span className="text-[9px] text-gray-500 uppercase">POS &amp; HRMS</span>
+          <span className={`text-[9px] ${isLight ? "text-slate-400" : "text-gray-500"} uppercase`}>POS &amp; HRMS</span>
         </Link>
       </div>
     </aside>
