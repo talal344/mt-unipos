@@ -70,15 +70,8 @@ export default function SMSSidebar() {
 
   const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
 
-  // Accordion open/close state for all sidebar groups
-  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
-    hub: true,
-    students: true,
-    academics: true,
-    exams: true,
-    finance: true,
-    campus: false
-  });
+  // Accordion open/close state for all sidebar groups (Closed by default)
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
 
   const toggleGroup = (groupId: string) => {
     setOpenGroups((prev) => ({

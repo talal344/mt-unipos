@@ -27,7 +27,10 @@ import {
   UserCheck,
   AlertCircle,
   X,
-  RefreshCw
+  Plus,
+  CheckSquare,
+  Square,
+  AlertTriangle
 } from "lucide-react";
 
 export default function SMSUsersManagementPage() {
@@ -58,12 +61,16 @@ export default function SMSUsersManagementPage() {
     fullName: "",
     email: "",
     password: "",
-    role: "Teacher" as SMSRole,
+    role: "Parent" as SMSRole,
     linkedEntityId: "",
     linkedEntityName: "",
+    linkedStudentIds: [] as string[],
     phone: "",
     status: "Active" as "Active" | "Suspended" | "Pending"
   });
+
+  // Student Search in Modal for Parent Linking
+  const [studentSearch, setStudentSearch] = useState("");
 
   const roleColors: Record<SMSRole, { bg: string; text: string; border: string; label: string }> = {
     Owner: { bg: "bg-amber-500/10", text: "text-amber-400", border: "border-amber-500/30", label: "👑 Owner / Director" },
@@ -91,7 +98,7 @@ export default function SMSUsersManagementPage() {
   };
 
   const copyCredentials = (u: SMSUserAccount) => {
-    const text = `MT Core School ERP Credentials\nUsername: ${u.username}\nEmail: ${u.email}\nPassword: ${u.password}\nRole: ${u.role}\nPortal URL: ${window.location.origin}/sms`;
+    const text = `MT Core School ERP Credentials\nTenant Workspace: CAMP-01 (Gulberg Heights)\nUsername: ${u.username}\nEmail: ${u.email}\nPassword: ${u.password}\nRole: ${u.role}\nPortal URL: ${window.location.origin}/login`;
     navigator.clipboard.writeText(text);
     setCopiedId(u.id);
     setToastMsg(`✅ Credentials for ${u.fullName} copied to clipboard!`);
@@ -101,16 +108,24 @@ export default function SMSUsersManagementPage() {
     }, 3000);
   };
 
+  // Username Uniqueness Check
+  const trimmedUsername = form.username.trim().toLowerCase();
+  const isDuplicateUsername = users.some(
+    (u) => u.username.toLowerCase() === trimmedUsername && u.id !== editingUser?.id
+  );
+
   const handleOpenAdd = () => {
     setEditingUser(null);
+    setStudentSearch("");
     setForm({
       username: "",
       fullName: "",
       email: "",
       password: `Pass@${Math.floor(1000 + Math.random() * 9000)}`,
-      role: "Teacher",
+      role: "Parent",
       linkedEntityId: "",
       linkedEntityName: "",
+      linkedStudentIds: [],
       phone: "",
       status: "Active"
     });
@@ -119,6 +134,7 @@ export default function SMSUsersManagementPage() {
 
   const handleOpenEdit = (u: SMSUserAccount) => {
     setEditingUser(u);
+    setStudentSearch("");
     setForm({
       username: u.username,
       fullName: u.fullName,
@@ -127,21 +143,79 @@ export default function SMSUsersManagementPage() {
       role: u.role,
       linkedEntityId: u.linkedEntityId || "",
       linkedEntityName: u.linkedEntityName || "",
+      linkedStudentIds: u.linkedStudentIds || (u.linkedEntityId ? [u.linkedEntityId] : []),
       phone: u.phone || "",
       status: u.status
     });
     setShowModal(true);
   };
 
+  // Toggle child student linkage for Parent user
+  const toggleStudentLink = (stId: string) => {
+    const current = [...form.linkedStudentIds];
+    const exists = current.includes(stId);
+    let updated: string[];
+
+    if (exists) {
+      updated = current.filter((id) => id !== stId);
+    } else {
+      updated = [...current, stId];
+    }
+
+    // Auto-derive primary name if not set
+    let derivedName = form.fullName;
+    if (!form.fullName && updated.length > 0) {
+      const st = students.find((s) => s.id === updated[0]);
+      if (st) {
+        derivedName = `${st.fatherName} (P/O ${st.firstName})`;
+      }
+    }
+
+    setForm({
+      ...form,
+      linkedStudentIds: updated,
+      fullName: derivedName
+    });
+  };
+
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.username || !form.fullName || !form.email) return;
 
+    if (isDuplicateUsername) {
+      alert(`Error: Username "${form.username}" already exists in this tenant. Please enter a unique username.`);
+      return;
+    }
+
+    // Mandatory student check for Parent role
+    if (form.role === "Parent" && form.linkedStudentIds.length === 0) {
+      alert("Validation Error: Parent user must be linked to at least one student child by Admission ID.");
+      return;
+    }
+
+    // Compute linked summary
+    let linkedName = form.linkedEntityName;
+    if (form.role === "Parent" && form.linkedStudentIds.length > 0) {
+      const names = form.linkedStudentIds
+        .map((id) => {
+          const st = students.find((s) => s.id === id);
+          return st ? `${st.firstName} (${st.admissionNo})` : id;
+        })
+        .join(", ");
+      linkedName = names;
+    }
+
+    const payload = {
+      ...form,
+      linkedEntityName: linkedName,
+      linkedEntityId: form.linkedStudentIds[0] || form.linkedEntityId
+    };
+
     if (editingUser) {
-      updateUserAccount(editingUser.id, form);
+      updateUserAccount(editingUser.id, payload);
       setToastMsg(`✅ User credentials for ${form.fullName} updated!`);
     } else {
-      addUserAccount(form);
+      addUserAccount(payload);
       setToastMsg(`✅ New user account created for ${form.fullName}!`);
     }
     setShowModal(false);
@@ -168,6 +242,16 @@ export default function SMSUsersManagementPage() {
     setTimeout(() => setToastMsg(""), 4000);
   };
 
+  // Filter students for linking modal
+  const searchableStudents = students.filter(
+    (st) =>
+      st.firstName.toLowerCase().includes(studentSearch.toLowerCase()) ||
+      st.lastName.toLowerCase().includes(studentSearch.toLowerCase()) ||
+      st.admissionNo.toLowerCase().includes(studentSearch.toLowerCase()) ||
+      st.fatherName.toLowerCase().includes(studentSearch.toLowerCase()) ||
+      st.className.toLowerCase().includes(studentSearch.toLowerCase())
+  );
+
   return (
     <div className="space-y-8 font-sans">
       {/* Toast */}
@@ -185,7 +269,7 @@ export default function SMSUsersManagementPage() {
             <span>SMS User Credential &amp; Role-Based Access Control (RBAC)</span>
           </h1>
           <p className="text-xs text-gray-400">
-            Provision secure login credentials for Students, Teachers, Parents, Accountants, HR &amp; Principals with strict dashboard permissions.
+            Create tenant credentials for Students, Teachers, Parents (with Multi-Child linking), Accountants, HR &amp; Principals.
           </p>
         </div>
 
@@ -264,7 +348,7 @@ export default function SMSUsersManagementPage() {
             <option value="Principal">👔 Principal / Head</option>
             <option value="Teacher">👩‍🏫 Teacher / Faculty</option>
             <option value="Student">🎒 Student</option>
-            <option value="Parent">👨‍👩‍👧 Parent</option>
+            <option value="Parent">👨‍👩‍👧 Parent (Linked Children)</option>
             <option value="Finance">💳 Finance &amp; Accountant</option>
             <option value="HR">👥 School HR</option>
           </select>
@@ -275,10 +359,10 @@ export default function SMSUsersManagementPage() {
       <div className="bg-[#0b121e] border border-[#1e293b] rounded-2xl overflow-hidden shadow-2xl">
         <div className="p-4 border-b border-gray-800 flex justify-between items-center bg-black/40">
           <h3 className="font-black text-white text-xs uppercase tracking-wider">
-            Active School Users &amp; Login Matrix ({filteredUsers.length} Users)
+            Tenant Users &amp; Login Matrix ({filteredUsers.length} Users)
           </h3>
           <span className="text-[10px] text-gray-500 font-mono">
-            Role-Based Authorization Enabled
+            Unique Usernames &bull; Multi-Child Linked
           </span>
         </div>
 
@@ -286,11 +370,11 @@ export default function SMSUsersManagementPage() {
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="border-b border-gray-800 text-gray-400 font-mono text-[10px] bg-black/20">
-                <th className="p-4 font-bold">User / Full Name</th>
+                <th className="p-4 font-bold">User / Legal Name</th>
                 <th className="p-4 font-bold">Assigned Role</th>
-                <th className="p-4 font-bold">Login Username / Email</th>
+                <th className="p-4 font-bold">Tenant Login (Username / Email)</th>
                 <th className="p-4 font-bold">Password &amp; Credentials</th>
-                <th className="p-4 font-bold">Linked Entity Profile</th>
+                <th className="p-4 font-bold">Linked Student(s) / Profile</th>
                 <th className="p-4 font-bold text-center">Status</th>
                 <th className="p-4 font-bold text-right">Actions</th>
               </tr>
@@ -299,6 +383,11 @@ export default function SMSUsersManagementPage() {
               {filteredUsers.map((u) => {
                 const cfg = roleColors[u.role] || roleColors.Teacher;
                 const isRevealed = !!revealedPasswords[u.id];
+
+                // Resolve linked children for parent
+                const linkedChildren = (u.linkedStudentIds || (u.linkedEntityId ? [u.linkedEntityId] : []))
+                  .map((stId) => students.find((s) => s.id === stId))
+                  .filter(Boolean);
 
                 return (
                   <tr key={u.id} className="hover:bg-white/[0.02] transition">
@@ -324,7 +413,9 @@ export default function SMSUsersManagementPage() {
 
                     {/* Username / Email */}
                     <td className="p-4 font-mono">
-                      <div className="text-white font-bold">{u.username}</div>
+                      <div className="text-white font-bold flex items-center gap-1.5">
+                        <span className="text-sky-400">@{u.username}</span>
+                      </div>
                       <div className="text-[10px] text-gray-400">{u.email}</div>
                     </td>
 
@@ -351,14 +442,23 @@ export default function SMSUsersManagementPage() {
                       </div>
                     </td>
 
-                    {/* Linked Profile */}
+                    {/* Linked Profile / Students */}
                     <td className="p-4">
-                      {u.linkedEntityName ? (
+                      {u.role === "Parent" && linkedChildren.length > 0 ? (
+                        <div className="space-y-1">
+                          {linkedChildren.map((st) => (
+                            <div key={st!.id} className="inline-flex items-center gap-1 bg-pink-500/10 border border-pink-500/20 text-pink-300 px-2 py-0.5 rounded text-[10px] font-mono mr-1 mb-1">
+                              <span>🎒 {st!.firstName} {st!.lastName}</span>
+                              <span className="text-pink-400 font-bold">({st!.admissionNo})</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : u.linkedEntityName ? (
                         <span className="text-[10px] bg-gray-800 text-gray-300 px-2 py-0.5 rounded font-mono">
                           🔗 {u.linkedEntityName}
                         </span>
                       ) : (
-                        <span className="text-[10px] text-gray-600">Direct Staff</span>
+                        <span className="text-[10px] text-gray-600">Direct Staff Account</span>
                       )}
                     </td>
 
@@ -414,11 +514,11 @@ export default function SMSUsersManagementPage() {
       </div>
 
       {/* ───────────────────────────────────────────────────────────────────────────── */}
-      {/* ADD / EDIT USER MODAL                                                         */}
+      {/* CREATE / EDIT USER MODAL WITH PARENT MULTI-STUDENT LINKING                    */}
       {/* ───────────────────────────────────────────────────────────────────────────── */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="bg-[#0b121e] border border-sky-500/40 rounded-3xl w-full max-w-lg shadow-2xl p-6 my-8 animate-fade-in-up">
+          <div className="bg-[#0b121e] border border-sky-500/40 rounded-3xl w-full max-w-xl shadow-2xl p-6 my-8 animate-fade-in-up">
             <div className="flex justify-between items-center border-b border-gray-800 pb-3 mb-4">
               <h3 className="font-black text-white text-sm flex items-center gap-2">
                 <Key className="text-sky-400" size={16} />
@@ -436,15 +536,15 @@ export default function SMSUsersManagementPage() {
                   <select
                     value={form.role}
                     onChange={(e) => setForm({ ...form, role: e.target.value as SMSRole })}
-                    className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-bold"
+                    className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-bold focus:border-sky-500"
                   >
-                    <option value="Owner">👑 Owner / Director</option>
-                    <option value="Principal">👔 Principal / Head</option>
-                    <option value="Teacher">👩‍🏫 Teacher / Faculty</option>
+                    <option value="Parent">👨‍👩‍👧 Parent / Guardian</option>
                     <option value="Student">🎒 Student</option>
-                    <option value="Parent">👨‍👩‍👧 Parent</option>
+                    <option value="Teacher">👩‍🏫 Teacher / Faculty</option>
                     <option value="Finance">💳 Finance &amp; Accountant</option>
                     <option value="HR">👥 School HR</option>
+                    <option value="Principal">👔 Principal / Head</option>
+                    <option value="Owner">👑 Owner / Director</option>
                   </select>
                 </div>
 
@@ -461,29 +561,140 @@ export default function SMSUsersManagementPage() {
                 </div>
               </div>
 
+              {/* ───────────────────────────────────────────────────────────── */}
+              {/* PARENT SPECIFIC: MULTI-CHILD LINKING VIA ADMISSION ID        */}
+              {/* ───────────────────────────────────────────────────────────── */}
+              {form.role === "Parent" && (
+                <div className="p-4 bg-black/60 border border-pink-500/30 rounded-2xl space-y-3 animate-fade-in-up">
+                  <div className="flex justify-between items-center">
+                    <label className="text-[11px] uppercase font-bold text-pink-400 flex items-center gap-1.5">
+                      <Users size={14} />
+                      <span>Link Student Children by Admission ID / Name *</span>
+                    </label>
+                    <span className="text-[10px] text-gray-400">
+                      {form.linkedStudentIds.length} Children Linked
+                    </span>
+                  </div>
+
+                  {/* Selected Children Badges */}
+                  {form.linkedStudentIds.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 p-2 bg-pink-500/10 border border-pink-500/20 rounded-xl">
+                      {form.linkedStudentIds.map((stId) => {
+                        const st = students.find((s) => s.id === stId);
+                        return (
+                          <span
+                            key={stId}
+                            className="inline-flex items-center gap-1.5 bg-pink-600 text-white px-2.5 py-1 rounded-lg text-xs font-bold shadow"
+                          >
+                            <span>{st ? `${st.firstName} ${st.lastName}` : stId}</span>
+                            <span className="font-mono text-[10px] opacity-80">({st?.admissionNo})</span>
+                            <button
+                              type="button"
+                              onClick={() => toggleStudentLink(stId)}
+                              className="hover:text-black transition"
+                            >
+                              <X size={12} />
+                            </button>
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* Searchable Student Dropdown Picker */}
+                  <div className="space-y-2">
+                    <div className="relative">
+                      <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                      <input
+                        type="text"
+                        placeholder="Search student by Name, Admission ID (e.g. ADM-2026-0041) or Class..."
+                        value={studentSearch}
+                        onChange={(e) => setStudentSearch(e.target.value)}
+                        className="w-full bg-[#0b121e] border border-gray-800 pl-9 pr-3 py-2 rounded-xl text-xs text-white focus:outline-none focus:border-pink-500"
+                      />
+                    </div>
+
+                    <div className="max-h-40 overflow-y-auto space-y-1 bg-[#0b121e] border border-gray-800 p-2 rounded-xl custom-scrollbar">
+                      {searchableStudents.length === 0 ? (
+                        <div className="text-[11px] text-gray-500 text-center py-2">No students found matching query</div>
+                      ) : (
+                        searchableStudents.map((st) => {
+                          const isSelected = form.linkedStudentIds.includes(st.id);
+                          return (
+                            <div
+                              key={st.id}
+                              onClick={() => toggleStudentLink(st.id)}
+                              className={`p-2 rounded-lg flex items-center justify-between cursor-pointer transition text-xs ${
+                                isSelected
+                                  ? "bg-pink-500/20 text-pink-300 border border-pink-500/30"
+                                  : "hover:bg-white/5 text-gray-300"
+                              }`}
+                            >
+                              <div className="flex items-center gap-2">
+                                {isSelected ? (
+                                  <CheckSquare size={14} className="text-pink-400" />
+                                ) : (
+                                  <Square size={14} className="text-gray-500" />
+                                )}
+                                <div>
+                                  <div className="font-bold text-white">
+                                    {st.firstName} {st.lastName}
+                                  </div>
+                                  <div className="text-[10px] text-gray-400">
+                                    Father: {st.fatherName} &bull; {st.className} ({st.sectionName})
+                                  </div>
+                                </div>
+                              </div>
+                              <span className="font-mono font-bold text-[10px] bg-black/60 px-2 py-0.5 rounded text-sky-400">
+                                {st.admissionNo}
+                              </span>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Full Name */}
               <div>
                 <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Full Legal Name *</label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Sir Shahid Mehmood / Ahmed Talal"
+                  placeholder="e.g. Tariq Mahmood / Sir Shahid Mehmood"
                   value={form.fullName}
                   onChange={(e) => setForm({ ...form, fullName: e.target.value })}
-                  className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-bold"
+                  className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-bold focus:border-sky-500"
                 />
               </div>
 
+              {/* Username with Uniqueness Validation */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Login Username *</label>
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="text-[10px] uppercase font-bold text-gray-400">Login Username *</label>
+                    <span className="text-[9px] text-gray-500">Unique per Tenant</span>
+                  </div>
                   <input
                     type="text"
                     required
-                    placeholder="e.g. teacher.shahid"
+                    placeholder="e.g. parent.tariq"
                     value={form.username}
                     onChange={(e) => setForm({ ...form, username: e.target.value })}
-                    className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-mono"
+                    className={`w-full bg-black border p-2.5 rounded-xl text-white font-mono transition ${
+                      isDuplicateUsername
+                        ? "border-red-500 text-red-300 focus:border-red-400"
+                        : "border-gray-800 focus:border-sky-500"
+                    }`}
                   />
+                  {isDuplicateUsername && (
+                    <div className="text-[10px] text-red-400 font-bold mt-1 flex items-center gap-1">
+                      <AlertTriangle size={11} />
+                      <span>Username already exists in this tenant!</span>
+                    </div>
+                  )}
                 </div>
 
                 <div>
@@ -493,21 +704,22 @@ export default function SMSUsersManagementPage() {
                     required
                     value={form.password}
                     onChange={(e) => setForm({ ...form, password: e.target.value })}
-                    className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-emerald-400 font-mono font-bold"
+                    className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-emerald-400 font-mono font-bold focus:border-sky-500"
                   />
                 </div>
               </div>
 
+              {/* Corporate / Personal Email */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Corporate / Personal Email *</label>
+                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Email Address *</label>
                   <input
                     type="email"
                     required
                     placeholder="user@mtcore.edu.pk"
                     value={form.email}
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
-                    className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white"
+                    className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white focus:border-sky-500"
                   />
                 </div>
 
@@ -518,25 +730,19 @@ export default function SMSUsersManagementPage() {
                     placeholder="0300-1234567"
                     value={form.phone}
                     onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                    className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white"
+                    className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white focus:border-sky-500"
                   />
                 </div>
               </div>
 
-              <div>
-                <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Linked Student / Teacher Record (Optional)</label>
-                <input
-                  type="text"
-                  placeholder="e.g. ADM-2026-0041 or TCH-01"
-                  value={form.linkedEntityName}
-                  onChange={(e) => setForm({ ...form, linkedEntityName: e.target.value })}
-                  className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white"
-                />
-              </div>
-
               <button
                 type="submit"
-                className="w-full py-3 bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-black uppercase rounded-xl transition text-xs shadow-lg"
+                disabled={isDuplicateUsername}
+                className={`w-full py-3 text-white font-black uppercase rounded-xl transition text-xs shadow-lg ${
+                  isDuplicateUsername
+                    ? "bg-gray-700 cursor-not-allowed opacity-50"
+                    : "bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500"
+                }`}
               >
                 Save User Credentials
               </button>

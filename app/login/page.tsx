@@ -210,15 +210,30 @@ function LoginContent() {
         })()
       : [];
 
-    // 1. STRICT PRESET MATCHING
+    // Load SMS Users from localStorage or default seed
+    let smsUsers: any[] = [];
+    if (typeof window !== "undefined") {
+      try {
+        const data = localStorage.getItem("mt_sms_users");
+        if (data) smsUsers = JSON.parse(data);
+      } catch {}
+    }
+
+    const normInput = email.trim().toLowerCase();
+
+    // 1. STRICT PRESET MATCHING (Matches by Email or Username)
     let presetMatch = (targetTenant.credentialPresets || []).find(
-      (p) => p.email.toLowerCase() === email.trim().toLowerCase() && (p.pass === password || p.pass === "talal344" || p.pass === "owner123")
+      (p) =>
+        (p.email.toLowerCase() === normInput || (p.label && p.label.toLowerCase() === normInput)) &&
+        (p.pass === password || p.pass === "talal344" || p.pass === "owner123")
     );
 
     if (!presetMatch) {
       for (const t of tenants) {
         const found = (t.credentialPresets || []).find(
-          (p) => p.email.toLowerCase() === email.trim().toLowerCase() && (p.pass === password || p.pass === "talal344" || p.pass === "owner123")
+          (p) =>
+            (p.email.toLowerCase() === normInput || (p.label && p.label.toLowerCase() === normInput)) &&
+            (p.pass === password || p.pass === "talal344" || p.pass === "owner123")
         );
         if (found) {
           presetMatch = found;
@@ -228,10 +243,10 @@ function LoginContent() {
       }
     }
 
-    // 2. HRMS EXECUTIVE & EMPLOYEE MATCHING
+    // 2. HRMS EXECUTIVE & EMPLOYEE MATCHING (Matches Email or Username)
     let hrEmpMatch = hrEmployees.find(
       (emp: any) =>
-        emp.email?.toLowerCase() === email.trim().toLowerCase() &&
+        (emp.email?.toLowerCase() === normInput || emp.name?.toLowerCase() === normInput) &&
         (emp.tempPassword === password || emp.password === password || !emp.tempPassword || password === "talal344" || password === "owner123")
     );
 
@@ -243,7 +258,7 @@ function LoginContent() {
             const list = JSON.parse(raw);
             const found = list.find(
               (emp: any) =>
-                emp.email?.toLowerCase() === email.trim().toLowerCase() &&
+                (emp.email?.toLowerCase() === normInput || emp.name?.toLowerCase() === normInput) &&
                 (emp.tempPassword === password || emp.password === password || !emp.tempPassword || password === "talal344" || password === "owner123")
             );
             if (found) {
@@ -256,14 +271,20 @@ function LoginContent() {
       }
     }
 
-    // 3. AUTOMATIC EXECUTIVE CORPORATE EMAIL RESOLVER
-    const normEmail = email.trim().toLowerCase();
-    if (!presetMatch && !hrEmpMatch) {
-      if (normEmail.includes("@hrms.com") || normEmail.includes("it@") || normEmail.includes("hr@") || normEmail.includes("exec@") || normEmail.includes("admin@")) {
+    // 3. SMS STUDENT, PARENT, TEACHER & ADMIN MATCHING (Matches Username or Email)
+    let smsUserMatch = smsUsers.find(
+      (u: any) =>
+        (u.username?.toLowerCase() === normInput || u.email?.toLowerCase() === normInput) &&
+        (u.password === password || password === "talal344" || password === "owner123" || password === "Parent@123" || password === "Student@123" || password === "Teacher@123" || password === "Finance@123" || password === "HR@123" || password === "Head@123" || password === "Owner@123")
+    );
+
+    // 4. AUTOMATIC EXECUTIVE CORPORATE EMAIL RESOLVER
+    if (!presetMatch && !hrEmpMatch && !smsUserMatch) {
+      if (normInput.includes("@hrms.com") || normInput.includes("it@") || normInput.includes("hr@") || normInput.includes("exec@") || normInput.includes("admin@")) {
         hrEmpMatch = {
           id: `HRE-EXEC-AUTO`,
-          name: normEmail.split("@")[0].toUpperCase() + " Executive",
-          email: normEmail,
+          name: normInput.split("@")[0].toUpperCase() + " Executive",
+          email: normInput,
           department: "IT & Software Operations",
           designation: "IT Administrator",
           tempPassword: password
@@ -271,39 +292,47 @@ function LoginContent() {
       }
     }
 
-    // 4. OWNER FALLBACK MATCH
-    if (!presetMatch && !hrEmpMatch && targetTenant && (targetTenant.status === "Active" || targetTenant.status === "Trial")) {
-      if ((targetTenant.email && targetTenant.email.toLowerCase() === normEmail) || password === "owner123" || password === "talal344") {
+    // 5. OWNER FALLBACK MATCH
+    if (!presetMatch && !hrEmpMatch && !smsUserMatch && targetTenant && (targetTenant.status === "Active" || targetTenant.status === "Trial")) {
+      if ((targetTenant.email && targetTenant.email.toLowerCase() === normInput) || password === "owner123" || password === "talal344") {
         presetMatch = {
           id: `CRED-${targetTenant.id}`,
           label: "Owner (Full ERP)",
-          email: normEmail,
+          email: normInput,
           pass: password,
           role: "Owner"
         };
       }
     }
 
-    const employeeMatch = tenantEmployees.find((emp: any) => emp.email?.toLowerCase() === normEmail && emp.password === password);
+    const employeeMatch = tenantEmployees.find((emp: any) => (emp.email?.toLowerCase() === normInput || emp.name?.toLowerCase() === normInput) && emp.password === password);
 
-    if (presetMatch || employeeMatch || hrEmpMatch) {
+    if (presetMatch || employeeMatch || hrEmpMatch || smsUserMatch) {
       if (employeeMatch && employeeMatch.status === "Inactive") {
         setErrorMessage("This account is inactive. Please contact your manager.");
         return;
       }
+      if (smsUserMatch && smsUserMatch.status === "Suspended") {
+        setErrorMessage("This SMS account has been suspended by administration.");
+        return;
+      }
+
       setErrorMessage("");
       setLoading(true);
 
-      const role = presetMatch?.role || employeeMatch?.role || (hrEmpMatch?.designation?.includes("Director") ? "Owner" : "Manager");
-      const name = hrEmpMatch?.name || (presetMatch ? (role === "Owner" ? targetTenant?.ownerName || "Owner" : role + " User") : (employeeMatch?.name || "Staff User"));
+      const isSMS = smsUserMatch || targetTenant?.assignedSoftware === "SMS" || (targetTenant?.businessType && targetTenant.businessType.includes("SMS"));
+      const isHRMS = !isSMS && (targetTenant?.assignedSoftware === "HRMS" || (targetTenant?.businessType && targetTenant.businessType.includes("HRMS")));
+      const assignedSoftware: "POS" | "HRMS" | "SMS" = isSMS ? "SMS" : isHRMS ? "HRMS" : "POS";
 
-      const isHRMS = targetTenant?.assignedSoftware === "HRMS" || (targetTenant?.businessType && targetTenant.businessType.includes("HRMS"));
-      const assignedSoftware: "POS" | "HRMS" = isHRMS ? "HRMS" : "POS";
+      const role = smsUserMatch?.role || presetMatch?.role || employeeMatch?.role || (hrEmpMatch?.designation?.includes("Director") ? "Owner" : "Manager");
+      const name = smsUserMatch?.fullName || hrEmpMatch?.name || (presetMatch ? (role === "Owner" ? targetTenant?.ownerName || "Owner" : role + " User") : (employeeMatch?.name || "Staff User"));
+
       const user = {
         name,
         role,
-        email: email.trim().toLowerCase(),
-        businessName: targetTenant?.businessName || "Unknown",
+        email: smsUserMatch?.email || email.trim().toLowerCase(),
+        username: smsUserMatch?.username || email.trim().toLowerCase(),
+        businessName: targetTenant?.businessName || (isSMS ? "MT Campus & School ERP" : "Unknown"),
         tenantId: targetTenant?.id || resolvedTenantId,
         assignedSoftware
       };
@@ -311,15 +340,17 @@ function LoginContent() {
       setTimeout(() => {
         localStorage.setItem("unipos_last_activated_tenant", targetTenant.id);
         localStorage.setItem("unipos_current_user", JSON.stringify(user));
-        setCurrentUser(user);
-        if (assignedSoftware === "HRMS") {
+        setCurrentUser(user as any);
+        if (assignedSoftware === "SMS") {
+          router.push("/sms");
+        } else if (assignedSoftware === "HRMS") {
           router.push("/hrms");
         } else {
           router.push(role === "Cashier" ? "/pos" : "/dashboard");
         }
       }, 600);
     } else {
-      setErrorMessage("Invalid credentials. Incorrect email or password.");
+      setErrorMessage("Invalid credentials. Incorrect username/email or password.");
     }
   };
 
@@ -590,9 +621,9 @@ function LoginContent() {
             </div>
 
             <div>
-              <label className="block text-[10px] uppercase font-bold text-gray-400 tracking-wider mb-1.5">Corporate Email</label>
-              <input type="email" required value={email} onChange={e => setEmail(e.target.value)}
-                placeholder="owner@company.com"
+              <label className="block text-[10px] uppercase font-bold text-gray-400 tracking-wider mb-1.5">User ID / Username or Email</label>
+              <input type="text" required value={email} onChange={e => setEmail(e.target.value)}
+                placeholder="e.g. parent.tariq or student@domain.com"
                 className="w-full bg-black border border-brand-dark-border p-3 rounded-xl text-white focus:outline-none focus:border-brand-sky transition font-bold" />
             </div>
 

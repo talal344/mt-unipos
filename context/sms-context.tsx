@@ -420,6 +420,7 @@ export interface SMSUserAccount {
   role: SMSRole;
   linkedEntityId?: string; // studentId or teacherId
   linkedEntityName?: string;
+  linkedStudentIds?: string[]; // for parent users linked to multiple sibling students
   phone?: string;
   status: "Active" | "Suspended" | "Pending";
   createdAt: string;
@@ -1007,6 +1008,7 @@ const INITIAL_USERS: SMSUserAccount[] = [
     role: "Parent",
     linkedEntityId: "STU-001",
     linkedEntityName: "Ahmed Talal",
+    linkedStudentIds: ["STU-001"],
     phone: "0300-1122334",
     status: "Active",
     createdAt: "2025-04-01"

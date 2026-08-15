@@ -391,56 +391,97 @@ export default function SMSDashboard() {
         </div>
       )}
 
-      {/* 3. STUDENT & PARENT PERSPECTIVE */}
-      {(activeRole === "Student" || activeRole === "Parent") && demoStudent && (
+      {/* 3. STUDENT & PARENT PERSPECTIVE (WITH MULTI-CHILD SWITCHER) */}
+      {(activeRole === "Student" || activeRole === "Parent") && (
         <div className="space-y-6">
-          <div className="bg-[#0b121e] border border-purple-500/30 rounded-2xl p-6 space-y-5">
-            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 border-b border-gray-800 pb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center font-black text-white text-lg">
-                  {demoStudent.firstName[0]}
-                </div>
-                <div>
-                  <h3 className="text-base font-black text-white">
-                    {demoStudent.firstName} {demoStudent.lastName}
-                  </h3>
-                  <p className="text-xs text-gray-400">
-                    {demoStudent.className} • {demoStudent.sectionName} • Roll #{demoStudent.rollNo} • House: {demoStudent.houseName || "Jinnah House"}
-                  </p>
-                </div>
+          {/* Sibling / Children Switcher for Parent */}
+          {activeRole === "Parent" && students.length > 1 && (
+            <div className="bg-[#0b121e] border border-pink-500/30 p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xl">
+              <div className="flex items-center gap-2 text-xs font-bold text-pink-400">
+                <Users size={16} />
+                <span>Select Linked Child Profile:</span>
               </div>
-
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-mono font-bold bg-purple-500/10 border border-purple-500/30 text-purple-300 px-3 py-1.5 rounded-xl">
-                  Admission: {demoStudent.admissionNo}
-                </span>
-                <span className="text-xs font-bold bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 px-3 py-1.5 rounded-xl">
-                  {demoStudent.status}
-                </span>
-              </div>
-            </div>
-
-            {/* Student 3-Card Summary */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-sans">
-              <div className="bg-black/40 border border-gray-800 p-4 rounded-xl space-y-1.5">
-                <span className="text-[10px] font-bold text-gray-400 uppercase">Midterm Exam Performance</span>
-                <div className="text-xl font-black text-emerald-400">98% (Grade A+)</div>
-                <p className="text-[10px] text-gray-400">1st Position in Section A</p>
-              </div>
-
-              <div className="bg-black/40 border border-gray-800 p-4 rounded-xl space-y-1.5">
-                <span className="text-[10px] font-bold text-gray-400 uppercase">Attendance Register</span>
-                <div className="text-xl font-black text-sky-400">96.5% Present</div>
-                <p className="text-[10px] text-gray-400">22 Days Present / 1 Leave</p>
-              </div>
-
-              <div className="bg-black/40 border border-gray-800 p-4 rounded-xl space-y-1.5">
-                <span className="text-[10px] font-bold text-gray-400 uppercase">Monthly Fee Voucher</span>
-                <div className="text-xl font-black text-emerald-400">Cleared &amp; Paid</div>
-                <p className="text-[10px] text-gray-400">Challan #CHL-2026-0801</p>
+              <div className="flex flex-wrap gap-2">
+                {students.slice(0, 3).map((st) => (
+                  <button
+                    key={st.id}
+                    onClick={() => {
+                      // Toggle selected child
+                      const activeElem = document.getElementById(`child-card-${st.id}`);
+                      if (activeElem) activeElem.scrollIntoView({ behavior: "smooth" });
+                    }}
+                    className="px-3 py-1.5 rounded-xl text-xs font-bold bg-pink-500/10 hover:bg-pink-500 text-pink-300 hover:text-white border border-pink-500/30 transition flex items-center gap-1.5"
+                  >
+                    <span>🎒 {st.firstName} {st.lastName}</span>
+                    <span className="text-[10px] font-mono opacity-80">({st.admissionNo})</span>
+                  </button>
+                ))}
               </div>
             </div>
-          </div>
+          )}
+
+          {students.slice(0, activeRole === "Parent" ? 2 : 1).map((currentStudent) => {
+            const studentFee = feeVouchers.find((f) => f.studentId === currentStudent.id);
+            return (
+              <div
+                key={currentStudent.id}
+                id={`child-card-${currentStudent.id}`}
+                className="bg-[#0b121e] border border-purple-500/30 rounded-2xl p-6 space-y-5 shadow-2xl"
+              >
+                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 border-b border-gray-800 pb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center font-black text-white text-lg shadow">
+                      {currentStudent.firstName[0]}
+                    </div>
+                    <div>
+                      <h3 className="text-base font-black text-white">
+                        {currentStudent.firstName} {currentStudent.lastName}
+                      </h3>
+                      <p className="text-xs text-gray-400">
+                        {currentStudent.className} &bull; {currentStudent.sectionName} &bull; Roll #{currentStudent.rollNo} &bull; House: {currentStudent.houseName || "Jinnah House"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-mono font-bold bg-purple-500/10 border border-purple-500/30 text-purple-300 px-3 py-1.5 rounded-xl">
+                      Admission: {currentStudent.admissionNo}
+                    </span>
+                    <span className="text-xs font-bold bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 px-3 py-1.5 rounded-xl">
+                      {currentStudent.status}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Student 3-Card Summary */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-sans">
+                  <div className="bg-black/40 border border-gray-800 p-4 rounded-xl space-y-1.5">
+                    <span className="text-[10px] font-bold text-gray-400 uppercase">Exam Distinction</span>
+                    <div className="text-xl font-black text-emerald-400">
+                      {currentStudent.admissionNo === "ADM-2026-0041" ? "98% (Grade A+)" : "92% (Grade A+)"}
+                    </div>
+                    <p className="text-[10px] text-gray-400">
+                      {currentStudent.admissionNo === "ADM-2026-0041" ? "1st Position in Section" : "2nd Position in Section"}
+                    </p>
+                  </div>
+
+                  <div className="bg-black/40 border border-gray-800 p-4 rounded-xl space-y-1.5">
+                    <span className="text-[10px] font-bold text-gray-400 uppercase">Attendance Register</span>
+                    <div className="text-xl font-black text-sky-400">96.5% Present</div>
+                    <p className="text-[10px] text-gray-400">22 Days Present &bull; 0 Unexcused</p>
+                  </div>
+
+                  <div className="bg-black/40 border border-gray-800 p-4 rounded-xl space-y-1.5">
+                    <span className="text-[10px] font-bold text-gray-400 uppercase">Monthly Fee Voucher</span>
+                    <div className={`text-xl font-black ${studentFee?.status === "Paid" ? "text-emerald-400" : "text-amber-400"}`}>
+                      {studentFee ? `${studentFee.status} (Rs ${studentFee.totalPayable.toLocaleString()})` : "Cleared & Paid"}
+                    </div>
+                    <p className="text-[10px] text-gray-400">Challan #{studentFee?.challanNo || "CHL-2026-0801"}</p>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
 
