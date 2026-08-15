@@ -509,6 +509,8 @@ interface SMSContextType {
   // Fee Actions
   generateMonthlyChallans: (className: string, month: string, dueDate: string) => number;
   collectFeeChallan: (challanNo: string, amount: number, paymentMethod: string, bankBranch?: string) => void;
+  deleteFeeChallan: (id: string) => void;
+  purgeDuplicateChallans: () => number;
   
   // Paper Generator
   addQuestionToBank: (q: Omit<QuestionBankItem, "id">) => QuestionBankItem;
@@ -1289,7 +1291,20 @@ export function SMSProvider({ children }: { children: ReactNode }) {
 
   const generateMonthlyChallans = (className: string, month: string, dueDate: string): number => {
     const targetStudents = students.filter((s) => s.className === className && s.status === "Active");
-    const newVouchers: SMSFeeVoucher[] = targetStudents.map((s, idx) => {
+    
+    // Check if student already has a challan for this specific billing month
+    const eligibleStudents = targetStudents.filter((s) => {
+      const alreadyHasChallan = feeVouchers.some(
+        (v) => (v.studentId === s.id || v.admissionNo === s.admissionNo) && v.month.trim().toLowerCase() === month.trim().toLowerCase()
+      );
+      return !alreadyHasChallan;
+    });
+
+    if (eligibleStudents.length === 0) {
+      return 0;
+    }
+
+    const newVouchers: SMSFeeVoucher[] = eligibleStudents.map((s, idx) => {
       const tuition = s.customMonthlyFee || 18500;
       const transport = s.transportEnrolled ? 3500 : 0;
       const exam = 1000;
@@ -1297,7 +1312,7 @@ export function SMSProvider({ children }: { children: ReactNode }) {
       const total = tuition + transport + exam - disc;
 
       return {
-        id: `FEE-${Date.now()}-${idx}`,
+        id: `FEE-${Date.now()}-${idx}-${Math.floor(Math.random() * 1000)}`,
         challanNo: `CHL-2026-${String(feeVouchers.length + idx + 1).padStart(4, "0")}`,
         studentId: s.id,
         admissionNo: s.admissionNo,
@@ -1322,6 +1337,32 @@ export function SMSProvider({ children }: { children: ReactNode }) {
     setFeeVouchers(updated);
     persist("mt_sms_feevouchers", updated);
     return newVouchers.length;
+  };
+
+  const deleteFeeChallan = (id: string) => {
+    const updated = feeVouchers.filter((v) => v.id !== id && v.challanNo !== id);
+    setFeeVouchers(updated);
+    persist("mt_sms_feevouchers", updated);
+  };
+
+  const purgeDuplicateChallans = (): number => {
+    const seen = new Set<string>();
+    const uniqueVouchers: SMSFeeVoucher[] = [];
+    let removedCount = 0;
+
+    feeVouchers.forEach((v) => {
+      const key = `${v.studentId || v.admissionNo}_${v.month.trim().toLowerCase()}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        uniqueVouchers.push(v);
+      } else {
+        removedCount++;
+      }
+    });
+
+    setFeeVouchers(uniqueVouchers);
+    persist("mt_sms_feevouchers", uniqueVouchers);
+    return removedCount;
   };
 
   const collectFeeChallan = (challanNo: string, amount: number, paymentMethod: string, bankBranch?: string) => {
@@ -1783,6 +1824,8 @@ export function SMSProvider({ children }: { children: ReactNode }) {
         saveMarksBatch,
         generateMonthlyChallans,
         collectFeeChallan,
+        deleteFeeChallan,
+        purgeDuplicateChallans,
         addQuestionToBank,
         createGeneratedPaper,
         issueBook,

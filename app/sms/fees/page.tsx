@@ -15,11 +15,13 @@ import {
   Send,
   Building,
   Check,
-  X
+  X,
+  Trash2,
+  Sparkles
 } from "lucide-react";
 
 export default function SMSFeesPage() {
-  const { classes, feeVouchers, generateMonthlyChallans, collectFeeChallan } = useSMS();
+  const { classes, feeVouchers, generateMonthlyChallans, collectFeeChallan, deleteFeeChallan, purgeDuplicateChallans } = useSMS();
 
   const [activeTab, setActiveTab] = useState<"challans" | "counter" | "defaulters">("challans");
   const [selectedClass, setSelectedClass] = useState("Class 9 (Science)");
@@ -56,7 +58,29 @@ export default function SMSFeesPage() {
 
   const handleGenerateBatch = () => {
     const count = generateMonthlyChallans(selectedClass, selectedMonth, dueDate);
-    setToastMsg(`✅ Generated ${count} Bank Fee Challans for ${selectedClass} (${selectedMonth})!`);
+    if (count > 0) {
+      setToastMsg(`✅ Generated ${count} new Bank Fee Challans for ${selectedClass} (${selectedMonth})!`);
+    } else {
+      setToastMsg(`ℹ️ All active students in ${selectedClass} already have fee challans generated for ${selectedMonth}. No duplicates created!`);
+    }
+    setTimeout(() => setToastMsg(""), 4500);
+  };
+
+  const handleDeleteChallan = (v: SMSFeeVoucher) => {
+    if (confirm(`Are you sure you want to delete Fee Challan #${v.challanNo} for ${v.studentName} (${v.month})?`)) {
+      deleteFeeChallan(v.id);
+      setToastMsg(`🗑️ Challan #${v.challanNo} deleted successfully.`);
+      setTimeout(() => setToastMsg(""), 3500);
+    }
+  };
+
+  const handlePurgeDuplicates = () => {
+    const removed = purgeDuplicateChallans();
+    if (removed > 0) {
+      setToastMsg(`🧹 Cleaned & removed ${removed} duplicate fee challans!`);
+    } else {
+      setToastMsg(`✨ All fee challans are already unique. No duplicate records found!`);
+    }
     setTimeout(() => setToastMsg(""), 4000);
   };
 
@@ -202,6 +226,15 @@ export default function SMSFeesPage() {
           >
             Fee Defaulters ({defaulters.length})
           </button>
+
+          <button
+            onClick={handlePurgeDuplicates}
+            className="px-3 py-2 rounded-lg text-xs font-bold bg-amber-500/10 hover:bg-amber-500 text-amber-300 hover:text-black border border-amber-500/30 transition flex items-center gap-1.5"
+            title="Remove accidental duplicate challans for the same student and month"
+          >
+            <Sparkles size={13} />
+            <span>Clean Duplicates</span>
+          </button>
         </div>
       </div>
 
@@ -326,6 +359,13 @@ export default function SMSFeesPage() {
                           Collect
                         </button>
                       )}
+                      <button
+                        onClick={() => handleDeleteChallan(v)}
+                        className="p-1.5 bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white rounded-lg transition"
+                        title="Delete Challan"
+                      >
+                        <Trash2 size={13} />
+                      </button>
                     </div>
                   </td>
                 </tr>
