@@ -352,26 +352,38 @@ function ActivateDemoModal({
     amount: "25000",
     currency: "PKR" as "PKR" | "USD",
     plan: "Professional",
-    billingCycle: "monthly" as "monthly" | "yearly",
+    billingCycle: "monthly" as "monthly" | "yearly" | "custom",
     durationDays: "30",
+    specificExpiryDate: "",
     paymentMethod: "Bank Transfer (HBL / Meezan)",
     notes: "Payment received & verified by SuperAdmin",
   });
 
   const [loading, setLoading] = useState(false);
 
+  // Calculate target expiry string preview
+  const expiryPreview = useMemo(() => {
+    if (form.billingCycle === "custom" && form.specificExpiryDate) {
+      return form.specificExpiryDate;
+    }
+    const days = form.billingCycle === "yearly" ? 365 : form.billingCycle === "monthly" ? 30 : parseInt(form.durationDays, 10) || 30;
+    const d = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+    return d.toISOString().split("T")[0];
+  }, [form.billingCycle, form.durationDays, form.specificExpiryDate]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
       const amt = parseFloat(form.amount) || 0;
-      const days = parseInt(form.durationDays, 10) || 30;
+      const days = form.billingCycle === "yearly" ? 365 : form.billingCycle === "monthly" ? 30 : parseInt(form.durationDays, 10) || 30;
       convertDemoToActivePaid(req.id, {
         amount: amt,
         currency: form.currency,
         plan: form.plan,
         billingCycle: form.billingCycle,
         durationDays: days,
+        specificExpiryDate: form.billingCycle === "custom" && form.specificExpiryDate ? form.specificExpiryDate : undefined,
         paymentMethod: form.paymentMethod,
         notes: form.notes,
       });
@@ -385,8 +397,8 @@ function ActivateDemoModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 font-sans">
-      <div className="bg-[#0b0f17] border border-emerald-500/40 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-fade-in-up">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 font-sans overflow-y-auto">
+      <div className="bg-[#0b0f17] border border-emerald-500/40 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-fade-in-up my-6">
         {/* Header */}
         <div className="p-5 border-b border-gray-800 flex justify-between items-center bg-black/40">
           <div className="flex items-center gap-3">
@@ -404,9 +416,9 @@ function ActivateDemoModal({
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4 text-xs">
-          <div className="bg-emerald-500/10 border border-emerald-500/30 p-3 rounded-xl text-emerald-300 text-xs font-bold flex items-center gap-2">
-            <CheckCircle2 size={16} className="shrink-0 text-emerald-400" />
-            <span>Form submit hotay hi Demo account section sy khatm ho kar <b>FULLY ACTIVE Paid Tenant</b> ban jaye ga aur Cleared Invoice generate ho jaye gi!</span>
+          <div className="bg-emerald-500/10 border border-emerald-500/30 p-3.5 rounded-xl text-emerald-300 text-xs font-semibold flex items-center gap-2.5">
+            <CheckCircle2 size={18} className="shrink-0 text-emerald-400" />
+            <span>Confirm hotay hi lead ka status <b>Converted &amp; Active Paid</b> ho jaye ga, SaaS Invoice Paid mark ho gi aur tenant permanent active ho jaye ga!</span>
           </div>
 
           {/* Amount & Currency */}
@@ -440,6 +452,24 @@ function ActivateDemoModal({
             </div>
           </div>
 
+          {/* Quick Price Buttons */}
+          <div className="flex gap-2 flex-wrap">
+            {(form.currency === "PKR" ? ["15000", "25000", "50000", "100000"] : ["50", "100", "250", "500"]).map(amt => (
+              <button
+                type="button"
+                key={amt}
+                onClick={() => setForm({ ...form, amount: amt })}
+                className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border transition ${
+                  form.amount === amt
+                    ? "bg-emerald-500/20 border-emerald-500/60 text-emerald-300"
+                    : "bg-black/40 border-gray-800 text-gray-400 hover:text-white hover:border-gray-700"
+                }`}
+              >
+                {form.currency === "USD" ? `$${amt}` : `Rs ${Number(amt).toLocaleString()}`}
+              </button>
+            ))}
+          </div>
+
           {/* Plan & Billing Cycle */}
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -458,50 +488,57 @@ function ActivateDemoModal({
             </div>
             <div>
               <label className="block text-[11px] uppercase font-bold text-gray-400 mb-1">
-                Billing Cycle
+                Billing Cycle / Duration
               </label>
               <select
                 value={form.billingCycle}
                 onChange={(e) => setForm({ ...form, billingCycle: e.target.value as any })}
                 className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-bold focus:outline-none focus:border-emerald-500"
               >
-                <option value="monthly">Monthly Subscription</option>
-                <option value="yearly">Yearly Subscription</option>
+                <option value="monthly">Monthly (30 Days)</option>
+                <option value="yearly">Yearly (365 Days)</option>
+                <option value="custom">Specific Custom Date</option>
               </select>
             </div>
           </div>
 
-          {/* Duration in Days & Payment Method */}
-          <div className="grid grid-cols-2 gap-3">
+          {/* Custom Date or Specific Duration */}
+          {form.billingCycle === "custom" ? (
             <div>
-              <label className="block text-[11px] uppercase font-bold text-gray-400 mb-1">
-                Subscription Validity (Days)
+              <label className="block text-[11px] uppercase font-bold text-emerald-400 mb-1">
+                Select Specific Expiry Date
               </label>
               <input
-                type="number"
+                type="date"
                 required
-                min="1"
-                placeholder="e.g. 30 or 365"
-                value={form.durationDays}
-                onChange={(e) => setForm({ ...form, durationDays: e.target.value })}
-                className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-bold focus:outline-none focus:border-emerald-500"
+                value={form.specificExpiryDate}
+                onChange={(e) => setForm({ ...form, specificExpiryDate: e.target.value })}
+                className="w-full bg-black border border-emerald-500/40 p-2.5 rounded-xl text-white font-bold focus:outline-none focus:border-emerald-500"
               />
             </div>
-            <div>
-              <label className="block text-[11px] uppercase font-bold text-gray-400 mb-1">
-                Payment Received Via
-              </label>
-              <select
-                value={form.paymentMethod}
-                onChange={(e) => setForm({ ...form, paymentMethod: e.target.value })}
-                className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-bold focus:outline-none focus:border-emerald-500"
-              >
-                <option value="Bank Transfer (HBL / Meezan)">Bank Transfer (HBL / Meezan)</option>
-                <option value="Cash Payment">Cash Payment</option>
-                <option value="EasyPaisa / JazzCash">EasyPaisa / JazzCash</option>
-                <option value="Credit / Debit Card">Credit / Debit Card</option>
-              </select>
-            </div>
+          ) : null}
+
+          {/* Target Expiry Preview */}
+          <div className="bg-black/50 border border-gray-800 rounded-xl p-3 flex items-center justify-between font-mono text-xs">
+            <span className="text-gray-400">Subscription Active Until:</span>
+            <span className="text-emerald-400 font-bold">{expiryPreview}</span>
+          </div>
+
+          {/* Payment Method */}
+          <div>
+            <label className="block text-[11px] uppercase font-bold text-gray-400 mb-1">
+              Payment Received Via
+            </label>
+            <select
+              value={form.paymentMethod}
+              onChange={(e) => setForm({ ...form, paymentMethod: e.target.value })}
+              className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-bold focus:outline-none focus:border-emerald-500"
+            >
+              <option value="Bank Transfer (HBL / Meezan)">Bank Transfer (HBL / Meezan)</option>
+              <option value="Cash Payment">Cash Payment</option>
+              <option value="EasyPaisa / JazzCash">EasyPaisa / JazzCash</option>
+              <option value="Credit / Debit Card">Credit / Debit Card</option>
+            </select>
           </div>
 
           {/* Notes */}
@@ -522,7 +559,7 @@ function ActivateDemoModal({
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase tracking-wider rounded-xl transition flex items-center justify-center gap-2 text-xs shadow-lg shadow-emerald-600/20"
+            className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase tracking-wider rounded-xl transition flex items-center justify-center gap-2 text-xs shadow-lg shadow-emerald-600/20 cursor-pointer"
           >
             <CheckCircle2 size={16} />
             <span>Confirm Payment &amp; Activate Tenant Account</span>
@@ -738,6 +775,19 @@ function DetailModal({
                     : `Trial EXPIRED on ${formatDate(req.trialEndsAt)}`}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Converted Section */}
+          {req.status === "Converted" && (
+            <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4 space-y-2">
+              <div className="flex items-center gap-2 text-emerald-400 font-black text-xs uppercase tracking-wide">
+                <CheckCircle2 size={14} />
+                Client Converted &amp; Active Paid
+              </div>
+              <div className="text-[10px] text-gray-300">
+                This client lead has been converted into a permanent active paid tenant workspace with verified and cleared SaaS invoicing.
+              </div>
             </div>
           )}
 
@@ -1808,6 +1858,35 @@ export default function AdminClientsPage() {
                           </td>
                           <td className="p-4">
                             <div className="flex gap-1.5 justify-center flex-wrap">
+                              {tenant.status === "Trial" && (
+                                <button
+                                  onClick={() => {
+                                    const matchDemo = demoRequests.find(d => (d.email && tenant.email && d.email.toLowerCase() === tenant.email.toLowerCase()) || (d.businessName && tenant.businessName && d.businessName.toLowerCase() === tenant.businessName.toLowerCase()));
+                                    if (matchDemo) {
+                                      setActivateDemoTarget(matchDemo);
+                                    } else {
+                                      const pseudoReq: DemoRequest = {
+                                        id: tenant.id,
+                                        ticketNumber: tenant.id,
+                                        name: tenant.ownerName,
+                                        businessName: tenant.businessName,
+                                        email: tenant.email,
+                                        phone: tenant.phone || "",
+                                        country: "Pakistan",
+                                        businessType: tenant.businessType || "Retail",
+                                        date: tenant.signupDate || new Date().toISOString(),
+                                        status: "Pending",
+                                        messages: [],
+                                      };
+                                      setActivateDemoTarget(pseudoReq);
+                                    }
+                                  }}
+                                  className="p-1.5 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white rounded transition"
+                                  title="Convert Trial to Permanent Active Paid Tenant & Clear Invoice"
+                                >
+                                  <CreditCard size={12} />
+                                </button>
+                              )}
                               <button
                                 onClick={() => handleOpenEdit(tenant)}
                                 className="p-1.5 bg-brand-sky/10 hover:bg-brand-sky text-brand-sky hover:text-black rounded transition"

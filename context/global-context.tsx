@@ -81,7 +81,7 @@ export interface Tenant {
   phone: string;
   businessType: string;
   plan: "Starter" | "Professional" | "Enterprise";
-  billingCycle: "monthly" | "yearly";
+  billingCycle: "monthly" | "yearly" | "custom";
   status: "Active" | "Trial" | "Suspended" | "Expired";
   signupDate: string;
   branches: string[];
@@ -644,8 +644,9 @@ interface GlobalContextType {
     amount: number;
     currency: "PKR" | "USD";
     plan: string;
-    billingCycle: "monthly" | "yearly";
+    billingCycle: "monthly" | "yearly" | "custom";
     durationDays: number;
+    specificExpiryDate?: string;
     paymentMethod: string;
     notes?: string;
   }) => void;
@@ -2736,8 +2737,9 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     amount: number;
     currency: "PKR" | "USD";
     plan: string;
-    billingCycle: "monthly" | "yearly";
+    billingCycle: "monthly" | "yearly" | "custom";
     durationDays: number;
+    specificExpiryDate?: string;
     paymentMethod: string;
     notes?: string;
   }) => {
@@ -2745,8 +2747,11 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     if (!req) return;
 
     const now = new Date();
-    const expiryDate = new Date(now.getTime() + options.durationDays * 24 * 60 * 60 * 1000);
-    const expiryStr = expiryDate.toISOString().split("T")[0];
+    let expiryStr = options.specificExpiryDate;
+    if (!expiryStr) {
+      const expiryDate = new Date(now.getTime() + options.durationDays * 24 * 60 * 60 * 1000);
+      expiryStr = expiryDate.toISOString().split("T")[0];
+    }
 
     // 1. Mark Demo Request as "Converted"
     const updatedDemos = demoRequests.map(r =>
@@ -2766,11 +2771,12 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     // 2. Find or Register Tenant
     const existingTenant = tenants.find(t => (t.email && req.email && t.email.toLowerCase() === req.email.toLowerCase()) || (t.businessName && req.businessName && t.businessName.toLowerCase() === req.businessName.toLowerCase()));
     let targetTenantId = existingTenant?.id;
+    let nextTenantsList = [...tenants];
 
     if (existingTenant) {
       // Upgrade existing tenant to Active Paid - KEEP SAME PERMANENT TENANT ID!
       targetTenantId = existingTenant.id;
-      const updatedTenants = tenants.map(t =>
+      nextTenantsList = tenants.map(t =>
         t.id === existingTenant.id ? {
           ...t,
           status: "Active" as const,
@@ -2781,8 +2787,8 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
           trialEndsAt: expiryStr,
         } : t
       );
-      setTenants(updatedTenants);
-      localStorage.setItem("unipos_tenants", JSON.stringify(updatedTenants));
+      setTenants(nextTenantsList);
+      localStorage.setItem("unipos_tenants", JSON.stringify(nextTenantsList));
     } else {
       // Create new active tenant with format: Business Initials + '-' + 001
       const demoEmail = req.email;
@@ -2811,11 +2817,9 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         isTrial: false,
         trialEndsAt: expiryStr,
       };
-      setTenants(prev => {
-        const next = [newTenant, ...prev];
-        localStorage.setItem("unipos_tenants", JSON.stringify(next));
-        return next;
-      });
+      nextTenantsList = [newTenant, ...tenants];
+      setTenants(nextTenantsList);
+      localStorage.setItem("unipos_tenants", JSON.stringify(nextTenantsList));
     }
 
     // 3. Issue Cleared Paid SaaS Invoice
@@ -2832,20 +2836,18 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       status: "Paid",
       plan: `${options.plan} (${options.billingCycle})`,
       paymentMethod: options.paymentMethod,
-      notes: options.notes || `Demo Account converted to Paid Client (${options.durationDays} Days Duration). Payment Received & Cleared.`
+      notes: options.notes || `Demo Account converted to Paid Client (Valid until: ${expiryStr}). Payment Received & Cleared.`
     };
 
-    setSaasInvoices(prev => {
-      const next = [newInvoice, ...prev];
-      localStorage.setItem("unipos_invoices", JSON.stringify(next));
-      return next;
-    });
+    const nextInvoicesList = [newInvoice, ...saasInvoices];
+    setSaasInvoices(nextInvoicesList);
+    localStorage.setItem("unipos_invoices", JSON.stringify(nextInvoicesList));
 
     // Supabase Cloud Sync
     try {
       supabase.from('unipos_global').upsert({ key: 'unipos_demos', value: updatedDemos }).then(() => {});
-      supabase.from('unipos_global').upsert({ key: 'unipos_tenants', value: tenants }).then(() => {});
-      supabase.from('unipos_global').upsert({ key: 'unipos_invoices', value: saasInvoices }).then(() => {});
+      supabase.from('unipos_global').upsert({ key: 'unipos_tenants', value: nextTenantsList }).then(() => {});
+      supabase.from('unipos_global').upsert({ key: 'unipos_invoices', value: nextInvoicesList }).then(() => {});
     } catch {}
 
     // 4. Automated Resend API Email Dispatch to Client
