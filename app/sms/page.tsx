@@ -73,7 +73,7 @@ export default function SMSDashboard() {
   const demoStudent = students[0];
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto pb-16 font-sans">
+    <div className="space-y-8 w-full max-w-none pb-16 font-sans">
       {/* Top Welcome Banner */}
       <div className="relative overflow-hidden rounded-3xl p-6 sm:p-8 bg-gradient-to-r from-[#071326] via-[#0b1d3a] to-[#042838] border border-sky-500/20 shadow-2xl">
         <div className="absolute right-0 top-0 w-96 h-96 bg-sky-500/10 rounded-full blur-3xl pointer-events-none" />
