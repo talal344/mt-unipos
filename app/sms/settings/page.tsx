@@ -33,12 +33,24 @@ export default function SMSSettingsPage() {
     addClassSection,
     updateClassSection,
     deleteClassSection,
+    addCampusWing,
+    deleteCampusWing,
     clearAllDemoData
   } = useSMS();
+
+  const activeCampus = campuses.find((c) => c.id === selectedCampus) || campuses[0];
 
   const [activeTab, setActiveTab] = useState<"classes" | "timetable" | "grading" | "wings" | "general">("classes");
   const [toastMsg, setToastMsg] = useState("");
   const [showPurgeConfirm, setShowPurgeConfirm] = useState(false);
+
+  // Campus Wings Modal State
+  const [showWingModal, setShowWingModal] = useState(false);
+  const [wingForm, setWingForm] = useState({
+    name: "",
+    headName: "",
+    totalClasses: 4
+  });
 
   // Edit / Add Class Modal State
   const [showClassModal, setShowClassModal] = useState(false);
@@ -351,22 +363,58 @@ export default function SMSSettingsPage() {
       {/* TAB 4: CAMPUS WINGS & HEADS                                                   */}
       {/* ───────────────────────────────────────────────────────────────────────────── */}
       {activeTab === "wings" && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {campuses[0]?.wings.map((w) => (
-            <div key={w.id} className="bg-[#0b121e] border border-[#1e293b] rounded-2xl p-5 space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-[10px] font-bold text-sky-400 uppercase font-mono">{w.id}</span>
-                <span className="text-[10px] bg-sky-500/10 text-sky-300 px-2 py-0.5 rounded font-bold">
-                  {w.totalClasses} Classes
-                </span>
-              </div>
-              <h3 className="text-base font-black text-white">{w.name}</h3>
-              <div className="text-xs text-gray-400 pt-2 border-t border-gray-800">
-                <span className="text-gray-500">Wing Incharge: </span>
-                <b className="text-white block mt-0.5">{w.headName}</b>
-              </div>
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#0b121e] border border-[#1e293b] p-4 rounded-2xl">
+            <div>
+              <h3 className="text-sm font-black text-white">Campus Wings &amp; Sub-School Hierarchy</h3>
+              <p className="text-xs text-gray-400">
+                Manage academic wings, appointed Wing Incharge Heads, and class quotas for {activeCampus.name}.
+              </p>
             </div>
-          ))}
+            <button
+              onClick={() => {
+                setWingForm({ name: "", headName: "", totalClasses: 4 });
+                setShowWingModal(true);
+              }}
+              className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-bold rounded-xl text-xs shadow-lg transition"
+            >
+              <Plus size={14} />
+              <span>Add New Campus Wing</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {activeCampus?.wings.map((w) => (
+              <div key={w.id} className="bg-[#0b121e] border border-[#1e293b] rounded-2xl p-5 space-y-3 relative group shadow-lg hover:border-sky-500/40 transition">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-bold text-sky-400 uppercase font-mono">{w.id}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] bg-sky-500/10 text-sky-300 px-2 py-0.5 rounded font-bold">
+                      {w.totalClasses} Classes
+                    </span>
+                    <button
+                      onClick={() => {
+                        if (confirm(`Are you sure you want to delete Campus Wing "${w.name}"?`)) {
+                          deleteCampusWing(activeCampus.id, w.id);
+                          setToastMsg(`🗑️ Campus Wing "${w.name}" deleted successfully.`);
+                          setTimeout(() => setToastMsg(""), 3500);
+                        }
+                      }}
+                      className="p-1.5 bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white rounded-lg transition"
+                      title="Delete Campus Wing"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
+                </div>
+                <h3 className="text-base font-black text-white">{w.name}</h3>
+                <div className="text-xs text-gray-400 pt-2 border-t border-gray-800">
+                  <span className="text-gray-500">Wing Incharge: </span>
+                  <b className="text-white block mt-0.5">{w.headName}</b>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
@@ -568,6 +616,84 @@ export default function SMSSettingsPage() {
                 className="w-full py-3 bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-black uppercase rounded-xl transition text-xs shadow-lg"
               >
                 Save Class Section Hierarchy
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ───────────────────────────────────────────────────────────────────────────── */}
+      {/* ADD CAMPUS WING MODAL                                                         */}
+      {/* ───────────────────────────────────────────────────────────────────────────── */}
+      {showWingModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4">
+          <div className="bg-[#0b121e] border border-sky-500/40 rounded-3xl w-full max-w-md shadow-2xl p-6 animate-fade-in-up">
+            <div className="flex justify-between items-center border-b border-gray-800 pb-3 mb-4">
+              <div className="flex items-center gap-2">
+                <Layers size={18} className="text-sky-400" />
+                <h3 className="font-black text-white text-sm">Add New Campus Wing</h3>
+              </div>
+              <button onClick={() => setShowWingModal(false)} className="text-gray-400 hover:text-white">
+                <X size={16} />
+              </button>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!wingForm.name.trim()) return;
+                addCampusWing(activeCampus.id, {
+                  name: wingForm.name.trim(),
+                  headName: wingForm.headName.trim() || "Wing Incharge Head",
+                  totalClasses: wingForm.totalClasses || 4
+                });
+                setShowWingModal(false);
+                setToastMsg(`✅ Campus Wing "${wingForm.name}" added successfully!`);
+                setTimeout(() => setToastMsg(""), 3500);
+              }}
+              className="space-y-4 text-xs"
+            >
+              <div>
+                <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Campus Wing Name</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Primary Boys Wing, Cambridge O-Levels"
+                  value={wingForm.name}
+                  onChange={(e) => setWingForm({ ...wingForm, name: e.target.value })}
+                  className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-bold"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Appointed Wing Incharge / Head</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Sir Kashif Mehmood, Mrs. Naila Shah"
+                  value={wingForm.headName}
+                  onChange={(e) => setWingForm({ ...wingForm, headName: e.target.value })}
+                  className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-bold"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Assigned Classes Quota</label>
+                <input
+                  type="number"
+                  min={1}
+                  max={20}
+                  value={wingForm.totalClasses}
+                  onChange={(e) => setWingForm({ ...wingForm, totalClasses: parseInt(e.target.value, 10) || 4 })}
+                  className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-bold"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-3 bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-black uppercase rounded-xl transition text-xs shadow-lg"
+              >
+                Create Campus Wing
               </button>
             </form>
           </div>

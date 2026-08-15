@@ -534,6 +534,8 @@ interface SMSContextType {
   bookPTMSlot: (slotId: string, studentId: string, studentName: string, parentName: string) => void;
   logClinicVisit: (visit: Omit<ClinicVisit, "id" | "date" | "time">) => void;
   gradeOMRSheet: (studentId: string, subject: string, answers: Record<number, string>, key: Record<number, string>) => OMRGradingResult;
+  addCampusWing: (campusId: string, wing: { name: string; headName: string; totalClasses?: number }) => void;
+  deleteCampusWing: (campusId: string, wingId: string) => void;
   clearAllDemoData: () => void;
 }
 
@@ -1081,6 +1083,9 @@ export function SMSProvider({ children }: { children: ReactNode }) {
   // Load from localStorage
   useEffect(() => {
     try {
+      const storedCampuses = localStorage.getItem("mt_sms_campuses");
+      if (storedCampuses) setCampuses(JSON.parse(storedCampuses));
+
       const storedStudents = localStorage.getItem("mt_sms_students");
       if (storedStudents) setStudents(JSON.parse(storedStudents));
 
@@ -1762,6 +1767,40 @@ export function SMSProvider({ children }: { children: ReactNode }) {
     return createdCount;
   };
 
+  const addCampusWing = (campusId: string, wing: { name: string; headName: string; totalClasses?: number }) => {
+    const updated = campuses.map((c) => {
+      if (c.id === campusId) {
+        const newWing: CampusWing = {
+          id: `W-${Date.now().toString().slice(-4)}`,
+          name: wing.name,
+          headName: wing.headName,
+          totalClasses: wing.totalClasses || 0
+        };
+        return {
+          ...c,
+          wings: [...c.wings, newWing]
+        };
+      }
+      return c;
+    });
+    setCampuses(updated);
+    persist("mt_sms_campuses", updated);
+  };
+
+  const deleteCampusWing = (campusId: string, wingId: string) => {
+    const updated = campuses.map((c) => {
+      if (c.id === campusId) {
+        return {
+          ...c,
+          wings: c.wings.filter((w) => w.id !== wingId)
+        };
+      }
+      return c;
+    });
+    setCampuses(updated);
+    persist("mt_sms_campuses", updated);
+  };
+
   return (
     <SMSContext.Provider
       value={{
@@ -1841,6 +1880,8 @@ export function SMSProvider({ children }: { children: ReactNode }) {
         bookPTMSlot,
         logClinicVisit,
         gradeOMRSheet,
+        addCampusWing,
+        deleteCampusWing,
         clearAllDemoData
       }}
     >

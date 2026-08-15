@@ -28,6 +28,7 @@ import {
   Printer,
   MessageSquare,
   ScanLine,
+  Trash2,
   Trophy,
   ShieldAlert,
   CalendarRange,
@@ -53,7 +54,8 @@ export default function SMSDashboard() {
     whatsappLogs,
     gateVisitors,
     gatePunchLogs,
-    houses
+    houses,
+    deleteCampusWing
   } = useSMS();
 
   const activeCampus = campuses.find((c) => c.id === selectedCampus) || campuses[0];
@@ -295,12 +297,25 @@ export default function SMSDashboard() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {activeCampus.wings.map((w) => (
-              <div key={w.id} className="bg-[#0b121e] border border-[#1e293b] rounded-2xl p-5 space-y-3">
+              <div key={w.id} className="bg-[#0b121e] border border-[#1e293b] rounded-2xl p-5 space-y-3 relative group hover:border-sky-500/40 transition">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] uppercase font-bold text-sky-400 font-mono">{w.id}</span>
-                  <span className="text-[10px] bg-sky-500/10 text-sky-300 px-2 py-0.5 rounded-full font-bold">
-                    {w.totalClasses} Classes
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] bg-sky-500/10 text-sky-300 px-2 py-0.5 rounded-full font-bold">
+                      {w.totalClasses} Classes
+                    </span>
+                    <button
+                      onClick={() => {
+                        if (confirm(`Are you sure you want to remove Campus Wing "${w.name}"?`)) {
+                          deleteCampusWing(activeCampus.id, w.id);
+                        }
+                      }}
+                      className="p-1 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded transition"
+                      title="Remove Campus Wing"
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  </div>
                 </div>
                 <h3 className="text-sm font-black text-white">{w.name}</h3>
                 <div className="text-xs text-gray-400">
