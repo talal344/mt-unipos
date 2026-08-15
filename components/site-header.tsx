@@ -64,6 +64,7 @@ export default function SiteHeader() {
 
   const navLinks = [
     { name: "Features",     href: "/features"      },
+    { name: "School ERP",   href: "/sms"           },
     { name: "About Us",     href: "/about"         },
     { name: "SaaS Blog",    href: "/blog"          },
     { name: "Tracking",     href: "/track-ticket"  },

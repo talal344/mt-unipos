@@ -21,6 +21,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 
     // Public routes that don't need protection
     if (
+      pathname.startsWith("/sms") ||
       pathname.startsWith("/login") || 
       pathname.startsWith("/admin/login") || 
       pathname === "/" || 

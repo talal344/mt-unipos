@@ -64,24 +64,24 @@ export default function SoftwareShowcase() {
     {
       id: "sms",
       name: "School Management System (SMS)",
-      subtitle: "Student Admissions, Fee Vouchers, Exam Grading & Attendance",
+      subtitle: "Multi-Campus, Student 360, Board Paper Maker, Fee Challans & Results",
       icon: GraduationCap,
-      color: "from-purple-500/10 to-indigo-500/10",
-      borderColor: "border-purple-500/20",
+      color: "from-purple-500/20 to-indigo-500/20",
+      borderColor: "border-purple-500/40 hover:border-purple-400",
       accentColor: "text-purple-400",
-      badge: "COMING SOON 🚀",
+      badge: "LIVE & ACTIVE ⚡",
       badgeStyle: "bg-purple-500/10 text-purple-400 border-purple-500/30",
       description:
-        "Comprehensive academic management for schools & colleges. Digital fee generation, exam report cards, parent portal app, and teacher salary management.",
+        "Comprehensive academic governance for schools & colleges. Unique GR admission IDs, PVC cards, 3-copy bank fee vouchers, 1-click exam paper builder, smart teacher substitution, and printable A4 report cards.",
       features: [
-        "Student Admission Portal",
-        "Automated Fee Voucher Billing",
-        "Exam Grading & Progress Cards",
-        "Parent-Teacher Portal App"
+        "Unique Admission GR # & PVC ID Cards",
+        "3-Copy Bank Fee Challan Generator",
+        "Automated Board Exam Paper Builder",
+        "7 Multi-Role Switchable Portals"
       ],
-      link: "#",
-      cta: "In Development",
-      active: false
+      link: "/sms",
+      cta: "Launch SMS Portal",
+      active: true
     },
     {
       id: "hms",
