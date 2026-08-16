@@ -15,18 +15,19 @@ import {
 } from "lucide-react";
 
 export default function SMSTransportPage() {
-  const { transportRoutes } = useSMS();
+  const { theme, transportRoutes } = useSMS();
+  const isLight = theme === "light";
 
   return (
     <div className="space-y-6 font-sans">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-800 pb-4">
+      <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b ${isLight ? "border-slate-200" : "border-gray-800"} pb-4`}>
         <div>
-          <h1 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
-            <Bus className="text-sky-400" size={22} />
+          <h1 className={`text-xl font-black tracking-tight ${isLight ? "text-slate-900" : "text-white"} flex items-center gap-2`}>
+            <Bus className={isLight ? "text-sky-600" : "text-sky-400"} size={22} />
             <span>School Transport &amp; Bus Fleet Management</span>
           </h1>
-          <p className="text-xs text-gray-400">
+          <p className={`text-xs ${isLight ? "text-slate-600 font-medium" : "text-gray-400"}`}>
             Manage school van and bus routes, driver contact points, student pickup allocations, and monthly transport dues.
           </p>
         </div>
@@ -43,37 +44,39 @@ export default function SMSTransportPage() {
       {/* Routes Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {transportRoutes.map((route) => (
-          <div key={route.id} className="bg-[#0b121e] border border-[#1e293b] rounded-2xl p-6 space-y-4">
+          <div key={route.id} className={`${isLight ? "bg-white border-slate-200 shadow-sm" : "bg-[#0b121e] border-[#1e293b]"} border rounded-2xl p-6 space-y-4`}>
             <div className="flex justify-between items-center">
-              <span className="text-xs font-mono font-bold bg-sky-500/10 text-sky-400 border border-sky-500/20 px-2.5 py-1 rounded-lg">
+              <span className={`text-xs font-mono font-bold ${
+                isLight ? "bg-sky-50 text-sky-700 border-sky-300" : "bg-sky-500/10 text-sky-400 border-sky-500/20"
+              } border px-2.5 py-1 rounded-lg`}>
                 {route.routeCode}
               </span>
-              <span className="text-xs font-bold text-emerald-400">
+              <span className={`text-xs font-bold ${isLight ? "text-emerald-700 font-black" : "text-emerald-400"}`}>
                 Rs {route.monthlyFeePerStudent.toLocaleString()} / Student
               </span>
             </div>
 
-            <h3 className="text-base font-black text-white flex items-center gap-2">
-              <MapPin size={16} className="text-sky-400 shrink-0" />
+            <h3 className={`text-base font-black ${isLight ? "text-slate-900" : "text-white"} flex items-center gap-2`}>
+              <MapPin size={16} className={`${isLight ? "text-sky-600" : "text-sky-400"} shrink-0`} />
               <span>{route.routeName}</span>
             </h3>
 
-            <div className="grid grid-cols-2 gap-2 text-xs bg-black/40 border border-gray-800 p-3 rounded-xl">
+            <div className={`grid grid-cols-2 gap-2 text-xs ${isLight ? "bg-slate-50 border-slate-200" : "bg-black/40 border-gray-800"} border p-3 rounded-xl`}>
               <div>
-                <span className="text-[10px] text-gray-500 uppercase block font-bold">Assigned Vehicle</span>
-                <span className="font-bold text-white">{route.vehicleNumber}</span>
+                <span className={`text-[10px] ${isLight ? "text-slate-500" : "text-gray-500"} uppercase block font-bold`}>Assigned Vehicle</span>
+                <span className={`font-bold ${isLight ? "text-slate-900" : "text-white"}`}>{route.vehicleNumber}</span>
               </div>
               <div>
-                <span className="text-[10px] text-gray-500 uppercase block font-bold">Capacity Filled</span>
-                <span className="font-bold text-sky-400">{route.assignedStudentsCount} / {route.totalSeats} Seats</span>
+                <span className={`text-[10px] ${isLight ? "text-slate-500" : "text-gray-500"} uppercase block font-bold`}>Capacity Filled</span>
+                <span className={`font-bold ${isLight ? "text-sky-700" : "text-sky-400"}`}>{route.assignedStudentsCount} / {route.totalSeats} Seats</span>
               </div>
               <div>
-                <span className="text-[10px] text-gray-500 uppercase block font-bold">Driver Name</span>
-                <span className="font-bold text-white">{route.driverName}</span>
+                <span className={`text-[10px] ${isLight ? "text-slate-500" : "text-gray-500"} uppercase block font-bold`}>Driver Name</span>
+                <span className={`font-bold ${isLight ? "text-slate-900" : "text-white"}`}>{route.driverName}</span>
               </div>
               <div>
-                <span className="text-[10px] text-gray-500 uppercase block font-bold">Driver Hotline</span>
-                <span className="font-bold text-emerald-400">{route.driverPhone}</span>
+                <span className={`text-[10px] ${isLight ? "text-slate-500" : "text-gray-500"} uppercase block font-bold`}>Driver Hotline</span>
+                <span className={`font-bold ${isLight ? "text-emerald-700" : "text-emerald-400"}`}>{route.driverPhone}</span>
               </div>
             </div>
           </div>

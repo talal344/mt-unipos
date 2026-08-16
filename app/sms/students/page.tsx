@@ -24,6 +24,7 @@ import {
 
 export default function SMSStudentsPage() {
   const {
+    theme,
     students,
     classes,
     addStudent,
@@ -32,6 +33,8 @@ export default function SMSStudentsPage() {
     promoteStudentsBatch,
     issueSchoolLeavingCertificate
   } = useSMS();
+
+  const isLight = theme === "light";
 
   const [search, setSearch] = useState("");
   const [classFilter, setClassFilter] = useState("All");
@@ -106,9 +109,7 @@ export default function SMSStudentsPage() {
 
     addStudent({
       ...form,
-      classId: "C9",
-      sectionId: "CLS-9-A",
-      rollNo: form.rollNo || String(students.length + 1)
+      rollNo: form.rollNo || `${Math.floor(10 + Math.random() * 90)}`
     });
 
     setShowAddModal(false);
@@ -295,13 +296,13 @@ export default function SMSStudentsPage() {
   return (
     <div className="space-y-6 font-sans">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-800 pb-4">
+      <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b ${isLight ? "border-slate-200" : "border-gray-800"} pb-4`}>
         <div>
-          <h1 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
-            <Users className="text-sky-400" size={22} />
+          <h1 className={`text-xl font-black tracking-tight ${isLight ? "text-slate-900" : "text-white"} flex items-center gap-2`}>
+            <Users className={isLight ? "text-sky-600" : "text-sky-400"} size={22} />
             <span>Student 360 &amp; Admissions Desk</span>
           </h1>
-          <p className="text-xs text-gray-400">
+          <p className={`text-xs ${isLight ? "text-slate-600 font-medium" : "text-gray-400"}`}>
             Manage comprehensive student lifecycle, roll numbers, PVC identity card printing, and class promotion wizard.
           </p>
         </div>
@@ -309,14 +310,16 @@ export default function SMSStudentsPage() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowPromoteModal(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-purple-600/20 hover:bg-purple-600 text-purple-300 hover:text-white border border-purple-500/30 text-xs font-bold transition"
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl ${
+              isLight ? "bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-300" : "bg-purple-600/20 hover:bg-purple-600 text-purple-300 hover:text-white border-purple-500/30"
+            } border text-xs font-bold transition cursor-pointer`}
           >
             <ArrowUpRight size={14} />
             <span>Class Promotion Wizard</span>
           </button>
           <button
             onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-bold text-xs shadow-lg shadow-sky-600/20 transition"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-bold text-xs shadow-lg shadow-sky-600/20 transition cursor-pointer"
           >
             <Plus size={14} />
             <span>New Admission</span>
@@ -327,13 +330,17 @@ export default function SMSStudentsPage() {
       {/* Filter & Search Bar */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+          <Search size={14} className={`absolute left-3 top-1/2 -translate-y-1/2 ${isLight ? "text-slate-400" : "text-gray-500"}`} />
           <input
             type="text"
             placeholder="Search by student name, father name, admission ID, or roll #..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-[#0b121e] border border-[#1e293b] pl-9 pr-3 py-2.5 rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-sky-500"
+            className={`w-full ${
+              isLight
+                ? "bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:border-sky-500 shadow-xs"
+                : "bg-[#0b121e] border-[#1e293b] text-white placeholder-gray-500 focus:border-sky-500"
+            } border pl-9 pr-3 py-2.5 rounded-xl text-xs focus:outline-none`}
           />
         </div>
 
@@ -341,7 +348,11 @@ export default function SMSStudentsPage() {
           <select
             value={classFilter}
             onChange={(e) => setClassFilter(e.target.value)}
-            className="bg-[#0b121e] border border-[#1e293b] px-3 py-2 rounded-xl text-xs text-white font-semibold focus:outline-none focus:border-sky-500"
+            className={`${
+              isLight
+                ? "bg-white border-slate-200 text-slate-900 focus:border-sky-500 shadow-xs"
+                : "bg-[#0b121e] border-[#1e293b] text-white focus:border-sky-500"
+            } border px-3 py-2 rounded-xl text-xs font-semibold focus:outline-none`}
           >
             <option value="All">All Classes</option>
             {classes.map((c) => (
@@ -354,7 +365,11 @@ export default function SMSStudentsPage() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="bg-[#0b121e] border border-[#1e293b] px-3 py-2 rounded-xl text-xs text-white font-semibold focus:outline-none focus:border-sky-500"
+            className={`${
+              isLight
+                ? "bg-white border-slate-200 text-slate-900 focus:border-sky-500 shadow-xs"
+                : "bg-[#0b121e] border-[#1e293b] text-white focus:border-sky-500"
+            } border px-3 py-2 rounded-xl text-xs font-semibold focus:outline-none`}
           >
             <option value="All">All Statuses</option>
             <option value="Active">Active</option>
@@ -366,11 +381,11 @@ export default function SMSStudentsPage() {
       </div>
 
       {/* Students Table */}
-      <div className="bg-[#0b121e] border border-[#1e293b] rounded-2xl overflow-hidden shadow-2xl">
+      <div className={`${isLight ? "bg-white border-slate-200 shadow-sm" : "bg-[#0b121e] border-[#1e293b]"} border rounded-2xl overflow-hidden shadow-2xl`}>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="border-b border-gray-800 text-gray-400 font-mono text-[11px] bg-black/40">
+              <tr className={`border-b ${isLight ? "border-slate-200 text-slate-600 bg-slate-100/70" : "border-gray-800 text-gray-400 bg-black/40"} font-mono text-[11px]`}>
                 <th className="p-4 font-bold">Admission ID</th>
                 <th className="p-4 font-bold">Roll #</th>
                 <th className="p-4 font-bold">Student Name</th>
@@ -382,29 +397,31 @@ export default function SMSStudentsPage() {
                 <th className="p-4 font-bold text-center">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-800/50 font-mono text-[11px]">
+            <tbody className={`divide-y ${isLight ? "divide-slate-100" : "divide-gray-800/50"} font-mono text-[11px]`}>
               {filteredStudents.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="p-8 text-center text-gray-500 italic font-sans">
+                  <td colSpan={9} className={`p-8 text-center ${isLight ? "text-slate-400" : "text-gray-500"} italic font-sans`}>
                     No student records match your query.
                   </td>
                 </tr>
               ) : (
                 filteredStudents.map((st) => (
-                  <tr key={st.id} className="hover:bg-white/[0.02] transition">
-                    <td className="p-4 font-bold text-sky-400">{st.admissionNo}</td>
-                    <td className="p-4 text-white font-bold">{st.rollNo}</td>
-                    <td className="p-4 font-sans font-bold text-white">
+                  <tr key={st.id} className={`${isLight ? "hover:bg-slate-50/80" : "hover:bg-white/[0.02]"} transition`}>
+                    <td className={`p-4 font-bold ${isLight ? "text-sky-700" : "text-sky-400"}`}>{st.admissionNo}</td>
+                    <td className={`p-4 font-bold ${isLight ? "text-slate-900" : "text-white"}`}>{st.rollNo}</td>
+                    <td className={`p-4 font-sans font-bold ${isLight ? "text-slate-900" : "text-white"}`}>
                       {st.firstName} {st.lastName}
                     </td>
-                    <td className="p-4 font-sans text-gray-300">{st.fatherName}</td>
+                    <td className={`p-4 font-sans ${isLight ? "text-slate-700" : "text-gray-300"}`}>{st.fatherName}</td>
                     <td className="p-4 font-sans">
-                      <div className="text-white font-semibold">{st.className}</div>
-                      <div className="text-[10px] text-gray-500">{st.sectionName}</div>
+                      <div className={`font-semibold ${isLight ? "text-slate-900" : "text-white"}`}>{st.className}</div>
+                      <div className={`text-[10px] ${isLight ? "text-slate-500" : "text-gray-500"}`}>{st.sectionName}</div>
                     </td>
-                    <td className="p-4 text-gray-400">{st.emergencyContact}</td>
+                    <td className={`p-4 ${isLight ? "text-slate-600" : "text-gray-400"}`}>{st.emergencyContact}</td>
                     <td className="p-4 font-sans">
-                      <span className="bg-sky-500/10 text-sky-300 border border-sky-500/20 px-2 py-0.5 rounded-md text-[10px] font-bold">
+                      <span className={`${
+                        isLight ? "bg-sky-50 text-sky-700 border-sky-200" : "bg-sky-500/10 text-sky-300 border-sky-500/20"
+                      } border px-2 py-0.5 rounded-md text-[10px] font-bold`}>
                         {st.feeCategory}
                       </span>
                     </td>
@@ -412,9 +429,15 @@ export default function SMSStudentsPage() {
                       <span
                         className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold ${
                           st.status === "Active"
-                            ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
+                            ? isLight
+                              ? "bg-emerald-50 text-emerald-700 border border-emerald-300"
+                              : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
                             : st.status === "Alumni"
-                            ? "bg-purple-500/10 text-purple-400 border border-purple-500/30"
+                            ? isLight
+                              ? "bg-purple-50 text-purple-700 border border-purple-300"
+                              : "bg-purple-500/10 text-purple-400 border border-purple-500/30"
+                            : isLight
+                            ? "bg-red-50 text-red-700 border border-red-300"
                             : "bg-red-500/10 text-red-400 border border-red-500/30"
                         }`}
                       >
@@ -425,28 +448,36 @@ export default function SMSStudentsPage() {
                       <div className="flex gap-1.5 justify-center">
                         <button
                           onClick={() => handlePrintIdCard(st)}
-                          className="p-1.5 bg-sky-500/10 hover:bg-sky-500 text-sky-400 hover:text-white rounded-lg transition"
+                          className={`p-1.5 ${
+                            isLight ? "bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200" : "bg-sky-500/10 hover:bg-sky-500 text-sky-400 hover:text-white"
+                          } rounded-lg transition cursor-pointer`}
                           title="Print PVC Student Identity Card"
                         >
                           <QrCode size={12} />
                         </button>
                         <button
                           onClick={() => setSlcTargetStudent(st)}
-                          className="p-1.5 bg-purple-500/10 hover:bg-purple-500 text-purple-400 hover:text-white rounded-lg transition"
+                          className={`p-1.5 ${
+                            isLight ? "bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200" : "bg-purple-500/10 hover:bg-purple-500 text-purple-400 hover:text-white"
+                          } rounded-lg transition cursor-pointer`}
                           title="Issue School Leaving Certificate (SLC)"
                         >
                           <FileCheck2 size={12} />
                         </button>
                         <button
                           onClick={() => setSelectedStudent(st)}
-                          className="p-1.5 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-400 hover:text-white rounded-lg transition"
+                          className={`p-1.5 ${
+                            isLight ? "bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200" : "bg-emerald-500/10 hover:bg-emerald-500 text-emerald-400 hover:text-white"
+                          } rounded-lg transition cursor-pointer`}
                           title="View Student 360 Profile"
                         >
                           <Eye size={12} />
                         </button>
                         <button
                           onClick={() => deleteStudent(st.id)}
-                          className="p-1.5 bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white rounded-lg transition"
+                          className={`p-1.5 ${
+                            isLight ? "bg-red-50 hover:bg-red-100 text-red-700 border border-red-200" : "bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white"
+                          } rounded-lg transition cursor-pointer`}
                           title="Delete Student Record"
                         >
                           <Trash2 size={12} />
@@ -465,14 +496,16 @@ export default function SMSStudentsPage() {
       {/* NEW ADMISSION MODAL                                                           */}
       {/* ───────────────────────────────────────────────────────────────────────────── */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="bg-[#0b121e] border border-sky-500/40 rounded-3xl w-full max-w-2xl shadow-2xl p-6 my-8 animate-fade-in-up">
-            <div className="flex justify-between items-center border-b border-gray-800 pb-3 mb-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className={`${
+            isLight ? "bg-white border-slate-200 text-slate-900" : "bg-[#0b121e] border-sky-500/40 text-white"
+          } border rounded-3xl w-full max-w-2xl shadow-2xl p-6 my-8 animate-fade-in-up`}>
+            <div className={`flex justify-between items-center border-b ${isLight ? "border-slate-100" : "border-gray-800"} pb-3 mb-4`}>
               <div className="flex items-center gap-2">
-                <Plus size={16} className="text-sky-400" />
-                <h3 className="font-black text-white text-sm">Formal Student Admission Enrolment</h3>
+                <Plus size={16} className={isLight ? "text-sky-600" : "text-sky-400"} />
+                <h3 className={`font-black ${isLight ? "text-slate-900" : "text-white"} text-sm`}>Formal Student Admission Enrolment</h3>
               </div>
-              <button onClick={() => setShowAddModal(false)} className="text-gray-400 hover:text-white">
+              <button onClick={() => setShowAddModal(false)} className={`${isLight ? "text-slate-400 hover:text-slate-800" : "text-gray-400 hover:text-white"} cursor-pointer`}>
                 <X size={16} />
               </button>
             </div>
@@ -481,32 +514,38 @@ export default function SMSStudentsPage() {
               {/* Personal Details */}
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">First Name *</label>
+                  <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-slate-500" : "text-gray-400"} mb-1`}>First Name *</label>
                   <input
                     type="text"
                     required
                     placeholder="e.g. Ahmed"
                     value={form.firstName}
                     onChange={(e) => setForm({ ...form, firstName: e.target.value })}
-                    className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-bold focus:outline-none focus:border-sky-500"
+                    className={`w-full ${
+                      isLight ? "bg-slate-50 border-slate-200 text-slate-900 focus:bg-white" : "bg-black border-gray-800 text-white"
+                    } border p-2.5 rounded-xl font-bold focus:outline-none focus:border-sky-500`}
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Last Name</label>
+                  <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-slate-500" : "text-gray-400"} mb-1`}>Last Name</label>
                   <input
                     type="text"
                     placeholder="e.g. Talal"
                     value={form.lastName}
                     onChange={(e) => setForm({ ...form, lastName: e.target.value })}
-                    className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-bold focus:outline-none focus:border-sky-500"
+                    className={`w-full ${
+                      isLight ? "bg-slate-50 border-slate-200 text-slate-900 focus:bg-white" : "bg-black border-gray-800 text-white"
+                    } border p-2.5 rounded-xl font-bold focus:outline-none focus:border-sky-500`}
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Gender</label>
+                  <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-slate-500" : "text-gray-400"} mb-1`}>Gender</label>
                   <select
                     value={form.gender}
                     onChange={(e) => setForm({ ...form, gender: e.target.value as any })}
-                    className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-bold focus:outline-none focus:border-sky-500"
+                    className={`w-full ${
+                      isLight ? "bg-slate-50 border-slate-200 text-slate-900 focus:bg-white" : "bg-black border-gray-800 text-white"
+                    } border p-2.5 rounded-xl font-bold focus:outline-none focus:border-sky-500`}
                   >
                     <option value="Male">Male</option>
                     <option value="Female">Female</option>
@@ -517,11 +556,13 @@ export default function SMSStudentsPage() {
               {/* Class & Section Assignment */}
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-[10px] uppercase font-bold text-sky-400 mb-1">Enrolled Class *</label>
+                  <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-sky-700" : "text-sky-400"} mb-1`}>Enrolled Class *</label>
                   <select
                     value={form.className}
                     onChange={(e) => setForm({ ...form, className: e.target.value })}
-                    className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-bold focus:outline-none focus:border-sky-500"
+                    className={`w-full ${
+                      isLight ? "bg-slate-50 border-slate-200 text-slate-900 focus:bg-white" : "bg-black border-gray-800 text-white"
+                    } border p-2.5 rounded-xl font-bold focus:outline-none focus:border-sky-500`}
                   >
                     {classes.map((c) => (
                       <option key={c.id} value={c.className}>
@@ -531,11 +572,13 @@ export default function SMSStudentsPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[10px] uppercase font-bold text-sky-400 mb-1">Section</label>
+                  <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-sky-700" : "text-sky-400"} mb-1`}>Section</label>
                   <select
                     value={form.sectionName}
                     onChange={(e) => setForm({ ...form, sectionName: e.target.value })}
-                    className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-bold focus:outline-none focus:border-sky-500"
+                    className={`w-full ${
+                      isLight ? "bg-slate-50 border-slate-200 text-slate-900 focus:bg-white" : "bg-black border-gray-800 text-white"
+                    } border p-2.5 rounded-xl font-bold focus:outline-none focus:border-sky-500`}
                   >
                     <option value="Section A (Newton)">Section A (Newton)</option>
                     <option value="Section B (Einstein)">Section B (Einstein)</option>
@@ -543,13 +586,15 @@ export default function SMSStudentsPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Roll Number</label>
+                  <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-slate-500" : "text-gray-400"} mb-1`}>Roll Number</label>
                   <input
                     type="text"
                     placeholder="e.g. 05"
                     value={form.rollNo}
                     onChange={(e) => setForm({ ...form, rollNo: e.target.value })}
-                    className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-mono font-bold focus:outline-none focus:border-sky-500"
+                    className={`w-full ${
+                      isLight ? "bg-slate-50 border-slate-200 text-slate-900 focus:bg-white" : "bg-black border-gray-800 text-white"
+                    } border p-2.5 rounded-xl font-mono font-bold focus:outline-none focus:border-sky-500`}
                   />
                 </div>
               </div>
@@ -557,35 +602,41 @@ export default function SMSStudentsPage() {
               {/* Father / Guardian Details */}
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Father Name *</label>
+                  <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-slate-500" : "text-gray-400"} mb-1`}>Father Name *</label>
                   <input
                     type="text"
                     required
                     placeholder="e.g. Mian Talal Ahmad"
                     value={form.fatherName}
                     onChange={(e) => setForm({ ...form, fatherName: e.target.value })}
-                    className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-bold focus:outline-none focus:border-sky-500"
+                    className={`w-full ${
+                      isLight ? "bg-slate-50 border-slate-200 text-slate-900 focus:bg-white" : "bg-black border-gray-800 text-white"
+                    } border p-2.5 rounded-xl font-bold focus:outline-none focus:border-sky-500`}
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Father CNIC</label>
+                  <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-slate-500" : "text-gray-400"} mb-1`}>Father CNIC</label>
                   <input
                     type="text"
                     placeholder="35202-xxxxxxx-x"
                     value={form.fatherCnic}
                     onChange={(e) => setForm({ ...form, fatherCnic: e.target.value })}
-                    className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white focus:outline-none focus:border-sky-500"
+                    className={`w-full ${
+                      isLight ? "bg-slate-50 border-slate-200 text-slate-900 focus:bg-white" : "bg-black border-gray-800 text-white"
+                    } border p-2.5 rounded-xl focus:outline-none focus:border-sky-500`}
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] uppercase font-bold text-emerald-400 mb-1">Emergency Phone *</label>
+                  <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-emerald-700" : "text-emerald-400"} mb-1`}>Emergency Phone *</label>
                   <input
                     type="text"
                     required
                     placeholder="03396399895"
                     value={form.emergencyContact}
                     onChange={(e) => setForm({ ...form, emergencyContact: e.target.value })}
-                    className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-mono font-bold focus:outline-none focus:border-emerald-500"
+                    className={`w-full ${
+                      isLight ? "bg-slate-50 border-slate-200 text-slate-900 focus:bg-white" : "bg-black border-gray-800 text-white"
+                    } border p-2.5 rounded-xl font-mono font-bold focus:outline-none focus:border-emerald-500`}
                   />
                 </div>
               </div>
@@ -593,11 +644,13 @@ export default function SMSStudentsPage() {
               {/* Fee & Concession Structure */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Fee Concession Category</label>
+                  <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-slate-500" : "text-gray-400"} mb-1`}>Fee Concession Category</label>
                   <select
                     value={form.feeCategory}
                     onChange={(e) => setForm({ ...form, feeCategory: e.target.value as any })}
-                    className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-bold focus:outline-none focus:border-sky-500"
+                    className={`w-full ${
+                      isLight ? "bg-slate-50 border-slate-200 text-slate-900 focus:bg-white" : "bg-black border-gray-800 text-white"
+                    } border p-2.5 rounded-xl font-bold focus:outline-none focus:border-sky-500`}
                   >
                     <option value="Standard">Standard Full Fee</option>
                     <option value="Sibling Concession (20%)">Sibling Concession (20% Off)</option>
@@ -607,12 +660,14 @@ export default function SMSStudentsPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Custom Monthly Tuition (PKR)</label>
+                  <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-slate-500" : "text-gray-400"} mb-1`}>Custom Monthly Tuition (PKR)</label>
                   <input
                     type="number"
                     value={form.customMonthlyFee}
                     onChange={(e) => setForm({ ...form, customMonthlyFee: parseFloat(e.target.value) || 0 })}
-                    className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-emerald-400 font-bold focus:outline-none focus:border-sky-500"
+                    className={`w-full ${
+                      isLight ? "bg-slate-50 border-slate-200 text-emerald-700 focus:bg-white" : "bg-black border-gray-800 text-emerald-400"
+                    } border p-2.5 rounded-xl font-bold focus:outline-none focus:border-sky-500`}
                   />
                 </div>
               </div>
@@ -620,7 +675,7 @@ export default function SMSStudentsPage() {
               {/* Submit */}
               <button
                 type="submit"
-                className="w-full py-3 bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-black uppercase tracking-wider rounded-xl transition flex items-center justify-center gap-2 text-xs shadow-lg shadow-sky-600/20"
+                className="w-full py-3 bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-black uppercase tracking-wider rounded-xl transition flex items-center justify-center gap-2 text-xs shadow-lg shadow-sky-600/20 cursor-pointer"
               >
                 <CheckCircle2 size={16} />
                 <span>Confirm &amp; Enrol Student (Auto-Generate GR #)</span>
@@ -634,29 +689,33 @@ export default function SMSStudentsPage() {
       {/* PROMOTION WIZARD MODAL                                                        */}
       {/* ───────────────────────────────────────────────────────────────────────────── */}
       {showPromoteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4">
-          <div className="bg-[#0b121e] border border-purple-500/40 rounded-3xl w-full max-w-md shadow-2xl p-6 animate-fade-in-up">
-            <div className="flex justify-between items-center border-b border-gray-800 pb-3 mb-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className={`${
+            isLight ? "bg-white border-slate-200 text-slate-900" : "bg-[#0b121e] border-purple-500/40 text-white"
+          } border rounded-3xl w-full max-w-md shadow-2xl p-6 animate-fade-in-up`}>
+            <div className={`flex justify-between items-center border-b ${isLight ? "border-slate-100" : "border-gray-800"} pb-3 mb-4`}>
               <div className="flex items-center gap-2">
-                <ArrowUpRight size={16} className="text-purple-400" />
-                <h3 className="font-black text-white text-sm">Batch Class Promotion Wizard</h3>
+                <ArrowUpRight size={16} className={isLight ? "text-purple-600" : "text-purple-400"} />
+                <h3 className={`font-black ${isLight ? "text-slate-900" : "text-white"} text-sm`}>Batch Class Promotion Wizard</h3>
               </div>
-              <button onClick={() => setShowPromoteModal(false)} className="text-gray-400 hover:text-white">
+              <button onClick={() => setShowPromoteModal(false)} className={`${isLight ? "text-slate-400 hover:text-slate-800" : "text-gray-400 hover:text-white"} cursor-pointer`}>
                 <X size={16} />
               </button>
             </div>
 
             <form onSubmit={handlePromoteSubmit} className="space-y-4 text-xs">
-              <div className="bg-purple-500/10 border border-purple-500/30 p-3 rounded-xl text-purple-300 text-xs">
+              <div className={`${isLight ? "bg-purple-50 border-purple-200 text-purple-900" : "bg-purple-500/10 border-purple-500/30 text-purple-300"} border p-3 rounded-xl text-xs`}>
                 Select the Source Class to promote all active students to their next target Class &amp; Section for the new session.
               </div>
 
               <div className="space-y-2">
-                <label className="block text-[10px] uppercase font-bold text-gray-400">Source Class</label>
+                <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-slate-500" : "text-gray-400"}`}>Source Class</label>
                 <select
                   value={promoForm.sourceClass}
                   onChange={(e) => setPromoForm({ ...promoForm, sourceClass: e.target.value })}
-                  className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-bold"
+                  className={`w-full ${
+                    isLight ? "bg-slate-50 border-slate-200 text-slate-900 focus:bg-white" : "bg-black border-gray-800 text-white"
+                  } border p-2.5 rounded-xl font-bold focus:outline-none`}
                 >
                   {classes.map((c) => (
                     <option key={c.id} value={c.className}>
@@ -667,11 +726,13 @@ export default function SMSStudentsPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="block text-[10px] uppercase font-bold text-emerald-400">Promote To Target Class</label>
+                <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-emerald-700" : "text-emerald-400"}`}>Promote To Target Class</label>
                 <select
                   value={promoForm.targetClass}
                   onChange={(e) => setPromoForm({ ...promoForm, targetClass: e.target.value })}
-                  className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-bold"
+                  className={`w-full ${
+                    isLight ? "bg-slate-50 border-slate-200 text-slate-900 focus:bg-white" : "bg-black border-gray-800 text-white"
+                  } border p-2.5 rounded-xl font-bold focus:outline-none`}
                 >
                   <option value="Class 10 (Matric Science)">Class 10 (Matric Science)</option>
                   <option value="FSc Pre-Medical (Part 1)">FSc Pre-Medical (Part 1)</option>
@@ -681,7 +742,7 @@ export default function SMSStudentsPage() {
 
               <button
                 type="submit"
-                className="w-full py-3 bg-purple-600 hover:bg-purple-500 text-white font-black uppercase rounded-xl transition flex items-center justify-center gap-2 text-xs"
+                className="w-full py-3 bg-purple-600 hover:bg-purple-500 text-white font-black uppercase rounded-xl transition flex items-center justify-center gap-2 text-xs cursor-pointer shadow-lg shadow-purple-600/20"
               >
                 <CheckCircle2 size={16} />
                 <span>Execute Batch Promotion</span>
@@ -695,32 +756,36 @@ export default function SMSStudentsPage() {
       {/* SLC ISSUANCE MODAL                                                            */}
       {/* ───────────────────────────────────────────────────────────────────────────── */}
       {slcTargetStudent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4">
-          <div className="bg-[#0b121e] border border-purple-500/40 rounded-3xl w-full max-w-md shadow-2xl p-6 animate-fade-in-up">
-            <div className="flex justify-between items-center border-b border-gray-800 pb-3 mb-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className={`${
+            isLight ? "bg-white border-slate-200 text-slate-900" : "bg-[#0b121e] border-purple-500/40 text-white"
+          } border rounded-3xl w-full max-w-md shadow-2xl p-6 animate-fade-in-up`}>
+            <div className={`flex justify-between items-center border-b ${isLight ? "border-slate-100" : "border-gray-800"} pb-3 mb-4`}>
               <div className="flex items-center gap-2">
-                <FileCheck2 size={16} className="text-purple-400" />
-                <h3 className="font-black text-white text-sm">Issue School Leaving Certificate</h3>
+                <FileCheck2 size={16} className={isLight ? "text-purple-600" : "text-purple-400"} />
+                <h3 className={`font-black ${isLight ? "text-slate-900" : "text-white"} text-sm`}>Issue School Leaving Certificate</h3>
               </div>
-              <button onClick={() => setSlcTargetStudent(null)} className="text-gray-400 hover:text-white">
+              <button onClick={() => setSlcTargetStudent(null)} className={`${isLight ? "text-slate-400 hover:text-slate-800" : "text-gray-400 hover:text-white"} cursor-pointer`}>
                 <X size={16} />
               </button>
             </div>
 
             <div className="space-y-4 text-xs">
-              <div className="bg-black/40 border border-gray-800 rounded-xl p-3 space-y-1 font-mono">
-                <div>Student: <span className="text-white font-bold">{slcTargetStudent.firstName} {slcTargetStudent.lastName}</span></div>
-                <div>GR ID: <span className="text-sky-400 font-bold">{slcTargetStudent.admissionNo}</span></div>
-                <div>Class: <span className="text-purple-400">{slcTargetStudent.className}</span></div>
+              <div className={`${isLight ? "bg-slate-50 border-slate-200 text-slate-800" : "bg-black/40 border-gray-800 text-gray-300"} border rounded-xl p-3 space-y-1 font-mono`}>
+                <div>Student: <span className={`${isLight ? "text-slate-900" : "text-white"} font-bold`}>{slcTargetStudent.firstName} {slcTargetStudent.lastName}</span></div>
+                <div>GR ID: <span className={`${isLight ? "text-sky-700" : "text-sky-400"} font-bold`}>{slcTargetStudent.admissionNo}</span></div>
+                <div>Class: <span className={isLight ? "text-purple-700 font-bold" : "text-purple-400"}>{slcTargetStudent.className}</span></div>
               </div>
 
               <div>
-                <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Reason for Leaving *</label>
+                <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-slate-500" : "text-gray-400"} mb-1`}>Reason for Leaving *</label>
                 <textarea
                   rows={3}
                   value={slcReason}
                   onChange={(e) => setSlcReason(e.target.value)}
-                  className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white text-xs resize-none"
+                  className={`w-full ${
+                    isLight ? "bg-slate-50 border-slate-200 text-slate-900 focus:bg-white" : "bg-black border-gray-800 text-white"
+                  } border p-2.5 rounded-xl text-xs resize-none focus:outline-none`}
                 />
               </div>
 
@@ -731,7 +796,7 @@ export default function SMSStudentsPage() {
                     handlePrintSLC(slcTargetStudent);
                     setSlcTargetStudent(null);
                   }}
-                  className="flex-1 py-3 bg-purple-600 hover:bg-purple-500 text-white font-black uppercase rounded-xl transition flex items-center justify-center gap-2 text-xs"
+                  className="flex-1 py-3 bg-purple-600 hover:bg-purple-500 text-white font-black uppercase rounded-xl transition flex items-center justify-center gap-2 text-xs cursor-pointer shadow-lg shadow-purple-600/20"
                 >
                   <Printer size={14} />
                   <span>Clear Dues &amp; Print Official SLC</span>
@@ -746,69 +811,75 @@ export default function SMSStudentsPage() {
       {/* STUDENT 360 COMPREHENSIVE PROFILE MODAL                                       */}
       {/* ───────────────────────────────────────────────────────────────────────────── */}
       {selectedStudent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="bg-[#0b121e] border border-sky-500/40 rounded-3xl w-full max-w-3xl shadow-2xl p-6 my-8 animate-fade-in-up space-y-5">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className={`${
+            isLight ? "bg-white border-slate-200 text-slate-900" : "bg-[#0b121e] border-sky-500/40 text-white"
+          } border rounded-3xl w-full max-w-3xl shadow-2xl p-6 my-8 animate-fade-in-up space-y-5`}>
             {/* Header */}
-            <div className="flex justify-between items-start border-b border-gray-800 pb-4">
+            <div className={`flex justify-between items-start border-b ${isLight ? "border-slate-100" : "border-gray-800"} pb-4`}>
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-sky-600 to-indigo-600 flex items-center justify-center font-black text-white text-2xl shadow-lg shadow-sky-600/30">
                   {selectedStudent.firstName[0]}
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h2 className="text-xl font-black text-white">
+                    <h2 className={`text-xl font-black ${isLight ? "text-slate-900" : "text-white"}`}>
                       {selectedStudent.firstName} {selectedStudent.lastName}
                     </h2>
-                    <span className="text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2.5 py-0.5 rounded-full">
+                    <span className={`text-[10px] font-bold ${
+                      isLight ? "bg-emerald-50 text-emerald-700 border-emerald-300" : "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                    } border px-2.5 py-0.5 rounded-full`}>
                       {selectedStudent.status}
                     </span>
                   </div>
-                  <div className="text-xs text-gray-400 mt-0.5">
-                    Admission ID: <b className="text-sky-400 font-mono">{selectedStudent.admissionNo}</b> • Roll #{selectedStudent.rollNo} • {selectedStudent.className} ({selectedStudent.sectionName})
+                  <div className={`text-xs ${isLight ? "text-slate-500" : "text-gray-400"} mt-0.5`}>
+                    Admission ID: <b className={`${isLight ? "text-sky-700" : "text-sky-400"} font-mono`}>{selectedStudent.admissionNo}</b> • Roll #{selectedStudent.rollNo} • {selectedStudent.className} ({selectedStudent.sectionName})
                   </div>
                 </div>
               </div>
-              <button onClick={() => setSelectedStudent(null)} className="text-gray-400 hover:text-white p-1">
+              <button onClick={() => setSelectedStudent(null)} className={`${isLight ? "text-slate-400 hover:text-slate-800" : "text-gray-400 hover:text-white"} p-1 cursor-pointer`}>
                 <X size={18} />
               </button>
             </div>
 
             {/* 3-Column Info Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-              <div className="bg-black/40 border border-gray-800 p-4 rounded-xl space-y-1.5">
-                <span className="text-[10px] uppercase font-bold text-sky-400 block">Guardian / Father Info</span>
-                <div>Name: <b className="text-white">{selectedStudent.fatherName}</b></div>
-                <div>CNIC: <span className="text-gray-300 font-mono">{selectedStudent.fatherCnic || 'N/A'}</span></div>
-                <div>Phone: <b className="text-emerald-400">{selectedStudent.fatherPhone}</b></div>
-                <div>Address: <span className="text-gray-400">{selectedStudent.residentialAddress}</span></div>
+              <div className={`${isLight ? "bg-slate-50 border-slate-200 text-slate-800" : "bg-black/40 border-gray-800 text-gray-300"} border p-4 rounded-xl space-y-1.5`}>
+                <span className={`text-[10px] uppercase font-bold ${isLight ? "text-sky-700" : "text-sky-400"} block`}>Guardian / Father Info</span>
+                <div>Name: <b className={isLight ? "text-slate-900" : "text-white"}>{selectedStudent.fatherName}</b></div>
+                <div>CNIC: <span className={`${isLight ? "text-slate-600" : "text-gray-300"} font-mono`}>{selectedStudent.fatherCnic || 'N/A'}</span></div>
+                <div>Phone: <b className={isLight ? "text-emerald-700" : "text-emerald-400"}>{selectedStudent.fatherPhone}</b></div>
+                <div>Address: <span className={isLight ? "text-slate-600" : "text-gray-400"}>{selectedStudent.residentialAddress}</span></div>
               </div>
 
-              <div className="bg-black/40 border border-gray-800 p-4 rounded-xl space-y-1.5">
-                <span className="text-[10px] uppercase font-bold text-emerald-400 block">Financial &amp; Transport</span>
-                <div>Category: <b className="text-sky-300">{selectedStudent.feeCategory}</b></div>
-                <div>Monthly Fee: <b className="text-emerald-400">Rs {(selectedStudent.customMonthlyFee || 18500).toLocaleString()}</b></div>
-                <div>Transport: <span className="text-gray-300">{selectedStudent.transportEnrolled ? 'Enrolled (Bus)' : 'Private Pickup'}</span></div>
-                <div>House: <b className="text-purple-300">{selectedStudent.houseName || 'Jinnah House'}</b></div>
+              <div className={`${isLight ? "bg-slate-50 border-slate-200 text-slate-800" : "bg-black/40 border-gray-800 text-gray-300"} border p-4 rounded-xl space-y-1.5`}>
+                <span className={`text-[10px] uppercase font-bold ${isLight ? "text-emerald-700" : "text-emerald-400"} block`}>Financial &amp; Transport</span>
+                <div>Category: <b className={isLight ? "text-sky-700" : "text-sky-300"}>{selectedStudent.feeCategory}</b></div>
+                <div>Monthly Fee: <b className={isLight ? "text-emerald-700" : "text-emerald-400"}>Rs {(selectedStudent.customMonthlyFee || 18500).toLocaleString()}</b></div>
+                <div>Transport: <span className={isLight ? "text-slate-600" : "text-gray-300"}>{selectedStudent.transportEnrolled ? 'Enrolled (Bus)' : 'Private Pickup'}</span></div>
+                <div>House: <b className={isLight ? "text-purple-700" : "text-purple-300"}>{selectedStudent.houseName || 'Jinnah House'}</b></div>
               </div>
 
-              <div className="bg-black/40 border border-gray-800 p-4 rounded-xl space-y-1.5">
-                <span className="text-[10px] uppercase font-bold text-rose-400 block">Health &amp; Demographics</span>
-                <div>Blood Group: <b className="text-red-400">{selectedStudent.bloodGroup || 'B+'}</b></div>
-                <div>DOB: <span className="text-gray-300">{selectedStudent.dob}</span></div>
-                <div>Gender: <span className="text-gray-300">{selectedStudent.gender}</span></div>
-                <div>Medical Alert: <span className="text-gray-400">{selectedStudent.medicalNotes || 'No known allergies'}</span></div>
+              <div className={`${isLight ? "bg-slate-50 border-slate-200 text-slate-800" : "bg-black/40 border-gray-800 text-gray-300"} border p-4 rounded-xl space-y-1.5`}>
+                <span className={`text-[10px] uppercase font-bold ${isLight ? "text-rose-700" : "text-rose-400"} block`}>Health &amp; Demographics</span>
+                <div>Blood Group: <b className="text-red-600">{selectedStudent.bloodGroup || 'B+'}</b></div>
+                <div>DOB: <span className={isLight ? "text-slate-600" : "text-gray-300"}>{selectedStudent.dob}</span></div>
+                <div>Gender: <span className={isLight ? "text-slate-600" : "text-gray-300"}>{selectedStudent.gender}</span></div>
+                <div>Medical Alert: <span className={isLight ? "text-slate-600" : "text-gray-400"}>{selectedStudent.medicalNotes || 'No known allergies'}</span></div>
               </div>
             </div>
 
             {/* Quick Action Footer */}
-            <div className="pt-2 border-t border-gray-800 flex flex-wrap justify-between items-center gap-3">
-              <div className="text-[10px] text-gray-500 font-mono">
+            <div className={`pt-2 border-t ${isLight ? "border-slate-100" : "border-gray-800"} flex flex-wrap justify-between items-center gap-3`}>
+              <div className={`text-[10px] ${isLight ? "text-slate-500" : "text-gray-500"} font-mono`}>
                 Enrolled On: {selectedStudent.admissionDate}
               </div>
               <div className="flex gap-2">
                 <button
                   onClick={() => handlePrintIdCard(selectedStudent)}
-                  className="px-3.5 py-2 bg-sky-600/20 hover:bg-sky-600 text-sky-300 hover:text-white rounded-xl font-bold text-xs transition flex items-center gap-1.5"
+                  className={`px-3.5 py-2 ${
+                    isLight ? "bg-sky-50 hover:bg-sky-600 text-sky-700 hover:text-white border border-sky-200" : "bg-sky-600/20 hover:bg-sky-600 text-sky-300 hover:text-white"
+                  } rounded-xl font-bold text-xs transition flex items-center gap-1.5 cursor-pointer`}
                 >
                   <QrCode size={14} />
                   <span>Print PVC Card</span>
@@ -818,7 +889,9 @@ export default function SMSStudentsPage() {
                     setSlcTargetStudent(selectedStudent);
                     setSelectedStudent(null);
                   }}
-                  className="px-3.5 py-2 bg-purple-600/20 hover:bg-purple-600 text-purple-300 hover:text-white rounded-xl font-bold text-xs transition flex items-center gap-1.5"
+                  className={`px-3.5 py-2 ${
+                    isLight ? "bg-purple-50 hover:bg-purple-600 text-purple-700 hover:text-white border border-purple-200" : "bg-purple-600/20 hover:bg-purple-600 text-purple-300 hover:text-white"
+                  } rounded-xl font-bold text-xs transition flex items-center gap-1.5 cursor-pointer`}
                 >
                   <FileCheck2 size={14} />
                   <span>Issue SLC</span>

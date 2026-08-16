@@ -21,7 +21,8 @@ import {
 } from "lucide-react";
 
 export default function SMSCertificatesPage() {
-  const { students, campuses, selectedCampus } = useSMS();
+  const { theme, students, campuses, selectedCampus } = useSMS();
+  const isLight = theme === "light";
   const activeCampus = campuses.find((c) => c.id === selectedCampus) || campuses[0];
 
   const [selectedStudentId, setSelectedStudentId] = useState(students[0]?.id || "");
@@ -146,13 +147,13 @@ export default function SMSCertificatesPage() {
       `}} />
 
       {/* Page Title & Actions Toolbar */}
-      <div className="no-print flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-800 pb-5">
+      <div className={`no-print flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b ${isLight ? "border-slate-200" : "border-gray-800"} pb-5`}>
         <div>
-          <h1 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
-            <FileCheck className="text-sky-400" size={24} />
+          <h1 className={`text-xl font-black tracking-tight ${isLight ? "text-slate-900" : "text-white"} flex items-center gap-2`}>
+            <FileCheck className={isLight ? "text-sky-600" : "text-sky-400"} size={24} />
             <span>Official A4 Student Certificates &amp; Attestation Studio</span>
           </h1>
-          <p className="text-xs text-gray-400">
+          <p className={`text-xs ${isLight ? "text-slate-600 font-medium" : "text-gray-400"}`}>
             Generate, customize, and print verified A4 Certificates with Official Golden E-Stamp, Security Watermark, and QR Code.
           </p>
         </div>
@@ -160,8 +161,14 @@ export default function SMSCertificatesPage() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => setShowStamp(!showStamp)}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border transition ${
-              showStamp ? "bg-amber-500/10 text-amber-300 border-amber-500/30" : "bg-gray-800 text-gray-400 border-gray-700"
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border transition cursor-pointer ${
+              showStamp
+                ? isLight
+                  ? "bg-amber-50 text-amber-800 border-amber-300"
+                  : "bg-amber-500/10 text-amber-300 border-amber-500/30"
+                : isLight
+                ? "bg-slate-100 text-slate-600 border-slate-200"
+                : "bg-gray-800 text-gray-400 border-gray-700"
             }`}
           >
             <Stamp size={14} />
@@ -182,23 +189,25 @@ export default function SMSCertificatesPage() {
         {/* ───────────────────────────────────────────────────────────────────────────── */}
         {/* 2. LEFT SIDEBAR: FULL CUSTOMIZATION & PARAMETERS (NO PRINT)                   */}
         {/* ───────────────────────────────────────────────────────────────────────────── */}
-        <div className="no-print xl:col-span-4 bg-[#0b121e] border border-[#1e293b] rounded-3xl p-6 space-y-5 shadow-2xl">
-          <div className="flex items-center justify-between border-b border-gray-800 pb-3">
-            <h3 className="text-xs uppercase font-black text-sky-400 tracking-wider flex items-center gap-1.5">
+        <div className={`no-print xl:col-span-4 ${isLight ? "bg-white border-slate-200 shadow-sm" : "bg-[#0b121e] border-[#1e293b]"} border rounded-3xl p-6 space-y-5 shadow-2xl`}>
+          <div className={`flex items-center justify-between border-b ${isLight ? "border-slate-100" : "border-gray-800"} pb-3`}>
+            <h3 className={`text-xs uppercase font-black ${isLight ? "text-sky-700 font-bold" : "text-sky-400"} tracking-wider flex items-center gap-1.5`}>
               <Edit3 size={15} />
               <span>Certificate Parameters &amp; Editor</span>
             </h3>
-            <span className="text-[10px] text-gray-500 font-mono">Live Sync</span>
+            <span className={`text-[10px] ${isLight ? "text-slate-400" : "text-gray-500"} font-mono`}>Live Sync</span>
           </div>
 
           <div className="space-y-4 text-xs">
             {/* Certificate Template Type */}
             <div>
-              <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Select Certificate Type</label>
+              <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-slate-500" : "text-gray-400"} mb-1`}>Select Certificate Type</label>
               <select
                 value={certType}
                 onChange={(e) => setCertType(e.target.value as any)}
-                className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-bold focus:border-sky-500"
+                className={`w-full ${
+                  isLight ? "bg-slate-50 border-slate-200 text-slate-900 focus:bg-white" : "bg-black border-gray-800 text-white"
+                } border p-2.5 rounded-xl font-bold focus:border-sky-500`}
               >
                 <option value="Character Certificate">📜 Character &amp; Conduct Certificate</option>
                 <option value="Bonafide Student Certificate">🏛️ Bonafide Student Certificate</option>
@@ -211,11 +220,13 @@ export default function SMSCertificatesPage() {
 
             {/* Select Student Quick Fill */}
             <div>
-              <label className="block text-[10px] uppercase font-bold text-sky-400 mb-1">Quick Select Admitted Student</label>
+              <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-sky-700 font-bold" : "text-sky-400"} mb-1`}>Quick Select Admitted Student</label>
               <select
                 value={selectedStudentId}
                 onChange={(e) => setSelectedStudentId(e.target.value)}
-                className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-bold focus:border-sky-500"
+                className={`w-full ${
+                  isLight ? "bg-slate-50 border-slate-200 text-slate-900 focus:bg-white" : "bg-black border-gray-800 text-white"
+                } border p-2.5 rounded-xl font-bold focus:border-sky-500`}
               >
                 {students.map((s) => (
                   <option key={s.id} value={s.id}>
@@ -226,89 +237,105 @@ export default function SMSCertificatesPage() {
             </div>
 
             {/* Editable Student Details */}
-            <div className="p-3 bg-black/40 border border-gray-800 rounded-2xl space-y-3">
-              <span className="text-[10px] font-bold text-gray-400 uppercase block">Student Credentials (Editable)</span>
+            <div className={`p-3 ${isLight ? "bg-slate-50 border-slate-200" : "bg-black/40 border-gray-800"} border rounded-2xl space-y-3`}>
+              <span className={`text-[10px] font-bold ${isLight ? "text-slate-600" : "text-gray-400"} uppercase block`}>Student Credentials (Editable)</span>
               
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-[9px] text-gray-500 font-bold block mb-0.5">Student Legal Name</label>
+                  <label className={`text-[9px] ${isLight ? "text-slate-500" : "text-gray-500"} font-bold block mb-0.5`}>Student Legal Name</label>
                   <input
                     type="text"
                     value={studentName}
                     onChange={(e) => setStudentName(e.target.value)}
-                    className="w-full bg-[#080d14] border border-gray-800 p-2 rounded-lg text-white font-bold text-xs"
+                    className={`w-full ${
+                      isLight ? "bg-white border-slate-200 text-slate-900" : "bg-[#080d14] border-gray-800 text-white"
+                    } border p-2 rounded-lg font-bold text-xs`}
                   />
                 </div>
                 <div>
-                  <label className="text-[9px] text-gray-500 font-bold block mb-0.5">Father's Name</label>
+                  <label className={`text-[9px] ${isLight ? "text-slate-500" : "text-gray-500"} font-bold block mb-0.5`}>Father's Name</label>
                   <input
                     type="text"
                     value={fatherName}
                     onChange={(e) => setFatherName(e.target.value)}
-                    className="w-full bg-[#080d14] border border-gray-800 p-2 rounded-lg text-white font-bold text-xs"
+                    className={`w-full ${
+                      isLight ? "bg-white border-slate-200 text-slate-900" : "bg-[#080d14] border-gray-800 text-white"
+                    } border p-2 rounded-lg font-bold text-xs`}
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-[9px] text-gray-500 font-bold block mb-0.5">Admission / GR #</label>
+                  <label className={`text-[9px] ${isLight ? "text-slate-500" : "text-gray-500"} font-bold block mb-0.5`}>Admission / GR #</label>
                   <input
                     type="text"
                     value={admissionNo}
                     onChange={(e) => setAdmissionNo(e.target.value)}
-                    className="w-full bg-[#080d14] border border-gray-800 p-2 rounded-lg text-sky-400 font-mono font-bold text-xs"
+                    className={`w-full ${
+                      isLight ? "bg-white border-slate-200 text-sky-700" : "bg-[#080d14] border-gray-800 text-sky-400"
+                    } border p-2 rounded-lg font-mono font-bold text-xs`}
                   />
                 </div>
                 <div>
-                  <label className="text-[9px] text-gray-500 font-bold block mb-0.5">Roll Number</label>
+                  <label className={`text-[9px] ${isLight ? "text-slate-500" : "text-gray-500"} font-bold block mb-0.5`}>Roll Number</label>
                   <input
                     type="text"
                     value={rollNo}
                     onChange={(e) => setRollNo(e.target.value)}
-                    className="w-full bg-[#080d14] border border-gray-800 p-2 rounded-lg text-white font-mono text-xs"
+                    className={`w-full ${
+                      isLight ? "bg-white border-slate-200 text-slate-900" : "bg-[#080d14] border-gray-800 text-white"
+                    } border p-2 rounded-lg font-mono text-xs`}
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-[9px] text-gray-500 font-bold block mb-0.5">Class &amp; Section</label>
+                  <label className={`text-[9px] ${isLight ? "text-slate-500" : "text-gray-500"} font-bold block mb-0.5`}>Class &amp; Section</label>
                   <input
                     type="text"
                     value={`${className} (${sectionName})`}
                     onChange={(e) => setClassName(e.target.value)}
-                    className="w-full bg-[#080d14] border border-gray-800 p-2 rounded-lg text-white text-xs"
+                    className={`w-full ${
+                      isLight ? "bg-white border-slate-200 text-slate-900" : "bg-[#080d14] border-gray-800 text-white"
+                    } border p-2 rounded-lg text-xs`}
                   />
                 </div>
                 <div>
-                  <label className="text-[9px] text-gray-500 font-bold block mb-0.5">B-Form / CNIC #</label>
+                  <label className={`text-[9px] ${isLight ? "text-slate-500" : "text-gray-500"} font-bold block mb-0.5`}>B-Form / CNIC #</label>
                   <input
                     type="text"
                     value={bFormNo}
                     onChange={(e) => setBFormNo(e.target.value)}
-                    className="w-full bg-[#080d14] border border-gray-800 p-2 rounded-lg text-white font-mono text-xs"
+                    className={`w-full ${
+                      isLight ? "bg-white border-slate-200 text-slate-900" : "bg-[#080d14] border-gray-800 text-white"
+                    } border p-2 rounded-lg font-mono text-xs`}
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-[9px] text-gray-500 font-bold block mb-0.5">Conduct Rating</label>
+                  <label className={`text-[9px] ${isLight ? "text-slate-500" : "text-gray-500"} font-bold block mb-0.5`}>Conduct Rating</label>
                   <input
                     type="text"
                     value={conductRating}
                     onChange={(e) => setConductRating(e.target.value)}
-                    className="w-full bg-[#080d14] border border-gray-800 p-2 rounded-lg text-emerald-400 font-bold text-xs"
+                    className={`w-full ${
+                      isLight ? "bg-white border-slate-200 text-emerald-700" : "bg-[#080d14] border-gray-800 text-emerald-400"
+                    } border p-2 rounded-lg font-bold text-xs`}
                   />
                 </div>
                 <div>
-                  <label className="text-[9px] text-gray-500 font-bold block mb-0.5">Date of Birth</label>
+                  <label className={`text-[9px] ${isLight ? "text-slate-500" : "text-gray-500"} font-bold block mb-0.5`}>Date of Birth</label>
                   <input
                     type="date"
                     value={dob}
                     onChange={(e) => setDob(e.target.value)}
-                    className="w-full bg-[#080d14] border border-gray-800 p-2 rounded-lg text-white text-xs"
+                    className={`w-full ${
+                      isLight ? "bg-white border-slate-200 text-slate-900" : "bg-[#080d14] border-gray-800 text-white"
+                    } border p-2 rounded-lg text-xs`}
                   />
                 </div>
               </div>
@@ -316,54 +343,64 @@ export default function SMSCertificatesPage() {
 
             {/* Purpose & Remarks */}
             <div>
-              <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Purpose / Issued For</label>
+              <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-slate-500" : "text-gray-400"} mb-1`}>Purpose / Issued For</label>
               <input
                 type="text"
                 value={purpose}
                 onChange={(e) => setPurpose(e.target.value)}
-                className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white text-xs focus:border-sky-500"
+                className={`w-full ${
+                  isLight ? "bg-slate-50 border-slate-200 text-slate-900 focus:bg-white" : "bg-black border-gray-800 text-white"
+                } border p-2.5 rounded-xl text-xs focus:border-sky-500`}
               />
             </div>
 
             {/* Custom Certificate Body Paragraph */}
             <div>
-              <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Custom Certificate Body Text</label>
+              <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-slate-500" : "text-gray-400"} mb-1`}>Custom Certificate Body Text</label>
               <textarea
                 rows={4}
                 value={customBodyText}
                 onChange={(e) => setCustomBodyText(e.target.value)}
-                className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white text-xs leading-relaxed focus:border-sky-500"
+                className={`w-full ${
+                  isLight ? "bg-slate-50 border-slate-200 text-slate-900 focus:bg-white" : "bg-black border-gray-800 text-white"
+                } border p-2.5 rounded-xl text-xs leading-relaxed focus:border-sky-500`}
               />
             </div>
 
             {/* Institutional Header Info (Editable) */}
-            <div className="p-3 bg-black/40 border border-gray-800 rounded-2xl space-y-2">
-              <span className="text-[10px] font-bold text-sky-400 uppercase block">School Header Info</span>
+            <div className={`p-3 ${isLight ? "bg-slate-50 border-slate-200" : "bg-black/40 border-gray-800"} border rounded-2xl space-y-2`}>
+              <span className={`text-[10px] font-bold ${isLight ? "text-sky-700 font-bold" : "text-sky-400"} uppercase block`}>School Header Info</span>
               <div>
-                <label className="text-[9px] text-gray-500 block mb-0.5">School Name</label>
+                <label className={`text-[9px] ${isLight ? "text-slate-500" : "text-gray-500"} block mb-0.5`}>School Name</label>
                 <input
                   type="text"
                   value={schoolName}
                   onChange={(e) => setSchoolName(e.target.value)}
-                  className="w-full bg-[#080d14] border border-gray-800 p-1.5 rounded text-white text-xs font-bold"
+                  className={`w-full ${
+                    isLight ? "bg-white border-slate-200 text-slate-900" : "bg-[#080d14] border-gray-800 text-white"
+                  } border p-1.5 rounded text-xs font-bold`}
                 />
               </div>
               <div>
-                <label className="text-[9px] text-gray-500 block mb-0.5">Campus Address &amp; Tel</label>
+                <label className={`text-[9px] ${isLight ? "text-slate-500" : "text-gray-500"} block mb-0.5`}>Campus Address &amp; Tel</label>
                 <input
                   type="text"
                   value={schoolAddress}
                   onChange={(e) => setSchoolAddress(e.target.value)}
-                  className="w-full bg-[#080d14] border border-gray-800 p-1.5 rounded text-gray-300 text-xs"
+                  className={`w-full ${
+                    isLight ? "bg-white border-slate-200 text-slate-700" : "bg-[#080d14] border-gray-800 text-gray-300"
+                  } border p-1.5 rounded text-xs`}
                 />
               </div>
               <div>
-                <label className="text-[9px] text-gray-500 block mb-0.5">Affiliation &amp; Reg Code</label>
+                <label className={`text-[9px] ${isLight ? "text-slate-500" : "text-gray-500"} block mb-0.5`}>Affiliation &amp; Reg Code</label>
                 <input
                   type="text"
                   value={schoolAffiliation}
                   onChange={(e) => setSchoolAffiliation(e.target.value)}
-                  className="w-full bg-[#080d14] border border-gray-800 p-1.5 rounded text-gray-300 text-xs"
+                  className={`w-full ${
+                    isLight ? "bg-white border-slate-200 text-slate-700" : "bg-[#080d14] border-gray-800 text-gray-300"
+                  } border p-1.5 rounded text-xs`}
                 />
               </div>
             </div>
@@ -451,83 +488,81 @@ export default function SMSCertificatesPage() {
                   <strong className="text-sky-950 font-sans font-bold">
                     {className} ({sectionName})
                   </strong>{" "}
-                  under Roll Number{" "}
-                  <strong className="font-mono text-sky-900">
-                    #{rollNo}
+                  under Class Roll No.{" "}
+                  <strong className="font-mono text-xs bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+                    {rollNo}
                   </strong>{" "}
-                  for Academic Session{" "}
-                  <strong className="font-mono font-bold">
-                    {academicSession}
-                  </strong>
-                  .
+                  during the Academic Session <strong>{academicSession}</strong>.
                 </p>
 
-                <p className="font-serif italic text-slate-800">
-                  {customBodyText}
-                </p>
+                <p>{customBodyText}</p>
 
                 <p>
-                  His / Her institutional conduct and moral behavior have been officially recorded as{" "}
-                  <strong className="text-emerald-800 font-sans font-black">
+                  The institutional record reflects his/her overall institutional conduct and moral ethics to be{" "}
+                  <strong className="text-emerald-800 font-sans font-bold underline">
                     {conductRating}
                   </strong>
-                  . This certificate is issued upon the formal request of the legal guardian for the purpose of{" "}
-                  <strong className="text-sky-950 underline decoration-slate-400 font-sans font-bold">
-                    {purpose}
-                  </strong>
-                  . We wish him/her immense success and prosperity in all scholastic and professional pursuits.
+                  . He/She has demonstrated exemplary punctuality, integrity, and disciplined participation in academia and extracurricular forums.
+                </p>
+
+                <p className="text-xs text-slate-600 italic">
+                  This certificate is issued upon formal request for: <strong>{purpose}</strong>. We wish the candidate great success and flying colors in all future academic endeavors and career pursuits.
                 </p>
               </div>
 
-              {/* ── OFFICIAL FOOTER: STAMP, QR VERIFICATION & SIGNATURES ── */}
-              <div className="pt-10 flex justify-between items-end gap-6 relative">
+              {/* ── BOTTOM ATTESTATION & SIGNATURE ROW WITH STAMP ── */}
+              <div className="pt-10 flex justify-between items-end relative min-h-[140px]">
                 
-                {/* QR Code Verification Stamp */}
-                <div className="space-y-1 text-center shrink-0">
-                  <div className="w-20 h-20 border-2 border-slate-300 rounded-xl p-1.5 flex flex-col items-center justify-center bg-slate-50 shadow-inner">
-                    <QrCode size={48} className="text-slate-800" />
+                {/* Prepared By Signature Line */}
+                <div className="text-center w-48 space-y-1">
+                  <div className="border-t-2 border-slate-800 pt-1 font-sans text-xs font-bold text-slate-800 uppercase">
+                    Incharge Examinations
                   </div>
-                  <div className="text-[8px] font-mono font-bold text-slate-500">
-                    MT-SEC-AUTH:{admissionNo}
-                  </div>
+                  <div className="text-[10px] text-slate-500 font-mono">Verified Records Desk</div>
                 </div>
 
-                {/* Golden Official E-Stamp (Seal) */}
+                {/* Golden Official E-Stamp */}
                 {showStamp && (
-                  <div className="relative shrink-0 flex items-center justify-center">
-                    <div className="w-28 h-28 rounded-full border-4 border-double border-amber-600 bg-amber-50/70 p-2 flex flex-col items-center justify-center text-center shadow-inner relative transform rotate-[-6deg]">
-                      <div className="absolute inset-1 rounded-full border border-dashed border-amber-600 pointer-events-none" />
-                      <span className="text-[7px] uppercase font-black font-sans text-amber-900 tracking-wider">MT CORE MODEL SCHOOL</span>
-                      <Award size={20} className="text-amber-700 my-0.5" />
-                      <span className="text-[8px] uppercase font-black text-amber-950 font-sans">OFFICIAL SEAL</span>
-                      <span className="text-[6px] font-mono text-amber-800">ATTESTED &bull; {issueDate}</span>
+                  <div className="flex flex-col items-center">
+                    <div className="w-24 h-24 rounded-full border-4 border-double border-amber-600 bg-amber-50/90 flex flex-col items-center justify-center p-1 text-center shadow-lg transform -rotate-6 animate-pulse">
+                      <ShieldCheck size={20} className="text-amber-700 mb-0.5" />
+                      <span className="text-[8px] font-sans font-black uppercase text-amber-900 leading-tight tracking-tighter">
+                        MT MODEL SCHOOL
+                      </span>
+                      <span className="text-[6px] font-mono text-amber-700 font-bold">
+                        OFFICIAL ATTESTED
+                      </span>
+                      <span className="text-[6px] font-mono text-amber-800">
+                        {issueDate}
+                      </span>
                     </div>
                   </div>
                 )}
 
-                {/* Signatures */}
-                <div className="flex gap-8 text-center shrink-0">
-                  <div className="space-y-1">
-                    <div className="w-36 border-t-2 border-slate-800 pt-1 text-xs font-black font-sans text-slate-900">
-                      Class Incharge
-                    </div>
-                    <div className="text-[9px] font-sans text-slate-500">Section Academic Master</div>
+                {/* Principal Signature Line */}
+                <div className="text-center w-52 space-y-1">
+                  <div className="border-t-2 border-slate-800 pt-1 font-sans text-xs font-bold text-slate-800 uppercase">
+                    Principal &amp; Head of Institution
                   </div>
-
-                  <div className="space-y-1">
-                    <div className="w-44 border-t-2 border-slate-800 pt-1 text-xs font-black font-sans text-slate-900">
-                      Principal / Headmaster
-                    </div>
-                    <div className="text-[9px] font-sans text-slate-500">Controller of Examinations</div>
-                  </div>
+                  <div className="text-[10px] text-slate-500 font-mono">Signature &amp; Official Seal</div>
                 </div>
               </div>
 
-              {/* Micro Disclaimer */}
-              <div className="border-t border-slate-200 pt-2 flex justify-between text-[8px] font-mono text-slate-400">
-                <span>Verified by MT Core Academic Document Governance Suite</span>
-                <span>System Authenticated &bull; No physical tampering permitted</span>
+              {/* ── SECURITY FOOTER WITH QR CODE & VERIFICATION CODE ── */}
+              <div className="border-t border-slate-200 pt-4 flex justify-between items-center text-[10px] text-slate-500 font-mono">
+                <div className="flex items-center gap-2">
+                  <QrCode size={36} className="text-slate-800" />
+                  <div>
+                    <div className="font-bold text-slate-700">Online Security Verification</div>
+                    <div>Scan QR to verify authenticity on Portal</div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div>Document ID: <b>{refNumber}</b></div>
+                  <div className="text-[9px]">MT Core School System &bull; ISO 9001:2015 Certified Institution</div>
+                </div>
               </div>
+
             </div>
           </div>
         </div>

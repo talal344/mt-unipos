@@ -15,7 +15,9 @@ import {
 } from "lucide-react";
 
 export default function SMSLMSPage() {
-  const { classes } = useSMS();
+  const { theme, classes } = useSMS();
+  const isLight = theme === "light";
+
   const [selectedClass, setSelectedClass] = useState("Class 9 (Science)");
 
   const learningMaterials = [
@@ -70,13 +72,13 @@ export default function SMSLMSPage() {
   return (
     <div className="space-y-6 font-sans">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-800 pb-4">
+      <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b ${isLight ? "border-slate-200" : "border-gray-800"} pb-4`}>
         <div>
-          <h1 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
-            <BookOpen className="text-sky-400" size={22} />
+          <h1 className={`text-xl font-black tracking-tight ${isLight ? "text-slate-900" : "text-white"} flex items-center gap-2`}>
+            <BookOpen className={isLight ? "text-sky-600" : "text-sky-400"} size={22} />
             <span>Digital Learning Repository &amp; Daily Homework Diary</span>
           </h1>
-          <p className="text-xs text-gray-400">
+          <p className={`text-xs ${isLight ? "text-slate-600 font-medium" : "text-gray-400"}`}>
             Publish digital lecture handouts, chapter worksheets, 10-year past papers, and daily classroom diary assignments.
           </p>
         </div>
@@ -92,11 +94,13 @@ export default function SMSLMSPage() {
 
       {/* Class Selector */}
       <div className="w-full sm:w-80">
-        <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Target Class Handouts</label>
+        <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-slate-500" : "text-gray-400"} mb-1`}>Target Class Handouts</label>
         <select
           value={selectedClass}
           onChange={(e) => setSelectedClass(e.target.value)}
-          className="w-full bg-[#0b121e] border border-[#1e293b] p-2.5 rounded-xl text-white font-bold text-xs focus:outline-none focus:border-sky-500"
+          className={`w-full ${
+            isLight ? "bg-white border-slate-200 text-slate-900 shadow-xs" : "bg-[#0b121e] border-[#1e293b] text-white"
+          } border p-2.5 rounded-xl font-bold text-xs focus:outline-none focus:border-sky-500`}
         >
           {classes.map((c) => (
             <option key={c.id} value={c.className}>
@@ -110,25 +114,29 @@ export default function SMSLMSPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Learning Materials */}
         <div className="space-y-3">
-          <h3 className="text-xs uppercase font-bold text-sky-400 tracking-wider">Digital Notes &amp; Handouts</h3>
+          <h3 className={`text-xs uppercase font-bold ${isLight ? "text-sky-700 font-bold" : "text-sky-400"} tracking-wider`}>Digital Notes &amp; Handouts</h3>
           <div className="space-y-3">
             {learningMaterials.map((mat) => (
               <div
                 key={mat.id}
-                className="bg-[#0b121e] border border-[#1e293b] hover:border-sky-500/40 p-5 rounded-2xl space-y-3 transition group"
+                className={`${
+                  isLight ? "bg-white border-slate-200 hover:border-sky-400 shadow-sm" : "bg-[#0b121e] border-[#1e293b] hover:border-sky-500/40"
+                } border p-5 rounded-2xl space-y-3 transition group`}
               >
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-[10px] font-bold bg-sky-500/10 text-sky-400 border border-sky-500/20 px-2 py-0.5 rounded">
+                  <span className={`text-[10px] font-bold ${
+                    isLight ? "bg-sky-50 text-sky-700 border-sky-300" : "bg-sky-500/10 text-sky-400 border-sky-500/20"
+                  } border px-2 py-0.5 rounded`}>
                     {mat.subject}
                   </span>
-                  <span className="text-[10px] text-gray-500 font-mono">{mat.uploadedAt}</span>
+                  <span className={`text-[10px] ${isLight ? "text-slate-500" : "text-gray-500"} font-mono`}>{mat.uploadedAt}</span>
                 </div>
-                <h4 className="text-sm font-bold text-white group-hover:text-sky-300 transition">{mat.title}</h4>
-                <div className="flex justify-between items-center text-xs text-gray-400">
-                  <span>By: <b className="text-gray-200">{mat.author}</b></span>
+                <h4 className={`text-sm font-bold ${isLight ? "text-slate-900 group-hover:text-sky-600" : "text-white group-hover:text-sky-300"} transition`}>{mat.title}</h4>
+                <div className={`flex justify-between items-center text-xs ${isLight ? "text-slate-600" : "text-gray-400"}`}>
+                  <span>By: <b className={isLight ? "text-slate-800" : "text-gray-200"}>{mat.author}</b></span>
                   <button
                     onClick={() => alert(`Downloading handout: ${mat.title}`)}
-                    className="flex items-center gap-1 text-sky-400 hover:text-white font-bold text-[11px]"
+                    className={`flex items-center gap-1 ${isLight ? "text-sky-700 hover:text-sky-900" : "text-sky-400 hover:text-white"} font-bold text-[11px] cursor-pointer`}
                   >
                     <Download size={12} />
                     <span>Download Handout</span>
@@ -141,19 +149,23 @@ export default function SMSLMSPage() {
 
         {/* Daily Diary */}
         <div className="space-y-3">
-          <h3 className="text-xs uppercase font-bold text-emerald-400 tracking-wider">Daily Classroom Diary &amp; Homework</h3>
+          <h3 className={`text-xs uppercase font-bold ${isLight ? "text-emerald-700 font-bold" : "text-emerald-400"} tracking-wider`}>Daily Classroom Diary &amp; Homework</h3>
           <div className="space-y-3">
             {dailyDiary.map((dry) => (
-              <div key={dry.id} className="bg-[#0b121e] border border-emerald-500/30 p-5 rounded-2xl space-y-3">
+              <div key={dry.id} className={`${
+                isLight ? "bg-white border-emerald-200 shadow-sm" : "bg-[#0b121e] border-emerald-500/30"
+              } border p-5 rounded-2xl space-y-3`}>
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-emerald-400 font-bold font-mono">{dry.subject}</span>
-                  <span className="text-[10px] bg-red-500/10 text-red-400 border border-red-500/20 px-2 py-0.5 rounded font-bold">
+                  <span className={`${isLight ? "text-emerald-800" : "text-emerald-400"} font-bold font-mono`}>{dry.subject}</span>
+                  <span className={`text-[10px] ${
+                    isLight ? "bg-red-50 text-red-700 border-red-200" : "bg-red-500/10 text-red-400 border-red-500/20"
+                  } border px-2 py-0.5 rounded font-bold`}>
                     Due: {dry.due}
                   </span>
                 </div>
-                <p className="text-xs text-gray-200 leading-relaxed font-sans">{dry.homework}</p>
-                <div className="text-[10px] text-gray-500 border-t border-gray-800 pt-2 flex justify-between">
-                  <span>Assigned By: <b className="text-gray-300">{dry.teacher}</b></span>
+                <p className={`text-xs ${isLight ? "text-slate-800" : "text-gray-200"} leading-relaxed font-sans`}>{dry.homework}</p>
+                <div className={`text-[10px] ${isLight ? "text-slate-500 border-slate-100" : "text-gray-500 border-gray-800"} border-t pt-2 flex justify-between`}>
+                  <span>Assigned By: <b className={isLight ? "text-slate-700" : "text-gray-300"}>{dry.teacher}</b></span>
                   <span>Date: {dry.date}</span>
                 </div>
               </div>

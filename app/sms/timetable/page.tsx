@@ -14,7 +14,9 @@ import {
 } from "lucide-react";
 
 export default function SMSTimetablePage() {
-  const { classes, teachers, timetable } = useSMS();
+  const { theme, classes, teachers, timetable } = useSMS();
+  const isLight = theme === "light";
+
   const [selectedClass, setSelectedClass] = useState("Class 9 (Science)");
   const [selectedDay, setSelectedDay] = useState<"Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday">("Monday");
   const [substituteModal, setSubstituteModal] = useState(false);
@@ -37,20 +39,24 @@ export default function SMSTimetablePage() {
   return (
     <div className="space-y-6 font-sans">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-800 pb-4">
+      <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b ${isLight ? "border-slate-200" : "border-gray-800"} pb-4`}>
         <div>
-          <h1 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
-            <Clock className="text-sky-400" size={22} />
+          <h1 className={`text-xl font-black tracking-tight ${isLight ? "text-slate-900" : "text-white"} flex items-center gap-2`}>
+            <Clock className={isLight ? "text-sky-600" : "text-sky-400"} size={22} />
             <span>Class Timetable &amp; Smart Substitution Matrix</span>
           </h1>
-          <p className="text-xs text-gray-400">
+          <p className={`text-xs ${isLight ? "text-slate-600 font-medium" : "text-gray-400"}`}>
             Master weekly period matrix per section with automatic teacher substitution locator for absent faculty.
           </p>
         </div>
 
         <button
           onClick={() => setSubstituteModal(true)}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-purple-600/20 hover:bg-purple-600 text-purple-300 hover:text-white border border-purple-500/30 font-bold text-xs transition cursor-pointer"
+          className={`flex items-center gap-1.5 px-4 py-2 rounded-xl ${
+            isLight
+              ? "bg-purple-50 hover:bg-purple-600 text-purple-700 hover:text-white border-purple-300"
+              : "bg-purple-600/20 hover:bg-purple-600 text-purple-300 hover:text-white border-purple-500/30"
+          } border font-bold text-xs transition cursor-pointer shadow-xs`}
         >
           <Sparkles size={14} />
           <span>Smart Substitution Finder</span>
@@ -60,11 +66,13 @@ export default function SMSTimetablePage() {
       {/* Selectors */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="w-full sm:w-72">
-          <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Select Class</label>
+          <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-slate-500" : "text-gray-400"} mb-1`}>Select Class</label>
           <select
             value={selectedClass}
             onChange={(e) => setSelectedClass(e.target.value)}
-            className="w-full bg-[#0b121e] border border-[#1e293b] p-2.5 rounded-xl text-white font-bold text-xs focus:outline-none focus:border-sky-500"
+            className={`w-full ${
+              isLight ? "bg-white border-slate-200 text-slate-900 shadow-xs" : "bg-[#0b121e] border-[#1e293b] text-white"
+            } border p-2.5 rounded-xl font-bold text-xs focus:outline-none focus:border-sky-500`}
           >
             {classes.map((c) => (
               <option key={c.id} value={c.className}>
@@ -80,9 +88,11 @@ export default function SMSTimetablePage() {
             <button
               key={d}
               onClick={() => setSelectedDay(d)}
-              className={`px-4 py-2.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${
+              className={`px-4 py-2.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer ${
                 selectedDay === d
                   ? "bg-sky-600 text-white shadow-md shadow-sky-600/20"
+                  : isLight
+                  ? "bg-white border border-slate-200 text-slate-700 hover:text-slate-950 shadow-xs"
                   : "bg-[#0b121e] border border-[#1e293b] text-gray-400 hover:text-white"
               }`}
             >
@@ -101,26 +111,34 @@ export default function SMSTimetablePage() {
               key={p.num}
               className={`p-5 rounded-2xl border transition ${
                 isBreak
-                  ? "bg-amber-500/5 border-amber-500/20"
+                  ? isLight
+                    ? "bg-amber-50/80 border-amber-200 text-amber-900 shadow-xs"
+                    : "bg-amber-500/5 border-amber-500/20"
+                  : isLight
+                  ? "bg-white border-slate-200 hover:border-sky-400 shadow-sm"
                   : "bg-[#0b121e] border-[#1e293b] hover:border-sky-500/40"
               } space-y-2`}
             >
               <div className="flex justify-between items-center text-xs">
-                <span className={`font-mono font-bold ${isBreak ? "text-amber-400" : "text-sky-400"}`}>
+                <span className={`font-mono font-bold ${
+                  isBreak
+                    ? isLight ? "text-amber-800" : "text-amber-400"
+                    : isLight ? "text-sky-700" : "text-sky-400"
+                }`}>
                   {isBreak ? "BREAK" : `Period #${p.num}`}
                 </span>
-                <span className="text-[10px] text-gray-500 font-mono">{p.time}</span>
+                <span className={`text-[10px] ${isLight ? "text-slate-500" : "text-gray-500"} font-mono`}>{p.time}</span>
               </div>
 
-              <div className="text-base font-black text-white">{p.subject}</div>
+              <div className={`text-base font-black ${isLight ? "text-slate-900" : "text-white"}`}>{p.subject}</div>
 
               {!isBreak && (
                 <>
-                  <div className="text-xs text-gray-300">
-                    <span className="text-gray-500">Teacher: </span>
-                    <span className="text-emerald-400 font-bold">{p.teacher}</span>
+                  <div className={`text-xs ${isLight ? "text-slate-600" : "text-gray-300"}`}>
+                    <span className={isLight ? "text-slate-500" : "text-gray-500"}>Teacher: </span>
+                    <span className={`${isLight ? "text-emerald-700" : "text-emerald-400"} font-bold`}>{p.teacher}</span>
                   </div>
-                  <div className="text-[10px] text-gray-500">{p.room}</div>
+                  <div className={`text-[10px] ${isLight ? "text-slate-500" : "text-gray-500"}`}>{p.room}</div>
                 </>
               )}
             </div>
@@ -130,51 +148,53 @@ export default function SMSTimetablePage() {
 
       {/* Substitution Modal */}
       {substituteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4">
-          <div className="bg-[#0b121e] border border-purple-500/40 rounded-3xl w-full max-w-md shadow-2xl p-6 animate-fade-in-up">
-            <div className="flex justify-between items-center border-b border-gray-800 pb-3 mb-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className={`${
+            isLight ? "bg-white border-slate-200 text-slate-900" : "bg-[#0b121e] border-purple-500/40 text-white"
+          } border rounded-3xl w-full max-w-md shadow-2xl p-6 animate-fade-in-up`}>
+            <div className={`flex justify-between items-center border-b ${isLight ? "border-slate-100" : "border-gray-800"} pb-3 mb-4`}>
               <div className="flex items-center gap-2">
-                <Sparkles size={16} className="text-purple-400" />
-                <h3 className="font-black text-white text-sm">Smart Faculty Substitution Assistant</h3>
+                <Sparkles size={16} className={isLight ? "text-purple-600" : "text-purple-400"} />
+                <h3 className={`font-black ${isLight ? "text-slate-900" : "text-white"} text-sm`}>Smart Faculty Substitution Assistant</h3>
               </div>
-              <button onClick={() => setSubstituteModal(false)} className="text-gray-400 hover:text-white">
+              <button onClick={() => setSubstituteModal(false)} className={`${isLight ? "text-slate-400 hover:text-slate-800" : "text-gray-400 hover:text-white"} cursor-pointer`}>
                 ✕
               </button>
             </div>
 
             <div className="space-y-4 text-xs">
-              <div className="bg-purple-500/10 border border-purple-500/30 p-3.5 rounded-xl text-purple-300">
+              <div className={`${isLight ? "bg-purple-50 border-purple-200 text-purple-900" : "bg-purple-500/10 border-purple-500/30 text-purple-300"} border p-3.5 rounded-xl`}>
                 Found <b>2 available free teachers</b> with no scheduled lectures during Period #1 (08:00 AM - 08:45 AM):
               </div>
 
               <div className="space-y-2">
-                <div className="p-3 bg-black/40 border border-gray-800 rounded-xl flex items-center justify-between">
+                <div className={`p-3 ${isLight ? "bg-slate-50 border-slate-200" : "bg-black/40 border-gray-800"} border rounded-xl flex items-center justify-between`}>
                   <div>
-                    <div className="font-bold text-white">Mrs. Tahira Batool</div>
-                    <div className="text-[10px] text-gray-400">English • Free in Staff Room</div>
+                    <div className={`font-bold ${isLight ? "text-slate-900" : "text-white"}`}>Mrs. Tahira Batool</div>
+                    <div className={`text-[10px] ${isLight ? "text-slate-500" : "text-gray-400"}`}>English • Free in Staff Room</div>
                   </div>
                   <button
                     onClick={() => {
                       alert("Assigned Mrs. Tahira Batool as proxy substitution for Period #1!");
                       setSubstituteModal(false);
                     }}
-                    className="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-lg font-bold text-[10px]"
+                    className="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-lg font-bold text-[10px] cursor-pointer"
                   >
                     Assign Proxy
                   </button>
                 </div>
 
-                <div className="p-3 bg-black/40 border border-gray-800 rounded-xl flex items-center justify-between">
+                <div className={`p-3 ${isLight ? "bg-slate-50 border-slate-200" : "bg-black/40 border-gray-800"} border rounded-xl flex items-center justify-between`}>
                   <div>
-                    <div className="font-bold text-white">Sir Nasir Abbas</div>
-                    <div className="text-[10px] text-gray-400">Mathematics • Free</div>
+                    <div className={`font-bold ${isLight ? "text-slate-900" : "text-white"}`}>Sir Nasir Abbas</div>
+                    <div className={`text-[10px] ${isLight ? "text-slate-500" : "text-gray-400"}`}>Mathematics • Free</div>
                   </div>
                   <button
                     onClick={() => {
                       alert("Assigned Sir Nasir Abbas as proxy substitution for Period #1!");
                       setSubstituteModal(false);
                     }}
-                    className="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-lg font-bold text-[10px]"
+                    className="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-lg font-bold text-[10px] cursor-pointer"
                   >
                     Assign Proxy
                   </button>

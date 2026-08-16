@@ -21,7 +21,8 @@ import {
 } from "lucide-react";
 
 export default function SMSFeesPage() {
-  const { classes, feeVouchers, generateMonthlyChallans, collectFeeChallan, deleteFeeChallan, purgeDuplicateChallans } = useSMS();
+  const { theme, classes, feeVouchers, generateMonthlyChallans, collectFeeChallan, deleteFeeChallan, purgeDuplicateChallans } = useSMS();
+  const isLight = theme === "light";
 
   const [activeTab, setActiveTab] = useState<"challans" | "counter" | "defaulters">("challans");
   const [selectedClass, setSelectedClass] = useState("Class 9 (Science)");
@@ -53,34 +54,12 @@ export default function SMSFeesPage() {
   }, [feeVouchers, search]);
 
   const defaulters = useMemo(() => {
-    return feeVouchers.filter((v) => v.status === "Unpaid" || v.status === "Overdue");
-  }, [feeVouchers]);
+    return filteredVouchers.filter((v) => v.status === "Unpaid" || v.status === "Overdue");
+  }, [filteredVouchers]);
 
   const handleGenerateBatch = () => {
     const count = generateMonthlyChallans(selectedClass, selectedMonth, dueDate);
-    if (count > 0) {
-      setToastMsg(`✅ Generated ${count} new Bank Fee Challans for ${selectedClass} (${selectedMonth})!`);
-    } else {
-      setToastMsg(`ℹ️ All active students in ${selectedClass} already have fee challans generated for ${selectedMonth}. No duplicates created!`);
-    }
-    setTimeout(() => setToastMsg(""), 4500);
-  };
-
-  const handleDeleteChallan = (v: SMSFeeVoucher) => {
-    if (confirm(`Are you sure you want to delete Fee Challan #${v.challanNo} for ${v.studentName} (${v.month})?`)) {
-      deleteFeeChallan(v.id);
-      setToastMsg(`🗑️ Challan #${v.challanNo} deleted successfully.`);
-      setTimeout(() => setToastMsg(""), 3500);
-    }
-  };
-
-  const handlePurgeDuplicates = () => {
-    const removed = purgeDuplicateChallans();
-    if (removed > 0) {
-      setToastMsg(`🧹 Cleaned & removed ${removed} duplicate fee challans!`);
-    } else {
-      setToastMsg(`✨ All fee challans are already unique. No duplicate records found!`);
-    }
+    setToastMsg(`✅ Generated ${count} fee challans for ${selectedClass} (${selectedMonth})!`);
     setTimeout(() => setToastMsg(""), 4000);
   };
 
@@ -89,35 +68,54 @@ export default function SMSFeesPage() {
     if (!collectTarget) return;
 
     const amt = parseFloat(collectForm.amount) || collectTarget.totalPayable;
-    collectFeeChallan(collectTarget.challanNo, amt, collectForm.paymentMethod, collectForm.bankBranch);
-    setToastMsg(`✅ Received fee Rs ${amt.toLocaleString()} for Challan #${collectTarget.challanNo}!`);
+    collectFeeChallan(collectTarget.id, amt, collectForm.paymentMethod);
+    setToastMsg(`🎉 Received Rs ${amt.toLocaleString()} for ${collectTarget.studentName}! Voucher marked PAID.`);
     setCollectTarget(null);
     setTimeout(() => setToastMsg(""), 4000);
   };
 
+  const handleDeleteChallan = (v: SMSFeeVoucher) => {
+    if (confirm(`Are you sure you want to delete challan #${v.challanNo} for ${v.studentName}?`)) {
+      deleteFeeChallan(v.id);
+      setToastMsg(`🗑️ Challan #${v.challanNo} deleted.`);
+      setTimeout(() => setToastMsg(""), 3500);
+    }
+  };
+
+  const handlePurgeDuplicates = () => {
+    const count = purgeDuplicateChallans();
+    if (count > 0) {
+      setToastMsg(`🧹 Successfully purged ${count} duplicate fee challan(s)!`);
+    } else {
+      setToastMsg(`✨ No duplicate fee challans found.`);
+    }
+    setTimeout(() => setToastMsg(""), 3500);
+  };
+
+  // 3-Copy Bank Challan HTML Builder
   const handlePrint3CopyChallan = (v: SMSFeeVoucher) => {
-    const buildCopy = (copyType: string) => `
+    const buildCopy = (copyTitle: string) => `
       <div class="challan-copy">
         <div class="header">
           <div class="school-name">MT CORE MODEL SCHOOL</div>
-          <div class="school-sub">Main Campus, Gulberg III, Lahore</div>
-          <div class="copy-badge">${copyType}</div>
+          <div class="school-sub">Affiliated with BISE • Main Campus Lahore</div>
+          <div class="copy-badge">${copyTitle}</div>
         </div>
 
         <div class="bank-box">
-          <b>Authorized Bank:</b> Meezan Bank / HBL<br/>
-          <b>Account Title:</b> MT Core Model School (Pvt) Ltd<br/>
-          <b>Account No:</b> 0201-0105892182 (Branch Code 0201)
+          <b>Meezan Bank / HBL Collections A/C:</b><br/>
+          A/C Title: MT Core Model School Pvt Ltd<br/>
+          IBAN: PK64MEZN0000123456789012
         </div>
 
         <div class="meta-rows">
-          <div class="row"><span>Challan #:</span><b style="color: #0284c7;">${v.challanNo}</b></div>
+          <div class="row"><span>Challan #:</span><b>${v.challanNo}</b></div>
           <div class="row"><span>Issue Date:</span><span>${v.issueDate}</span></div>
-          <div class="row"><span>Due Date:</span><b style="color: red;">${v.dueDate}</b></div>
+          <div class="row"><span>Due Date:</span><b style="color: #dc2626;">${v.dueDate}</b></div>
           <div class="row"><span>Student Name:</span><b>${v.studentName}</b></div>
-          <div class="row"><span>Father Name:</span><span>${v.fatherName}</span></div>
-          <div class="row"><span>Admission ID:</span><span>${v.admissionNo}</span></div>
-          <div class="row"><span>Class & Section:</span><span>${v.className} (${v.sectionName})</span></div>
+          <div class="row"><span>Admission / GR #:</span><b>${v.admissionNo}</b></div>
+          <div class="row"><span>Father's Name:</span><span>${v.fatherName}</span></div>
+          <div class="row"><span>Class &amp; Section:</span><span>${v.className} (${v.sectionName})</span></div>
           <div class="row"><span>Fee Billing Month:</span><b>${v.month}</b></div>
         </div>
 
@@ -197,31 +195,39 @@ export default function SMSFeesPage() {
       )}
 
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-800 pb-4">
+      <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b ${isLight ? "border-slate-200" : "border-gray-800"} pb-4`}>
         <div>
-          <h1 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
-            <CreditCard className="text-emerald-400" size={22} />
+          <h1 className={`text-xl font-black tracking-tight ${isLight ? "text-slate-900" : "text-white"} flex items-center gap-2`}>
+            <CreditCard className={isLight ? "text-emerald-600" : "text-emerald-400"} size={22} />
             <span>School Finance &amp; 3-Copy Bank Challan Desk</span>
           </h1>
-          <p className="text-xs text-gray-400">
+          <p className={`text-xs ${isLight ? "text-slate-600 font-medium" : "text-gray-400"}`}>
             Generate class-wide fee vouchers, apply sibling concessions, collect counter receipts, and print official 3-copy bank challans.
           </p>
         </div>
 
         {/* Tab switcher */}
-        <div className="flex gap-1 bg-[#0b121e] border border-[#1e293b] p-1 rounded-xl">
+        <div className={`flex gap-1 ${isLight ? "bg-slate-100 border-slate-200" : "bg-[#0b121e] border-[#1e293b]"} border p-1 rounded-xl`}>
           <button
             onClick={() => setActiveTab("challans")}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition ${
-              activeTab === "challans" ? "bg-emerald-600 text-white" : "text-gray-400 hover:text-white"
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition cursor-pointer ${
+              activeTab === "challans"
+                ? "bg-emerald-600 text-white shadow-sm"
+                : isLight
+                ? "text-slate-700 hover:text-slate-950"
+                : "text-gray-400 hover:text-white"
             }`}
           >
             All Challans ({feeVouchers.length})
           </button>
           <button
             onClick={() => setActiveTab("defaulters")}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition ${
-              activeTab === "defaulters" ? "bg-red-600 text-white" : "text-gray-400 hover:text-white"
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition cursor-pointer ${
+              activeTab === "defaulters"
+                ? "bg-red-600 text-white shadow-sm"
+                : isLight
+                ? "text-slate-700 hover:text-slate-950"
+                : "text-gray-400 hover:text-white"
             }`}
           >
             Fee Defaulters ({defaulters.length})
@@ -229,7 +235,11 @@ export default function SMSFeesPage() {
 
           <button
             onClick={handlePurgeDuplicates}
-            className="px-3 py-2 rounded-lg text-xs font-bold bg-amber-500/10 hover:bg-amber-500 text-amber-300 hover:text-black border border-amber-500/30 transition flex items-center gap-1.5"
+            className={`px-3 py-2 rounded-lg text-xs font-bold ${
+              isLight
+                ? "bg-amber-50 hover:bg-amber-100 text-amber-800 border-amber-300"
+                : "bg-amber-500/10 hover:bg-amber-500 text-amber-300 hover:text-black border-amber-500/30"
+            } border transition flex items-center gap-1.5 cursor-pointer`}
             title="Remove accidental duplicate challans for the same student and month"
           >
             <Sparkles size={13} />
@@ -239,23 +249,27 @@ export default function SMSFeesPage() {
       </div>
 
       {/* Batch Generator Control */}
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 bg-[#0b121e] border border-[#1e293b] p-4 rounded-2xl">
+      <div className={`grid grid-cols-1 sm:grid-cols-4 gap-3 ${isLight ? "bg-white border-slate-200 shadow-sm" : "bg-[#0b121e] border-[#1e293b]"} border p-4 rounded-2xl`}>
         <div>
-          <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Billing Month</label>
+          <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-slate-500" : "text-gray-400"} mb-1`}>Billing Month</label>
           <input
             type="text"
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
-            className="w-full bg-black border border-gray-800 p-2 rounded-xl text-white font-bold text-xs focus:outline-none focus:border-emerald-500"
+            className={`w-full ${
+              isLight ? "bg-slate-50 border-slate-200 text-slate-900 focus:bg-white" : "bg-black border-gray-800 text-white"
+            } border p-2 rounded-xl font-bold text-xs focus:outline-none focus:border-emerald-500`}
           />
         </div>
 
         <div>
-          <label className="block text-[10px] uppercase font-bold text-sky-400 mb-1">Target Class</label>
+          <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-sky-700 font-bold" : "text-sky-400"} mb-1`}>Target Class</label>
           <select
             value={selectedClass}
             onChange={(e) => setSelectedClass(e.target.value)}
-            className="w-full bg-black border border-gray-800 p-2 rounded-xl text-white font-bold text-xs focus:outline-none focus:border-emerald-500"
+            className={`w-full ${
+              isLight ? "bg-slate-50 border-slate-200 text-slate-900 focus:bg-white" : "bg-black border-gray-800 text-white"
+            } border p-2 rounded-xl font-bold text-xs focus:outline-none focus:border-emerald-500`}
           >
             {classes.map((c) => (
               <option key={c.id} value={c.className}>
@@ -266,12 +280,14 @@ export default function SMSFeesPage() {
         </div>
 
         <div>
-          <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Due Date</label>
+          <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-slate-500" : "text-gray-400"} mb-1`}>Due Date</label>
           <input
             type="date"
             value={dueDate}
             onChange={(e) => setDueDate(e.target.value)}
-            className="w-full bg-black border border-gray-800 p-2 rounded-xl text-white font-bold text-xs focus:outline-none focus:border-emerald-500"
+            className={`w-full ${
+              isLight ? "bg-slate-50 border-slate-200 text-slate-900 focus:bg-white" : "bg-black border-gray-800 text-white"
+            } border p-2 rounded-xl font-bold text-xs focus:outline-none focus:border-emerald-500`}
           />
         </div>
 
@@ -287,16 +303,18 @@ export default function SMSFeesPage() {
       </div>
 
       {/* Fee Challans Table */}
-      <div className="bg-[#0b121e] border border-[#1e293b] rounded-2xl overflow-hidden shadow-2xl">
-        <div className="p-4 border-b border-gray-800 flex justify-between items-center bg-black/40">
+      <div className={`${isLight ? "bg-white border-slate-200 shadow-sm" : "bg-[#0b121e] border-[#1e293b]"} border rounded-2xl overflow-hidden shadow-2xl`}>
+        <div className={`p-4 border-b ${isLight ? "border-slate-100 bg-slate-50/80" : "border-gray-800 bg-black/40"} flex justify-between items-center`}>
           <div className="relative flex-1 max-w-sm">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+            <Search size={14} className={`absolute left-3 top-1/2 -translate-y-1/2 ${isLight ? "text-slate-400" : "text-gray-500"}`} />
             <input
               type="text"
               placeholder="Search challan #, student name, admission ID..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-black border border-gray-800 pl-9 pr-3 py-1.5 rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500"
+              className={`w-full ${
+                isLight ? "bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:border-emerald-500 shadow-xs" : "bg-black border-gray-800 text-white placeholder-gray-500 focus:border-emerald-500"
+              } border pl-9 pr-3 py-1.5 rounded-xl text-xs focus:outline-none`}
             />
           </div>
         </div>
@@ -304,7 +322,7 @@ export default function SMSFeesPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="border-b border-gray-800 text-gray-400 font-mono text-[11px] bg-black/20">
+              <tr className={`border-b ${isLight ? "border-slate-200 text-slate-600 bg-slate-100/70" : "border-gray-800 text-gray-400 bg-black/20"} font-mono text-[11px]`}>
                 <th className="p-4 font-bold">Challan #</th>
                 <th className="p-4 font-bold">Admission ID</th>
                 <th className="p-4 font-bold">Student Name</th>
@@ -316,23 +334,27 @@ export default function SMSFeesPage() {
                 <th className="p-4 font-bold text-center">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-800/50 font-mono text-[11px]">
+            <tbody className={`divide-y ${isLight ? "divide-slate-100" : "divide-gray-800/50"} font-mono text-[11px]`}>
               {(activeTab === "challans" ? filteredVouchers : defaulters).map((v) => (
-                <tr key={v.id} className="hover:bg-white/[0.02] transition">
-                  <td className="p-4 font-bold text-emerald-400">{v.challanNo}</td>
-                  <td className="p-4 text-sky-400 font-bold">{v.admissionNo}</td>
-                  <td className="p-4 font-sans font-bold text-white text-sm">{v.studentName}</td>
-                  <td className="p-4 font-sans text-gray-300">{v.className}</td>
-                  <td className="p-4 text-gray-400 font-sans">{v.month}</td>
-                  <td className="p-4 text-red-400">{v.dueDate}</td>
-                  <td className="p-4 text-right font-black text-white text-sm">
+                <tr key={v.id} className={`${isLight ? "hover:bg-slate-50/80" : "hover:bg-white/[0.02]"} transition`}>
+                  <td className={`p-4 font-bold ${isLight ? "text-emerald-700" : "text-emerald-400"}`}>{v.challanNo}</td>
+                  <td className={`p-4 font-bold ${isLight ? "text-sky-700" : "text-sky-400"}`}>{v.admissionNo}</td>
+                  <td className={`p-4 font-sans font-bold ${isLight ? "text-slate-900" : "text-white"} text-sm`}>{v.studentName}</td>
+                  <td className={`p-4 font-sans ${isLight ? "text-slate-700" : "text-gray-300"}`}>{v.className}</td>
+                  <td className={`p-4 font-sans ${isLight ? "text-slate-500" : "text-gray-400"}`}>{v.month}</td>
+                  <td className={`p-4 ${isLight ? "text-red-600 font-bold" : "text-red-400"}`}>{v.dueDate}</td>
+                  <td className={`p-4 text-right font-black ${isLight ? "text-slate-900" : "text-white"} text-sm`}>
                     Rs {v.totalPayable.toLocaleString()}
                   </td>
                   <td className="p-4 text-center font-sans">
                     <span
                       className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold ${
                         v.status === "Paid"
-                          ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
+                          ? isLight
+                            ? "bg-emerald-50 text-emerald-700 border border-emerald-300"
+                            : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
+                          : isLight
+                          ? "bg-red-50 text-red-700 border border-red-300"
                           : "bg-red-500/10 text-red-400 border border-red-500/30"
                       }`}
                     >
@@ -343,7 +365,9 @@ export default function SMSFeesPage() {
                     <div className="flex gap-1.5 justify-center">
                       <button
                         onClick={() => handlePrint3CopyChallan(v)}
-                        className="p-1.5 bg-sky-500/10 hover:bg-sky-500 text-sky-400 hover:text-white rounded-lg transition"
+                        className={`p-1.5 ${
+                          isLight ? "bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200" : "bg-sky-500/10 hover:bg-sky-500 text-sky-400 hover:text-white"
+                        } rounded-lg transition cursor-pointer`}
                         title="Print 3-Copy Bank Challan"
                       >
                         <Printer size={13} />
@@ -354,14 +378,16 @@ export default function SMSFeesPage() {
                             setCollectTarget(v);
                             setCollectForm({ ...collectForm, amount: v.totalPayable.toString() });
                           }}
-                          className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-bold text-[10px] transition"
+                          className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-bold text-[10px] transition cursor-pointer shadow-xs"
                         >
                           Collect
                         </button>
                       )}
                       <button
                         onClick={() => handleDeleteChallan(v)}
-                        className="p-1.5 bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white rounded-lg transition"
+                        className={`p-1.5 ${
+                          isLight ? "bg-red-50 hover:bg-red-100 text-red-700 border border-red-200" : "bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white"
+                        } rounded-lg transition cursor-pointer`}
                         title="Delete Challan"
                       >
                         <Trash2 size={13} />
@@ -379,43 +405,49 @@ export default function SMSFeesPage() {
       {/* COLLECT FEE MODAL                                                             */}
       {/* ───────────────────────────────────────────────────────────────────────────── */}
       {collectTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4">
-          <div className="bg-[#0b121e] border border-emerald-500/40 rounded-3xl w-full max-w-md shadow-2xl p-6 animate-fade-in-up">
-            <div className="flex justify-between items-center border-b border-gray-800 pb-3 mb-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className={`${
+            isLight ? "bg-white border-slate-200 text-slate-900" : "bg-[#0b121e] border-emerald-500/40 text-white"
+          } border rounded-3xl w-full max-w-md shadow-2xl p-6 animate-fade-in-up`}>
+            <div className={`flex justify-between items-center border-b ${isLight ? "border-slate-100" : "border-gray-800"} pb-3 mb-4`}>
               <div className="flex items-center gap-2">
-                <CreditCard size={16} className="text-emerald-400" />
-                <h3 className="font-black text-white text-sm">Fee Collection Cashier Desk</h3>
+                <CreditCard size={16} className={isLight ? "text-emerald-600" : "text-emerald-400"} />
+                <h3 className={`font-black ${isLight ? "text-slate-900" : "text-white"} text-sm`}>Fee Collection Cashier Desk</h3>
               </div>
-              <button onClick={() => setCollectTarget(null)} className="text-gray-400 hover:text-white">
+              <button onClick={() => setCollectTarget(null)} className={`${isLight ? "text-slate-400 hover:text-slate-800" : "text-gray-400 hover:text-white"} cursor-pointer`}>
                 <X size={16} />
               </button>
             </div>
 
             <form onSubmit={handleCollectSubmit} className="space-y-4 text-xs">
-              <div className="bg-black/40 border border-gray-800 rounded-xl p-3 space-y-1 font-mono">
-                <div>Challan: <span className="text-emerald-400 font-bold">{collectTarget.challanNo}</span></div>
-                <div>Student: <span className="text-white font-bold">{collectTarget.studentName}</span></div>
-                <div>Class: <span className="text-gray-300">{collectTarget.className}</span></div>
-                <div>Net Due: <span className="text-white font-black text-sm">Rs {collectTarget.totalPayable.toLocaleString()}</span></div>
+              <div className={`${isLight ? "bg-slate-50 border-slate-200 text-slate-800" : "bg-black/40 border-gray-800 text-gray-300"} border rounded-xl p-3 space-y-1 font-mono`}>
+                <div>Challan: <span className={`${isLight ? "text-emerald-700" : "text-emerald-400"} font-bold`}>{collectTarget.challanNo}</span></div>
+                <div>Student: <span className={`${isLight ? "text-slate-900" : "text-white"} font-bold`}>{collectTarget.studentName}</span></div>
+                <div>Class: <span className={isLight ? "text-slate-600" : "text-gray-300"}>{collectTarget.className}</span></div>
+                <div>Net Due: <span className={`${isLight ? "text-emerald-700" : "text-white"} font-black text-sm`}>Rs {collectTarget.totalPayable.toLocaleString()}</span></div>
               </div>
 
               <div>
-                <label className="block text-[10px] uppercase font-bold text-emerald-400 mb-1">Amount Received (PKR) *</label>
+                <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-emerald-700 font-bold" : "text-emerald-400"} mb-1`}>Amount Received (PKR) *</label>
                 <input
                   type="number"
                   required
                   value={collectForm.amount}
                   onChange={(e) => setCollectForm({ ...collectForm, amount: e.target.value })}
-                  className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-emerald-400 font-black text-base focus:outline-none focus:border-emerald-500"
+                  className={`w-full ${
+                    isLight ? "bg-slate-50 border-slate-200 text-emerald-800 focus:bg-white" : "bg-black border-gray-800 text-emerald-400"
+                  } border p-2.5 rounded-xl font-black text-base focus:outline-none focus:border-emerald-500`}
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Payment Method</label>
+                <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-slate-500" : "text-gray-400"} mb-1`}>Payment Method</label>
                 <select
                   value={collectForm.paymentMethod}
                   onChange={(e) => setCollectForm({ ...collectForm, paymentMethod: e.target.value })}
-                  className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-bold focus:outline-none focus:border-emerald-500"
+                  className={`w-full ${
+                    isLight ? "bg-slate-50 border-slate-200 text-slate-900 focus:bg-white" : "bg-black border-gray-800 text-white"
+                  } border p-2.5 rounded-xl font-bold focus:outline-none focus:border-emerald-500`}
                 >
                   <option value="Cash Counter Desk">Cash Counter Desk</option>
                   <option value="Bank Transfer (Meezan Bank)">Bank Transfer (Meezan Bank)</option>

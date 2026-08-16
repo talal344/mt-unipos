@@ -19,7 +19,8 @@ import {
 } from "lucide-react";
 
 export default function SMSWhatsAppPage() {
-  const { students, feeVouchers, marks, whatsappLogs, sendWhatsAppAlert } = useSMS();
+  const { theme, students, feeVouchers, marks, whatsappLogs, sendWhatsAppAlert } = useSMS();
+  const isLight = theme === "light";
 
   const [selectedCategory, setSelectedCategory] = useState<WhatsAppLog["category"]>("Absence Alert");
   const [selectedStudentId, setSelectedStudentId] = useState(students[0]?.id || "");
@@ -77,19 +78,21 @@ export default function SMSWhatsAppPage() {
       )}
 
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-800 pb-4">
+      <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b ${isLight ? "border-slate-200" : "border-gray-800"} pb-4`}>
         <div>
-          <h1 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
-            <MessageSquare className="text-emerald-400" size={22} />
+          <h1 className={`text-xl font-black tracking-tight ${isLight ? "text-slate-900" : "text-white"} flex items-center gap-2`}>
+            <MessageSquare className={isLight ? "text-emerald-600" : "text-emerald-400"} size={22} />
             <span>Automated WhatsApp &amp; SMS Broadcast Gateway</span>
           </h1>
-          <p className="text-xs text-gray-400">
+          <p className={`text-xs ${isLight ? "text-slate-600 font-medium" : "text-gray-400"}`}>
             Dispatch instant WhatsApp notifications to parents for morning absences, monthly fee challans, exam results, and emergency school circulars.
           </p>
         </div>
 
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold font-mono">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full ${
+          isLight ? "bg-emerald-50 border-emerald-300 text-emerald-800" : "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+        } border text-xs font-bold font-mono`}>
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
           WhatsApp API Connected
         </span>
       </div>
@@ -97,22 +100,24 @@ export default function SMSWhatsAppPage() {
       {/* Dispatcher Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left: Message Composer */}
-        <div className="bg-[#0b121e] border border-[#1e293b] rounded-2xl p-6 space-y-4">
-          <div className="flex items-center gap-2 text-emerald-400 font-black text-sm border-b border-gray-800 pb-3">
+        <div className={`${isLight ? "bg-white border-slate-200 shadow-sm" : "bg-[#0b121e] border-[#1e293b]"} border rounded-2xl p-6 space-y-4`}>
+          <div className={`flex items-center gap-2 ${isLight ? "text-emerald-700" : "text-emerald-400"} font-black text-sm border-b ${isLight ? "border-slate-100" : "border-gray-800"} pb-3`}>
             <Sparkles size={16} />
             <span>Broadcast Composer</span>
           </div>
 
           <div className="space-y-3 text-xs">
             <div>
-              <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Message Category / Template</label>
+              <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-slate-500" : "text-gray-400"} mb-1`}>Message Category / Template</label>
               <select
                 value={selectedCategory}
                 onChange={(e) => {
                   setSelectedCategory(e.target.value as any);
                   setCustomMsg("");
                 }}
-                className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-bold focus:outline-none focus:border-emerald-500"
+                className={`w-full ${
+                  isLight ? "bg-slate-50 border-slate-200 text-slate-900 focus:bg-white" : "bg-black border-gray-800 text-white"
+                } border p-2.5 rounded-xl font-bold focus:outline-none focus:border-emerald-500`}
               >
                 <option value="Absence Alert">🚨 Daily Absence Alert</option>
                 <option value="Fee Voucher">💳 Fee Challan Due Reminder</option>
@@ -123,14 +128,16 @@ export default function SMSWhatsAppPage() {
             </div>
 
             <div>
-              <label className="block text-[10px] uppercase font-bold text-sky-400 mb-1">Select Student Target</label>
+              <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-sky-700" : "text-sky-400"} mb-1`}>Select Student Target</label>
               <select
                 value={selectedStudentId}
                 onChange={(e) => {
                   setSelectedStudentId(e.target.value);
                   setCustomMsg("");
                 }}
-                className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-bold focus:outline-none focus:border-sky-500"
+                className={`w-full ${
+                  isLight ? "bg-slate-50 border-slate-200 text-slate-900 focus:bg-white" : "bg-black border-gray-800 text-white"
+                } border p-2.5 rounded-xl font-bold focus:outline-none focus:border-sky-500`}
               >
                 {students.map((st) => (
                   <option key={st.id} value={st.id}>
@@ -141,20 +148,22 @@ export default function SMSWhatsAppPage() {
             </div>
 
             {targetStudent && (
-              <div className="p-3 bg-black/40 border border-gray-800 rounded-xl space-y-1 font-mono text-[11px]">
-                <div className="text-gray-400">Parent: <span className="text-white font-bold">{targetStudent.fatherName}</span></div>
-                <div className="text-gray-400">Phone: <span className="text-emerald-400 font-bold">{targetStudent.fatherPhone}</span></div>
-                <div className="text-gray-400">Class: <span className="text-sky-300">{targetStudent.className}</span></div>
+              <div className={`p-3 ${isLight ? "bg-slate-50 border-slate-200 text-slate-700" : "bg-black/40 border-gray-800 text-gray-400"} border rounded-xl space-y-1 font-mono text-[11px]`}>
+                <div>Parent: <span className={`${isLight ? "text-slate-900" : "text-white"} font-bold`}>{targetStudent.fatherName}</span></div>
+                <div>Phone: <span className={`${isLight ? "text-emerald-700" : "text-emerald-400"} font-bold`}>{targetStudent.fatherPhone}</span></div>
+                <div>Class: <span className={`${isLight ? "text-sky-700" : "text-sky-300"} font-bold`}>{targetStudent.className}</span></div>
               </div>
             )}
 
             <div>
-              <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Customize Message Body</label>
+              <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-slate-500" : "text-gray-400"} mb-1`}>Customize Message Body</label>
               <textarea
                 rows={5}
                 value={currentPreview}
                 onChange={(e) => setCustomMsg(e.target.value)}
-                className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white text-xs leading-relaxed resize-none focus:outline-none focus:border-emerald-500"
+                className={`w-full ${
+                  isLight ? "bg-slate-50 border-slate-200 text-slate-900 focus:bg-white" : "bg-black border-gray-800 text-white"
+                } border p-2.5 rounded-xl text-xs leading-relaxed resize-none focus:outline-none focus:border-emerald-500`}
               />
             </div>
 
@@ -171,23 +180,23 @@ export default function SMSWhatsAppPage() {
         {/* Right: Real-time Smartphone Preview & Logs */}
         <div className="lg:col-span-2 space-y-6">
           {/* WhatsApp Chat Preview Card */}
-          <div className="bg-[#0b121e] border border-[#1e293b] rounded-2xl p-5 space-y-3">
-            <div className="flex justify-between items-center border-b border-gray-800 pb-2">
-              <h3 className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-2">
-                <MessageSquare size={14} className="text-emerald-400" />
+          <div className={`${isLight ? "bg-white border-slate-200 shadow-sm" : "bg-[#0b121e] border-[#1e293b]"} border rounded-2xl p-5 space-y-3`}>
+            <div className={`flex justify-between items-center border-b ${isLight ? "border-slate-100" : "border-gray-800"} pb-2`}>
+              <h3 className={`text-xs font-black ${isLight ? "text-slate-900" : "text-white"} uppercase tracking-wider flex items-center gap-2`}>
+                <MessageSquare size={14} className={isLight ? "text-emerald-600" : "text-emerald-400"} />
                 <span>Live Smartphone WhatsApp Bubble Preview</span>
               </h3>
-              <span className="text-[10px] font-mono text-gray-500">End-to-End Encrypted</span>
+              <span className={`text-[10px] font-mono ${isLight ? "text-slate-400" : "text-gray-500"}`}>End-to-End Encrypted</span>
             </div>
 
-            <div className="bg-[#0a1014] border border-[#1f2c34] p-4 rounded-2xl max-w-lg mx-auto shadow-2xl relative">
-              <div className="flex items-center gap-2.5 pb-3 mb-3 border-b border-[#1f2c34]">
+            <div className={`${isLight ? "bg-slate-100 border-slate-300" : "bg-[#0a1014] border-[#1f2c34]"} border p-4 rounded-2xl max-w-lg mx-auto shadow-2xl relative`}>
+              <div className={`flex items-center gap-2.5 pb-3 mb-3 border-b ${isLight ? "border-slate-200" : "border-[#1f2c34]"}`}>
                 <div className="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center font-black text-white text-xs">
                   MT
                 </div>
                 <div>
-                  <div className="text-xs font-bold text-white">MT Core Model School Official</div>
-                  <div className="text-[9px] text-emerald-400 font-semibold">Verified Official Institution</div>
+                  <div className={`text-xs font-bold ${isLight ? "text-slate-900" : "text-white"}`}>MT Core Model School Official</div>
+                  <div className={`text-[9px] ${isLight ? "text-emerald-700 font-bold" : "text-emerald-400 font-semibold"}`}>Verified Official Institution</div>
                 </div>
               </div>
 
@@ -203,18 +212,18 @@ export default function SMSWhatsAppPage() {
           </div>
 
           {/* Delivery Log History */}
-          <div className="bg-[#0b121e] border border-[#1e293b] rounded-2xl overflow-hidden shadow-xl">
-            <div className="p-4 border-b border-gray-800 flex justify-between items-center bg-black/40">
-              <h3 className="font-black text-white text-xs uppercase tracking-wider">
+          <div className={`${isLight ? "bg-white border-slate-200 shadow-sm" : "bg-[#0b121e] border-[#1e293b]"} border rounded-2xl overflow-hidden shadow-xl`}>
+            <div className={`p-4 border-b ${isLight ? "border-slate-100 bg-slate-50/80" : "border-gray-800 bg-black/40"} flex justify-between items-center`}>
+              <h3 className={`font-black ${isLight ? "text-slate-900" : "text-white"} text-xs uppercase tracking-wider`}>
                 Recent WhatsApp Dispatches &amp; Logs ({whatsappLogs.length})
               </h3>
-              <span className="text-[10px] text-emerald-400 font-mono">100% Delivery Rate</span>
+              <span className={`text-[10px] ${isLight ? "text-emerald-700 font-bold" : "text-emerald-400"} font-mono`}>100% Delivery Rate</span>
             </div>
 
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="border-b border-gray-800 text-gray-400 font-mono text-[10px] bg-black/20">
+                  <tr className={`border-b ${isLight ? "border-slate-200 text-slate-600 bg-slate-100/70" : "border-gray-800 text-gray-400 bg-black/20"} font-mono text-[10px]`}>
                     <th className="p-3 font-bold">Recipient Parent</th>
                     <th className="p-3 font-bold">Phone Number</th>
                     <th className="p-3 font-bold">Category</th>
@@ -223,20 +232,24 @@ export default function SMSWhatsAppPage() {
                     <th className="p-3 font-bold text-center">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-800/50 font-mono text-[10px]">
+                <tbody className={`divide-y ${isLight ? "divide-slate-100 text-slate-700" : "divide-gray-800/50"} font-mono text-[10px]`}>
                   {whatsappLogs.map((log) => (
-                    <tr key={log.id} className="hover:bg-white/[0.02] transition">
-                      <td className="p-3 font-sans font-bold text-white">{log.recipientName}</td>
-                      <td className="p-3 text-emerald-400">{log.recipientPhone}</td>
+                    <tr key={log.id} className={`${isLight ? "hover:bg-slate-50/80" : "hover:bg-white/[0.02]"} transition`}>
+                      <td className={`p-3 font-sans font-bold ${isLight ? "text-slate-900" : "text-white"}`}>{log.recipientName}</td>
+                      <td className={`p-3 font-bold ${isLight ? "text-emerald-700" : "text-emerald-400"}`}>{log.recipientPhone}</td>
                       <td className="p-3 font-sans">
-                        <span className="bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 px-2 py-0.5 rounded text-[9px] font-bold">
+                        <span className={`${
+                          isLight ? "bg-emerald-50 text-emerald-800 border-emerald-300" : "bg-emerald-500/10 text-emerald-300 border-emerald-500/20"
+                        } border px-2 py-0.5 rounded text-[9px] font-bold`}>
                           {log.category}
                         </span>
                       </td>
-                      <td className="p-3 font-sans text-gray-300 max-w-xs truncate">{log.message}</td>
-                      <td className="p-3 text-gray-400">{log.sentAt}</td>
+                      <td className={`p-3 font-sans ${isLight ? "text-slate-600 font-medium" : "text-gray-300"} max-w-xs truncate`}>{log.message}</td>
+                      <td className={`p-3 ${isLight ? "text-slate-500" : "text-gray-400"}`}>{log.sentAt}</td>
                       <td className="p-3 text-center">
-                        <span className="text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded">
+                        <span className={`${
+                          isLight ? "text-emerald-700 bg-emerald-50 border border-emerald-200" : "text-emerald-400 bg-emerald-500/10"
+                        } font-bold px-2 py-0.5 rounded`}>
                           ✓✓ {log.status}
                         </span>
                       </td>

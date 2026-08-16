@@ -19,6 +19,7 @@ import {
 
 export default function SMSClassesPage() {
   const {
+    theme,
     classes,
     students,
     teachers,
@@ -27,6 +28,8 @@ export default function SMSClassesPage() {
     deleteClassSection,
     reassignStudentSection
   } = useSMS();
+
+  const isLight = theme === "light";
 
   const [selectedClassId, setSelectedClassId] = useState<string>(classes[0]?.id || "");
   const [toastMsg, setToastMsg] = useState("");
@@ -144,13 +147,13 @@ export default function SMSClassesPage() {
       )}
 
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-800 pb-4">
+      <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b ${isLight ? "border-slate-200" : "border-gray-800"} pb-4`}>
         <div>
-          <h1 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
-            <Building2 className="text-sky-400" size={22} />
+          <h1 className={`text-xl font-black tracking-tight ${isLight ? "text-slate-900" : "text-white"} flex items-center gap-2`}>
+            <Building2 className={isLight ? "text-sky-600" : "text-sky-400"} size={22} />
             <span>Class &amp; Section Student-Teacher Allocation Workbench</span>
           </h1>
-          <p className="text-xs text-gray-400">
+          <p className={`text-xs ${isLight ? "text-slate-600 font-medium" : "text-gray-400"}`}>
             Configure class sections, assign incharge faculty, elect student CR/GR, and re-assign students across sections.
           </p>
         </div>
@@ -178,19 +181,23 @@ export default function SMSClassesPage() {
               onClick={() => setSelectedClassId(cls.id)}
               className={`p-5 rounded-2xl border transition cursor-pointer space-y-3 relative ${
                 isSelected
-                  ? "bg-[#0b1a2e] border-sky-500 shadow-xl shadow-sky-600/10 ring-1 ring-sky-500"
+                  ? isLight
+                    ? "bg-sky-50/80 border-sky-400 shadow-md ring-2 ring-sky-400"
+                    : "bg-[#0b1a2e] border-sky-500 shadow-xl shadow-sky-600/10 ring-1 ring-sky-500"
+                  : isLight
+                  ? "bg-white border-slate-200 hover:border-slate-300 shadow-sm"
                   : "bg-[#0b121e] border-[#1e293b] hover:border-gray-700"
               }`}
             >
               <div className="flex justify-between items-center text-xs">
-                <span className="text-[10px] uppercase font-bold text-sky-400 font-mono">{cls.wing}</span>
+                <span className={`text-[10px] uppercase font-bold ${isLight ? "text-sky-700" : "text-sky-400"} font-mono`}>{cls.wing}</span>
                 <div className="flex gap-1">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       handleOpenEdit(cls);
                     }}
-                    className="p-1 hover:bg-sky-500/20 text-gray-400 hover:text-sky-300 rounded"
+                    className={`p-1 ${isLight ? "hover:bg-slate-200 text-slate-500 hover:text-slate-900" : "hover:bg-sky-500/20 text-gray-400 hover:text-sky-300"} rounded cursor-pointer`}
                     title="Edit Section"
                   >
                     <Edit2 size={12} />
@@ -200,7 +207,7 @@ export default function SMSClassesPage() {
                       e.stopPropagation();
                       handleDelete(cls);
                     }}
-                    className="p-1 hover:bg-red-500/20 text-gray-400 hover:text-red-400 rounded"
+                    className={`p-1 ${isLight ? "hover:bg-red-100 text-slate-500 hover:text-red-600" : "hover:bg-red-500/20 text-gray-400 hover:text-red-400"} rounded cursor-pointer`}
                     title="Delete Section"
                   >
                     <Trash2 size={12} />
@@ -209,18 +216,18 @@ export default function SMSClassesPage() {
               </div>
 
               <div>
-                <h3 className="font-black text-white text-base">{cls.className}</h3>
-                <div className="text-xs text-sky-300 font-bold">{cls.sectionName} • {cls.roomNumber}</div>
+                <h3 className={`font-black ${isLight ? "text-slate-900" : "text-white"} text-base`}>{cls.className}</h3>
+                <div className={`text-xs ${isLight ? "text-sky-700 font-bold" : "text-sky-300 font-bold"}`}>{cls.sectionName} • {cls.roomNumber}</div>
               </div>
 
-              <div className="pt-2 border-t border-gray-800 flex justify-between items-end text-xs">
+              <div className={`pt-2 border-t ${isLight ? "border-slate-100" : "border-gray-800"} flex justify-between items-end text-xs`}>
                 <div>
-                  <span className="text-[9px] text-gray-500 block">Class Incharge</span>
-                  <span className="font-bold text-emerald-400 text-[11px]">{cls.classTeacherName || "Unassigned"}</span>
+                  <span className={`text-[9px] ${isLight ? "text-slate-500" : "text-gray-500"} block`}>Class Incharge</span>
+                  <span className={`font-bold ${isLight ? "text-emerald-700" : "text-emerald-400"} text-[11px]`}>{cls.classTeacherName || "Unassigned"}</span>
                 </div>
                 <div className="text-right">
-                  <span className="font-black text-white text-sm">{studentCount} / {cls.capacity}</span>
-                  <span className="text-[9px] text-gray-500 block">Students</span>
+                  <span className={`font-black ${isLight ? "text-slate-900" : "text-white"} text-sm`}>{studentCount} / {cls.capacity}</span>
+                  <span className={`text-[9px] ${isLight ? "text-slate-500" : "text-gray-500"} block`}>Students</span>
                 </div>
               </div>
             </div>
@@ -232,19 +239,19 @@ export default function SMSClassesPage() {
       {/* SECTION DETAIL: ENROLLED STUDENTS & MANAGEMENT                                */}
       {/* ───────────────────────────────────────────────────────────────────────────── */}
       {currentClass && (
-        <div className="bg-[#0b121e] border border-[#1e293b] rounded-2xl overflow-hidden shadow-2xl space-y-4">
-          <div className="p-5 border-b border-gray-800 flex flex-col sm:flex-row justify-between sm:items-center gap-3 bg-black/40">
+        <div className={`${isLight ? "bg-white border-slate-200 shadow-sm" : "bg-[#0b121e] border-[#1e293b]"} border rounded-2xl overflow-hidden shadow-2xl space-y-4`}>
+          <div className={`p-5 border-b ${isLight ? "border-slate-100 bg-slate-50/80" : "border-gray-800 bg-black/40"} flex flex-col sm:flex-row justify-between sm:items-center gap-3`}>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-black text-white text-sm">
+                <h3 className={`font-black ${isLight ? "text-slate-900" : "text-white"} text-sm`}>
                   {currentClass.className} — {currentClass.sectionName}
                 </h3>
-                <span className="text-[10px] bg-sky-500/10 text-sky-400 border border-sky-500/30 px-2 py-0.5 rounded font-bold">
+                <span className={`text-[10px] ${isLight ? "bg-sky-50 text-sky-700 border border-sky-300 font-bold" : "bg-sky-500/10 text-sky-400 border border-sky-500/30 font-bold"} px-2 py-0.5 rounded`}>
                   {enrolledStudentsInCurrent.length} Students Enrolled
                 </span>
               </div>
-              <p className="text-xs text-gray-400 mt-0.5">
-                Incharge: <b className="text-emerald-400">{currentClass.classTeacherName || 'Not Set'}</b> • Boy CR: <b className="text-sky-300">{currentClass.crBoyName || 'None'}</b> • Girl GR: <b className="text-pink-300">{currentClass.grGirlName || 'None'}</b>
+              <p className={`text-xs ${isLight ? "text-slate-600" : "text-gray-400"} mt-0.5`}>
+                Incharge: <b className={isLight ? "text-emerald-700" : "text-emerald-400"}>{currentClass.classTeacherName || 'Not Set'}</b> • Boy CR: <b className={isLight ? "text-sky-700" : "text-sky-300"}>{currentClass.crBoyName || 'None'}</b> • Girl GR: <b className={isLight ? "text-pink-700" : "text-pink-300"}>{currentClass.grGirlName || 'None'}</b>
               </p>
             </div>
           </div>
@@ -252,7 +259,7 @@ export default function SMSClassesPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="border-b border-gray-800 text-gray-400 font-mono text-[10px] bg-black/20">
+                <tr className={`border-b ${isLight ? "border-slate-200 text-slate-600 bg-slate-100/70" : "border-gray-800 text-gray-400 bg-black/20"} font-mono text-[10px]`}>
                   <th className="p-4 font-bold">Roll #</th>
                   <th className="p-4 font-bold">Student Name</th>
                   <th className="p-4 font-bold">Admission ID</th>
@@ -262,32 +269,36 @@ export default function SMSClassesPage() {
                   <th className="p-4 font-bold text-center">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-800/50 font-mono text-[11px]">
+              <tbody className={`divide-y ${isLight ? "divide-slate-100" : "divide-gray-800/50"} font-mono text-[11px]`}>
                 {enrolledStudentsInCurrent.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="p-6 text-center text-gray-500 font-sans">
+                    <td colSpan={7} className={`p-6 text-center ${isLight ? "text-slate-400" : "text-gray-500"} font-sans`}>
                       No students currently allocated to this section. Use Student 360 to assign or shift candidates.
                     </td>
                   </tr>
                 ) : (
                   enrolledStudentsInCurrent.map((st) => (
-                    <tr key={st.id} className="hover:bg-white/[0.02] transition">
-                      <td className="p-4 font-bold text-white font-mono">#{st.rollNo}</td>
-                      <td className="p-4 font-sans font-bold text-white text-sm">
+                    <tr key={st.id} className={`${isLight ? "hover:bg-slate-50/80" : "hover:bg-white/[0.02]"} transition`}>
+                      <td className={`p-4 font-bold ${isLight ? "text-slate-900" : "text-white"} font-mono`}>#{st.rollNo}</td>
+                      <td className={`p-4 font-sans font-bold ${isLight ? "text-slate-900" : "text-white"} text-sm`}>
                         {st.firstName} {st.lastName}
                       </td>
-                      <td className="p-4 font-bold text-sky-400">{st.admissionNo}</td>
-                      <td className="p-4 font-sans text-gray-300">{st.fatherName}</td>
-                      <td className="p-4 text-emerald-400">{st.fatherPhone}</td>
+                      <td className={`p-4 font-bold ${isLight ? "text-sky-700" : "text-sky-400"}`}>{st.admissionNo}</td>
+                      <td className={`p-4 font-sans ${isLight ? "text-slate-700" : "text-gray-300"}`}>{st.fatherName}</td>
+                      <td className={`p-4 ${isLight ? "text-emerald-700 font-bold" : "text-emerald-400"}`}>{st.fatherPhone}</td>
                       <td className="p-4 font-sans">
-                        <span className="bg-sky-500/10 text-sky-300 border border-sky-500/20 px-2 py-0.5 rounded text-[10px] font-bold">
+                        <span className={`${
+                          isLight ? "bg-sky-50 text-sky-700 border-sky-200" : "bg-sky-500/10 text-sky-300 border-sky-500/20"
+                        } border px-2 py-0.5 rounded text-[10px] font-bold`}>
                           {st.feeCategory}
                         </span>
                       </td>
                       <td className="p-4 text-center">
                         <button
                           onClick={() => setReassignTargetStudent(st)}
-                          className="px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white rounded-lg font-bold text-[10px] transition flex items-center gap-1.5 mx-auto cursor-pointer"
+                          className={`px-3 py-1.5 ${
+                            isLight ? "bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white border border-indigo-200" : "bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white"
+                          } rounded-lg font-bold text-[10px] transition flex items-center gap-1.5 mx-auto cursor-pointer`}
                         >
                           <ArrowRightLeft size={12} />
                           <span>Shift Section</span>
@@ -306,29 +317,33 @@ export default function SMSClassesPage() {
       {/* SHIFT STUDENT SECTION MODAL                                                   */}
       {/* ───────────────────────────────────────────────────────────────────────────── */}
       {reassignTargetStudent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4">
-          <div className="bg-[#0b121e] border border-indigo-500/40 rounded-3xl w-full max-w-md shadow-2xl p-6 animate-fade-in-up">
-            <div className="flex justify-between items-center border-b border-gray-800 pb-3 mb-4">
-              <h3 className="font-black text-white text-sm">Shift Student to Another Section</h3>
-              <button onClick={() => setReassignTargetStudent(null)} className="text-gray-400 hover:text-white">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className={`${
+            isLight ? "bg-white border-slate-200 text-slate-900" : "bg-[#0b121e] border-indigo-500/40 text-white"
+          } border rounded-3xl w-full max-w-md shadow-2xl p-6 animate-fade-in-up`}>
+            <div className={`flex justify-between items-center border-b ${isLight ? "border-slate-100" : "border-gray-800"} pb-3 mb-4`}>
+              <h3 className={`font-black ${isLight ? "text-slate-900" : "text-white"} text-sm`}>Shift Student to Another Section</h3>
+              <button onClick={() => setReassignTargetStudent(null)} className={`${isLight ? "text-slate-400 hover:text-slate-800" : "text-gray-400 hover:text-white"} cursor-pointer`}>
                 <X size={16} />
               </button>
             </div>
 
             <form onSubmit={handleReassignSubmit} className="space-y-4 text-xs">
-              <div className="bg-black/40 border border-gray-800 p-3 rounded-xl space-y-1">
-                <div>Candidate: <b className="text-white">{reassignTargetStudent.firstName} {reassignTargetStudent.lastName}</b></div>
-                <div>Current: <b className="text-sky-400">{reassignTargetStudent.className} ({reassignTargetStudent.sectionName})</b></div>
+              <div className={`${isLight ? "bg-slate-50 border-slate-200 text-slate-800" : "bg-black/40 border-gray-800 text-gray-300"} border p-3 rounded-xl space-y-1`}>
+                <div>Candidate: <b className={isLight ? "text-slate-900" : "text-white"}>{reassignTargetStudent.firstName} {reassignTargetStudent.lastName}</b></div>
+                <div>Current: <b className={isLight ? "text-sky-700" : "text-sky-400"}>{reassignTargetStudent.className} ({reassignTargetStudent.sectionName})</b></div>
               </div>
 
               <div>
-                <label className="block text-[10px] uppercase font-bold text-indigo-400 mb-1">
+                <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-indigo-700" : "text-indigo-400"} mb-1`}>
                   Select Target Destination Section
                 </label>
                 <select
                   value={targetClassSectionId}
                   onChange={(e) => setTargetClassSectionId(e.target.value)}
-                  className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-bold"
+                  className={`w-full ${
+                    isLight ? "bg-slate-50 border-slate-200 text-slate-900 focus:bg-white" : "bg-black border-gray-800 text-white"
+                  } border p-2.5 rounded-xl font-bold focus:outline-none`}
                 >
                   {classes.map((c) => (
                     <option key={c.id} value={c.id}>
@@ -340,7 +355,7 @@ export default function SMSClassesPage() {
 
               <button
                 type="submit"
-                className="w-full py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-black uppercase rounded-xl transition text-xs"
+                className="w-full py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-black uppercase rounded-xl transition text-xs cursor-pointer shadow-lg"
               >
                 Confirm Student Section Transfer
               </button>
@@ -353,13 +368,15 @@ export default function SMSClassesPage() {
       {/* ADD / EDIT CLASS SECTION MODAL                                                */}
       {/* ───────────────────────────────────────────────────────────────────────────── */}
       {showClassModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="bg-[#0b121e] border border-sky-500/40 rounded-3xl w-full max-w-lg shadow-2xl p-6 my-8 animate-fade-in-up">
-            <div className="flex justify-between items-center border-b border-gray-800 pb-3 mb-4">
-              <h3 className="font-black text-white text-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className={`${
+            isLight ? "bg-white border-slate-200 text-slate-900" : "bg-[#0b121e] border-sky-500/40 text-white"
+          } border rounded-3xl w-full max-w-lg shadow-2xl p-6 my-8 animate-fade-in-up`}>
+            <div className={`flex justify-between items-center border-b ${isLight ? "border-slate-100" : "border-gray-800"} pb-3 mb-4`}>
+              <h3 className={`font-black ${isLight ? "text-slate-900" : "text-white"} text-sm`}>
                 {editingClass ? "Edit Class Section & Leadership" : "Create New Class Section"}
               </h3>
-              <button onClick={() => setShowClassModal(false)} className="text-gray-400 hover:text-white">
+              <button onClick={() => setShowClassModal(false)} className={`${isLight ? "text-slate-400 hover:text-slate-800" : "text-gray-400 hover:text-white"} cursor-pointer`}>
                 <X size={16} />
               </button>
             </div>
@@ -367,36 +384,42 @@ export default function SMSClassesPage() {
             <form onSubmit={handleSaveClass} className="space-y-4 text-xs">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Class Name *</label>
+                  <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-slate-500" : "text-gray-400"} mb-1`}>Class Name *</label>
                   <input
                     type="text"
                     required
                     placeholder="e.g. Class 10 (Science)"
                     value={form.className}
                     onChange={(e) => setForm({ ...form, className: e.target.value })}
-                    className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-bold"
+                    className={`w-full ${
+                      isLight ? "bg-slate-50 border-slate-200 text-slate-900 focus:bg-white" : "bg-black border-gray-800 text-white"
+                    } border p-2.5 rounded-xl font-bold focus:outline-none`}
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] uppercase font-bold text-sky-400 mb-1">Section Name *</label>
+                  <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-sky-700" : "text-sky-400"} mb-1`}>Section Name *</label>
                   <input
                     type="text"
                     required
                     placeholder="e.g. Section A (Einstein)"
                     value={form.sectionName}
                     onChange={(e) => setForm({ ...form, sectionName: e.target.value })}
-                    className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-bold"
+                    className={`w-full ${
+                      isLight ? "bg-slate-50 border-slate-200 text-slate-900 focus:bg-white" : "bg-black border-gray-800 text-white"
+                    } border p-2.5 rounded-xl font-bold focus:outline-none`}
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Campus Wing</label>
+                  <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-slate-500" : "text-gray-400"} mb-1`}>Campus Wing</label>
                   <select
                     value={form.wing}
                     onChange={(e) => setForm({ ...form, wing: e.target.value })}
-                    className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-bold"
+                    className={`w-full ${
+                      isLight ? "bg-slate-50 border-slate-200 text-slate-900 focus:bg-white" : "bg-black border-gray-800 text-white"
+                    } border p-2.5 rounded-xl font-bold focus:outline-none`}
                   >
                     <option value="Montessori & Early Years">Montessori &amp; Early Years</option>
                     <option value="Junior Girls Wing">Junior Girls Wing</option>
@@ -405,65 +428,75 @@ export default function SMSClassesPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Room Number</label>
+                  <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-slate-500" : "text-gray-400"} mb-1`}>Room Number</label>
                   <input
                     type="text"
                     placeholder="Room 204"
                     value={form.roomNumber}
                     onChange={(e) => setForm({ ...form, roomNumber: e.target.value })}
-                    className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white"
+                    className={`w-full ${
+                      isLight ? "bg-slate-50 border-slate-200 text-slate-900 focus:bg-white" : "bg-black border-gray-800 text-white"
+                    } border p-2.5 rounded-xl focus:outline-none`}
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] uppercase font-bold text-emerald-400 mb-1">Class Incharge Teacher</label>
+                  <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-emerald-700" : "text-emerald-400"} mb-1`}>Class Incharge Teacher</label>
                   <input
                     type="text"
                     placeholder="Sir Shahid Mehmood"
                     value={form.classTeacherName}
                     onChange={(e) => setForm({ ...form, classTeacherName: e.target.value })}
-                    className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-bold"
+                    className={`w-full ${
+                      isLight ? "bg-slate-50 border-slate-200 text-slate-900 focus:bg-white" : "bg-black border-gray-800 text-white"
+                    } border p-2.5 rounded-xl font-bold focus:outline-none`}
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Capacity (Max Seats)</label>
+                  <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-slate-500" : "text-gray-400"} mb-1`}>Capacity (Max Seats)</label>
                   <input
                     type="number"
                     value={form.capacity}
                     onChange={(e) => setForm({ ...form, capacity: parseInt(e.target.value, 10) || 35 })}
-                    className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white font-bold"
+                    className={`w-full ${
+                      isLight ? "bg-slate-50 border-slate-200 text-slate-900 focus:bg-white" : "bg-black border-gray-800 text-white"
+                    } border p-2.5 rounded-xl font-bold focus:outline-none`}
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] uppercase font-bold text-sky-400 mb-1">Appointed Boy CR</label>
+                  <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-sky-700" : "text-sky-400"} mb-1`}>Appointed Boy CR</label>
                   <input
                     type="text"
                     placeholder="Daniyal Tariq"
                     value={form.crBoyName}
                     onChange={(e) => setForm({ ...form, crBoyName: e.target.value })}
-                    className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white"
+                    className={`w-full ${
+                      isLight ? "bg-slate-50 border-slate-200 text-slate-900 focus:bg-white" : "bg-black border-gray-800 text-white"
+                    } border p-2.5 rounded-xl focus:outline-none`}
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] uppercase font-bold text-pink-400 mb-1">Appointed Girl GR</label>
+                  <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-pink-700" : "text-pink-400"} mb-1`}>Appointed Girl GR</label>
                   <input
                     type="text"
                     placeholder="Ayesha Noor"
                     value={form.grGirlName}
                     onChange={(e) => setForm({ ...form, grGirlName: e.target.value })}
-                    className="w-full bg-black border border-gray-800 p-2.5 rounded-xl text-white"
+                    className={`w-full ${
+                      isLight ? "bg-slate-50 border-slate-200 text-slate-900 focus:bg-white" : "bg-black border-gray-800 text-white"
+                    } border p-2.5 rounded-xl focus:outline-none`}
                   />
                 </div>
               </div>
 
               <button
                 type="submit"
-                className="w-full py-3 bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-black uppercase rounded-xl transition text-xs shadow-lg"
+                className="w-full py-3 bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-black uppercase rounded-xl transition text-xs shadow-lg cursor-pointer"
               >
                 Save Section Allocation
               </button>

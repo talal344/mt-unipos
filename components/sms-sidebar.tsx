@@ -93,13 +93,48 @@ export default function SMSSidebar() {
   }, [pathname]);
 
   const roleColors: Record<SMSRole, { bg: string; text: string; border: string; label: string }> = {
-    Owner: { bg: "bg-amber-500/10", text: "text-amber-400", border: "border-amber-500/30", label: "👑 Owner / Director" },
-    Principal: { bg: "bg-sky-500/10", text: "text-sky-400", border: "border-sky-500/30", label: "👔 Principal / Head" },
-    Teacher: { bg: "bg-emerald-500/10", text: "text-emerald-400", border: "border-emerald-500/30", label: "👩‍🏫 Faculty / Teacher" },
-    Student: { bg: "bg-purple-500/10", text: "text-purple-400", border: "border-purple-500/30", label: "🎒 Student Portal" },
-    Parent: { bg: "bg-pink-500/10", text: "text-pink-400", border: "border-pink-500/30", label: "👨‍👩‍👧 Parent Portal" },
-    HR: { bg: "bg-indigo-500/10", text: "text-indigo-400", border: "border-indigo-500/30", label: "👥 School HR" },
-    Finance: { bg: "bg-teal-500/10", text: "text-teal-400", border: "border-teal-500/30", label: "💳 Accounts & Fees" }
+    Owner: {
+      bg: isLight ? "bg-amber-50" : "bg-amber-500/10",
+      text: isLight ? "text-amber-800" : "text-amber-400",
+      border: isLight ? "border-amber-300" : "border-amber-500/30",
+      label: "👑 Owner / Director"
+    },
+    Principal: {
+      bg: isLight ? "bg-sky-50" : "bg-sky-500/10",
+      text: isLight ? "text-sky-800" : "text-sky-400",
+      border: isLight ? "border-sky-300" : "border-sky-500/30",
+      label: "👔 Principal / Head"
+    },
+    Teacher: {
+      bg: isLight ? "bg-emerald-50" : "bg-emerald-500/10",
+      text: isLight ? "text-emerald-800" : "text-emerald-400",
+      border: isLight ? "border-emerald-300" : "border-emerald-500/30",
+      label: "👩‍🏫 Faculty / Teacher"
+    },
+    Student: {
+      bg: isLight ? "bg-purple-50" : "bg-purple-500/10",
+      text: isLight ? "text-purple-800" : "text-purple-400",
+      border: isLight ? "border-purple-300" : "border-purple-500/30",
+      label: "🎒 Student Portal"
+    },
+    Parent: {
+      bg: isLight ? "bg-pink-50" : "bg-pink-500/10",
+      text: isLight ? "text-pink-800" : "text-pink-400",
+      border: isLight ? "border-pink-300" : "border-pink-500/30",
+      label: "👨‍👩‍👧 Parent Portal"
+    },
+    HR: {
+      bg: isLight ? "bg-indigo-50" : "bg-indigo-500/10",
+      text: isLight ? "text-indigo-800" : "text-indigo-400",
+      border: isLight ? "border-indigo-300" : "border-indigo-500/30",
+      label: "👥 School HR"
+    },
+    Finance: {
+      bg: isLight ? "bg-teal-50" : "bg-teal-500/10",
+      text: isLight ? "text-teal-800" : "text-teal-400",
+      border: isLight ? "border-teal-300" : "border-teal-500/30",
+      label: "💳 Accounts & Fees"
+    }
   };
 
   const navGroups: NavGroup[] = [
@@ -107,7 +142,7 @@ export default function SMSSidebar() {
       id: "hub",
       groupTitle: "Command & Comms",
       icon: LayoutDashboard,
-      color: "text-sky-400",
+      color: isLight ? "text-sky-600" : "text-sky-400",
       items: [
         { href: "/sms", label: "Executive Dashboard", icon: LayoutDashboard },
         { href: "/sms/users", label: "User Accounts & Logins", icon: Users, badge: "Auth" },
@@ -118,7 +153,7 @@ export default function SMSSidebar() {
       id: "students",
       groupTitle: "Students & Admissions",
       icon: Users,
-      color: "text-indigo-400",
+      color: isLight ? "text-indigo-600" : "text-indigo-400",
       items: [
         { href: "/sms/students", label: "Student 360 & PVC Cards", icon: Users, badge: "Core" },
         { href: "/sms/admissions-online", label: "Online Admissions & Merit", icon: UserPlus, badge: "CRM" },
@@ -129,7 +164,7 @@ export default function SMSSidebar() {
       id: "academics",
       groupTitle: "Academics & Operations",
       icon: Building2,
-      color: "text-emerald-400",
+      color: isLight ? "text-emerald-600" : "text-emerald-400",
       items: [
         { href: "/sms/classes", label: "Classes & Student Allocation", icon: Building2, badge: "Alloc" },
         { href: "/sms/teachers", label: "Teachers Faculty Matrix", icon: GraduationCap, badge: "Schedule" },
@@ -144,7 +179,7 @@ export default function SMSSidebar() {
       id: "exams",
       groupTitle: "Exams & AI Grading",
       icon: Award,
-      color: "text-purple-400",
+      color: isLight ? "text-purple-600" : "text-purple-400",
       items: [
         { href: "/sms/leaderboard", label: "Positions & Hall of Fame", icon: Trophy, badge: "1st/2nd" },
         { href: "/sms/exams", label: "Examinations & A4 Cards", icon: Award },
@@ -157,7 +192,7 @@ export default function SMSSidebar() {
       id: "finance",
       groupTitle: "Finance & Payroll",
       icon: CreditCard,
-      color: "text-teal-400",
+      color: isLight ? "text-teal-600" : "text-teal-400",
       items: [
         { href: "/sms/fees", label: "3-Copy Challan & Cashier", icon: CreditCard },
         { href: "/sms/faculty-payroll", label: "Faculty Payroll & Payslips", icon: DollarSign, badge: "Salary" }
@@ -167,7 +202,7 @@ export default function SMSSidebar() {
       id: "campus",
       groupTitle: "Campus Facilities & Life",
       icon: Trophy,
-      color: "text-amber-400",
+      color: isLight ? "text-amber-600" : "text-amber-400",
       items: [
         { href: "/sms/house-system", label: "House Points & Merits", icon: Trophy },
         { href: "/sms/ptm", label: "PTM Slot Scheduler", icon: CalendarRange },
@@ -400,10 +435,10 @@ export default function SMSSidebar() {
                   className={`w-full flex items-center justify-between px-3 py-2 text-xs font-black tracking-wide uppercase transition rounded-xl ${
                     hasActiveChild
                       ? isLight
-                        ? "bg-slate-100 text-slate-950 font-black"
+                        ? "bg-slate-100 text-slate-950 font-black shadow-sm"
                         : "bg-white/[0.04] text-white"
                       : isLight
-                      ? "text-slate-600 hover:text-slate-950 hover:bg-slate-100/70"
+                      ? "text-slate-800 hover:text-slate-950 hover:bg-slate-100 font-extrabold"
                       : "text-gray-400 hover:text-white hover:bg-white/[0.02]"
                   }`}
                 >
