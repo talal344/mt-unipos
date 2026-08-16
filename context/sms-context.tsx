@@ -47,6 +47,16 @@ export interface SMSClassSection {
   enrolledCount: number;
 }
 
+export interface SMSClassSubject {
+  id: string;
+  className: string;
+  subjectName: string;
+  type: "Compulsory" | "Elective"; // Compulsory (Lazmi) vs Elective (Ikhtiari/Optional)
+  totalMarks: number;
+  passingMarks: number;
+  teacherName?: string;
+}
+
 export interface StudentRecord {
   id: string;
   admissionNo: string;
@@ -453,6 +463,7 @@ interface SMSContextType {
   campuses: SMSCampus[];
   sessions: SMSAcademicSession[];
   classes: SMSClassSection[];
+  classSubjects: SMSClassSubject[];
   students: StudentRecord[];
   teachers: TeacherRecord[];
   users: SMSUserAccount[];
@@ -500,11 +511,18 @@ interface SMSContextType {
   generateStudentCredentialsBatch: () => number;
   generateTeacherCredentialsBatch: () => number;
 
-  // Class & Section Actions
+  // Class & Section & Subject Actions
   addClassSection: (section: Omit<SMSClassSection, "id" | "enrolledCount">) => SMSClassSection;
   updateClassSection: (id: string, updates: Partial<SMSClassSection>) => void;
   deleteClassSection: (id: string) => void;
   reassignStudentSection: (studentId: string, targetClassId: string, targetClassName: string, targetSectionId: string, targetSectionName: string) => void;
+  addClassSubject: (subject: Omit<SMSClassSubject, "id">) => SMSClassSubject;
+  updateClassSubject: (id: string, updates: Partial<SMSClassSubject>) => void;
+  deleteClassSubject: (id: string) => void;
+  bulkImportClassesAndSubjects: (
+    importedClasses: Omit<SMSClassSection, "id" | "enrolledCount">[],
+    importedSubjects: Omit<SMSClassSubject, "id">[]
+  ) => { classCount: number; subjectCount: number };
   
   // Timetable Actions
   addTimetablePeriod: (period: Omit<TimetablePeriod, "id">) => TimetablePeriod;
@@ -617,6 +635,7 @@ export function SMSProvider({ children }: { children: ReactNode }) {
   const [campuses, setCampuses] = useState<SMSCampus[]>(INITIAL_CAMPUSES);
   const [sessions, setSessions] = useState<SMSAcademicSession[]>(INITIAL_SESSIONS);
   const [classes, setClasses] = useState<SMSClassSection[]>([]);
+  const [classSubjects, setClassSubjects] = useState<SMSClassSubject[]>([]);
   const [students, setStudents] = useState<StudentRecord[]>([]);
   const [teachers, setTeachers] = useState<TeacherRecord[]>([]);
   const [users, setUsers] = useState<SMSUserAccount[]>([]);
@@ -708,6 +727,7 @@ export function SMSProvider({ children }: { children: ReactNode }) {
       loadOrEmpty("mt_sms_campuses", setCampuses);
       loadOrEmpty("mt_sms_sessions", setSessions);
       loadOrEmpty("mt_sms_classes", setClasses);
+      loadOrEmpty("mt_sms_class_subjects", setClassSubjects);
       loadOrEmpty("mt_sms_teachers", setTeachers);
       loadOrEmpty("mt_sms_users", setUsers);
       loadOrEmpty("mt_sms_attendance", setAttendance);
@@ -892,6 +912,76 @@ export function SMSProvider({ children }: { children: ReactNode }) {
     );
     setStudents(updated);
     persist("mt_sms_students", updated);
+  };
+
+  const addClassSubject = (subData: Omit<SMSClassSubject, "id">): SMSClassSubject => {
+    const newSub: SMSClassSubject = {
+      ...subData,
+      id: `SUB-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`
+    };
+    const updated = [...classSubjects, newSub];
+    setClassSubjects(updated);
+    persist("mt_sms_class_subjects", updated);
+    return newSub;
+  };
+
+  const updateClassSubject = (id: string, updates: Partial<SMSClassSubject>) => {
+    const updated = classSubjects.map((s) => (s.id === id ? { ...s, ...updates } : s));
+    setClassSubjects(updated);
+    persist("mt_sms_class_subjects", updated);
+  };
+
+  const deleteClassSubject = (id: string) => {
+    const updated = classSubjects.filter((s) => s.id !== id);
+    setClassSubjects(updated);
+    persist("mt_sms_class_subjects", updated);
+  };
+
+  const bulkImportClassesAndSubjects = (
+    importedClasses: Omit<SMSClassSection, "id" | "enrolledCount">[],
+    importedSubjects: Omit<SMSClassSubject, "id">[]
+  ) => {
+    let addedClasses: SMSClassSection[] = [...classes];
+    let addedSubjects: SMSClassSubject[] = [...classSubjects];
+
+    importedClasses.forEach((c) => {
+      const exists = addedClasses.some(
+        (existing) =>
+          existing.className.trim().toLowerCase() === c.className.trim().toLowerCase() &&
+          existing.sectionName.trim().toLowerCase() === c.sectionName.trim().toLowerCase()
+      );
+      if (!exists && c.className && c.sectionName) {
+        addedClasses.push({
+          ...c,
+          id: `CLS-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`,
+          enrolledCount: 0
+        });
+      }
+    });
+
+    importedSubjects.forEach((s) => {
+      const exists = addedSubjects.some(
+        (existing) =>
+          existing.className.trim().toLowerCase() === s.className.trim().toLowerCase() &&
+          existing.subjectName.trim().toLowerCase() === s.subjectName.trim().toLowerCase()
+      );
+      if (!exists && s.className && s.subjectName) {
+        addedSubjects.push({
+          ...s,
+          id: `SUB-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`
+        });
+      }
+    });
+
+    setClasses(addedClasses);
+    persist("mt_sms_classes", addedClasses);
+    setClassSubjects(addedSubjects);
+    persist("mt_sms_class_subjects", addedSubjects);
+
+    return {
+      classCount: importedClasses.length,
+      subjectCount: importedSubjects.length
+    };
   };
 
   const addTimetablePeriod = (periodData: Omit<TimetablePeriod, "id">): TimetablePeriod => {
@@ -1552,6 +1642,7 @@ export function SMSProvider({ children }: { children: ReactNode }) {
         campuses,
         sessions,
         classes,
+        classSubjects,
         students,
         teachers,
         users,
@@ -1594,6 +1685,10 @@ export function SMSProvider({ children }: { children: ReactNode }) {
         updateClassSection,
         deleteClassSection,
         reassignStudentSection,
+        addClassSubject,
+        updateClassSubject,
+        deleteClassSubject,
+        bulkImportClassesAndSubjects,
         addTimetablePeriod,
         updateTimetablePeriod,
         deleteTimetablePeriod,

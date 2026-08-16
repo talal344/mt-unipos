@@ -19,11 +19,12 @@ import {
   Sparkles,
   Layers,
   Award,
-  CalendarCheck2
+  CalendarCheck2,
+  Check
 } from "lucide-react";
 
 export default function SMSTeachersPage() {
-  const { theme, teachers, timetable, classes, addTeacher, updateTeacher, deleteTeacher } = useSMS();
+  const { theme, teachers, timetable, classes, classSubjects, addTeacher, updateTeacher, deleteTeacher } = useSMS();
   const isLight = theme === "light";
 
   const [search, setSearch] = useState("");
@@ -149,6 +150,28 @@ export default function SMSTeachersPage() {
     }
   };
 
+  const toggleSubjectAssignment = (sName: string) => {
+    const exists = form.assignedSubjects.includes(sName);
+    if (exists) {
+      setForm({ ...form, assignedSubjects: form.assignedSubjects.filter((s) => s !== sName) });
+    } else {
+      setForm({ ...form, assignedSubjects: [...form.assignedSubjects, sName] });
+    }
+  };
+
+  // Get available subjects for currently selected classes
+  const getSubjectsForAssignedClasses = () => {
+    if (form.assignedClasses.length === 0) {
+      return classSubjects.map((s) => s.subjectName);
+    }
+    const matched = classSubjects
+      .filter((s) => form.assignedClasses.includes(s.className))
+      .map((s) => s.subjectName);
+    const unique = Array.from(new Set(matched));
+    if (unique.length > 0) return unique;
+    return ["English", "Urdu", "Mathematics", "General Science", "Physics", "Chemistry", "Biology", "Computer Science", "Islamic Studies", "Social Studies"];
+  };
+
   return (
     <div className="space-y-6 font-sans">
       {/* Toast */}
@@ -167,7 +190,7 @@ export default function SMSTeachersPage() {
             <span>Faculty Directory, Timetable Allocation &amp; Workload Matrix</span>
           </h1>
           <p className={`text-xs ${isLight ? "text-slate-600 font-medium" : "text-gray-400"}`}>
-            View assigned classes, subject loads, and specific period timings for each faculty member.
+            View assigned classes, specific subject allocations, and timetable period timings for each faculty member.
           </p>
         </div>
 
@@ -263,7 +286,7 @@ export default function SMSTeachersPage() {
                       Phone: {t.phone}
                     </span>
                     <span className={`px-2 py-0.5 rounded font-bold ${isLight ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-emerald-500/10 text-emerald-400"}`}>
-                      {t.assignedClasses?.length || 0} Classes Assigned
+                      {t.assignedClasses?.length || 0} Classes &bull; {t.assignedSubjects?.length || 0} Subjects
                     </span>
                   </div>
                 </div>
@@ -410,8 +433,8 @@ export default function SMSTeachersPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
           <div className={`${
             isLight ? "bg-white border-slate-200 text-slate-900" : "bg-[#0b121e] border-emerald-500/40 text-white"
-          } border rounded-3xl w-full max-w-lg shadow-2xl p-6 my-8 animate-fade-in-up`}>
-            <div className={`flex justify-between items-center border-b ${isLight ? "border-slate-100" : "border-gray-800"} pb-3 mb-4`}>
+          } border rounded-3xl w-full max-w-lg shadow-2xl p-6 my-8 animate-fade-in-up space-y-4`}>
+            <div className={`flex justify-between items-center border-b ${isLight ? "border-slate-100" : "border-gray-800"} pb-3`}>
               <h3 className={`font-black ${isLight ? "text-slate-900" : "text-white"} text-sm`}>
                 {editingTeacher ? "Edit Faculty Member Profile" : "Appoint New Faculty Member"}
               </h3>
@@ -426,7 +449,7 @@ export default function SMSTeachersPage() {
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Sir Ahmad Ali"
+                  placeholder="e.g. Sir Shahid Mehmood"
                   value={form.fullName}
                   onChange={(e) => setForm({ ...form, fullName: e.target.value })}
                   className={`w-full ${
@@ -475,7 +498,7 @@ export default function SMSTeachersPage() {
                   Assign Teaching Classes (Select configured classes)
                 </label>
                 {uniqueClassNames.length === 0 ? (
-                  <p className="text-[11px] text-gray-500">No classes configured yet. Add classes in Settings / Classes.</p>
+                  <p className="text-[11px] text-gray-500">No classes configured yet. Add classes in Classes Hub.</p>
                 ) : (
                   <div className="flex flex-wrap gap-2 p-3 rounded-xl border border-slate-200 dark:border-gray-800 bg-slate-50 dark:bg-black/30">
                     {uniqueClassNames.map((cName) => {
@@ -499,6 +522,56 @@ export default function SMSTeachersPage() {
                     })}
                   </div>
                 )}
+              </div>
+
+              {/* Specific Subject Allocation for Selected Classes */}
+              <div>
+                <div className="flex justify-between items-center mb-1.5">
+                  <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-purple-700" : "text-purple-400"}`}>
+                    Assign Specific Subject(s) / Curriculum
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const allAvail = getSubjectsForAssignedClasses();
+                      if (form.assignedSubjects.length === allAvail.length) {
+                        setForm({ ...form, assignedSubjects: [] });
+                      } else {
+                        setForm({ ...form, assignedSubjects: allAvail });
+                      }
+                    }}
+                    className="text-[10px] text-purple-600 font-bold hover:underline cursor-pointer"
+                  >
+                    {form.assignedSubjects.length > 0 ? "Toggle Complete Class / All" : "Select All Subjects"}
+                  </button>
+                </div>
+
+                <div className="flex flex-wrap gap-2 p-3 rounded-xl border border-slate-200 dark:border-gray-800 bg-slate-50 dark:bg-black/30 max-h-36 overflow-y-auto">
+                  {getSubjectsForAssignedClasses().map((subName) => {
+                    const isSelected = form.assignedSubjects.includes(subName);
+                    return (
+                      <button
+                        type="button"
+                        key={subName}
+                        onClick={() => toggleSubjectAssignment(subName)}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer border ${
+                          isSelected
+                            ? "bg-purple-600 text-white border-purple-600 shadow-xs"
+                            : isLight
+                            ? "bg-white text-slate-700 border-slate-300 hover:bg-slate-100"
+                            : "bg-gray-800 text-gray-300 border-gray-700 hover:bg-gray-700"
+                        }`}
+                      >
+                        {isSelected ? `✓ ${subName}` : `+ ${subName}`}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="text-[10px] text-gray-500 mt-1">
+                  {form.assignedSubjects.length === 0
+                    ? "Teacher has no specific subject assigned (will be general faculty)."
+                    : `Assigned: ${form.assignedSubjects.join(", ")}`}
+                </p>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
