@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { useSMS, TeacherRecord } from "@/context/sms-context";
 import {
   GraduationCap,
@@ -16,7 +17,9 @@ import {
   Mail,
   X,
   Sparkles,
-  Layers
+  Layers,
+  Award,
+  CalendarCheck2
 } from "lucide-react";
 
 export default function SMSTeachersPage() {
@@ -299,9 +302,28 @@ export default function SMSTeachersPage() {
                     <b className={isLight ? "text-emerald-700" : "text-emerald-400"}>{(selectedTeacher.assignedSubjects || ["General"]).join(", ")}</b>
                   </div>
                   <div className={`${isLight ? "bg-slate-50 border border-slate-200" : "bg-black/40"} p-3 rounded-xl`}>
-                    <span className={`text-[10px] uppercase font-bold ${isLight ? "text-slate-500" : "text-gray-400"} block`}>Contact Phone</span>
-                    <b className={isLight ? "text-sky-700" : "text-sky-300"}>{selectedTeacher.phone}</b>
+                    <span className={`text-[10px] uppercase font-bold ${isLight ? "text-slate-500" : "text-gray-400"} block`}>Assigned Classes</span>
+                    <b className={isLight ? "text-sky-700" : "text-sky-300"}>{(selectedTeacher.assignedClasses || ["General"]).join(", ")}</b>
                   </div>
+                </div>
+
+                {/* Direct Action Links for Teacher */}
+                <div className={`pt-3 border-t ${isLight ? "border-slate-100" : "border-gray-800"} flex flex-wrap gap-2.5`}>
+                  <Link
+                    href="/sms/exams"
+                    className="flex-1 min-w-[200px] flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-black text-xs shadow-md transition cursor-pointer"
+                  >
+                    <Award size={14} />
+                    <span>Upload Student Paper Marks</span>
+                  </Link>
+
+                  <Link
+                    href="/sms/attendance"
+                    className="flex-1 min-w-[200px] flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-md transition cursor-pointer"
+                  >
+                    <CalendarCheck2 size={14} />
+                    <span>Upload Daily Class Attendance</span>
+                  </Link>
                 </div>
               </div>
 

@@ -129,6 +129,46 @@ export default function SMSDashboard() {
         </div>
       </div>
 
+      {/* Faculty Teaching & Quick Upload Desk */}
+      <div className={`p-5 rounded-3xl border transition shadow-lg ${
+        isLight
+          ? "bg-gradient-to-r from-sky-50 via-indigo-50 to-purple-50 border-sky-200 text-slate-900"
+          : "bg-gradient-to-r from-sky-950/40 via-indigo-950/40 to-purple-950/40 border-sky-500/30 text-white"
+      }`}>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="inline-flex items-center gap-2 text-xs font-black uppercase text-sky-600 tracking-wider">
+              <Sparkles size={15} />
+              <span>Teacher Teaching &amp; Upload Center</span>
+            </div>
+            <h2 className={`text-base font-black ${isLight ? "text-slate-900" : "text-white"}`}>
+              Assigned Class Paper Marks &amp; Daily Attendance Upload
+            </h2>
+            <p className={`text-xs ${isLight ? "text-slate-600 font-medium" : "text-gray-300"}`}>
+              Subject masters and class incharge teachers can upload student-wise exam marks, log morning class attendance, and notify parents.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2.5">
+            <Link
+              href="/sms/exams"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-black text-xs shadow-lg shadow-sky-600/20 transition cursor-pointer"
+            >
+              <Award size={15} />
+              <span>Upload Paper Marks</span>
+            </Link>
+
+            <Link
+              href="/sms/attendance"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-lg shadow-emerald-600/20 transition cursor-pointer"
+            >
+              <CalendarCheck2 size={15} />
+              <span>Upload Class Attendance</span>
+            </Link>
+          </div>
+        </div>
+      </div>
+
       {/* Global 4-Metric KPI Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Students */}
