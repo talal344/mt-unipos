@@ -37,6 +37,11 @@ export default function SMSStudentsPage() {
     theme,
     students,
     classes,
+    classSubjects,
+    teachers,
+    marks,
+    attendance,
+    feeVouchers,
     campuses,
     addStudent,
     updateStudent,
@@ -1508,113 +1513,288 @@ export default function SMSStudentsPage() {
       )}
 
       {/* ───────────────────────────────────────────────────────────────────────────── */}
-      {/* STUDENT 360 PROFILE VIEW MODAL                                                */}
+      {/* STUDENT 360 ACADEMIC DOSSIER & PROFILE MODAL                                  */}
       {/* ───────────────────────────────────────────────────────────────────────────── */}
-      {selectedStudent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className={`${
-            isLight ? "bg-white border-slate-200 text-slate-900" : "bg-[#0b121e] border-sky-500/40 text-white"
-          } border rounded-3xl w-full max-w-3xl shadow-2xl p-6 my-8 animate-fade-in-up space-y-5`}>
-            {/* Header */}
-            <div className={`flex justify-between items-start border-b ${isLight ? "border-slate-100" : "border-gray-800"} pb-4`}>
-              <div className="flex items-center gap-4">
-                {selectedStudent.avatar ? (
-                  <img src={selectedStudent.avatar} alt="Profile" className="w-16 h-16 rounded-2xl object-cover border-2 border-sky-500 shadow-lg" />
-                ) : (
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-sky-600 to-indigo-600 flex items-center justify-center font-black text-white text-2xl shadow-lg shadow-sky-600/30">
-                    {selectedStudent.firstName[0]}
-                  </div>
-                )}
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className={`text-xl font-black ${isLight ? "text-slate-900" : "text-white"}`}>
-                      {selectedStudent.firstName} {selectedStudent.lastName}
-                    </h2>
-                    <span className={`text-[10px] font-bold ${
-                      isLight ? "bg-emerald-50 text-emerald-700 border-emerald-300" : "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
-                    } border px-2.5 py-0.5 rounded-full`}>
-                      {selectedStudent.status}
-                    </span>
-                  </div>
-                  <div className={`text-xs ${isLight ? "text-slate-500" : "text-gray-400"} mt-0.5`}>
-                    Admission ID: <b className={`${isLight ? "text-sky-700" : "text-sky-400"} font-mono`}>{selectedStudent.admissionNo}</b> • Roll #{selectedStudent.rollNo} • {selectedStudent.className} ({selectedStudent.sectionName})
+      {selectedStudent && (() => {
+        // Look up class section meta (room, wing, class teacher)
+        const classMeta = classes.find(
+          (c) => c.className.trim().toLowerCase() === selectedStudent.className.trim().toLowerCase() &&
+                 c.sectionName.trim().toLowerCase() === selectedStudent.sectionName.trim().toLowerCase()
+        ) || classes.find((c) => c.className.trim().toLowerCase() === selectedStudent.className.trim().toLowerCase());
+
+        // Student's class subjects
+        const studentSubjects = classSubjects.filter(
+          (s) => s.className.trim().toLowerCase() === selectedStudent.className.trim().toLowerCase()
+        );
+
+        // Student's exam marks
+        const studentMarks = marks.filter((m) => m.studentId === selectedStudent.id);
+
+        // Student's attendance records
+        const studentAttendance = attendance.filter((a) => a.studentId === selectedStudent.id);
+        const presentCount = studentAttendance.filter((a) => a.status === "Present").length;
+        const absentCount = studentAttendance.filter((a) => a.status === "Absent").length;
+        const attRate = studentAttendance.length > 0 ? Math.round((presentCount / studentAttendance.length) * 100) : 100;
+
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
+            <div className={`${
+              isLight ? "bg-white border-slate-200 text-slate-900" : "bg-[#0b121e] border-sky-500/40 text-white"
+            } border rounded-3xl w-full max-w-4xl shadow-2xl p-6 my-8 animate-fade-in-up space-y-5 max-h-[90vh] overflow-y-auto`}>
+              
+              {/* Header */}
+              <div className={`flex justify-between items-start border-b ${isLight ? "border-slate-100" : "border-gray-800"} pb-4`}>
+                <div className="flex items-center gap-4">
+                  {selectedStudent.avatar ? (
+                    <img src={selectedStudent.avatar} alt="Profile" className="w-16 h-16 rounded-2xl object-cover border-2 border-sky-500 shadow-lg" />
+                  ) : (
+                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-sky-600 to-indigo-600 flex items-center justify-center font-black text-white text-2xl shadow-lg shadow-sky-600/30">
+                      {selectedStudent.firstName[0]}
+                    </div>
+                  )}
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h2 className={`text-xl font-black ${isLight ? "text-slate-900" : "text-white"}`}>
+                        {selectedStudent.firstName} {selectedStudent.lastName}
+                      </h2>
+                      <span className={`text-[10px] font-bold ${
+                        isLight ? "bg-emerald-50 text-emerald-700 border-emerald-300" : "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                      } border px-2.5 py-0.5 rounded-full`}>
+                        {selectedStudent.status}
+                      </span>
+                    </div>
+                    <div className={`text-xs ${isLight ? "text-slate-500" : "text-gray-400"} mt-0.5`}>
+                      Admission ID: <b className={`${isLight ? "text-sky-700" : "text-sky-400"} font-mono`}>{selectedStudent.admissionNo}</b> • Roll #{selectedStudent.rollNo} • {selectedStudent.className} (Section {selectedStudent.sectionName})
+                    </div>
                   </div>
                 </div>
-              </div>
-              <button onClick={() => setSelectedStudent(null)} className={`${isLight ? "text-slate-400 hover:text-slate-800" : "text-gray-400 hover:text-white"} p-1 cursor-pointer`}>
-                <X size={18} />
-              </button>
-            </div>
-
-            {/* 3-Column Info Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-              <div className={`${isLight ? "bg-slate-50 border-slate-200 text-slate-800" : "bg-black/40 border-gray-800 text-gray-300"} border p-4 rounded-xl space-y-1.5`}>
-                <span className={`text-[10px] uppercase font-bold ${isLight ? "text-sky-700" : "text-sky-400"} block`}>Guardian / Father Info</span>
-                <div>Name: <b className={isLight ? "text-slate-900" : "text-white"}>{selectedStudent.fatherName}</b></div>
-                <div>CNIC: <span className={`${isLight ? "text-slate-600" : "text-gray-300"} font-mono`}>{selectedStudent.fatherCnic || 'N/A'}</span></div>
-                <div>Phone: <b className={isLight ? "text-emerald-700" : "text-emerald-400"}>{selectedStudent.emergencyContact || selectedStudent.fatherPhone}</b></div>
-                <div>Address: <span className={isLight ? "text-slate-600" : "text-gray-400"}>{selectedStudent.residentialAddress || 'N/A'}</span></div>
-              </div>
-
-              <div className={`${isLight ? "bg-slate-50 border-slate-200 text-slate-800" : "bg-black/40 border-gray-800 text-gray-300"} border p-4 rounded-xl space-y-1.5`}>
-                <span className={`text-[10px] uppercase font-bold ${isLight ? "text-emerald-700" : "text-emerald-400"} block`}>Academic &amp; Tuition</span>
-                <div>Class: <b className={isLight ? "text-sky-700" : "text-sky-300"}>{selectedStudent.className}</b></div>
-                <div>Section: <b className={isLight ? "text-sky-700" : "text-sky-300"}>{selectedStudent.sectionName}</b></div>
-                <div>Monthly Fee: <b className={isLight ? "text-emerald-700" : "text-emerald-400"}>Rs {(selectedStudent.customMonthlyFee || 0).toLocaleString()}</b></div>
-                <div>Fee Category: <span className={isLight ? "text-slate-600" : "text-gray-300"}>{selectedStudent.feeCategory}</span></div>
-              </div>
-
-              <div className={`${isLight ? "bg-slate-50 border-slate-200 text-slate-800" : "bg-black/40 border-gray-800 text-gray-300"} border p-4 rounded-xl space-y-1.5`}>
-                <span className={`text-[10px] uppercase font-bold ${isLight ? "text-rose-700" : "text-rose-400"} block`}>Health &amp; Demographics</span>
-                <div>Blood Group: <b className="text-red-600 font-black">{selectedStudent.bloodGroup || 'B+'}</b></div>
-                <div>DOB: <span className={isLight ? "text-slate-600" : "text-gray-300"}>{selectedStudent.dob}</span></div>
-                <div>Gender: <span className={isLight ? "text-slate-600" : "text-gray-300"}>{selectedStudent.gender}</span></div>
-                <div>Medical Alert: <span className={isLight ? "text-slate-600" : "text-gray-400"}>{selectedStudent.medicalNotes || 'No known allergies'}</span></div>
-              </div>
-            </div>
-
-            {/* Quick Action Footer */}
-            <div className={`pt-2 border-t ${isLight ? "border-slate-100" : "border-gray-800"} flex flex-wrap justify-between items-center gap-3`}>
-              <div className={`text-[10px] ${isLight ? "text-slate-500" : "text-gray-500"} font-mono`}>
-                Enrolled On: {selectedStudent.admissionDate}
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => {
-                    handleOpenEdit(selectedStudent);
-                    setSelectedStudent(null);
-                  }}
-                  className="px-3.5 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-xl font-bold text-xs transition flex items-center gap-1.5 cursor-pointer shadow-sm"
-                >
-                  <Edit2 size={14} />
-                  <span>Edit Data</span>
+                <button onClick={() => setSelectedStudent(null)} className={`${isLight ? "text-slate-400 hover:text-slate-800" : "text-gray-400 hover:text-white"} p-1 cursor-pointer`}>
+                  <X size={18} />
                 </button>
-                <button
-                  onClick={() => handlePrintIdCard(selectedStudent)}
-                  className={`px-3.5 py-2 ${
-                    isLight ? "bg-sky-50 hover:bg-sky-600 text-sky-700 hover:text-white border border-sky-200" : "bg-sky-600/20 hover:bg-sky-600 text-sky-300 hover:text-white"
-                  } rounded-xl font-bold text-xs transition flex items-center gap-1.5 cursor-pointer`}
-                >
-                  <QrCode size={14} />
-                  <span>Print PVC Card</span>
-                </button>
-                <button
-                  onClick={() => {
-                    setSlcTargetStudent(selectedStudent);
-                    setSelectedStudent(null);
-                  }}
-                  className={`px-3.5 py-2 ${
-                    isLight ? "bg-purple-50 hover:bg-purple-600 text-purple-700 hover:text-white border border-purple-200" : "bg-purple-600/20 hover:bg-purple-600 text-purple-300 hover:text-white"
-                  } rounded-xl font-bold text-xs transition flex items-center gap-1.5 cursor-pointer`}
-                >
-                  <FileCheck2 size={14} />
-                  <span>Issue SLC</span>
-                </button>
+              </div>
+
+              {/* Academic Placement Strip */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                <div className={`p-3 rounded-2xl border ${isLight ? "bg-sky-50/60 border-sky-200 text-sky-900" : "bg-sky-500/10 border-sky-500/20 text-sky-200"}`}>
+                  <span className="text-[10px] uppercase font-bold text-sky-600 block">Class &amp; Section</span>
+                  <span className="font-black text-sm">{selectedStudent.className} ({selectedStudent.sectionName})</span>
+                  <div className="text-[10px] opacity-70 mt-0.5">{classMeta?.wing || "General Wing"}</div>
+                </div>
+
+                <div className={`p-3 rounded-2xl border ${isLight ? "bg-emerald-50/60 border-emerald-200 text-emerald-900" : "bg-emerald-500/10 border-emerald-500/20 text-emerald-200"}`}>
+                  <span className="text-[10px] uppercase font-bold text-emerald-600 block">Lecture Room</span>
+                  <span className="font-black text-sm">{classMeta?.roomNumber || "Room 1"}</span>
+                  <div className="text-[10px] opacity-70 mt-0.5">Capacity: {classMeta?.capacity || 35} Seats</div>
+                </div>
+
+                <div className={`p-3 rounded-2xl border ${isLight ? "bg-purple-50/60 border-purple-200 text-purple-900" : "bg-purple-500/10 border-purple-500/20 text-purple-200"}`}>
+                  <span className="text-[10px] uppercase font-bold text-purple-600 block">Class Incharge Teacher</span>
+                  <span className="font-black text-sm truncate block">{classMeta?.classTeacherName || "Not Assigned"}</span>
+                  <div className="text-[10px] opacity-70 mt-0.5">Academic Mentor</div>
+                </div>
+
+                <div className={`p-3 rounded-2xl border ${isLight ? "bg-amber-50/60 border-amber-200 text-amber-900" : "bg-amber-500/10 border-amber-500/20 text-amber-200"}`}>
+                  <span className="text-[10px] uppercase font-bold text-amber-600 block">Attendance Pulse</span>
+                  <span className="font-black text-sm">{attRate}% Present</span>
+                  <div className="text-[10px] opacity-70 mt-0.5">{presentCount} Present &bull; {absentCount} Absent</div>
+                </div>
+              </div>
+
+              {/* 1. Subjects & Assigned Teachers Table */}
+              <div className="space-y-2">
+                <div className="flex justify-between items-center text-xs">
+                  <h4 className={`font-black ${isLight ? "text-slate-900" : "text-white"} uppercase flex items-center gap-1.5`}>
+                    <BookOpen size={14} className="text-purple-600" />
+                    <span>Enrolled Subjects &amp; Assigned Teaching Faculty</span>
+                  </h4>
+                  <span className="text-[10px] text-gray-500">{studentSubjects.length} Configured Subjects</span>
+                </div>
+
+                <div className={`rounded-2xl border ${isLight ? "bg-white border-slate-200" : "bg-black/30 border-gray-800"} overflow-hidden text-xs`}>
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className={`border-b ${isLight ? "border-slate-100 bg-slate-50 text-slate-600" : "border-gray-800 bg-black/40 text-gray-400"} font-mono text-[10px]`}>
+                        <th className="p-3">Subject Name</th>
+                        <th className="p-3 text-center">Type</th>
+                        <th className="p-3 text-center">Max Marks</th>
+                        <th className="p-3 text-center">Passing</th>
+                        <th className="p-3">Assigned Teaching Faculty</th>
+                      </tr>
+                    </thead>
+                    <tbody className={`divide-y ${isLight ? "divide-slate-100" : "divide-gray-800/60"}`}>
+                      {studentSubjects.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} className="p-6 text-center text-gray-400 italic">
+                            No subjects configured yet for {selectedStudent.className}. Configure in Academic Classes &amp; Subjects Hub.
+                          </td>
+                        </tr>
+                      ) : (
+                        studentSubjects.map((sub) => {
+                          // Look up which teacher is assigned to teach this subject
+                          const assignedTeacher = teachers.find(
+                            (t) => t.assignedClasses?.includes(selectedStudent.className) && t.assignedSubjects?.includes(sub.subjectName)
+                          ) || teachers.find((t) => t.assignedSubjects?.includes(sub.subjectName));
+
+                          return (
+                            <tr key={sub.id} className={isLight ? "hover:bg-slate-50/60" : "hover:bg-white/[0.02]"}>
+                              <td className="p-3 font-black text-sky-600">{sub.subjectName}</td>
+                              <td className="p-3 text-center">
+                                <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
+                                  sub.type === "Compulsory"
+                                    ? isLight ? "bg-purple-50 text-purple-700 border border-purple-200" : "bg-purple-500/10 text-purple-300"
+                                    : isLight ? "bg-amber-50 text-amber-800 border border-amber-200" : "bg-amber-500/10 text-amber-300"
+                                }`}>
+                                  {sub.type}
+                                </span>
+                              </td>
+                              <td className="p-3 text-center font-mono">{sub.totalMarks}</td>
+                              <td className="p-3 text-center font-mono text-emerald-600 font-bold">{sub.passingMarks}</td>
+                              <td className="p-3">
+                                {assignedTeacher ? (
+                                  <div className="flex items-center gap-1.5 font-bold text-emerald-600">
+                                    <GraduationCap size={13} />
+                                    <span>{assignedTeacher.fullName}</span>
+                                    <span className="text-[10px] text-gray-400 font-normal font-mono">({assignedTeacher.employeeCode})</span>
+                                  </div>
+                                ) : (
+                                  <span className="text-gray-400 italic">{sub.teacherName || "General Subject Faculty"}</span>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* 2. Subject-Wise Examination Marks & Result Record */}
+              <div className="space-y-2">
+                <div className="flex justify-between items-center text-xs">
+                  <h4 className={`font-black ${isLight ? "text-slate-900" : "text-white"} uppercase flex items-center gap-1.5`}>
+                    <Award size={14} className="text-emerald-600" />
+                    <span>Examination Marks &amp; Progress Report History</span>
+                  </h4>
+                  <span className="text-[10px] text-gray-500">{studentMarks.length} Exam Records</span>
+                </div>
+
+                <div className={`rounded-2xl border ${isLight ? "bg-white border-slate-200" : "bg-black/30 border-gray-800"} overflow-hidden text-xs`}>
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className={`border-b ${isLight ? "border-slate-100 bg-slate-50 text-slate-600" : "border-gray-800 bg-black/40 text-gray-400"} font-mono text-[10px]`}>
+                        <th className="p-3">Examination Title</th>
+                        <th className="p-3">Subject</th>
+                        <th className="p-3 text-center">Total Marks</th>
+                        <th className="p-3 text-center font-bold text-sky-600">Obtained</th>
+                        <th className="p-3 text-center">Score %</th>
+                        <th className="p-3 text-center">Grade</th>
+                        <th className="p-3">Teacher Remarks</th>
+                      </tr>
+                    </thead>
+                    <tbody className={`divide-y ${isLight ? "divide-slate-100" : "divide-gray-800/60"}`}>
+                      {studentMarks.length === 0 ? (
+                        <tr>
+                          <td colSpan={7} className="p-6 text-center text-gray-400 italic">
+                            No exam marks uploaded yet for this student. Marks can be entered via Examinations &amp; Paper Marks portal.
+                          </td>
+                        </tr>
+                      ) : (
+                        studentMarks.map((m) => (
+                          <tr key={m.id} className={isLight ? "hover:bg-slate-50/60" : "hover:bg-white/[0.02]"}>
+                            <td className="p-3 font-bold">{m.examTitle}</td>
+                            <td className="p-3 font-black text-purple-600">{m.subject}</td>
+                            <td className="p-3 text-center font-mono">{m.totalMarks}</td>
+                            <td className="p-3 text-center font-mono font-black text-sky-600 text-sm">{m.obtainedMarks}</td>
+                            <td className="p-3 text-center font-bold">{m.percentage}%</td>
+                            <td className="p-3 text-center">
+                              <span className={`px-2 py-0.5 rounded-md font-black text-[10px] ${
+                                m.grade === "A+" || m.grade === "A"
+                                  ? isLight ? "bg-emerald-50 text-emerald-700 border border-emerald-300" : "bg-emerald-500/10 text-emerald-400"
+                                  : isLight ? "bg-sky-50 text-sky-700 border border-sky-300" : "bg-sky-500/10 text-sky-400"
+                              }`}>
+                                {m.grade}
+                              </span>
+                            </td>
+                            <td className="p-3 text-gray-500 italic">{m.remarks || "Satisfactory progress"}</td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* 3-Column Profile Meta Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                <div className={`${isLight ? "bg-slate-50 border-slate-200 text-slate-800" : "bg-black/40 border-gray-800 text-gray-300"} border p-4 rounded-xl space-y-1.5`}>
+                  <span className={`text-[10px] uppercase font-bold ${isLight ? "text-sky-700" : "text-sky-400"} block`}>Guardian &amp; Emergency Contact</span>
+                  <div>Father Name: <b className={isLight ? "text-slate-900" : "text-white"}>{selectedStudent.fatherName}</b></div>
+                  <div>CNIC: <span className="font-mono">{selectedStudent.fatherCnic || 'N/A'}</span></div>
+                  <div>Phone: <b className="text-emerald-600 font-mono">{selectedStudent.emergencyContact || selectedStudent.fatherPhone}</b></div>
+                  <div>Residential Address: <span className="text-gray-500 block text-[11px] mt-0.5">{selectedStudent.residentialAddress || 'N/A'}</span></div>
+                </div>
+
+                <div className={`${isLight ? "bg-slate-50 border-slate-200 text-slate-800" : "bg-black/40 border-gray-800 text-gray-300"} border p-4 rounded-xl space-y-1.5`}>
+                  <span className={`text-[10px] uppercase font-bold ${isLight ? "text-emerald-700" : "text-emerald-400"} block`}>Tuition &amp; Fee Status</span>
+                  <div>Monthly Fee: <b className="text-emerald-600 font-black">Rs {(selectedStudent.customMonthlyFee || 0).toLocaleString()}</b></div>
+                  <div>Fee Category: <span className="font-bold">{selectedStudent.feeCategory}</span></div>
+                  <div>Campus ID: <span className="font-mono">{selectedStudent.campusId}</span></div>
+                  <div>Enrolled Date: <span className="font-mono">{selectedStudent.admissionDate}</span></div>
+                </div>
+
+                <div className={`${isLight ? "bg-slate-50 border-slate-200 text-slate-800" : "bg-black/40 border-gray-800 text-gray-300"} border p-4 rounded-xl space-y-1.5`}>
+                  <span className={`text-[10px] uppercase font-bold ${isLight ? "text-rose-700" : "text-rose-400"} block`}>Medical &amp; Personal Info</span>
+                  <div>Blood Group: <b className="text-red-600 font-black">{selectedStudent.bloodGroup || 'B+'}</b></div>
+                  <div>Date of Birth: <span className="font-mono">{selectedStudent.dob}</span></div>
+                  <div>Gender: <span>{selectedStudent.gender}</span></div>
+                  <div>Medical Notes: <span className="text-gray-500">{selectedStudent.medicalNotes || 'No known allergies'}</span></div>
+                </div>
+              </div>
+
+              {/* Quick Action Footer */}
+              <div className={`pt-3 border-t ${isLight ? "border-slate-100" : "border-gray-800"} flex flex-wrap justify-between items-center gap-3`}>
+                <div className={`text-[10px] ${isLight ? "text-slate-500" : "text-gray-500"} font-mono`}>
+                  GR ID: {selectedStudent.admissionNo} &bull; Roll #{selectedStudent.rollNo}
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      handleOpenEdit(selectedStudent);
+                      setSelectedStudent(null);
+                    }}
+                    className="px-3.5 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-xl font-bold text-xs transition flex items-center gap-1.5 cursor-pointer shadow-sm"
+                  >
+                    <Edit2 size={14} />
+                    <span>Edit Profile</span>
+                  </button>
+                  <button
+                    onClick={() => handlePrintIdCard(selectedStudent)}
+                    className={`px-3.5 py-2 ${
+                      isLight ? "bg-sky-50 hover:bg-sky-600 text-sky-700 hover:text-white border border-sky-200" : "bg-sky-600/20 hover:bg-sky-600 text-sky-300 hover:text-white"
+                    } rounded-xl font-bold text-xs transition flex items-center gap-1.5 cursor-pointer`}
+                  >
+                    <QrCode size={14} />
+                    <span>Print PVC Card</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSlcTargetStudent(selectedStudent);
+                      setSelectedStudent(null);
+                    }}
+                    className={`px-3.5 py-2 ${
+                      isLight ? "bg-purple-50 hover:bg-purple-600 text-purple-700 hover:text-white border border-purple-200" : "bg-purple-600/20 hover:bg-purple-600 text-purple-300 hover:text-white"
+                    } rounded-xl font-bold text-xs transition flex items-center gap-1.5 cursor-pointer`}
+                  >
+                    <FileCheck2 size={14} />
+                    <span>Issue SLC</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
