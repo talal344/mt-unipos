@@ -482,7 +482,7 @@ interface SMSContextType {
   omrResults: OMRGradingResult[];
   
   // Student Actions
-  addStudent: (student: Omit<StudentRecord, "id" | "admissionNo">) => StudentRecord;
+  addStudent: (student: Omit<StudentRecord, "id" | "admissionNo"> & { admissionNo?: string }) => StudentRecord;
   updateStudent: (id: string, updates: Partial<StudentRecord>) => void;
   deleteStudent: (id: string) => void;
   promoteStudentsBatch: (sourceClass: string, sourceSection: string, targetClass: string, targetSection: string) => void;
@@ -681,10 +681,33 @@ export function SMSProvider({ children }: { children: ReactNode }) {
         }
       };
 
+      // Load students with guaranteed unique Admission ID check
+      const storedStudents = localStorage.getItem("mt_sms_students");
+      if (storedStudents !== null) {
+        try {
+          const parsed: StudentRecord[] = JSON.parse(storedStudents);
+          const seen = new Set<string>();
+          let seq = 101;
+          const cleanStudents = parsed.map((st) => {
+            if (!st.admissionNo || seen.has(st.admissionNo)) {
+              while (seen.has(`ADM-2026-${String(seq).padStart(4, "0")}`)) {
+                seq++;
+              }
+              const uniqueId = `ADM-2026-${String(seq).padStart(4, "0")}`;
+              seen.add(uniqueId);
+              seq++;
+              return { ...st, admissionNo: uniqueId };
+            }
+            seen.add(st.admissionNo);
+            return st;
+          });
+          setStudents(cleanStudents);
+        } catch {}
+      }
+
       loadOrEmpty("mt_sms_campuses", setCampuses);
       loadOrEmpty("mt_sms_sessions", setSessions);
       loadOrEmpty("mt_sms_classes", setClasses);
-      loadOrEmpty("mt_sms_students", setStudents);
       loadOrEmpty("mt_sms_teachers", setTeachers);
       loadOrEmpty("mt_sms_users", setUsers);
       loadOrEmpty("mt_sms_attendance", setAttendance);
@@ -724,12 +747,28 @@ export function SMSProvider({ children }: { children: ReactNode }) {
 
   // ── ACTIONS ──
 
-  const addStudent = (studentData: Omit<StudentRecord, "id" | "admissionNo">): StudentRecord => {
-    const nextNo = `ADM-2026-${String(students.length + 101).padStart(4, "0")}`;
+  const addStudent = (studentData: Omit<StudentRecord, "id" | "admissionNo"> & { admissionNo?: string }): StudentRecord => {
+    let nextSeq = 101;
+    try {
+      const storedSeq = parseInt(localStorage.getItem("mt_sms_admission_seq") || "100", 10);
+      const existingSeqs = students
+        .map((s) => {
+          const match = s.admissionNo?.match(/(\d+)$/);
+          return match ? parseInt(match[1], 10) : 0;
+        })
+        .filter((n) => !isNaN(n) && n > 0);
+      const maxExisting = existingSeqs.length > 0 ? Math.max(...existingSeqs) : 100;
+      nextSeq = Math.max(storedSeq + 1, maxExisting + 1, 101);
+      localStorage.setItem("mt_sms_admission_seq", String(nextSeq));
+    } catch {
+      nextSeq = 101 + students.length;
+    }
+
+    const uniqueAdmNo = studentData.admissionNo || `ADM-2026-${String(nextSeq).padStart(4, "0")}`;
     const newStudent: StudentRecord = {
       ...studentData,
-      id: `STU-${Date.now()}`,
-      admissionNo: nextNo
+      id: `STU-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`,
+      admissionNo: uniqueAdmNo
     };
     const updated = [newStudent, ...students];
     setStudents(updated);

@@ -1226,8 +1226,18 @@ export default function SMSStudentsPage() {
                 </div>
               </div>
 
-              {/* Class & Section (DYNAMIC) */}
-              <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+              {/* Admission ID & Class & Section (DYNAMIC) */}
+              <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
+                <div>
+                  <label className="block text-[10px] uppercase font-bold text-sky-700 mb-1">Admission ID / GR # *</label>
+                  <input
+                    type="text"
+                    required
+                    value={editingStudent.admissionNo}
+                    onChange={(e) => setEditingStudent({ ...editingStudent, admissionNo: e.target.value })}
+                    className="w-full border p-2 rounded-xl font-mono font-bold text-sky-700 bg-sky-50/50"
+                  />
+                </div>
                 <div>
                   <label className="block text-[10px] uppercase font-bold text-sky-700 mb-1">Class *</label>
                   <select
@@ -1238,7 +1248,7 @@ export default function SMSStudentsPage() {
                       setEditingStudent({
                         ...editingStudent,
                         className: newClass,
-                        sectionName: secs[0] || "Section A"
+                        sectionName: secs[0] || "A"
                       });
                     }}
                     className="w-full border p-2 rounded-xl font-bold"
