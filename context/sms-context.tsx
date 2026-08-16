@@ -57,6 +57,26 @@ export interface SMSClassSubject {
   teacherName?: string;
 }
 
+export interface SMSBellTiming {
+  id: string;
+  name: string;
+  start: string;
+  end: string;
+  type: "Assembly" | "Class" | "Break" | "Prayer" | "Dismissal";
+}
+
+export const DEFAULT_BELL_TIMINGS: SMSBellTiming[] = [
+  { id: "bt-1", name: "Morning Assembly", start: "07:45 AM", end: "08:00 AM", type: "Assembly" },
+  { id: "bt-2", name: "Period 1", start: "08:00 AM", end: "08:45 AM", type: "Class" },
+  { id: "bt-3", name: "Period 2", start: "08:45 AM", end: "09:30 AM", type: "Class" },
+  { id: "bt-4", name: "Period 3", start: "09:30 AM", end: "10:15 AM", type: "Class" },
+  { id: "bt-5", name: "Period 4", start: "10:15 AM", end: "11:00 AM", type: "Class" },
+  { id: "bt-6", name: "Recess / Break", start: "11:00 AM", end: "11:30 AM", type: "Break" },
+  { id: "bt-7", name: "Period 5", start: "11:30 AM", end: "12:15 PM", type: "Class" },
+  { id: "bt-8", name: "Period 6", start: "12:15 PM", end: "01:00 PM", type: "Class" },
+  { id: "bt-9", name: "Period 7 (Final)", start: "01:00 PM", end: "01:45 PM", type: "Class" }
+];
+
 export interface StudentRecord {
   id: string;
   admissionNo: string;
@@ -525,6 +545,11 @@ interface SMSContextType {
   ) => { classCount: number; subjectCount: number };
   
   // Timetable Actions
+  bellTimings: SMSBellTiming[];
+  addBellTiming: (timing: Omit<SMSBellTiming, "id">) => SMSBellTiming;
+  updateBellTiming: (id: string, updates: Partial<SMSBellTiming>) => void;
+  deleteBellTiming: (id: string) => void;
+  resetBellTimings: () => void;
   addTimetablePeriod: (period: Omit<TimetablePeriod, "id">) => TimetablePeriod;
   updateTimetablePeriod: (id: string, updates: Partial<TimetablePeriod>) => void;
   deleteTimetablePeriod: (id: string) => void;
@@ -636,6 +661,7 @@ export function SMSProvider({ children }: { children: ReactNode }) {
   const [sessions, setSessions] = useState<SMSAcademicSession[]>(INITIAL_SESSIONS);
   const [classes, setClasses] = useState<SMSClassSection[]>([]);
   const [classSubjects, setClassSubjects] = useState<SMSClassSubject[]>([]);
+  const [bellTimings, setBellTimings] = useState<SMSBellTiming[]>(DEFAULT_BELL_TIMINGS);
   const [students, setStudents] = useState<StudentRecord[]>([]);
   const [teachers, setTeachers] = useState<TeacherRecord[]>([]);
   const [users, setUsers] = useState<SMSUserAccount[]>([]);
@@ -728,6 +754,7 @@ export function SMSProvider({ children }: { children: ReactNode }) {
       loadOrEmpty("mt_sms_sessions", setSessions);
       loadOrEmpty("mt_sms_classes", setClasses);
       loadOrEmpty("mt_sms_class_subjects", setClassSubjects);
+      loadOrEmpty("mt_sms_bell_timings", setBellTimings);
       loadOrEmpty("mt_sms_teachers", setTeachers);
       loadOrEmpty("mt_sms_users", setUsers);
       loadOrEmpty("mt_sms_attendance", setAttendance);
@@ -984,6 +1011,31 @@ export function SMSProvider({ children }: { children: ReactNode }) {
     };
   };
 
+  const addBellTiming = (timingData: Omit<SMSBellTiming, "id">): SMSBellTiming => {
+    const newTiming: SMSBellTiming = { ...timingData, id: `BT-${Date.now()}` };
+    const updated = [...bellTimings, newTiming];
+    setBellTimings(updated);
+    persist("mt_sms_bell_timings", updated);
+    return newTiming;
+  };
+
+  const updateBellTiming = (id: string, updates: Partial<SMSBellTiming>) => {
+    const updated = bellTimings.map((bt) => (bt.id === id ? { ...bt, ...updates } : bt));
+    setBellTimings(updated);
+    persist("mt_sms_bell_timings", updated);
+  };
+
+  const deleteBellTiming = (id: string) => {
+    const updated = bellTimings.filter((bt) => bt.id !== id);
+    setBellTimings(updated);
+    persist("mt_sms_bell_timings", updated);
+  };
+
+  const resetBellTimings = () => {
+    setBellTimings(DEFAULT_BELL_TIMINGS);
+    persist("mt_sms_bell_timings", DEFAULT_BELL_TIMINGS);
+  };
+
   const addTimetablePeriod = (periodData: Omit<TimetablePeriod, "id">): TimetablePeriod => {
     const newPeriod: TimetablePeriod = {
       ...periodData,
@@ -991,17 +1043,20 @@ export function SMSProvider({ children }: { children: ReactNode }) {
     };
     const updated = [...timetable, newPeriod];
     setTimetable(updated);
+    persist("mt_sms_timetable", updated);
     return newPeriod;
   };
 
   const updateTimetablePeriod = (id: string, updates: Partial<TimetablePeriod>) => {
     const updated = timetable.map((tt) => (tt.id === id ? { ...tt, ...updates } : tt));
     setTimetable(updated);
+    persist("mt_sms_timetable", updated);
   };
 
   const deleteTimetablePeriod = (id: string) => {
     const updated = timetable.filter((tt) => tt.id !== id);
     setTimetable(updated);
+    persist("mt_sms_timetable", updated);
   };
 
   const markAttendanceBatch = (records: Omit<SMSAttendanceRecord, "id">[]) => {
@@ -1689,6 +1744,11 @@ export function SMSProvider({ children }: { children: ReactNode }) {
         updateClassSubject,
         deleteClassSubject,
         bulkImportClassesAndSubjects,
+        bellTimings,
+        addBellTiming,
+        updateBellTiming,
+        deleteBellTiming,
+        resetBellTimings,
         addTimetablePeriod,
         updateTimetablePeriod,
         deleteTimetablePeriod,

@@ -25,6 +25,11 @@ export default function SMSSettingsPage() {
     classes,
     campuses,
     selectedCampus,
+    bellTimings,
+    addBellTiming,
+    updateBellTiming,
+    deleteBellTiming,
+    resetBellTimings,
     addClassSection,
     updateClassSection,
     deleteClassSection,
@@ -64,18 +69,73 @@ export default function SMSSettingsPage() {
     totalClasses: 4
   });
 
-  // Bell Timings Matrix (Sample)
-  const [bellTimings, setBellTimings] = useState([
-    { id: 1, name: "Morning Assembly", start: "07:45 AM", end: "08:00 AM", type: "Assembly" },
-    { id: 2, name: "Period 1", start: "08:00 AM", end: "08:45 AM", type: "Class" },
-    { id: 3, name: "Period 2", start: "08:45 AM", end: "09:30 AM", type: "Class" },
-    { id: 4, name: "Period 3", start: "09:30 AM", end: "10:15 AM", type: "Class" },
-    { id: 5, name: "Period 4", start: "10:15 AM", end: "11:00 AM", type: "Class" },
-    { id: 6, name: "Recess / Break", start: "11:00 AM", end: "11:30 AM", type: "Break" },
-    { id: 7, name: "Period 5", start: "11:30 AM", end: "12:15 PM", type: "Class" },
-    { id: 8, name: "Period 6", start: "12:15 PM", end: "01:00 PM", type: "Class" },
-    { id: 9, name: "Period 7 (Final)", start: "01:00 PM", end: "01:45 PM", type: "Class" }
-  ]);
+  // Bell Timings State & Modal
+  const [showBellModal, setShowBellModal] = useState(false);
+  const [editingBellId, setEditingBellId] = useState<string | null>(null);
+  const [bellForm, setBellForm] = useState<{
+    name: string;
+    start: string;
+    end: string;
+    type: "Assembly" | "Class" | "Break" | "Prayer" | "Dismissal";
+  }>({
+    name: "Period 1",
+    start: "08:00 AM",
+    end: "08:45 AM",
+    type: "Class"
+  });
+
+  const handleOpenAddBell = () => {
+    setEditingBellId(null);
+    setBellForm({
+      name: `Period ${bellTimings.filter((b) => b.type === "Class").length + 1}`,
+      start: "08:00 AM",
+      end: "08:45 AM",
+      type: "Class"
+    });
+    setShowBellModal(true);
+  };
+
+  const handleOpenEditBell = (b: { id: string | number; name: string; start: string; end: string; type: any }) => {
+    setEditingBellId(String(b.id));
+    setBellForm({
+      name: b.name,
+      start: b.start,
+      end: b.end,
+      type: b.type
+    });
+    setShowBellModal(true);
+  };
+
+  const handleSaveBell = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!bellForm.name || !bellForm.start || !bellForm.end) return;
+
+    if (editingBellId) {
+      updateBellTiming(editingBellId, bellForm);
+      setToastMsg(`✅ Period timing "${bellForm.name}" updated!`);
+    } else {
+      addBellTiming(bellForm);
+      setToastMsg(`✅ New bell timing slot "${bellForm.name}" created!`);
+    }
+    setShowBellModal(false);
+    setTimeout(() => setToastMsg(""), 3500);
+  };
+
+  const handleDeleteBell = (id: string | number) => {
+    if (confirm("Are you sure you want to remove this timing slot?")) {
+      deleteBellTiming(String(id));
+      setToastMsg("🗑️ Timing slot removed.");
+      setTimeout(() => setToastMsg(""), 3500);
+    }
+  };
+
+  const handleResetBellDefaults = () => {
+    if (confirm("Reset bell timings matrix to standard institutional schedule?")) {
+      resetBellTimings();
+      setToastMsg("🔄 Bell timings reset to default schedule!");
+      setTimeout(() => setToastMsg(""), 3500);
+    }
+  };
 
   // Grading Scales
   const gradingScales = [
@@ -316,29 +376,86 @@ export default function SMSSettingsPage() {
       {/* ───────────────────────────────────────────────────────────────────────────── */}
       {activeTab === "timetable" && (
         <div className="space-y-4">
-          <div className={`${isLight ? "bg-white border-slate-200 shadow-sm" : "bg-[#0b121e] border-[#1e293b]"} border rounded-2xl p-5 space-y-3`}>
-            <h3 className={`font-black ${isLight ? "text-slate-900" : "text-white"} text-sm`}>Institutional Bell Timings &amp; Periods Schedule</h3>
-            <p className={`text-xs ${isLight ? "text-slate-600" : "text-gray-400"}`}>Configure morning assembly, period durations, and recess breaks.</p>
+          <div className={`${isLight ? "bg-white border-slate-200 shadow-sm" : "bg-[#0b121e] border-[#1e293b]"} border rounded-2xl p-5 space-y-4`}>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-gray-800 pb-3">
+              <div>
+                <h3 className={`font-black ${isLight ? "text-slate-900" : "text-white"} text-sm`}>Institutional Bell Timings &amp; Periods Schedule</h3>
+                <p className={`text-xs ${isLight ? "text-slate-600" : "text-gray-400"}`}>
+                  Configure morning assembly, period durations, recess breaks, and dismissal timings. Changes sync live with Class Timetable.
+                </p>
+              </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleResetBellDefaults}
+                  className={`px-3 py-1.5 rounded-xl border ${
+                    isLight ? "border-slate-300 text-slate-700 hover:bg-slate-100" : "border-gray-700 text-gray-300 hover:bg-gray-800"
+                  } font-bold text-xs transition cursor-pointer`}
+                >
+                  Reset Defaults
+                </button>
+                <button
+                  type="button"
+                  onClick={handleOpenAddBell}
+                  className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-bold text-xs shadow-md transition flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Plus size={14} />
+                  <span>Add Period Slot</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 pt-1">
               {bellTimings.map((b) => (
-                <div key={b.id} className={`${isLight ? "bg-slate-50 border-slate-200" : "bg-black/40 border-gray-800"} border p-4 rounded-xl space-y-1.5`}>
-                  <div className="flex justify-between items-center text-xs">
-                    <span className={`font-black ${isLight ? "text-slate-900" : "text-white"}`}>{b.name}</span>
+                <div
+                  key={b.id}
+                  className={`${
+                    isLight ? "bg-slate-50 border-slate-200 hover:border-slate-300 shadow-xs" : "bg-black/40 border-gray-800 hover:border-gray-700"
+                  } border p-4 rounded-2xl space-y-2 relative group transition`}
+                >
+                  <div className="flex justify-between items-start text-xs">
+                    <span className={`font-black ${isLight ? "text-slate-900" : "text-white"} text-sm`}>{b.name}</span>
                     <span
-                      className={`text-[9px] font-bold px-2 py-0.5 rounded ${
+                      className={`text-[9px] font-bold px-2 py-0.5 rounded-md ${
                         b.type === "Break"
                           ? isLight ? "bg-amber-50 text-amber-800 border border-amber-300" : "bg-amber-500/10 text-amber-400 border border-amber-500/30"
                           : b.type === "Assembly"
                           ? isLight ? "bg-purple-50 text-purple-800 border border-purple-300" : "bg-purple-500/10 text-purple-400 border border-purple-500/30"
+                          : b.type === "Prayer"
+                          ? isLight ? "bg-teal-50 text-teal-800 border border-teal-300" : "bg-teal-500/10 text-teal-400 border border-teal-500/30"
                           : isLight ? "bg-sky-50 text-sky-800 border border-sky-300" : "bg-sky-500/10 text-sky-400 border border-sky-500/30"
                       }`}
                     >
                       {b.type}
                     </span>
                   </div>
-                  <div className={`text-xs font-mono font-bold ${isLight ? "text-emerald-700 font-black" : "text-emerald-400"}`}>
+
+                  <div className={`text-sm font-mono font-black ${isLight ? "text-emerald-700" : "text-emerald-400"}`}>
                     {b.start} — {b.end}
+                  </div>
+
+                  <div className="flex justify-end gap-1.5 pt-2 border-t border-slate-200/60 dark:border-gray-800/80">
+                    <button
+                      type="button"
+                      onClick={() => handleOpenEditBell(b)}
+                      className={`p-1.5 rounded-lg ${
+                        isLight ? "hover:bg-slate-200 text-slate-600" : "hover:bg-gray-800 text-gray-300"
+                      } transition cursor-pointer`}
+                      title="Edit Period Timing"
+                    >
+                      <Edit2 size={12} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteBell(b.id)}
+                      className={`p-1.5 rounded-lg ${
+                        isLight ? "hover:bg-red-50 text-slate-400 hover:text-red-600" : "hover:bg-red-500/20 text-gray-500 hover:text-red-400"
+                      } transition cursor-pointer`}
+                      title="Delete Period Timing"
+                    >
+                      <Trash2 size={12} />
+                    </button>
                   </div>
                 </div>
               ))}
@@ -767,6 +884,103 @@ export default function SMSSettingsPage() {
                 className="w-full py-3 bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-black uppercase rounded-xl transition text-xs shadow-lg cursor-pointer"
               >
                 Create Campus Wing
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Bell Timing Slot Add/Edit Modal */}
+      {showBellModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className={`${
+            isLight ? "bg-white border-slate-200 text-slate-900" : "bg-[#0b121e] border-sky-500/40 text-white"
+          } border rounded-3xl w-full max-w-md shadow-2xl p-6 animate-fade-in-up space-y-4`}>
+            <div className={`flex justify-between items-center border-b ${isLight ? "border-slate-100" : "border-gray-800"} pb-3`}>
+              <h3 className={`font-black ${isLight ? "text-slate-900" : "text-white"} text-sm flex items-center gap-2`}>
+                <Clock size={16} className="text-sky-600" />
+                <span>{editingBellId ? "Edit Period Timing Slot" : "Add Institutional Period Slot"}</span>
+              </h3>
+              <button onClick={() => setShowBellModal(false)} className={`${isLight ? "text-slate-400 hover:text-slate-800" : "text-gray-400 hover:text-white"} cursor-pointer`}>
+                <X size={16} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveBell} className="space-y-4 text-xs">
+              <div>
+                <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-slate-500" : "text-gray-400"} mb-1`}>
+                  Period Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Period 1, Morning Assembly, Recess Break"
+                  value={bellForm.name}
+                  onChange={(e) => setBellForm({ ...bellForm, name: e.target.value })}
+                  className={`w-full ${
+                    isLight ? "bg-slate-50 border-slate-200 text-slate-900 focus:bg-white" : "bg-black border-gray-800 text-white"
+                  } border p-2.5 rounded-xl font-bold focus:outline-none`}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-slate-500" : "text-gray-400"} mb-1`}>
+                    Start Time *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="08:00 AM"
+                    value={bellForm.start}
+                    onChange={(e) => setBellForm({ ...bellForm, start: e.target.value })}
+                    className={`w-full ${
+                      isLight ? "bg-slate-50 border-slate-200 text-slate-900 focus:bg-white" : "bg-black border-gray-800 text-white"
+                    } border p-2.5 rounded-xl font-bold font-mono focus:outline-none`}
+                  />
+                </div>
+
+                <div>
+                  <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-slate-500" : "text-gray-400"} mb-1`}>
+                    End Time *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="08:45 AM"
+                    value={bellForm.end}
+                    onChange={(e) => setBellForm({ ...bellForm, end: e.target.value })}
+                    className={`w-full ${
+                      isLight ? "bg-slate-50 border-slate-200 text-slate-900 focus:bg-white" : "bg-black border-gray-800 text-white"
+                    } border p-2.5 rounded-xl font-bold font-mono focus:outline-none`}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-slate-500" : "text-gray-400"} mb-1`}>
+                  Slot Category / Type
+                </label>
+                <select
+                  value={bellForm.type}
+                  onChange={(e) => setBellForm({ ...bellForm, type: e.target.value as any })}
+                  className={`w-full ${
+                    isLight ? "bg-slate-50 border-slate-200 text-slate-900 focus:bg-white" : "bg-black border-gray-800 text-white"
+                  } border p-2.5 rounded-xl font-bold focus:outline-none`}
+                >
+                  <option value="Class">Class Academic Period</option>
+                  <option value="Assembly">Morning Assembly</option>
+                  <option value="Break">Recess / Lunch Break</option>
+                  <option value="Prayer">Zuhr / Prayer Break</option>
+                  <option value="Dismissal">Dismissal / Pack-Up</option>
+                </select>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-3 bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-black uppercase rounded-xl transition text-xs shadow-lg cursor-pointer"
+              >
+                Save Period Timing Slot
               </button>
             </form>
           </div>
