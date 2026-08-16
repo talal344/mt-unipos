@@ -169,7 +169,6 @@ export default function SMSSidebar() {
         { href: "/sms/classes", label: "Classes & Student Allocation", icon: Building2, badge: "Alloc" },
         { href: "/sms/teachers", label: "Teachers Faculty Matrix", icon: GraduationCap, badge: "Schedule" },
         { href: "/sms/attendance", label: "Morning Live Attendance", icon: CalendarCheck2 },
-        { href: "/sms/gate", label: "Smart Gate RFID & Passes", icon: ShieldAlert, badge: "Live" },
         { href: "/sms/lesson-planner", label: "Lesson Plan & Syllabus", icon: Target, badge: "Syllabus" },
         { href: "/sms/timetable", label: "Class Timetable & Matrix", icon: Clock },
         { href: "/sms/lms", label: "Digital LMS & Daily Diary", icon: BookOpen }
@@ -248,7 +247,6 @@ export default function SMSSidebar() {
             "/sms/exams",
             "/sms/attendance",
             "/sms/ptm",
-            "/sms/gate",
             "/sms/leaderboard",
             "/sms/transport"
           ];
@@ -290,7 +288,6 @@ export default function SMSSidebar() {
             "/sms/teachers",
             "/sms/attendance",
             "/sms/faculty-payroll",
-            "/sms/gate",
             "/sms/clinic",
             "/sms/hostel",
             "/sms/transport",

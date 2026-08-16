@@ -999,9 +999,72 @@ export default function SMSClassesPage() {
                   <label className="block text-[10px] uppercase font-bold text-slate-500 mb-1">Room Number</label>
                   <input
                     type="text"
-                    placeholder="Room 101"
+                    placeholder="Room 1"
                     value={classForm.roomNumber}
                     onChange={(e) => setClassForm({ ...classForm, roomNumber: e.target.value })}
+                    className="w-full border p-2.5 rounded-xl font-bold"
+                  />
+                </div>
+              </div>
+
+              {/* Class Incharge Teacher & Max Capacity */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] uppercase font-bold text-emerald-700 mb-1">
+                    Class Incharge Teacher (Select from Faculty)
+                  </label>
+                  <select
+                    value={classForm.classTeacherName}
+                    onChange={(e) => setClassForm({ ...classForm, classTeacherName: e.target.value })}
+                    className={`w-full border p-2.5 rounded-xl font-bold ${
+                      isLight ? "bg-slate-50 text-slate-900 border-slate-300" : "bg-black text-white border-gray-800"
+                    }`}
+                  >
+                    <option value="">-- Select Class Incharge Teacher --</option>
+                    {teachers.map((t) => (
+                      <option key={t.id} value={t.fullName}>
+                        {t.fullName} ({t.employeeCode} &bull; {t.department})
+                      </option>
+                    ))}
+                  </select>
+                  {teachers.length === 0 && (
+                    <p className="text-[10px] text-amber-600 mt-1">No faculty members found. Add teachers in Teachers Matrix.</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-[10px] uppercase font-bold text-slate-500 mb-1">Max Capacity (Seats)</label>
+                  <input
+                    type="number"
+                    min={5}
+                    max={100}
+                    value={classForm.capacity}
+                    onChange={(e) => setClassForm({ ...classForm, capacity: parseInt(e.target.value, 10) || 35 })}
+                    className="w-full border p-2.5 rounded-xl font-bold"
+                  />
+                </div>
+              </div>
+
+              {/* Student Leadership (Boy CR & Girl GR) */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] uppercase font-bold text-sky-700 mb-1">Appointed Boy CR</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Daniyal Tariq"
+                    value={classForm.crBoyName}
+                    onChange={(e) => setClassForm({ ...classForm, crBoyName: e.target.value })}
+                    className="w-full border p-2.5 rounded-xl font-bold"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] uppercase font-bold text-rose-600 mb-1">Appointed Girl GR</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Ayesha Noor"
+                    value={classForm.grGirlName}
+                    onChange={(e) => setClassForm({ ...classForm, grGirlName: e.target.value })}
                     className="w-full border p-2.5 rounded-xl font-bold"
                   />
                 </div>

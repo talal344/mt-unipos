@@ -244,35 +244,44 @@ export default function SMSDashboard() {
       {/* ───────────────────────────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* Widget 1: Gate Security Live Feed */}
+        {/* Widget 1: Daily Attendance Live Feed */}
         <div className={`p-5 rounded-2xl border space-y-3 shadow-sm ${
           isLight ? "bg-white border-slate-200 text-slate-900" : "bg-[#0b121e] border-[#1e293b] text-white"
         }`}>
           <div className={`flex justify-between items-center border-b pb-3 ${isLight ? "border-slate-100" : "border-gray-800"}`}>
             <div className="flex items-center gap-2 text-sky-600 font-black text-xs uppercase">
-              <ShieldAlert size={15} />
-              <span>Smart Gate Turnstile Feed</span>
+              <CalendarCheck2 size={15} />
+              <span>Daily Attendance Hub</span>
             </div>
-            <Link href="/sms/gate" className="text-[10px] text-sky-600 hover:underline font-bold">
-              View All &rarr;
+            <Link href="/sms/attendance" className="text-[10px] text-sky-600 hover:underline font-bold">
+              Mark Live &rarr;
             </Link>
           </div>
 
           <div className="space-y-2">
-            {gatePunchLogs.slice(0, 3).map((p) => (
-              <div key={p.id} className={`p-3 rounded-xl flex justify-between items-center text-xs border ${
-                isLight ? "bg-slate-50/80 border-slate-200/80" : "bg-black/40 border-gray-800"
-              }`}>
-                <div>
-                  <div className={`font-black ${isLight ? "text-slate-900" : "text-white"}`}>{p.studentName}</div>
-                  <div className={`text-[10px] ${isLight ? "text-slate-500" : "text-gray-400"}`}>{p.className} &bull; ID: {p.admissionNo}</div>
-                </div>
-                <div className="text-right">
-                  <div className="font-mono text-emerald-600 font-bold">{p.timestamp}</div>
-                  <div className={`text-[9px] ${isLight ? "text-slate-400" : "text-gray-500"}`}>{p.punchType.split(" ")[0]}</div>
-                </div>
+            <div className={`p-3 rounded-xl flex justify-between items-center text-xs border ${
+              isLight ? "bg-slate-50/80 border-slate-200/80" : "bg-black/40 border-gray-800"
+            }`}>
+              <div>
+                <div className={`font-black ${isLight ? "text-slate-900" : "text-white"}`}>Class Students Attendance</div>
+                <div className={`text-[10px] ${isLight ? "text-slate-500" : "text-gray-400"}`}>Class Teachers / Incharge Portal</div>
               </div>
-            ))}
+              <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200">
+                Teacher Mode
+              </span>
+            </div>
+
+            <div className={`p-3 rounded-xl flex justify-between items-center text-xs border ${
+              isLight ? "bg-slate-50/80 border-slate-200/80" : "bg-black/40 border-gray-800"
+            }`}>
+              <div>
+                <div className={`font-black ${isLight ? "text-slate-900" : "text-white"}`}>Faculty &amp; Staff Attendance</div>
+                <div className={`text-[10px] ${isLight ? "text-slate-500" : "text-gray-400"}`}>Headmaster / Principal Portal</div>
+              </div>
+              <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                Admin Mode
+              </span>
+            </div>
           </div>
         </div>
 
