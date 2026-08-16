@@ -50,13 +50,13 @@ export default function SMSGatePage() {
 
     if (matched) {
       const isMorning = new Date().getHours() < 12;
-      const type = isMorning ? "IN" : "OUT";
-      punchGateCard(matched.id, type);
+      const punchType: "Entry (Morning Gate)" | "Exit (Dismissal)" = isMorning ? "Entry (Morning Gate)" : "Exit (Dismissal)";
+      punchGateCard(matched.id, punchType);
 
       setPunchToast({
         name: `${matched.firstName} ${matched.lastName}`,
         time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        type: type === "IN" ? "Gate IN Entry" : "Gate OUT Exit"
+        type: punchType
       });
 
       setRfidInput("");

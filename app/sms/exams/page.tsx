@@ -45,6 +45,7 @@ export default function SMSExamsPage() {
   const [inputMarks, setInputMarks] = useState<Record<string, number>>({});
 
   const handleSaveMarks = () => {
+    const termObj = examTerms.find((t) => t.id === selectedTerm);
     const entries: Omit<SMSMarksEntry, "id">[] = targetStudents.map((st) => {
       const obt = inputMarks[st.id] ?? existingMarksMap[st.id]?.obtainedMarks ?? 85;
       const total = 100;
@@ -53,12 +54,17 @@ export default function SMSExamsPage() {
         studentId: st.id,
         studentName: `${st.firstName} ${st.lastName}`,
         admissionNo: st.admissionNo,
+        rollNo: st.rollNo,
         className: st.className,
+        sectionName: st.sectionName,
         examId: selectedTerm,
+        examTitle: termObj?.title || "Terminal Examination",
         subject: selectedSubject,
         totalMarks: total,
         obtainedMarks: obt,
+        percentage: pct,
         grade: pct >= 90 ? "A+" : pct >= 80 ? "A" : pct >= 70 ? "B" : "C",
+        remarks: "Excellent conceptual grasp",
         comments: "Excellent conceptual grasp"
       };
     });

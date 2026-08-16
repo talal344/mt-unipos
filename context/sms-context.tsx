@@ -58,9 +58,9 @@ export interface StudentRecord {
   bFormOrCnic: string;
   bloodGroup?: string;
   campusId: string;
-  classId: string;
+  classId?: string;
   className: string;
-  sectionId: string;
+  sectionId?: string;
   sectionName: string;
   admissionDate: string;
   status: "Active" | "Promoted" | "Struck Off" | "Alumni" | "Suspended";
@@ -69,13 +69,13 @@ export interface StudentRecord {
   
   // Guardian / Parent Info
   fatherName: string;
-  fatherCnic: string;
+  fatherCnic?: string;
   fatherPhone: string;
   fatherOccupation?: string;
   motherName?: string;
   motherPhone?: string;
-  emergencyContact: string;
-  residentialAddress: string;
+  emergencyContact?: string;
+  residentialAddress?: string;
   guardianEmail?: string;
   
   // Financial & Concession
@@ -115,9 +115,12 @@ export interface TeacherRecord {
 export interface SMSAttendanceRecord {
   id: string;
   date: string;
-  type: "Student" | "Staff";
-  referenceId: string;
-  name: string;
+  type?: "Student" | "Staff";
+  referenceId?: string;
+  name?: string;
+  studentId?: string;
+  studentName?: string;
+  admissionNo?: string;
   className?: string;
   sectionName?: string;
   status: "Present" | "Absent" | "Late" | "Leave";
@@ -138,21 +141,22 @@ export interface SMSExamTerm {
 export interface SMSMarksEntry {
   id: string;
   examId: string;
-  examTitle: string;
+  examTitle?: string;
   studentId: string;
   admissionNo: string;
-  rollNo: string;
+  rollNo?: string;
   studentName: string;
   className: string;
-  sectionName: string;
+  sectionName?: string;
   subject: string;
   totalMarks: number;
   obtainedMarks: number;
-  percentage: number;
+  percentage?: number;
   grade: "A+" | "A" | "B" | "C" | "D" | "F";
   sectionPosition?: number;
   classPosition?: number;
   remarks?: string;
+  comments?: string;
 }
 
 export interface SMSFeeVoucher {
@@ -199,11 +203,16 @@ export interface GeneratedPaper {
   title: string;
   className: string;
   subject: string;
-  session: string;
+  session?: string;
   timeAllowed: string;
   totalMarks: number;
-  instructions: string[];
-  sections: {
+  mcqCount?: number;
+  shortCount?: number;
+  shortAttempt?: number;
+  longCount?: number;
+  longAttempt?: number;
+  instructions?: string[];
+  sections?: {
     sectionTitle: string;
     instructions?: string;
     questions: { qNo: string; text: string; marks: number; options?: string[] }[];
@@ -1413,10 +1422,44 @@ export function SMSProvider({ children }: { children: ReactNode }) {
     return newQ;
   };
 
-  const createGeneratedPaper = (paperData: Omit<GeneratedPaper, "id" | "createdAt">): GeneratedPaper => {
+  const createGeneratedPaper = (paperData: any): GeneratedPaper => {
+    const defaultSections = [
+      {
+        sectionTitle: "SECTION-A (Objective MCQs) — 12 Marks",
+        instructions: "Choose the correct option. Cutting and overwriting is not allowed.",
+        questions: [
+          { qNo: "Q1", text: "Rate of change of displacement is called:", marks: 1, options: ["Speed", "Velocity", "Acceleration", "Force"] },
+          { qNo: "Q2", text: "Value of 'g' at the surface of Earth is approximately:", marks: 1, options: ["9.8 m/s²", "10 m/s²", "8.9 m/s²", "9.2 m/s²"] },
+          { qNo: "Q3", text: "SI unit of momentum is:", marks: 1, options: ["N s", "kg m/s²", "Joule", "Watt"] }
+        ]
+      },
+      {
+        sectionTitle: "SECTION-B (Short Answer Questions) — 30 Marks",
+        instructions: "Attempt any FIVE questions. All questions carry equal marks.",
+        questions: [
+          { qNo: "Q2(i)", text: "Differentiate between scalar and vector quantities with two examples each.", marks: 3 },
+          { qNo: "Q2(ii)", text: "State Newton's Second Law of Motion and derive F = ma.", marks: 3 },
+          { qNo: "Q2(iii)", text: "What is centripetal acceleration? Write its mathematical formula.", marks: 3 },
+          { qNo: "Q2(iv)", text: "Define inertia and give one everyday example.", marks: 3 },
+          { qNo: "Q2(v)", text: "A car starts from rest with acceleration of 2 m/s². Find speed after 10 seconds.", marks: 3 }
+        ]
+      },
+      {
+        sectionTitle: "SECTION-C (Detailed Long Questions) — 18 Marks",
+        instructions: "Attempt any TWO questions.",
+        questions: [
+          { qNo: "Q3", text: "Derive third equation of motion (2aS = vf² - vi²) with the help of speed-time graph.", marks: 9 },
+          { qNo: "Q4", text: "State and prove the Law of Conservation of Momentum for an isolated system.", marks: 9 }
+        ]
+      }
+    ];
+
     const newPaper: GeneratedPaper = {
       ...paperData,
       id: `PPR-${Date.now()}`,
+      session: paperData.session || "2025-2026",
+      instructions: paperData.instructions || ["Read all instructions carefully.", "Use black/blue pen only."],
+      sections: paperData.sections || defaultSections,
       createdAt: new Date().toISOString().split("T")[0]
     };
     const updated = [newPaper, ...generatedPapers];

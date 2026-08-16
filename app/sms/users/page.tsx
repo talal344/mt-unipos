@@ -207,7 +207,7 @@ export default function SMSUsersManagementPage() {
         const firstTeacher = teachers[0];
         if (firstTeacher) {
           linkedId = firstTeacher.id;
-          linkedName = `${firstTeacher.name} (${firstTeacher.subject})`;
+          linkedName = `${firstTeacher.fullName} (${firstTeacher.department})`;
         }
       } else if (newRole === "Student") {
         const firstStudent = students[0];

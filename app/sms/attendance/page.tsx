@@ -43,6 +43,9 @@ export default function SMSAttendancePage() {
   const handleSaveAttendance = () => {
     const records: SMSAttendanceRecord[] = targetStudents.map((s) => ({
       id: `ATT-${s.id}-${selectedDate}`,
+      type: "Student" as const,
+      referenceId: s.id,
+      name: `${s.firstName} ${s.lastName}`,
       studentId: s.id,
       studentName: `${s.firstName} ${s.lastName}`,
       admissionNo: s.admissionNo,

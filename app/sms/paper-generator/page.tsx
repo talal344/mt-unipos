@@ -123,11 +123,11 @@ export default function SMSPaperGeneratorPage() {
     <div>Total Marks: <b>${paper.totalMarks}</b></div>
   </div>
 
-  ${paper.sections.map(sec => `
+  ${(paper.sections || []).map(sec => `
     <div class="section-box">
       <div class="section-head">${sec.sectionTitle}</div>
       <div class="inst">${sec.instructions}</div>
-      ${sec.questions.map(q => `
+      ${(sec.questions || []).map(q => `
         <div class="q-item">
           <div class="q-head">
             <span><b>${q.qNo}:</b> ${q.text}</span>
@@ -335,11 +335,11 @@ export default function SMSPaperGeneratorPage() {
                   <div>Marks: {previewPaper.totalMarks}</div>
                 </div>
 
-                {previewPaper.sections.map((sec, i) => (
+                {(previewPaper.sections || []).map((sec, i) => (
                   <div key={i} className="space-y-2">
                     <div className="bg-gray-200 font-bold p-1.5 text-[11px] border-l-4 border-black">{sec.sectionTitle}</div>
                     <div className="text-[10px] italic text-gray-600">{sec.instructions}</div>
-                    {sec.questions.map((q, qIdx) => (
+                    {(sec.questions || []).map((q, qIdx) => (
                       <div key={qIdx} className="flex justify-between py-1 text-xs border-b border-gray-100">
                         <div>
                           <b>{q.qNo}:</b> {q.text}
