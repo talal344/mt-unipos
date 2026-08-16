@@ -31,15 +31,15 @@ export default function SMSWhatsAppPage() {
 
   const templates: Record<WhatsAppLog["category"], (s: any) => string> = {
     "Absence Alert": (s) =>
-      `Assalam-o-Alaikum Respected Parent, this is an automated attendance notice from MT Core Model School. Your child ${s?.firstName} ${s?.lastName} (Roll #${s?.rollNo}, ${s?.className}) is marked ABSENT today (${new Date().toLocaleDateString()}). If this is due to illness, please submit a formal leave application. Helpline: 042-35789011.`,
+      `Assalam-o-Alaikum Respected Parent, this is an automated attendance notice. Your child ${s ? `${s.firstName} ${s.lastName}` : "[Student Name]"} (Roll #${s?.rollNo || "-"}, ${s?.className || "Class"}) is marked ABSENT today (${new Date().toLocaleDateString()}). Please inform the school administration if leave is required.`,
     "Fee Voucher": (s) =>
-      `Assalam-o-Alaikum Respected Parent, Monthly Fee Challan for ${s?.firstName} ${s?.lastName} (ID: ${s?.admissionNo}, ${s?.className}) amounting to Rs ${s?.customMonthlyFee || 18500} has been issued. Due Date: 10th of this month. Please deposit at any Meezan / HBL branch or via online banking.`,
+      `Assalam-o-Alaikum Respected Parent, Monthly Fee Challan for ${s ? `${s.firstName} ${s.lastName}` : "[Student Name]"} (ID: ${s?.admissionNo || "-"}, ${s?.className || "Class"}) amounting to Rs ${s?.customMonthlyFee || 0} has been issued. Due Date: 10th of this month. Please deposit at the designated bank or online portal.`,
     "Result Declared": (s) =>
-      `Alhamdulillah! Examination Results for Midterm 2026 have been announced. Your child ${s?.firstName} ${s?.lastName} (${s?.className}) secured 1st Position with Grade A+ (98%). Digital progress report is available on the Parent Portal.`,
+      `Assalam-o-Alaikum Respected Parent, Examination Results have been announced. Your child ${s ? `${s.firstName} ${s.lastName}` : "[Student Name]"} (${s?.className || "Class"}) progress report is now available on the Parent Portal.`,
     "Event Notice": (s) =>
-      `Respected Parents, MT Core Model School cordially invites you to the Annual Science Exhibition & Declamation Gala on Saturday at 10:00 AM in the Central Auditorium. Attendance is requested.`,
+      `Respected Parents, you are cordially invited to our upcoming school event. Your presence and encouragement will be highly appreciated.`,
     "Disciplinary": (s) =>
-      `Respected Parent, this is a formal notice regarding ${s?.firstName}'s classroom conduct today. Please contact the Class Incharge (Sir Shahid Mehmood) tomorrow between 09:00 AM - 10:00 AM.`
+      `Respected Parent, this is a formal communication regarding ${s?.firstName || "your child"}'s classroom conduct today. Please schedule a meeting with the school administration.`
   };
 
   const currentPreview = customMsg || (targetStudent ? templates[selectedCategory](targetStudent) : "");

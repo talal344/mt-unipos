@@ -33,25 +33,25 @@ export default function SMSCertificatesPage() {
   const student = students.find((s) => s.id === selectedStudentId) || students[0];
 
   // ─── FULLY EDITABLE CERTIFICATE FIELDS ────────────────────────────────────
-  const [schoolName, setSchoolName] = useState("MT CORE MODEL SCHOOL & HIGHER SECONDARY COLLEGE");
-  const [schoolAddress, setSchoolAddress] = useState("Main Boulevard, Block H, Gulberg III, Lahore, Pakistan");
-  const [schoolAffiliation, setSchoolAffiliation] = useState("Affiliated with BISE Lahore & Federal Directorate | Registration Code: FDE-88219/LHR");
-  const [schoolContact, setSchoolContact] = useState("UAN: +92 42 111-682-673 | Email: registrar@mtcore.edu.pk | Web: www.mtcore.edu.pk");
+  const [schoolName, setSchoolName] = useState("MODEL HIGHER SECONDARY SCHOOL & COLLEGE");
+  const [schoolAddress, setSchoolAddress] = useState("Main Campus Road, City");
+  const [schoolAffiliation, setSchoolAffiliation] = useState("Affiliated with Board of Intermediate & Secondary Education");
+  const [schoolContact, setSchoolContact] = useState("UAN: 042-111-000-111 | Email: info@school.edu.pk");
 
   const [certTitle, setCertTitle] = useState("CHARACTER & CONDUCT CERTIFICATE");
-  const [refNumber, setRefNumber] = useState("MT/CERT/2026/0041");
+  const [refNumber, setRefNumber] = useState("CERT/2026/0001");
   const [issueDate, setIssueDate] = useState(new Date().toISOString().split("T")[0]);
-  const [studentName, setStudentName] = useState(student ? `${student.firstName} ${student.lastName}` : "Ahmed Talal");
-  const [fatherName, setFatherName] = useState(student ? student.fatherName : "Mian Talal Ahmad");
-  const [admissionNo, setAdmissionNo] = useState(student ? student.admissionNo : "ADM-2026-0041");
-  const [rollNo, setRollNo] = useState(student ? student.rollNo : "01");
-  const [bFormNo, setBFormNo] = useState(student ? student.bFormOrCnic || "35202-8921821-1" : "35202-8921821-1");
-  const [dob, setDob] = useState(student ? student.dob || "2010-08-14" : "2010-08-14");
-  const [className, setClassName] = useState(student ? student.className : "Class 9 (Science)");
-  const [sectionName, setSectionName] = useState(student ? student.sectionName : "Section A (Newton)");
-  const [academicSession, setAcademicSession] = useState("2025–2026");
+  const [studentName, setStudentName] = useState(student ? `${student.firstName} ${student.lastName}` : "");
+  const [fatherName, setFatherName] = useState(student ? student.fatherName : "");
+  const [admissionNo, setAdmissionNo] = useState(student ? student.admissionNo : "");
+  const [rollNo, setRollNo] = useState(student ? student.rollNo : "");
+  const [bFormNo, setBFormNo] = useState(student ? student.bFormOrCnic || "" : "");
+  const [dob, setDob] = useState(student ? student.dob || "" : "");
+  const [className, setClassName] = useState(student ? student.className : "");
+  const [sectionName, setSectionName] = useState(student ? student.sectionName : "");
+  const [academicSession, setAcademicSession] = useState("2026–2027");
   const [conductRating, setConductRating] = useState("Exemplary (Grade A+)");
-  const [purpose, setPurpose] = useState("University / Higher Secondary Admission & Official Verification");
+  const [purpose, setPurpose] = useState("Official Verification & Educational Records");
   const [customBodyText, setCustomBodyText] = useState("");
   const [showStamp, setShowStamp] = useState(true);
 

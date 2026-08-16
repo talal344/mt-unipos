@@ -446,158 +446,168 @@ export default function SMSUsersManagementPage() {
               </tr>
             </thead>
             <tbody className={`divide-y ${isLight ? "divide-slate-100" : "divide-gray-800/50"} text-xs`}>
-              {filteredUsers.map((u) => {
-                const cfg = roleColors[u.role] || roleColors.Teacher;
-                const isRevealed = !!revealedPasswords[u.id];
+              {filteredUsers.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className={`p-12 text-center text-xs ${isLight ? "text-slate-400" : "text-gray-500"}`}>
+                    <Shield size={32} className="mx-auto mb-2 opacity-40 text-sky-500" />
+                    <p className="font-bold">No User Accounts Created Yet</p>
+                    <p className="text-[11px] mt-1">Click "Create Custom User" or "Auto Faculty Users" to provision login credentials.</p>
+                  </td>
+                </tr>
+              ) : (
+                filteredUsers.map((u) => {
+                  const cfg = roleColors[u.role] || roleColors.Teacher;
+                  const isRevealed = !!revealedPasswords[u.id];
 
-                // Resolve linked children for parent
-                const linkedChildren = (u.linkedStudentIds || (u.linkedEntityId ? [u.linkedEntityId] : []))
-                  .map((stId) => students.find((s) => s.id === stId))
-                  .filter(Boolean);
+                  // Resolve linked children for parent
+                  const linkedChildren = (u.linkedStudentIds || (u.linkedEntityId ? [u.linkedEntityId] : []))
+                    .map((stId) => students.find((s) => s.id === stId))
+                    .filter(Boolean);
 
-                return (
-                  <tr key={u.id} className={`${isLight ? "hover:bg-slate-50/80" : "hover:bg-white/[0.02]"} transition`}>
-                    {/* User info */}
-                    <td className="p-4">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-9 h-9 rounded-xl ${
-                          isLight
-                            ? "bg-slate-100 text-slate-800 border border-slate-300"
-                            : "bg-gradient-to-tr from-gray-800 to-gray-700 text-white"
-                        } flex items-center justify-center font-black text-sm shadow`}>
-                          {u.fullName[0]}
-                        </div>
-                        <div>
-                          <div className={`font-bold ${isLight ? "text-slate-900" : "text-white"} text-sm`}>{u.fullName}</div>
-                          <div className={`text-[10px] ${isLight ? "text-slate-500" : "text-gray-500"} font-mono`}>ID: {u.id}</div>
-                        </div>
-                      </div>
-                    </td>
-
-                    {/* Role */}
-                    <td className="p-4">
-                      <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black border ${cfg.bg} ${cfg.text} ${cfg.border}`}>
-                        {cfg.label}
-                      </span>
-                    </td>
-
-                    {/* Username / Email */}
-                    <td className="p-4 font-mono">
-                      <div className={`${isLight ? "text-slate-900" : "text-white"} font-bold flex items-center gap-1.5`}>
-                        <span className={isLight ? "text-sky-700 font-bold" : "text-sky-400 font-bold"}>@{u.username}</span>
-                      </div>
-                      <div className={`text-[10px] ${isLight ? "text-slate-500 font-medium" : "text-gray-400"}`}>{u.email}</div>
-                    </td>
-
-                    {/* Password & Copy */}
-                    <td className="p-4 font-mono">
-                      <div className="flex items-center gap-2">
-                        <span className={`${
-                          isLight
-                            ? "bg-slate-100 border border-slate-300 text-emerald-800"
-                            : "bg-black/60 border border-gray-800 text-emerald-400"
-                        } px-2.5 py-1 rounded font-bold text-xs`}>
-                          {isRevealed ? u.password : "••••••••"}
-                        </span>
-                        <button
-                          onClick={() => togglePassword(u.id)}
-                          className={`p-1 ${isLight ? "text-slate-400 hover:text-slate-800" : "text-gray-400 hover:text-white"} transition cursor-pointer`}
-                          title={isRevealed ? "Hide Password" : "Show Password"}
-                        >
-                          {isRevealed ? <EyeOff size={13} /> : <Eye size={13} />}
-                        </button>
-                        <button
-                          onClick={() => copyCredentials(u)}
-                          className={`p-1 ${isLight ? "text-sky-600 hover:text-sky-800" : "text-sky-400 hover:text-sky-300"} transition cursor-pointer`}
-                          title="Copy Full Login Credentials"
-                        >
-                          {copiedId === u.id ? <Check size={13} className="text-emerald-600" /> : <Copy size={13} />}
-                        </button>
-                      </div>
-                    </td>
-
-                    {/* Linked Profile / Students */}
-                    <td className="p-4">
-                      {u.role === "Parent" && linkedChildren.length > 0 ? (
-                        <div className="space-y-1">
-                          {linkedChildren.map((st) => (
-                            <div key={st!.id} className={`inline-flex items-center gap-1 ${
-                              isLight ? "bg-pink-50 border-pink-200 text-pink-800" : "bg-pink-500/10 border-pink-500/20 text-pink-300"
-                            } border px-2 py-0.5 rounded text-[10px] font-mono mr-1 mb-1`}>
-                              <span>🎒 {st!.firstName} {st!.lastName}</span>
-                              <span className={`${isLight ? "text-pink-600" : "text-pink-400"} font-bold`}>({st!.admissionNo})</span>
-                            </div>
-                          ))}
-                        </div>
-                      ) : u.linkedEntityName ? (
-                        <span className={`text-[10px] ${
-                          isLight ? "bg-slate-100 text-slate-700 border border-slate-200" : "bg-gray-800 text-gray-300"
-                        } px-2 py-0.5 rounded font-mono`}>
-                          🔗 {u.linkedEntityName}
-                        </span>
-                      ) : (
-                        <span className={`text-[10px] ${isLight ? "text-slate-400" : "text-gray-600"}`}>Direct Staff Account</span>
-                      )}
-                    </td>
-
-                    {/* Status */}
-                    <td className="p-4 text-center">
-                      <span
-                        className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                          u.status === "Active"
-                            ? isLight
-                              ? "bg-emerald-50 text-emerald-700 border border-emerald-300"
-                              : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
-                            : isLight
-                            ? "bg-red-50 text-red-700 border border-red-300"
-                            : "bg-red-500/10 text-red-400 border border-red-500/30"
-                        }`}
-                      >
-                        {u.status}
-                      </span>
-                    </td>
-
-                    {/* Actions */}
-                    <td className="p-4 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <button
-                          onClick={() => {
-                            setActiveRole(u.role);
-                            setToastMsg(`🔄 Switched active view to ${u.role} portal!`);
-                            setTimeout(() => setToastMsg(""), 3000);
-                          }}
-                          className={`px-2 py-1 ${
+                  return (
+                    <tr key={u.id} className={`${isLight ? "hover:bg-slate-50/80" : "hover:bg-white/[0.02]"} transition`}>
+                      {/* User info */}
+                      <td className="p-4">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-9 h-9 rounded-xl ${
                             isLight
-                              ? "bg-sky-50 hover:bg-sky-600 text-sky-700 hover:text-white border border-sky-200"
-                              : "bg-sky-500/10 hover:bg-sky-500 text-sky-400 hover:text-black"
-                          } rounded text-[10px] font-bold transition cursor-pointer`}
-                          title="Test Login as this user"
+                              ? "bg-slate-100 text-slate-800 border border-slate-300"
+                              : "bg-gradient-to-tr from-gray-800 to-gray-700 text-white"
+                          } flex items-center justify-center font-black text-sm shadow`}>
+                            {u.fullName[0]}
+                          </div>
+                          <div>
+                            <div className={`font-bold ${isLight ? "text-slate-900" : "text-white"} text-sm`}>{u.fullName}</div>
+                            <div className={`text-[10px] ${isLight ? "text-slate-500" : "text-gray-500"} font-mono`}>ID: {u.id}</div>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Role */}
+                      <td className="p-4">
+                        <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black border ${cfg.bg} ${cfg.text} ${cfg.border}`}>
+                          {cfg.label}
+                        </span>
+                      </td>
+
+                      {/* Username / Email */}
+                      <td className="p-4 font-mono">
+                        <div className={`${isLight ? "text-slate-900" : "text-white"} font-bold flex items-center gap-1.5`}>
+                          <span className={isLight ? "text-sky-700 font-bold" : "text-sky-400 font-bold"}>@{u.username}</span>
+                        </div>
+                        <div className={`text-[10px] ${isLight ? "text-slate-500 font-medium" : "text-gray-400"}`}>{u.email}</div>
+                      </td>
+
+                      {/* Password & Copy */}
+                      <td className="p-4 font-mono">
+                        <div className="flex items-center gap-2">
+                          <span className={`${
+                            isLight
+                              ? "bg-slate-100 border border-slate-300 text-emerald-800"
+                              : "bg-black/60 border border-gray-800 text-emerald-400"
+                          } px-2.5 py-1 rounded font-bold text-xs`}>
+                            {isRevealed ? u.password : "••••••••"}
+                          </span>
+                          <button
+                            onClick={() => togglePassword(u.id)}
+                            className={`p-1 ${isLight ? "text-slate-400 hover:text-slate-800" : "text-gray-400 hover:text-white"} transition cursor-pointer`}
+                            title={isRevealed ? "Hide Password" : "Show Password"}
+                          >
+                            {isRevealed ? <EyeOff size={13} /> : <Eye size={13} />}
+                          </button>
+                          <button
+                            onClick={() => copyCredentials(u)}
+                            className={`p-1 ${isLight ? "text-sky-600 hover:text-sky-800" : "text-sky-400 hover:text-sky-300"} transition cursor-pointer`}
+                            title="Copy Full Login Credentials"
+                          >
+                            {copiedId === u.id ? <Check size={13} className="text-emerald-600" /> : <Copy size={13} />}
+                          </button>
+                        </div>
+                      </td>
+
+                      {/* Linked Profile / Students */}
+                      <td className="p-4">
+                        {u.role === "Parent" && linkedChildren.length > 0 ? (
+                          <div className="space-y-1">
+                            {linkedChildren.map((st) => (
+                              <div key={st!.id} className={`inline-flex items-center gap-1 ${
+                                isLight ? "bg-pink-50 border-pink-200 text-pink-800" : "bg-pink-500/10 border-pink-500/20 text-pink-300"
+                              } border px-2 py-0.5 rounded text-[10px] font-mono mr-1 mb-1`}>
+                                <span>🎒 {st!.firstName} {st!.lastName}</span>
+                                <span className={`${isLight ? "text-pink-600" : "text-pink-400"} font-bold`}>({st!.admissionNo})</span>
+                              </div>
+                            ))}
+                          </div>
+                        ) : u.linkedEntityName ? (
+                          <span className={`text-[10px] ${
+                            isLight ? "bg-slate-100 text-slate-700 border border-slate-200" : "bg-gray-800 text-gray-300"
+                          } px-2 py-0.5 rounded font-mono`}>
+                            🔗 {u.linkedEntityName}
+                          </span>
+                        ) : (
+                          <span className={`text-[10px] ${isLight ? "text-slate-400" : "text-gray-600"}`}>Direct Staff Account</span>
+                        )}
+                      </td>
+
+                      {/* Status */}
+                      <td className="p-4 text-center">
+                        <span
+                          className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                            u.status === "Active"
+                              ? isLight
+                                ? "bg-emerald-50 text-emerald-700 border border-emerald-300"
+                                : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
+                              : isLight
+                              ? "bg-red-50 text-red-700 border border-red-300"
+                              : "bg-red-500/10 text-red-400 border border-red-500/30"
+                          }`}
                         >
-                          Login View
-                        </button>
-                        <button
-                          onClick={() => handleOpenEdit(u)}
-                          className={`p-1.5 ${
-                            isLight ? "hover:bg-slate-100 text-slate-500 hover:text-slate-900" : "hover:bg-gray-800 text-gray-400 hover:text-white"
-                          } rounded transition cursor-pointer`}
-                          title="Edit User"
-                        >
-                          <Edit2 size={13} />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(u)}
-                          className={`p-1.5 ${
-                            isLight ? "hover:bg-red-50 text-slate-400 hover:text-red-600" : "hover:bg-red-500/20 text-gray-400 hover:text-red-400"
-                          } rounded transition cursor-pointer`}
-                          title="Delete User"
-                        >
-                          <Trash2 size={13} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
+                          {u.status}
+                        </span>
+                      </td>
+
+                      {/* Actions */}
+                      <td className="p-4 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => {
+                              setActiveRole(u.role);
+                              setToastMsg(`🔄 Switched active view to ${u.role} portal!`);
+                              setTimeout(() => setToastMsg(""), 3000);
+                            }}
+                            className={`px-2 py-1 ${
+                              isLight
+                                ? "bg-sky-50 hover:bg-sky-600 text-sky-700 hover:text-white border border-sky-200"
+                                : "bg-sky-500/10 hover:bg-sky-500 text-sky-400 hover:text-black"
+                            } rounded text-[10px] font-bold transition cursor-pointer`}
+                            title="Test Login as this user"
+                          >
+                            Login View
+                          </button>
+                          <button
+                            onClick={() => handleOpenEdit(u)}
+                            className={`p-1.5 ${
+                              isLight ? "hover:bg-slate-100 text-slate-500 hover:text-slate-900" : "hover:bg-gray-800 text-gray-400 hover:text-white"
+                            } rounded transition cursor-pointer`}
+                            title="Edit User"
+                          >
+                            <Edit2 size={13} />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(u)}
+                            className={`p-1.5 ${
+                              isLight ? "hover:bg-red-50 text-slate-400 hover:text-red-600" : "hover:bg-red-500/20 text-gray-400 hover:text-red-400"
+                            } rounded transition cursor-pointer`}
+                            title="Delete User"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>

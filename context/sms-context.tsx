@@ -553,505 +553,46 @@ interface SMSContextType {
 
 const SMSContext = createContext<SMSContextType | undefined>(undefined);
 
-// ─── SEED DATA ────────────────────────────────────────────────────────────────
+// ─── CLEAN INITIAL DATA (ZERO DEMO DATA) ──────────────────────────────────────
 
 const INITIAL_CAMPUSES: SMSCampus[] = [
   {
     id: "CAMP-01",
-    name: "Main Campus (Gulberg Heights)",
-    code: "GUL-01",
-    principalName: "Prof. Muhammad Aslam (M.Phil, Education)",
-    phone: "042-35789011",
-    address: "Block H, Gulberg III, Lahore",
-    wings: [
-      { id: "W-1", name: "Montessori & Early Years", headName: "Mrs. Naila Shah", totalClasses: 3 },
-      { id: "W-2", name: "Junior Girls Wing", headName: "Ms. Hina Tariq", totalClasses: 5 },
-      { id: "W-3", name: "Senior Boys Wing", headName: "Sir Kamran Rafique", totalClasses: 6 },
-      { id: "W-4", name: "College & Higher Secondary", headName: "Dr. Tariq Mahmood", totalClasses: 4 }
-    ]
-  },
-  {
-    id: "CAMP-02",
-    name: "City Executive Campus (Model Town)",
-    code: "MT-02",
-    principalName: "Dr. Farzana Naeem (Ph.D. Educational Leadership)",
-    phone: "042-35841122",
-    address: "Link Road, Model Town, Lahore",
-    wings: [
-      { id: "W-5", name: "Primary & Middle Wing", headName: "Mrs. Ayesha Malik", totalClasses: 8 },
-      { id: "W-6", name: "Senior Cambridge O/A Levels", headName: "Sir Usman Ghani", totalClasses: 4 }
-    ]
+    name: "Main Campus",
+    code: "CAMP-01",
+    principalName: "Principal Office",
+    phone: "",
+    address: "",
+    wings: []
   }
 ];
 
 const INITIAL_SESSIONS: SMSAcademicSession[] = [
-  { id: "SESS-2025-26", name: "Academic Session 2025–2026", startDate: "2025-04-01", endDate: "2026-03-31", isCurrent: true },
-  { id: "SESS-2026-27", name: "Academic Session 2026–2027", startDate: "2026-04-01", endDate: "2027-03-31", isCurrent: false }
+  { id: "SESS-2026-27", name: "Academic Session 2026–2027", startDate: "2026-08-01", endDate: "2027-06-30", isCurrent: true }
 ];
 
-const INITIAL_CLASSES: SMSClassSection[] = [
-  { id: "CLS-PG-A", classId: "PG", className: "Playgroup", sectionName: "Section A (Butterflies)", wing: "Montessori & Early Years", classTeacherName: "Ms. Sadia Bilal", roomNumber: "Room 101", capacity: 25, enrolledCount: 20 },
-  { id: "CLS-NUR-A", classId: "NUR", className: "Nursery", sectionName: "Section A (Dolphins)", wing: "Montessori & Early Years", classTeacherName: "Ms. Maria Khan", roomNumber: "Room 102", capacity: 25, enrolledCount: 22 },
-  { id: "CLS-PREP-A", classId: "PREP", className: "Prep", sectionName: "Section A (Stars)", wing: "Montessori & Early Years", classTeacherName: "Ms. Zainab Bibi", roomNumber: "Room 103", capacity: 30, enrolledCount: 28 },
-  { id: "CLS-1-A", classId: "C1", className: "Class 1", sectionName: "Section A (Rose)", wing: "Junior Girls Wing", classTeacherName: "Mrs. Tahira Batool", crBoyName: "Muhammad Ali", grGirlName: "Fatima Noor", roomNumber: "Room 201", capacity: 35, enrolledCount: 32 },
-  { id: "CLS-5-A", classId: "C5", className: "Class 5", sectionName: "Section A (Jasmine)", wing: "Junior Girls Wing", classTeacherName: "Ms. Amna Riaz", crBoyName: "Hamza Shafiq", grGirlName: "Areeba Tariq", roomNumber: "Room 205", capacity: 35, enrolledCount: 30 },
-  { id: "CLS-9-A", classId: "C9", className: "Class 9 (Science)", sectionName: "Section A (Newton)", wing: "Senior Boys Wing", classTeacherName: "Sir Shahid Mehmood", crBoyName: "Ahmed Talal (CR)", grGirlName: "Zoya Aslam (GR)", roomNumber: "Physics Lab Hall 1", capacity: 40, enrolledCount: 38 },
-  { id: "CLS-10-A", classId: "C10", className: "Class 10 (Matric Science)", sectionName: "Section A (Einstein)", wing: "Senior Boys Wing", classTeacherName: "Sir Nasir Abbas", crBoyName: "Usman Zafar", grGirlName: "Maryam Bibi", roomNumber: "Main Hall 301", capacity: 45, enrolledCount: 42 },
-  { id: "CLS-FSC-1", classId: "FSC1", className: "FSc Pre-Medical (Part 1)", sectionName: "Section Alpha", wing: "College & Higher Secondary", classTeacherName: "Dr. Rizwan Bashir", crBoyName: "Bilal Sajid", grGirlName: "Anaya Tariq", roomNumber: "Auditorium 401", capacity: 50, enrolledCount: 46 }
-];
-
-const INITIAL_STUDENTS: StudentRecord[] = [
-  {
-    id: "STU-001",
-    admissionNo: "ADM-2026-0041",
-    rollNo: "01",
-    firstName: "Ahmed",
-    lastName: "Talal",
-    gender: "Male",
-    dob: "2010-08-14",
-    bFormOrCnic: "35202-8921821-1",
-    bloodGroup: "B+",
-    campusId: "CAMP-01",
-    classId: "C9",
-    className: "Class 9 (Science)",
-    sectionId: "CLS-9-A",
-    sectionName: "Section A (Newton)",
-    admissionDate: "2024-04-10",
-    status: "Active",
-    houseName: "Jinnah House",
-    fatherName: "Mian Talal Ahmad",
-    fatherCnic: "35202-1192837-9",
-    fatherPhone: "03396399895",
-    fatherOccupation: "CEO & Software Architect",
-    motherName: "Mrs. Talal",
-    motherPhone: "03219876543",
-    emergencyContact: "03396399895 (Father)",
-    residentialAddress: "House 42, Block C, Model Town, Lahore",
-    guardianEmail: "miantalal2@gmail.com",
-    feeCategory: "Standard",
-    customMonthlyFee: 18500,
-    transportEnrolled: true,
-    busRoute: "BUS-01 (Wapda Town - Model Town - Gulberg)",
-    medicalNotes: "No known allergies. Perfect vision.",
-    previousSchool: "The City School (Lahore Campus)"
-  },
-  {
-    id: "STU-002",
-    admissionNo: "ADM-2026-0042",
-    rollNo: "02",
-    firstName: "Zoya",
-    lastName: "Aslam",
-    gender: "Female",
-    dob: "2010-11-20",
-    bFormOrCnic: "35202-7721832-4",
-    bloodGroup: "O+",
-    campusId: "CAMP-01",
-    classId: "C9",
-    className: "Class 9 (Science)",
-    sectionId: "CLS-9-A",
-    sectionName: "Section A (Newton)",
-    admissionDate: "2024-04-12",
-    status: "Active",
-    houseName: "Iqbal House",
-    fatherName: "Muhammad Aslam",
-    fatherCnic: "35202-4433221-1",
-    fatherPhone: "03004455667",
-    fatherOccupation: "Chartered Accountant",
-    emergencyContact: "03004455667",
-    residentialAddress: "Flat 12, Gulberg Heights, Lahore",
-    guardianEmail: "aslam.ca@gmail.com",
-    feeCategory: "Sibling Concession (20%)",
-    customMonthlyFee: 14800,
-    transportEnrolled: false
-  },
-  {
-    id: "STU-003",
-    admissionNo: "ADM-2026-0043",
-    rollNo: "03",
-    firstName: "Hamza",
-    lastName: "Shafiq",
-    gender: "Male",
-    dob: "2010-02-28",
-    bFormOrCnic: "35202-9988112-3",
-    bloodGroup: "A+",
-    campusId: "CAMP-01",
-    classId: "C9",
-    className: "Class 9 (Science)",
-    sectionId: "CLS-9-A",
-    sectionName: "Section A (Newton)",
-    admissionDate: "2024-04-15",
-    status: "Active",
-    houseName: "Sir Syed House",
-    fatherName: "Shafiq Ur Rehman",
-    fatherCnic: "35202-3322114-5",
-    fatherPhone: "03225566778",
-    emergencyContact: "03225566778",
-    residentialAddress: "Sector Y, Phase 3, DHA, Lahore",
-    guardianEmail: "shafiq@pktextile.com",
-    feeCategory: "Staff Child (50%)",
-    customMonthlyFee: 9250,
-    transportEnrolled: true,
-    busRoute: "BUS-02 (DHA Phase 5 - Gulberg)"
-  }
-];
-
-const INITIAL_TEACHERS: TeacherRecord[] = [
-  {
-    id: "TCH-01",
-    employeeCode: "TCH-2026-01",
-    fullName: "Sir Shahid Mehmood",
-    gender: "Male",
-    qualification: "M.Sc. Physics (Punjab University)",
-    designation: "Head of Science & Physics Master",
-    department: "Science",
-    phone: "03001234567",
-    email: "shahid.physics@mtcoreschool.edu.pk",
-    joiningDate: "2020-03-01",
-    salary: 110000,
-    assignedClasses: ["Class 9 (Science)", "Class 10 (Matric Science)"],
-    assignedSubjects: ["Physics"],
-    status: "Active",
-    isClassIncharge: true,
-    inchargeClassSection: "Class 9 (Science) - Section A",
-    rating: 4.9
-  },
-  {
-    id: "TCH-02",
-    employeeCode: "TCH-2026-02",
-    fullName: "Sir Nasir Abbas",
-    gender: "Male",
-    qualification: "M.Phil Applied Mathematics",
-    designation: "Senior Mathematics Specialist",
-    department: "Mathematics",
-    phone: "03129876543",
-    email: "nasir.math@mtcoreschool.edu.pk",
-    joiningDate: "2019-08-15",
-    salary: 105000,
-    assignedClasses: ["Class 9 (Science)", "Class 10 (Matric Science)", "FSc Pre-Medical (Part 1)"],
-    assignedSubjects: ["Mathematics"],
-    status: "Active",
-    isClassIncharge: true,
-    inchargeClassSection: "Class 10 (Matric Science) - Section A",
-    rating: 4.8
-  },
-  {
-    id: "TCH-03",
-    employeeCode: "TCH-2026-03",
-    fullName: "Mrs. Tahira Batool",
-    gender: "Female",
-    qualification: "M.A. English Literature",
-    designation: "Senior English Lecturer",
-    department: "English",
-    phone: "03334567890",
-    email: "tahira.eng@mtcoreschool.edu.pk",
-    joiningDate: "2021-01-10",
-    salary: 95000,
-    assignedClasses: ["Class 1", "Class 5", "Class 9 (Science)"],
-    assignedSubjects: ["English Grammar", "English Literature"],
-    status: "Active",
-    isClassIncharge: true,
-    inchargeClassSection: "Class 1 - Section A",
-    rating: 4.7
-  }
-];
-
-const INITIAL_HOUSES: HouseRecord[] = [
-  { id: "H-1", name: "Jinnah House", color: "#16a34a", motto: "Unity, Faith, Discipline", houseMaster: "Sir Shahid Mehmood", totalPoints: 1240, trophiesCount: 8 },
-  { id: "H-2", name: "Iqbal House", color: "#0284c7", motto: "Khudi & Eagle Vision", houseMaster: "Sir Nasir Abbas", totalPoints: 1180, trophiesCount: 6 },
-  { id: "H-3", name: "Sir Syed House", color: "#9333ea", motto: "Knowledge & Progress", houseMaster: "Dr. Rizwan Bashir", totalPoints: 1310, trophiesCount: 9 },
-  { id: "H-4", name: "Liaquat House", color: "#e11d48", motto: "Devotion & Service", houseMaster: "Mrs. Tahira Batool", totalPoints: 1120, trophiesCount: 5 }
-];
-
-const INITIAL_HOUSE_EVENTS: HousePointEvent[] = [
-  { id: "EV-01", houseName: "Sir Syed House", studentName: "Ahmed Talal", studentId: "STU-001", eventType: "Academic Distinction", points: 50, date: "2026-08-14", awardedBy: "Principal Office" },
-  { id: "EV-02", houseName: "Jinnah House", studentName: "Zoya Aslam", studentId: "STU-002", eventType: "Debate Championship", points: 40, date: "2026-08-12", awardedBy: "English Dept" }
-];
-
-const INITIAL_WHATSAPP_LOGS: WhatsAppLog[] = [
-  {
-    id: "WA-01",
-    recipientPhone: "03396399895",
-    recipientName: "Mian Talal Ahmad",
-    studentAdmissionNo: "ADM-2026-0041",
-    category: "Fee Voucher",
-    message: "Respected Parent, Fee Challan #CHL-2026-0801 for Ahmed Talal (Class 9) amounting to Rs 18,500 has been generated. Due Date: 10th Aug 2026.",
-    sentAt: "2026-08-01 09:30 AM",
-    status: "Delivered"
-  },
-  {
-    id: "WA-02",
-    recipientPhone: "03396399895",
-    recipientName: "Mian Talal Ahmad",
-    studentAdmissionNo: "ADM-2026-0041",
-    category: "Result Declared",
-    message: "Congratulations! Ahmed Talal has secured 1st Position in Class 9 (Newton) in Midterm Exam 2026 with 98% (A+). View result card in parent app.",
-    sentAt: "2026-08-15 11:00 AM",
-    status: "Delivered"
-  }
-];
-
-const INITIAL_GATE_VISITORS: GateVisitor[] = [
-  {
-    id: "VIS-01",
-    visitorPassNo: "VP-2026-091",
-    fullName: "Muhammad Tariq",
-    cnic: "35201-9988112-1",
-    phone: "03009988776",
-    purpose: "Meeting Principal",
-    personToMeet: "Prof. Muhammad Aslam",
-    checkInTime: "10:15 AM",
-    status: "Inside Campus",
-    vehicleNo: "LEA-2024",
-    badgeNumber: "BADGE-14"
-  }
-];
-
-const INITIAL_GATE_PUNCHES: GatePunchLog[] = [
-  {
-    id: "GP-01",
-    studentId: "STU-001",
-    studentName: "Ahmed Talal",
-    admissionNo: "ADM-2026-0041",
-    className: "Class 9 (Science)",
-    sectionName: "Section A (Newton)",
-    punchType: "Entry (Morning Gate)",
-    timestamp: "07:48 AM",
-    gateName: "Main Gate Turnstile 1",
-    alertStatus: "WhatsApp Dispatched"
-  }
-];
-
-const INITIAL_ONLINE_APPLICANTS: OnlineAdmissionApplicant[] = [
-  {
-    id: "APP-01",
-    applicationNo: "ONLINE-ADM-8821",
-    applicantName: "Daniyal Raza",
-    appliedClass: "Class 9 (Science)",
-    fatherName: "Raza Ali",
-    fatherPhone: "03214455667",
-    fatherCnic: "35202-9988221-1",
-    previousSchool: "Beaconhouse School System",
-    testScore: 88,
-    interviewScore: 92,
-    status: "Merit List 1",
-    appliedDate: "2026-08-05",
-    meritRank: 1
-  },
-  {
-    id: "APP-02",
-    applicationNo: "ONLINE-ADM-8822",
-    applicantName: "Hania Imran",
-    appliedClass: "Class 9 (Science)",
-    fatherName: "Imran Yousaf",
-    fatherPhone: "03335566778",
-    fatherCnic: "35202-4433112-9",
-    previousSchool: "Roots Millennium",
-    testScore: 82,
-    interviewScore: 85,
-    status: "Shortlisted",
-    appliedDate: "2026-08-08",
-    meritRank: 4
-  }
-];
-
-const INITIAL_PTM_SLOTS: PTMSlot[] = [
-  { id: "PTM-01", teacherId: "TCH-01", teacherName: "Sir Shahid Mehmood", className: "Class 9 (Science)", date: "2026-08-20", timeSlot: "09:00 AM - 09:15 AM", studentId: "STU-001", studentName: "Ahmed Talal", parentName: "Mian Talal Ahmad", status: "Booked", teacherRemarks: "Consistently top performer. Ready for national olympiad." },
-  { id: "PTM-02", teacherId: "TCH-01", teacherName: "Sir Shahid Mehmood", className: "Class 9 (Science)", date: "2026-08-20", timeSlot: "09:15 AM - 09:30 AM", status: "Available" },
-  { id: "PTM-03", teacherId: "TCH-02", teacherName: "Sir Nasir Abbas", className: "Class 10 (Matric)", date: "2026-08-20", timeSlot: "09:00 AM - 09:15 AM", status: "Available" }
-];
-
-const INITIAL_HOSTEL_ROOMS: HostelRoom[] = [
-  { id: "HR-101", buildingName: "Jinnah Hostel Block A", roomNumber: "Room 101 (Triple)", floor: "1st Floor", totalBeds: 3, occupiedBeds: 2, monthlyFee: 25000, wardenName: "Sir Abdul Qadir" },
-  { id: "HR-102", buildingName: "Jinnah Hostel Block A", roomNumber: "Room 102 (Double)", floor: "1st Floor", totalBeds: 2, occupiedBeds: 2, monthlyFee: 30000, wardenName: "Sir Abdul Qadir" },
-  { id: "HR-201", buildingName: "Iqbal Hostel Block B", roomNumber: "Room 201 (Double Deluxe)", floor: "2nd Floor", totalBeds: 2, occupiedBeds: 1, monthlyFee: 32000, wardenName: "Sir Masood Akhtar" }
-];
-
-const INITIAL_MESS_MENU: MessMenuItem[] = [
-  { day: "Monday", breakfast: "Egg Omelette, Paratha, Milk Tea", lunch: "Chicken Karahi, Roti, Salad", dinner: "Daal Chawal, Shami Kabab, Kheer" },
-  { day: "Tuesday", breakfast: "Halwa Puri, Chana, Tea", lunch: "Beef Biryani, Raita", dinner: "Mix Vegetables, Chicken Roast, Roti" },
-  { day: "Wednesday", breakfast: "French Toast, Butter Jam, Coffee", lunch: "Aloo Gosht, Zeera Rice", dinner: "Chicken Pulao, Mint Raita" },
-  { day: "Thursday", breakfast: "Boiled Eggs, Cheese Slice, Bread", lunch: "Daal Mash, Tandoori Roti", dinner: "Chicken Handi, Naan, Gulab Jamun" },
-  { day: "Friday", breakfast: "Chana Paratha, Tea", lunch: "Special Mutton Biryani, Salad", dinner: "Chicken Haleem, Naan" },
-  { day: "Saturday", breakfast: "Pancake / Waffle, Milk", lunch: "White Chana Pulao, Shami", dinner: "Chicken BBQ, Paratha, Mint Chutney" },
-  { day: "Sunday", breakfast: "Nihari / Siri Paye, Kulcha", lunch: "Chicken Manchurian, Fried Rice", dinner: "Kadhai Gosht, Roghani Naan, Custard" }
-];
-
-const INITIAL_CLINIC_VISITS: ClinicVisit[] = [
-  { id: "CL-01", studentId: "STU-001", studentName: "Ahmed Talal", className: "Class 9 (Science)", date: "2026-08-11", time: "11:20 AM", complaint: "Mild headache after sports period", treatment: "Oral hydration and rest in infirmary for 20 mins. Relieved.", attendedBy: "Staff Nurse Shazia", parentNotified: false }
-];
-
-const INITIAL_EXAM_TERMS: SMSExamTerm[] = [
-  { id: "EXM-MID-2026", title: "Midterm Terminal Examination 2026", session: "2025-2026", startDate: "2026-08-10", endDate: "2026-08-22", status: "Results Declared", weightagePercentage: 40 },
-  { id: "EXM-FIN-2026", title: "Annual Final Board Examination 2026", session: "2025-2026", startDate: "2026-02-15", endDate: "2026-03-05", status: "Upcoming", weightagePercentage: 60 }
-];
-
-const INITIAL_MARKS: SMSMarksEntry[] = [
-  { id: "MRK-01", examId: "EXM-MID-2026", examTitle: "Midterm Terminal Examination 2026", studentId: "STU-001", admissionNo: "ADM-2026-0041", rollNo: "01", studentName: "Ahmed Talal", className: "Class 9 (Science)", sectionName: "Section A (Newton)", subject: "Physics", totalMarks: 100, obtainedMarks: 98, percentage: 98, grade: "A+", sectionPosition: 1, classPosition: 1, remarks: "Top score in Federal Board syllabus" },
-  { id: "MRK-02", examId: "EXM-MID-2026", examTitle: "Midterm Terminal Examination 2026", studentId: "STU-001", admissionNo: "ADM-2026-0041", rollNo: "01", studentName: "Ahmed Talal", className: "Class 9 (Science)", sectionName: "Section A (Newton)", subject: "Mathematics", totalMarks: 100, obtainedMarks: 99, percentage: 99, grade: "A+", sectionPosition: 1, classPosition: 1, remarks: "Flawless mathematical proof steps" },
-  { id: "MRK-03", examId: "EXM-MID-2026", examTitle: "Midterm Terminal Examination 2026", studentId: "STU-001", admissionNo: "ADM-2026-0041", rollNo: "01", studentName: "Ahmed Talal", className: "Class 9 (Science)", sectionName: "Section A (Newton)", subject: "English Grammar", totalMarks: 100, obtainedMarks: 97, percentage: 97, grade: "A+", sectionPosition: 1, classPosition: 1, remarks: "Excellent essay composition" }
-];
-
-const INITIAL_FEE_VOUCHERS: SMSFeeVoucher[] = [
-  {
-    id: "FEE-01",
-    challanNo: "CHL-2026-0801",
-    studentId: "STU-001",
-    admissionNo: "ADM-2026-0041",
-    studentName: "Ahmed Talal",
-    fatherName: "Mian Talal Ahmad",
-    className: "Class 9 (Science)",
-    sectionName: "Section A (Newton)",
-    month: "August 2026",
-    issueDate: "2026-08-01",
-    dueDate: "2026-08-10",
-    tuitionFee: 18500,
-    transportFee: 3500,
-    examFee: 1000,
-    discountConcession: 0,
-    lateFine: 0,
-    totalPayable: 23000,
-    status: "Paid",
-    paidAmount: 23000,
-    paidDate: "2026-08-04",
-    paymentMethod: "Bank Transfer (Meezan Bank)",
-    bankBranch: "Main Boulevard Gulberg Branch"
-  },
-  {
-    id: "FEE-02",
-    challanNo: "CHL-2026-0802",
-    studentId: "STU-002",
-    admissionNo: "ADM-2026-0042",
-    studentName: "Zoya Aslam",
-    fatherName: "Muhammad Aslam",
-    className: "Class 9 (Science)",
-    sectionName: "Section A (Newton)",
-    month: "August 2026",
-    issueDate: "2026-08-01",
-    dueDate: "2026-08-10",
-    tuitionFee: 18500,
-    transportFee: 0,
-    examFee: 1000,
-    discountConcession: 3700,
-    lateFine: 0,
-    totalPayable: 15800,
-    status: "Unpaid"
-  }
-];
-
-const INITIAL_QUESTION_BANK: QuestionBankItem[] = [
-  { id: "QB-01", subject: "Physics", className: "Class 9 (Science)", chapter: "Kinematics", difficulty: "Medium", type: "MCQ", questionText: "The rate of change of displacement is known as:", options: ["Speed", "Velocity", "Acceleration", "Momentum"], correctAnswer: "Velocity", marks: 1 },
-  { id: "QB-02", subject: "Physics", className: "Class 9 (Science)", chapter: "Dynamics", difficulty: "Medium", type: "Short", questionText: "State Newton's Second Law of Motion and derive its formula F = ma.", marks: 4 },
-  { id: "QB-03", subject: "Physics", className: "Class 9 (Science)", chapter: "Gravitation", difficulty: "Hard", type: "Long", questionText: "State Newton's Law of Universal Gravitation and determine the mass of the earth using this law.", marks: 8 }
-];
-
-const INITIAL_TIMETABLE: TimetablePeriod[] = [
-  { id: "TT-01", className: "Class 9 (Science)", sectionName: "Section A (Newton)", day: "Monday", periodNumber: 1, timeSlot: "08:00 AM - 08:45 AM", subject: "Physics", teacherId: "TCH-01", teacherName: "Sir Shahid Mehmood", room: "Physics Lab 1" },
-  { id: "TT-02", className: "Class 9 (Science)", sectionName: "Section A (Newton)", day: "Monday", periodNumber: 2, timeSlot: "08:45 AM - 09:30 AM", subject: "Mathematics", teacherId: "TCH-02", teacherName: "Sir Nasir Abbas", room: "Hall 301" },
-  { id: "TT-03", className: "Class 9 (Science)", sectionName: "Section A (Newton)", day: "Monday", periodNumber: 3, timeSlot: "09:30 AM - 10:15 AM", subject: "English Grammar", teacherId: "TCH-03", teacherName: "Mrs. Tahira Batool", room: "Hall 301" }
-];
-
-const INITIAL_LIBRARY_BOOKS: LibraryBook[] = [
-  { id: "BK-01", accessionNo: "ACC-PHY-0101", title: "Fundamentals of Physics (Halliday & Resnick 10th Ed)", author: "Jearl Walker", category: "Science", totalCopies: 15, availableCopies: 12, shelfNumber: "Shelf S-04" },
-  { id: "BK-02", accessionNo: "ACC-MTH-0202", title: "Calculus & Analytical Geometry", author: "George B. Thomas", category: "Mathematics", totalCopies: 20, availableCopies: 18, shelfNumber: "Shelf M-02" },
-  { id: "BK-03", accessionNo: "ACC-LIT-0303", title: "A Brief History of Time", author: "Stephen Hawking", category: "Science", totalCopies: 8, availableCopies: 5, shelfNumber: "Shelf S-01" }
-];
-
-const INITIAL_TRANSPORT: TransportRoute[] = [
-  { id: "TR-01", routeCode: "BUS-01", routeName: "Wapda Town - Valencia - Model Town - Gulberg Main", driverName: "Muhammad Hanif", driverPhone: "03001122334", vehicleNumber: "LEG-8921 (Toyota Coaster)", totalSeats: 30, assignedStudentsCount: 28, monthlyFeePerStudent: 3500 },
-  { id: "TR-02", routeCode: "BUS-02", routeName: "DHA Phase 5 - Phase 3 - Cavalry - Gulberg Main", driverName: "Rashid Ali", driverPhone: "03214455667", vehicleNumber: "LEE-4455 (Hino Minibus)", totalSeats: 35, assignedStudentsCount: 32, monthlyFeePerStudent: 4000 }
-];
-
-const INITIAL_NOTICES: SchoolNotice[] = [
-  { id: "NOT-01", title: "Independence Day Gala & All-Pakistan Bilingual Declamation", category: "Event", targetAudience: "All", date: "2026-08-14", content: "All students are cordially invited to participate in the National Declamation and Science Exhibition on 14th August in the Central Auditorium.", isPinned: true },
-  { id: "NOT-02", title: "Annual Science Olympiad Registration Open", category: "Academic", targetAudience: "Students", date: "2026-08-10", content: "Registrations for BISE National Science Olympiad 2026 are now open. Interested students contact Sir Shahid Mehmood before 25th August.", isPinned: false }
-];
-
-const INITIAL_USERS: SMSUserAccount[] = [
-  {
-    id: "USR-001",
-    username: "owner",
-    fullName: "Mian Talal (Patron-in-Chief)",
-    email: "owner@mtcore.edu.pk",
-    password: "Owner@123",
-    role: "Owner",
-    phone: "0300-1234567",
-    status: "Active",
-    createdAt: "2025-04-01"
-  },
-  {
-    id: "USR-002",
-    username: "principal",
-    fullName: "Prof. Muhammad Aslam (Principal)",
-    email: "principal@mtcore.edu.pk",
-    password: "Head@123",
-    role: "Principal",
-    phone: "0321-7654321",
-    status: "Active",
-    createdAt: "2025-04-01"
-  },
-  {
-    id: "USR-003",
-    username: "teacher.shahid",
-    fullName: "Sir Shahid Mehmood (Physics)",
-    email: "teacher.shahid@mtcore.edu.pk",
-    password: "Teacher@123",
-    role: "Teacher",
-    linkedEntityId: "TCH-01",
-    linkedEntityName: "Sir Shahid Mehmood",
-    phone: "0300-1234567",
-    status: "Active",
-    createdAt: "2025-04-01"
-  },
-  {
-    id: "USR-004",
-    username: "student.ahmed",
-    fullName: "Ahmed Talal (Class 9)",
-    email: "student.ahmed@mtcore.edu.pk",
-    password: "Student@123",
-    role: "Student",
-    linkedEntityId: "STU-001",
-    linkedEntityName: "Ahmed Talal",
-    phone: "0300-1122334",
-    status: "Active",
-    createdAt: "2025-04-01"
-  },
-  {
-    id: "USR-005",
-    username: "parent.tariq",
-    fullName: "Tariq Mahmood (Father of Ahmed)",
-    email: "parent.tariq@gmail.com",
-    password: "Parent@123",
-    role: "Parent",
-    linkedEntityId: "STU-001",
-    linkedEntityName: "Ahmed Talal",
-    linkedStudentIds: ["STU-001"],
-    phone: "0300-1122334",
-    status: "Active",
-    createdAt: "2025-04-01"
-  },
-  {
-    id: "USR-006",
-    username: "accountant",
-    fullName: "Kashif Nisar (Accounts Incharge)",
-    email: "finance@mtcore.edu.pk",
-    password: "Finance@123",
-    role: "Finance",
-    phone: "0322-9988776",
-    status: "Active",
-    createdAt: "2025-04-01"
-  },
-  {
-    id: "USR-007",
-    username: "hr.manager",
-    fullName: "Sobia Akram (HR Officer)",
-    email: "hr@mtcore.edu.pk",
-    password: "HR@123",
-    role: "HR",
-    phone: "0333-5566778",
-    status: "Active",
-    createdAt: "2025-04-01"
-  }
-];
+const INITIAL_CLASSES: SMSClassSection[] = [];
+const INITIAL_STUDENTS: StudentRecord[] = [];
+const INITIAL_TEACHERS: TeacherRecord[] = [];
+const INITIAL_USERS: SMSUserAccount[] = [];
+const INITIAL_HOUSES: HouseRecord[] = [];
+const INITIAL_HOUSE_EVENTS: HousePointEvent[] = [];
+const INITIAL_WHATSAPP_LOGS: WhatsAppLog[] = [];
+const INITIAL_GATE_VISITORS: GateVisitor[] = [];
+const INITIAL_GATE_PUNCHES: GatePunchLog[] = [];
+const INITIAL_ONLINE_APPLICANTS: OnlineAdmissionApplicant[] = [];
+const INITIAL_PTM_SLOTS: PTMSlot[] = [];
+const INITIAL_HOSTEL_ROOMS: HostelRoom[] = [];
+const INITIAL_MESS_MENU: MessMenuItem[] = [];
+const INITIAL_CLINIC_VISITS: ClinicVisit[] = [];
+const INITIAL_EXAM_TERMS: SMSExamTerm[] = [];
+const INITIAL_MARKS: SMSMarksEntry[] = [];
+const INITIAL_FEE_VOUCHERS: SMSFeeVoucher[] = [];
+const INITIAL_QUESTION_BANK: QuestionBankItem[] = [];
+const INITIAL_TIMETABLE: TimetablePeriod[] = [];
+const INITIAL_LIBRARY_BOOKS: LibraryBook[] = [];
+const INITIAL_TRANSPORT: TransportRoute[] = [];
+const INITIAL_NOTICES: SchoolNotice[] = [];
 
 // ─── PROVIDER COMPONENT ───────────────────────────────────────────────────────
 
@@ -1059,7 +600,7 @@ export function SMSProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<"light" | "dark">("light");
   const [activeRole, setActiveRole] = useState<SMSRole>("Owner");
   const [selectedCampus, setSelectedCampus] = useState<string>("CAMP-01");
-  const [selectedSession, setSelectedSession] = useState<string>("SESS-2025-26");
+  const [selectedSession, setSelectedSession] = useState<string>("SESS-2026-27");
 
   const setTheme = (newTheme: "light" | "dark") => {
     setThemeState(newTheme);
@@ -1072,70 +613,102 @@ export function SMSProvider({ children }: { children: ReactNode }) {
     setTheme(theme === "light" ? "dark" : "light");
   };
 
-  // State Collections
+  // State Collections (Strictly Fresh / Empty)
   const [campuses, setCampuses] = useState<SMSCampus[]>(INITIAL_CAMPUSES);
   const [sessions, setSessions] = useState<SMSAcademicSession[]>(INITIAL_SESSIONS);
-  const [classes, setClasses] = useState<SMSClassSection[]>(INITIAL_CLASSES);
-  const [students, setStudents] = useState<StudentRecord[]>(INITIAL_STUDENTS);
-  const [teachers, setTeachers] = useState<TeacherRecord[]>(INITIAL_TEACHERS);
-  const [users, setUsers] = useState<SMSUserAccount[]>(INITIAL_USERS);
+  const [classes, setClasses] = useState<SMSClassSection[]>([]);
+  const [students, setStudents] = useState<StudentRecord[]>([]);
+  const [teachers, setTeachers] = useState<TeacherRecord[]>([]);
+  const [users, setUsers] = useState<SMSUserAccount[]>([]);
   const [attendance, setAttendance] = useState<SMSAttendanceRecord[]>([]);
-  const [examTerms, setExamTerms] = useState<SMSExamTerm[]>(INITIAL_EXAM_TERMS);
-  const [marks, setMarks] = useState<SMSMarksEntry[]>(INITIAL_MARKS);
-  const [feeVouchers, setFeeVouchers] = useState<SMSFeeVoucher[]>(INITIAL_FEE_VOUCHERS);
-  const [questionBank, setQuestionBank] = useState<QuestionBankItem[]>(INITIAL_QUESTION_BANK);
+  const [examTerms, setExamTerms] = useState<SMSExamTerm[]>([]);
+  const [marks, setMarks] = useState<SMSMarksEntry[]>([]);
+  const [feeVouchers, setFeeVouchers] = useState<SMSFeeVoucher[]>([]);
+  const [questionBank, setQuestionBank] = useState<QuestionBankItem[]>([]);
   const [generatedPapers, setGeneratedPapers] = useState<GeneratedPaper[]>([]);
-  const [timetable, setTimetable] = useState<TimetablePeriod[]>(INITIAL_TIMETABLE);
-  const [libraryBooks, setLibraryBooks] = useState<LibraryBook[]>(INITIAL_LIBRARY_BOOKS);
+  const [timetable, setTimetable] = useState<TimetablePeriod[]>([]);
+  const [libraryBooks, setLibraryBooks] = useState<LibraryBook[]>([]);
   const [issuedBooks, setIssuedBooks] = useState<LibraryIssuedRecord[]>([]);
-  const [transportRoutes, setTransportRoutes] = useState<TransportRoute[]>(INITIAL_TRANSPORT);
-  const [notices, setNotices] = useState<SchoolNotice[]>(INITIAL_NOTICES);
+  const [transportRoutes, setTransportRoutes] = useState<TransportRoute[]>([]);
+  const [notices, setNotices] = useState<SchoolNotice[]>([]);
 
   // Enterprise Module State
-  const [whatsappLogs, setWhatsappLogs] = useState<WhatsAppLog[]>(INITIAL_WHATSAPP_LOGS);
-  const [gateVisitors, setGateVisitors] = useState<GateVisitor[]>(INITIAL_GATE_VISITORS);
-  const [gatePunchLogs, setGatePunchLogs] = useState<GatePunchLog[]>(INITIAL_GATE_PUNCHES);
-  const [onlineApplicants, setOnlineApplicants] = useState<OnlineAdmissionApplicant[]>(INITIAL_ONLINE_APPLICANTS);
-  const [houses, setHouses] = useState<HouseRecord[]>(INITIAL_HOUSES);
-  const [housePointEvents, setHousePointEvents] = useState<HousePointEvent[]>(INITIAL_HOUSE_EVENTS);
-  const [ptmSlots, setPtmSlots] = useState<PTMSlot[]>(INITIAL_PTM_SLOTS);
-  const [hostelRooms, setHostelRooms] = useState<HostelRoom[]>(INITIAL_HOSTEL_ROOMS);
-  const [messMenu, setMessMenu] = useState<MessMenuItem[]>(INITIAL_MESS_MENU);
-  const [clinicVisits, setClinicVisits] = useState<ClinicVisit[]>(INITIAL_CLINIC_VISITS);
+  const [whatsappLogs, setWhatsappLogs] = useState<WhatsAppLog[]>([]);
+  const [gateVisitors, setGateVisitors] = useState<GateVisitor[]>([]);
+  const [gatePunchLogs, setGatePunchLogs] = useState<GatePunchLog[]>([]);
+  const [onlineApplicants, setOnlineApplicants] = useState<OnlineAdmissionApplicant[]>([]);
+  const [houses, setHouses] = useState<HouseRecord[]>([]);
+  const [housePointEvents, setHousePointEvents] = useState<HousePointEvent[]>([]);
+  const [ptmSlots, setPtmSlots] = useState<PTMSlot[]>([]);
+  const [hostelRooms, setHostelRooms] = useState<HostelRoom[]>([]);
+  const [messMenu, setMessMenu] = useState<MessMenuItem[]>([]);
+  const [clinicVisits, setClinicVisits] = useState<ClinicVisit[]>([]);
   const [omrResults, setOmrResults] = useState<OMRGradingResult[]>([]);
 
-  // Load from localStorage
+  // Load from localStorage with clean slate migration
   useEffect(() => {
     try {
       const storedTheme = localStorage.getItem("mt_sms_theme");
       if (storedTheme === "light" || storedTheme === "dark") setThemeState(storedTheme);
 
-      const storedCampuses = localStorage.getItem("mt_sms_campuses");
-      if (storedCampuses) setCampuses(JSON.parse(storedCampuses));
+      // Automated migration: Wipe legacy mock keys if present
+      const cleanVersion = localStorage.getItem("mt_sms_clean_slate_v3");
+      if (cleanVersion !== "true") {
+        const legacyKeys = [
+          "mt_sms_campuses", "mt_sms_sessions", "mt_sms_classes", "mt_sms_students",
+          "mt_sms_teachers", "mt_sms_users", "mt_sms_attendance", "mt_sms_examterms",
+          "mt_sms_marks", "mt_sms_feevouchers", "mt_sms_questions", "mt_sms_papers",
+          "mt_sms_timetable", "mt_sms_books", "mt_sms_issuedbooks", "mt_sms_transport",
+          "mt_sms_notices", "mt_sms_whatsapp", "mt_sms_visitors", "mt_sms_punches",
+          "mt_sms_applicants", "mt_sms_houses", "mt_sms_houseevents", "mt_sms_ptmslots",
+          "mt_sms_hostelrooms", "mt_sms_messmenu", "mt_sms_clinic", "mt_sms_omr"
+        ];
+        legacyKeys.forEach((k) => {
+          try {
+            localStorage.removeItem(k);
+          } catch {}
+        });
+        localStorage.setItem("mt_sms_clean_slate_v3", "true");
+        return;
+      }
 
-      const storedStudents = localStorage.getItem("mt_sms_students");
-      if (storedStudents) setStudents(JSON.parse(storedStudents));
+      const loadOrEmpty = (key: string, setter: (val: any) => void) => {
+        const item = localStorage.getItem(key);
+        if (item !== null) {
+          try {
+            setter(JSON.parse(item));
+          } catch {}
+        }
+      };
 
-      const storedClasses = localStorage.getItem("mt_sms_classes");
-      if (storedClasses) setClasses(JSON.parse(storedClasses));
-
-      const storedMarks = localStorage.getItem("mt_sms_marks");
-      if (storedMarks) setMarks(JSON.parse(storedMarks));
-
-      const storedFee = localStorage.getItem("mt_sms_feevouchers");
-      if (storedFee) setFeeVouchers(JSON.parse(storedFee));
-
-      const storedPapers = localStorage.getItem("mt_sms_papers");
-      if (storedPapers) setGeneratedPapers(JSON.parse(storedPapers));
-
-      const storedWA = localStorage.getItem("mt_sms_whatsapp");
-      if (storedWA) setWhatsappLogs(JSON.parse(storedWA));
-
-      const storedVisitors = localStorage.getItem("mt_sms_visitors");
-      if (storedVisitors) setGateVisitors(JSON.parse(storedVisitors));
-
-      const storedApplicants = localStorage.getItem("mt_sms_applicants");
-      if (storedApplicants) setOnlineApplicants(JSON.parse(storedApplicants));
+      loadOrEmpty("mt_sms_campuses", setCampuses);
+      loadOrEmpty("mt_sms_sessions", setSessions);
+      loadOrEmpty("mt_sms_classes", setClasses);
+      loadOrEmpty("mt_sms_students", setStudents);
+      loadOrEmpty("mt_sms_teachers", setTeachers);
+      loadOrEmpty("mt_sms_users", setUsers);
+      loadOrEmpty("mt_sms_attendance", setAttendance);
+      loadOrEmpty("mt_sms_examterms", setExamTerms);
+      loadOrEmpty("mt_sms_marks", setMarks);
+      loadOrEmpty("mt_sms_feevouchers", setFeeVouchers);
+      loadOrEmpty("mt_sms_questions", setQuestionBank);
+      loadOrEmpty("mt_sms_papers", setGeneratedPapers);
+      loadOrEmpty("mt_sms_timetable", setTimetable);
+      loadOrEmpty("mt_sms_books", setLibraryBooks);
+      loadOrEmpty("mt_sms_issuedbooks", setIssuedBooks);
+      loadOrEmpty("mt_sms_transport", setTransportRoutes);
+      loadOrEmpty("mt_sms_notices", setNotices);
+      loadOrEmpty("mt_sms_whatsapp", setWhatsappLogs);
+      loadOrEmpty("mt_sms_visitors", setGateVisitors);
+      loadOrEmpty("mt_sms_punches", setGatePunchLogs);
+      loadOrEmpty("mt_sms_applicants", setOnlineApplicants);
+      loadOrEmpty("mt_sms_houses", setHouses);
+      loadOrEmpty("mt_sms_houseevents", setHousePointEvents);
+      loadOrEmpty("mt_sms_ptmslots", setPtmSlots);
+      loadOrEmpty("mt_sms_hostelrooms", setHostelRooms);
+      loadOrEmpty("mt_sms_messmenu", setMessMenu);
+      loadOrEmpty("mt_sms_clinic", setClinicVisits);
+      loadOrEmpty("mt_sms_omr", setOmrResults);
     } catch (e) {
       console.warn("Could not load SMS local storage data:", e);
     }
@@ -1698,26 +1271,89 @@ export function SMSProvider({ children }: { children: ReactNode }) {
   };
 
   const clearAllDemoData = () => {
+    const emptyCampuses: SMSCampus[] = [
+      { id: "CAMP-01", name: "Main Campus", code: "CAMP-01", principalName: "Principal Office", phone: "", address: "", wings: [] }
+    ];
+    const emptySessions: SMSAcademicSession[] = [
+      { id: "SESS-2026-27", name: "Academic Session 2026–2027", startDate: "2026-08-01", endDate: "2027-06-30", isCurrent: true }
+    ];
+
+    setCampuses(emptyCampuses);
+    setSessions(emptySessions);
+    setClasses([]);
     setStudents([]);
-    setMarks([]);
+    setTeachers([]);
+    setUsers([]);
     setAttendance([]);
+    setExamTerms([]);
+    setMarks([]);
     setFeeVouchers([]);
+    setQuestionBank([]);
+    setGeneratedPapers([]);
+    setTimetable([]);
+    setLibraryBooks([]);
+    setIssuedBooks([]);
+    setTransportRoutes([]);
+    setNotices([]);
     setWhatsappLogs([]);
     setGateVisitors([]);
     setGatePunchLogs([]);
     setOnlineApplicants([]);
+    setHouses([]);
+    setHousePointEvents([]);
+    setPtmSlots([]);
+    setHostelRooms([]);
+    setMessMenu([]);
     setClinicVisits([]);
     setOmrResults([]);
+
+    const allKeys = [
+      "mt_sms_campuses", "mt_sms_sessions", "mt_sms_classes", "mt_sms_students",
+      "mt_sms_teachers", "mt_sms_users", "mt_sms_attendance", "mt_sms_examterms",
+      "mt_sms_marks", "mt_sms_feevouchers", "mt_sms_questions", "mt_sms_papers",
+      "mt_sms_timetable", "mt_sms_books", "mt_sms_issuedbooks", "mt_sms_transport",
+      "mt_sms_notices", "mt_sms_whatsapp", "mt_sms_visitors", "mt_sms_punches",
+      "mt_sms_applicants", "mt_sms_houses", "mt_sms_houseevents", "mt_sms_ptmslots",
+      "mt_sms_hostelrooms", "mt_sms_messmenu", "mt_sms_clinic", "mt_sms_omr"
+    ];
+
     if (typeof window !== "undefined") {
-      localStorage.removeItem("mt_sms_students");
-      localStorage.removeItem("mt_sms_marks");
-      localStorage.removeItem("mt_sms_attendance");
-      localStorage.removeItem("mt_sms_feevouchers");
-      localStorage.removeItem("mt_sms_whatsapp");
-      localStorage.removeItem("mt_sms_visitors");
-      localStorage.removeItem("mt_sms_applicants");
-      localStorage.removeItem("mt_sms_clinic");
+      allKeys.forEach((k) => {
+        try {
+          localStorage.removeItem(k);
+        } catch {}
+      });
+      localStorage.setItem("mt_sms_clean_slate_v3", "true");
     }
+
+    persist("mt_sms_campuses", emptyCampuses);
+    persist("mt_sms_sessions", emptySessions);
+    persist("mt_sms_classes", []);
+    persist("mt_sms_students", []);
+    persist("mt_sms_teachers", []);
+    persist("mt_sms_users", []);
+    persist("mt_sms_attendance", []);
+    persist("mt_sms_examterms", []);
+    persist("mt_sms_marks", []);
+    persist("mt_sms_feevouchers", []);
+    persist("mt_sms_questions", []);
+    persist("mt_sms_papers", []);
+    persist("mt_sms_timetable", []);
+    persist("mt_sms_books", []);
+    persist("mt_sms_issuedbooks", []);
+    persist("mt_sms_transport", []);
+    persist("mt_sms_notices", []);
+    persist("mt_sms_whatsapp", []);
+    persist("mt_sms_visitors", []);
+    persist("mt_sms_punches", []);
+    persist("mt_sms_applicants", []);
+    persist("mt_sms_houses", []);
+    persist("mt_sms_houseevents", []);
+    persist("mt_sms_ptmslots", []);
+    persist("mt_sms_hostelrooms", []);
+    persist("mt_sms_messmenu", []);
+    persist("mt_sms_clinic", []);
+    persist("mt_sms_omr", []);
   };
 
   const addUserAccount = (userData: Omit<SMSUserAccount, "id" | "createdAt">): SMSUserAccount => {
