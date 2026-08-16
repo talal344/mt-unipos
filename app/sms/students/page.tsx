@@ -65,17 +65,17 @@ export default function SMSStudentsPage() {
   // Unique list of classes configured in settings
   const configuredClasses = useMemo(() => {
     const unique = Array.from(new Set(classes.map((c) => c.className))).filter(Boolean);
-    return unique.length > 0 ? unique : ["Class 1", "Class 2", "Class 3", "Class 9 (Science)", "Class 10 (Matric Science)"];
+    return unique.length > 0 ? unique : ["One"];
   }, [classes]);
 
   // Dynamic helper for sections per class
   const getSectionsForClass = (className: string): string[] => {
     const matched = classes
-      .filter((c) => c.className === className)
+      .filter((c) => c.className.trim().toLowerCase() === (className || "").trim().toLowerCase())
       .map((c) => c.sectionName)
       .filter(Boolean);
     const unique = Array.from(new Set(matched));
-    return unique.length > 0 ? unique : ["Section A", "Section B", "Section C"];
+    return unique.length > 0 ? unique : ["A"];
   };
 
   // Filtered Students
@@ -209,7 +209,15 @@ export default function SMSStudentsPage() {
 
   // Open Edit Modal
   const handleOpenEdit = (student: StudentRecord) => {
-    setEditingStudent({ ...student });
+    const availSections = getSectionsForClass(student.className);
+    const resolvedSection = availSections.includes(student.sectionName)
+      ? student.sectionName
+      : availSections[0] || "A";
+
+    setEditingStudent({
+      ...student,
+      sectionName: resolvedSection
+    });
     setShowEditModal(true);
   };
 

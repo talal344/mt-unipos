@@ -47,7 +47,7 @@ export default function SMSExamsPage() {
   // Teacher Filter state
   const [selectedTeacherId, setSelectedTeacherId] = useState<string>("ALL");
   const [selectedTerm, setSelectedTerm] = useState("EXM-MID-2026");
-  const [selectedClass, setSelectedClass] = useState("Class 9 (Science)");
+  const [selectedClass, setSelectedClass] = useState(classes[0]?.className || "One");
   const [selectedSubject, setSelectedSubject] = useState("Physics");
   
   // Custom Paper Configuration
@@ -83,10 +83,11 @@ export default function SMSExamsPage() {
     }
   };
 
-  // Available classes based on teacher selection
+  // Available classes based on teacher selection and settings
   const availableClasses = useMemo(() => {
     if (!currentTeacher || !currentTeacher.assignedClasses || currentTeacher.assignedClasses.length === 0) {
-      return classes.map((c) => c.className);
+      const uniq = Array.from(new Set(classes.map((c) => c.className))).filter(Boolean);
+      return uniq.length > 0 ? uniq : ["One"];
     }
     return currentTeacher.assignedClasses;
   }, [currentTeacher, classes]);
@@ -95,16 +96,16 @@ export default function SMSExamsPage() {
   const availableSubjects = useMemo(() => {
     if (!currentTeacher || !currentTeacher.assignedSubjects || currentTeacher.assignedSubjects.length === 0) {
       return [
-        "Physics",
+        "English",
+        "Urdu",
         "Mathematics",
+        "General Science",
+        "Physics",
         "Chemistry",
         "Biology",
-        "English Grammar",
-        "English Literature",
-        "Urdu Literature",
         "Computer Science",
-        "Islamic Studies & Ethics",
-        "Pakistan Studies"
+        "Islamic Studies",
+        "Social Studies"
       ];
     }
     return currentTeacher.assignedSubjects;
@@ -112,15 +113,15 @@ export default function SMSExamsPage() {
 
   const targetStudents = useMemo(() => {
     return students
-      .filter((s) => s.className === selectedClass && s.status === "Active")
-      .sort((a, b) => parseInt(a.rollNo, 10) - parseInt(b.rollNo, 10));
+      .filter((s) => s.className.trim().toLowerCase() === selectedClass.trim().toLowerCase() && s.status === "Active")
+      .sort((a, b) => parseInt(a.rollNo || "0", 10) - parseInt(b.rollNo || "0", 10));
   }, [students, selectedClass]);
 
   // Existing marks map
   const existingMarksMap = useMemo(() => {
     const map: Record<string, SMSMarksEntry> = {};
     marks.forEach((m) => {
-      if (m.examId === selectedTerm && m.className === selectedClass && m.subject === selectedSubject) {
+      if (m.examId === selectedTerm && m.className.trim().toLowerCase() === selectedClass.trim().toLowerCase() && m.subject === selectedSubject) {
         map[m.studentId] = m;
       }
     });
@@ -130,24 +131,22 @@ export default function SMSExamsPage() {
   const [inputMarks, setInputMarks] = useState<Record<string, number>>({});
   const [inputRemarks, setInputRemarks] = useState<Record<string, string>>({});
 
-  // Sync existing marks into state when class/subject changes
+  // Sync existing marks into state when class/subject changes (NO AUTO-INVENTED MARKS)
   useEffect(() => {
     const initialMarks: Record<string, number> = {};
     const initialRemarks: Record<string, string> = {};
-    targetStudents.forEach((st, idx) => {
+    targetStudents.forEach((st) => {
       if (existingMarksMap[st.id]) {
         initialMarks[st.id] = existingMarksMap[st.id].obtainedMarks;
-        initialRemarks[st.id] = existingMarksMap[st.id].remarks || "Good performance";
+        initialRemarks[st.id] = existingMarksMap[st.id].remarks || "";
       } else {
-        // Sample realistic default mark based on index
-        const defaultMark = Math.max(45, Math.round(totalPaperMarks * (0.95 - idx * 0.05)));
-        initialMarks[st.id] = defaultMark;
-        initialRemarks[st.id] = defaultMark >= (totalPaperMarks * 0.8) ? "Exceptional concept clarity" : "Satisfactory progress";
+        initialMarks[st.id] = 0;
+        initialRemarks[st.id] = "";
       }
     });
     setInputMarks(initialMarks);
     setInputRemarks(initialRemarks);
-  }, [targetStudents, existingMarksMap, totalPaperMarks]);
+  }, [targetStudents, existingMarksMap]);
 
   // Quick fill helper
   const handleQuickFill = (percentage: number) => {
@@ -470,29 +469,37 @@ export default function SMSExamsPage() {
     }
   };
 
-  // Calculate live class statistics
+  // Calculate live class statistics (ONLY for actual entered marks)
   const classStats = useMemo(() => {
+    const studentsWithMarks = targetStudents.filter(
+      (st) => existingMarksMap[st.id] !== undefined || (inputMarks[st.id] !== undefined && inputMarks[st.id] > 0)
+    );
+
+    if (studentsWithMarks.length === 0) {
+      return { avg: 0, avgPct: 0, passCount: 0, passRate: 0, highest: 0, lowest: 0 };
+    }
+
     let totalObt = 0;
     let passCount = 0;
     let highest = 0;
     let lowest = totalPaperMarks;
 
-    targetStudents.forEach((st) => {
-      const mark = inputMarks[st.id] ?? 0;
+    studentsWithMarks.forEach((st) => {
+      const mark = inputMarks[st.id] ?? existingMarksMap[st.id]?.obtainedMarks ?? 0;
       totalObt += mark;
-      if (mark >= (totalPaperMarks * (passingPercentage / 100))) {
+      if (mark >= totalPaperMarks * (passingPercentage / 100)) {
         passCount++;
       }
       if (mark > highest) highest = mark;
       if (mark < lowest) lowest = mark;
     });
 
-    const avg = targetStudents.length > 0 ? Math.round(totalObt / targetStudents.length) : 0;
+    const avg = Math.round(totalObt / studentsWithMarks.length);
     const avgPct = totalPaperMarks > 0 ? Math.round((avg / totalPaperMarks) * 100) : 0;
-    const passRate = targetStudents.length > 0 ? Math.round((passCount / targetStudents.length) * 100) : 0;
+    const passRate = Math.round((passCount / studentsWithMarks.length) * 100);
 
     return { avg, avgPct, passCount, passRate, highest, lowest };
-  }, [targetStudents, inputMarks, totalPaperMarks, passingPercentage]);
+  }, [targetStudents, inputMarks, totalPaperMarks, passingPercentage, existingMarksMap]);
 
   return (
     <div className="space-y-6 font-sans">
@@ -786,10 +793,24 @@ export default function SMSExamsPage() {
             </thead>
             <tbody className={`divide-y ${isLight ? "divide-slate-100" : "divide-gray-800/50"} font-mono text-[11px]`}>
               {targetStudents.map((st) => {
-                const currentObt = inputMarks[st.id] ?? existingMarksMap[st.id]?.obtainedMarks ?? Math.round(totalPaperMarks * 0.85);
-                const pct = totalPaperMarks > 0 ? Math.round((currentObt / totalPaperMarks) * 100) : 0;
+                const hasExisting = existingMarksMap[st.id] !== undefined;
+                const currentObt = inputMarks[st.id] !== undefined ? inputMarks[st.id] : (hasExisting ? existingMarksMap[st.id].obtainedMarks : 0);
+                const isEntered = hasExisting || (inputMarks[st.id] !== undefined && inputMarks[st.id] > 0);
+                const pct = totalPaperMarks > 0 && currentObt > 0 ? Math.round((currentObt / totalPaperMarks) * 100) : 0;
                 const grade =
-                  pct >= 90 ? "A+" : pct >= 80 ? "A" : pct >= 70 ? "B" : pct >= 60 ? "C" : pct >= 50 ? "D" : "F";
+                  !isEntered || currentObt === 0
+                    ? "—"
+                    : pct >= 90
+                    ? "A+"
+                    : pct >= 80
+                    ? "A"
+                    : pct >= 70
+                    ? "B"
+                    : pct >= 60
+                    ? "C"
+                    : pct >= 50
+                    ? "D"
+                    : "F";
                 const isPassed = pct >= passingPercentage;
 
                 return (
@@ -798,7 +819,7 @@ export default function SMSExamsPage() {
                     <td className={`p-3.5 font-bold ${isLight ? "text-sky-700" : "text-sky-400"}`}>{st.admissionNo}</td>
                     <td className="p-3.5 font-sans font-bold">
                       <div className={isLight ? "text-slate-900" : "text-white"}>{st.firstName} {st.lastName}</div>
-                      <div className={`text-[9px] ${isLight ? "text-slate-400" : "text-gray-500"} font-normal`}>Section: {st.sectionName}</div>
+                      <div className={`text-[9px] ${isLight ? "text-sky-700" : "text-sky-400"} font-bold`}>Section: {st.sectionName}</div>
                     </td>
                     <td className={`p-3.5 font-sans ${isLight ? "text-slate-600" : "text-gray-400"}`}>{st.fatherName}</td>
                     <td className={`p-3.5 text-center ${isLight ? "text-slate-500" : "text-gray-400"}`}>{totalPaperMarks}</td>
@@ -810,7 +831,8 @@ export default function SMSExamsPage() {
                           type="number"
                           min="0"
                           max={totalPaperMarks}
-                          value={currentObt}
+                          placeholder="0"
+                          value={currentObt === 0 ? "" : currentObt}
                           onChange={(e) => {
                             const val = Math.min(totalPaperMarks, Math.max(0, parseInt(e.target.value, 10) || 0));
                             setInputMarks({ ...inputMarks, [st.id]: val });
@@ -827,7 +849,7 @@ export default function SMSExamsPage() {
 
                     {/* Percentage Progress */}
                     <td className="p-3.5 text-center">
-                      <div className="font-bold">{pct}%</div>
+                      <div className="font-bold">{pct > 0 ? `${pct}%` : "—"}</div>
                       <div className="w-16 h-1.5 bg-slate-200 dark:bg-gray-800 rounded-full mx-auto mt-1 overflow-hidden">
                         <div
                           className={`h-full rounded-full ${
@@ -850,6 +872,10 @@ export default function SMSExamsPage() {
                             ? isLight
                               ? "bg-sky-50 text-sky-700 border border-sky-300"
                               : "bg-sky-500/10 text-sky-400 border border-sky-500/30"
+                            : grade === "—"
+                            ? isLight
+                              ? "bg-slate-100 text-slate-500 border border-slate-200"
+                              : "bg-gray-800 text-gray-400"
                             : isLight
                             ? "bg-red-50 text-red-700 border border-red-300"
                             : "bg-red-500/10 text-red-400 border border-red-500/30"

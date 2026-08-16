@@ -30,6 +30,9 @@ export default function SMSTeachersPage() {
   const [selectedTeacherId, setSelectedTeacherId] = useState<string | null>(teachers[0]?.id || null);
   const [toastMsg, setToastMsg] = useState("");
 
+  // Unique list of classes configured in settings
+  const uniqueClassNames = Array.from(new Set(classes.map((c) => c.className))).filter(Boolean);
+
   // Modal State
   const [showModal, setShowModal] = useState(false);
   const [editingTeacher, setEditingTeacher] = useState<TeacherRecord | null>(null);
@@ -49,15 +52,15 @@ export default function SMSTeachersPage() {
   }>({
     fullName: "",
     gender: "Male",
-    qualification: "M.Sc. Physics (Punjab University)",
-    designation: "Senior Subject Specialist",
+    qualification: "M.Sc / M.Phil",
+    designation: "Senior Teacher",
     department: "Science",
-    assignedSubjects: ["Physics", "Mathematics"],
-    assignedClasses: ["Class 9 (Science)", "Class 10 (Science)"],
+    assignedSubjects: [],
+    assignedClasses: [],
     joiningDate: new Date().toISOString().split("T")[0],
-    phone: "0300-1234567",
-    email: "teacher@mtcore.edu.pk",
-    salary: 85000,
+    phone: "",
+    email: "",
+    salary: 75000,
     status: "Active"
   });
 
@@ -83,8 +86,8 @@ export default function SMSTeachersPage() {
       qualification: "M.Sc / M.Phil",
       designation: "Senior Teacher",
       department: "Science",
-      assignedSubjects: ["Physics"],
-      assignedClasses: ["Class 9 (Science)"],
+      assignedSubjects: [],
+      assignedClasses: [],
       joiningDate: new Date().toISOString().split("T")[0],
       phone: "",
       email: "",
@@ -102,8 +105,8 @@ export default function SMSTeachersPage() {
       qualification: t.qualification,
       designation: t.designation,
       department: t.department,
-      assignedSubjects: t.assignedSubjects || ["Physics"],
-      assignedClasses: t.assignedClasses,
+      assignedSubjects: t.assignedSubjects || [],
+      assignedClasses: t.assignedClasses || [],
       joiningDate: t.joiningDate,
       phone: t.phone,
       email: t.email,
@@ -134,6 +137,15 @@ export default function SMSTeachersPage() {
       deleteTeacher(t.id);
       setToastMsg(`🗑️ Faculty profile deleted.`);
       setTimeout(() => setToastMsg(""), 3500);
+    }
+  };
+
+  const toggleClassAssignment = (cName: string) => {
+    const exists = form.assignedClasses.includes(cName);
+    if (exists) {
+      setForm({ ...form, assignedClasses: form.assignedClasses.filter((c) => c !== cName) });
+    } else {
+      setForm({ ...form, assignedClasses: [...form.assignedClasses, cName] });
     }
   };
 
@@ -168,7 +180,7 @@ export default function SMSTeachersPage() {
         </button>
       </div>
 
-      {/* Search */}
+      {/* Search Toolbar */}
       <div className="relative max-w-md">
         <Search size={14} className={`absolute left-3 top-1/2 -translate-y-1/2 ${isLight ? "text-slate-400" : "text-gray-500"}`} />
         <input
@@ -184,40 +196,53 @@ export default function SMSTeachersPage() {
         />
       </div>
 
-      {/* Main 2-Column Split View */}
+      {/* Grid: Teachers List (Left) + Detail View (Right) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left: Teachers List */}
+        {/* Left Column: Teacher Cards */}
         <div className="space-y-3">
-          <h3 className={`text-xs uppercase font-bold ${isLight ? "text-emerald-700 font-bold" : "text-emerald-400"} tracking-wider`}>
-            Faculty Members ({filteredTeachers.length})
-          </h3>
-          <div className="space-y-2.5 max-h-[calc(100vh-280px)] overflow-y-auto custom-scrollbar pr-1">
-            {filteredTeachers.map((t) => {
-              const isSelected = t.id === (selectedTeacher?.id || selectedTeacherId);
+          <div className="flex justify-between items-center text-xs">
+            <span className={`font-bold ${isLight ? "text-emerald-700 font-bold" : "text-emerald-400"} uppercase tracking-wider`}>
+              Faculty Members ({filteredTeachers.length})
+            </span>
+          </div>
+
+          {filteredTeachers.length === 0 ? (
+            <div className={`p-8 text-center ${isLight ? "bg-white border-slate-200 text-slate-400" : "bg-[#0b121e] border-[#1e293b] text-gray-500"} border rounded-2xl`}>
+              No teachers registered in directory. Click "+ Appoint Faculty Member" to add one.
+            </div>
+          ) : (
+            filteredTeachers.map((t) => {
+              const isSelected = selectedTeacher?.id === t.id;
               return (
                 <div
                   key={t.id}
                   onClick={() => setSelectedTeacherId(t.id)}
-                  className={`p-4 rounded-2xl border transition cursor-pointer space-y-2 relative ${
+                  className={`p-4 rounded-2xl border transition cursor-pointer ${
                     isSelected
                       ? isLight
-                        ? "bg-emerald-50/80 border-emerald-400 shadow-md ring-2 ring-emerald-400"
-                        : "bg-[#0c241d] border-emerald-500 shadow-xl shadow-emerald-600/10 ring-1 ring-emerald-500"
+                        ? "bg-emerald-50/70 border-emerald-500 shadow-md ring-1 ring-emerald-500"
+                        : "bg-emerald-500/10 border-emerald-500 text-white"
                       : isLight
-                      ? "bg-white border-slate-200 hover:border-slate-300 shadow-sm"
-                      : "bg-[#0b121e] border-[#1e293b] hover:border-gray-700"
+                      ? "bg-white border-slate-200 hover:border-slate-300 shadow-xs"
+                      : "bg-[#0b121e] border-[#1e293b] hover:border-emerald-500/30"
                   }`}
                 >
-                  <div className="flex justify-between items-center text-xs">
-                    <span className={`font-bold ${isLight ? "text-emerald-700" : "text-emerald-400"} font-mono text-[10px]`}>{t.employeeCode}</span>
-                    <div className="flex gap-1">
+                  <div className="flex justify-between items-start">
+                    <div className="space-y-1">
+                      <span className={`text-[10px] font-mono font-bold ${isLight ? "text-emerald-700 font-bold" : "text-emerald-400"}`}>{t.employeeCode}</span>
+                      <h3 className={`font-black ${isLight ? "text-slate-900" : "text-white"} text-sm`}>{t.fullName}</h3>
+                      <p className={`text-xs ${isLight ? "text-slate-500 font-medium" : "text-gray-400"}`}>
+                        {t.designation} &bull; <b className={isLight ? "text-emerald-700" : "text-emerald-400"}>{t.department}</b>
+                      </p>
+                    </div>
+
+                    <div className="flex gap-1.5">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           handleOpenEdit(t);
                         }}
-                        className={`p-1 ${isLight ? "hover:bg-slate-200 text-slate-500 hover:text-slate-900" : "hover:bg-emerald-500/20 text-gray-400 hover:text-emerald-300"} rounded cursor-pointer`}
-                        title="Edit Teacher"
+                        className={`p-1.5 ${isLight ? "hover:bg-slate-100 text-slate-500" : "hover:bg-gray-800 text-gray-400"} rounded-lg transition cursor-pointer`}
                       >
                         <Edit2 size={12} />
                       </button>
@@ -226,40 +251,34 @@ export default function SMSTeachersPage() {
                           e.stopPropagation();
                           handleDelete(t);
                         }}
-                        className={`p-1 ${isLight ? "hover:bg-red-100 text-slate-500 hover:text-red-600" : "hover:bg-red-500/20 text-gray-400 hover:text-red-400"} rounded cursor-pointer`}
-                        title="Delete Teacher"
+                        className={`p-1.5 ${isLight ? "hover:bg-red-50 text-slate-400 hover:text-red-600" : "hover:bg-red-500/20 text-gray-400 hover:text-red-400"} rounded-lg transition cursor-pointer`}
                       >
                         <Trash2 size={12} />
                       </button>
                     </div>
                   </div>
 
-                  <div>
-                    <h4 className={`font-black ${isLight ? "text-slate-900" : "text-white"} text-sm`}>{t.fullName}</h4>
-                    <div className={`text-xs ${isLight ? "text-slate-600" : "text-gray-400"}`}>
-                      {t.designation} • <span className={`${isLight ? "text-emerald-700" : "text-emerald-300"} font-semibold`}>{t.department}</span>
-                    </div>
-                  </div>
-
-                  <div className={`pt-2 border-t ${isLight ? "border-slate-100" : "border-gray-800"} flex justify-between items-center text-[10px]`}>
-                    <span className={isLight ? "text-slate-500" : "text-gray-500"}>Phone: {t.phone}</span>
-                    <span className={`${isLight ? "text-emerald-800 bg-emerald-50 border border-emerald-200" : "text-emerald-400 bg-emerald-500/10"} font-bold px-2 py-0.5 rounded`}>
-                      {t.assignedClasses.length} Classes Assigned
+                  <div className={`mt-3 pt-2 border-t ${isLight ? "border-slate-100" : "border-gray-800/80"} flex justify-between items-center text-[10px] ${isLight ? "text-slate-500" : "text-gray-500"}`}>
+                    <span className="flex items-center gap-1 font-mono">
+                      Phone: {t.phone}
+                    </span>
+                    <span className={`px-2 py-0.5 rounded font-bold ${isLight ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-emerald-500/10 text-emerald-400"}`}>
+                      {t.assignedClasses?.length || 0} Classes Assigned
                     </span>
                   </div>
                 </div>
               );
-            })}
-          </div>
+            })
+          )}
         </div>
 
-        {/* Right: Selected Teacher's Live Class & Period Matrix */}
-        <div className="lg:col-span-2 space-y-6">
+        {/* Right Column: Teacher Details & Period Timetable */}
+        <div className="lg:col-span-2 space-y-4">
           {selectedTeacher ? (
-            <div className="space-y-6">
-              {/* Teacher Header Card */}
-              <div className={`${isLight ? "bg-white border-slate-200 shadow-sm" : "bg-[#0b121e] border-emerald-500/30"} border rounded-2xl p-6 space-y-4`}>
-                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+            <div className="space-y-4">
+              {/* Profile Card */}
+              <div className={`${isLight ? "bg-white border-slate-200 shadow-sm" : "bg-[#0b121e] border-[#1e293b]"} border rounded-2xl p-6 space-y-4`}>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="flex items-center gap-4">
                     <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-600 flex items-center justify-center font-black text-white text-xl shadow-lg shadow-emerald-600/30">
                       {selectedTeacher.fullName[0]}
@@ -267,110 +286,107 @@ export default function SMSTeachersPage() {
                     <div>
                       <div className="flex items-center gap-2">
                         <h2 className={`text-lg font-black ${isLight ? "text-slate-900" : "text-white"}`}>{selectedTeacher.fullName}</h2>
-                        <span className={`text-[10px] font-mono font-bold ${
-                          isLight ? "bg-emerald-50 text-emerald-800 border-emerald-300" : "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
-                        } border px-2 py-0.5 rounded`}>
+                        <span className={`text-[10px] font-mono font-bold ${isLight ? "bg-emerald-50 text-emerald-800 border-emerald-300" : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"} border px-2 py-0.5 rounded`}>
                           {selectedTeacher.employeeCode}
                         </span>
                       </div>
-                      <p className={`text-xs ${isLight ? "text-slate-600" : "text-gray-400"}`}>
-                        {selectedTeacher.designation} • {selectedTeacher.qualification}
+                      <p className={`text-xs ${isLight ? "text-slate-500" : "text-gray-400"}`}>
+                        {selectedTeacher.designation} &bull; {selectedTeacher.qualification}
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleOpenEdit(selectedTeacher)}
-                      className={`px-3.5 py-1.5 ${
-                        isLight ? "bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-200" : "bg-emerald-600/20 hover:bg-emerald-600 text-emerald-300 hover:text-white"
-                      } rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer`}
-                    >
-                      <Edit2 size={13} />
-                      <span>Edit Profile</span>
-                    </button>
-                  </div>
-                </div>
-
-                <div className={`grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs border-t ${isLight ? "border-slate-100" : "border-gray-800"}`}>
-                  <div className={`${isLight ? "bg-slate-50 border border-slate-200" : "bg-black/40"} p-3 rounded-xl`}>
-                    <span className={`text-[10px] uppercase font-bold ${isLight ? "text-slate-500" : "text-gray-400"} block`}>Department</span>
-                    <b className={isLight ? "text-slate-900" : "text-white"}>{selectedTeacher.department}</b>
-                  </div>
-                  <div className={`${isLight ? "bg-slate-50 border border-slate-200" : "bg-black/40"} p-3 rounded-xl`}>
-                    <span className={`text-[10px] uppercase font-bold ${isLight ? "text-slate-500" : "text-gray-400"} block`}>Assigned Subjects</span>
-                    <b className={isLight ? "text-emerald-700" : "text-emerald-400"}>{(selectedTeacher.assignedSubjects || ["General"]).join(", ")}</b>
-                  </div>
-                  <div className={`${isLight ? "bg-slate-50 border border-slate-200" : "bg-black/40"} p-3 rounded-xl`}>
-                    <span className={`text-[10px] uppercase font-bold ${isLight ? "text-slate-500" : "text-gray-400"} block`}>Assigned Classes</span>
-                    <b className={isLight ? "text-sky-700" : "text-sky-300"}>{(selectedTeacher.assignedClasses || ["General"]).join(", ")}</b>
-                  </div>
-                </div>
-
-                {/* Direct Action Links for Teacher */}
-                <div className={`pt-3 border-t ${isLight ? "border-slate-100" : "border-gray-800"} flex flex-wrap gap-2.5`}>
-                  <Link
-                    href="/sms/exams"
-                    className="flex-1 min-w-[200px] flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-black text-xs shadow-md transition cursor-pointer"
+                  <button
+                    onClick={() => handleOpenEdit(selectedTeacher)}
+                    className={`px-3.5 py-1.5 rounded-xl ${isLight ? "bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200" : "bg-gray-800 hover:bg-gray-700 text-white"} font-bold text-xs flex items-center gap-1.5 transition cursor-pointer`}
                   >
-                    <Award size={14} />
+                    <Edit2 size={12} />
+                    <span>Edit Profile</span>
+                  </button>
+                </div>
+
+                {/* Assigned Workloads */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs pt-2">
+                  <div className={`${isLight ? "bg-slate-50 border-slate-200 text-slate-800" : "bg-black/40 border-gray-800 text-gray-300"} border p-3 rounded-xl space-y-1`}>
+                    <span className={`text-[9px] uppercase font-bold ${isLight ? "text-slate-400" : "text-gray-500"} block`}>Department</span>
+                    <span className={`font-bold ${isLight ? "text-slate-900" : "text-white"}`}>{selectedTeacher.department}</span>
+                  </div>
+
+                  <div className={`${isLight ? "bg-slate-50 border-slate-200 text-slate-800" : "bg-black/40 border-gray-800 text-gray-300"} border p-3 rounded-xl space-y-1`}>
+                    <span className={`text-[9px] uppercase font-bold ${isLight ? "text-emerald-700" : "text-emerald-400"} block`}>Assigned Subjects</span>
+                    <span className={`font-bold ${isLight ? "text-emerald-700 font-black" : "text-emerald-400"}`}>
+                      {selectedTeacher.assignedSubjects?.length > 0 ? selectedTeacher.assignedSubjects.join(", ") : "None Assigned"}
+                    </span>
+                  </div>
+
+                  <div className={`${isLight ? "bg-slate-50 border-slate-200 text-slate-800" : "bg-black/40 border-gray-800 text-gray-300"} border p-3 rounded-xl space-y-1`}>
+                    <span className={`text-[9px] uppercase font-bold ${isLight ? "text-sky-700" : "text-sky-400"} block`}>Assigned Classes</span>
+                    <span className={`font-bold ${isLight ? "text-sky-700 font-black" : "text-sky-400"}`}>
+                      {selectedTeacher.assignedClasses?.length > 0 ? selectedTeacher.assignedClasses.join(", ") : "None Assigned"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Direct Action Hub for Teacher */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                  <Link
+                    href={`/sms/exams`}
+                    className="p-3.5 bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white rounded-xl font-bold text-xs shadow-md flex items-center justify-center gap-2 transition"
+                  >
+                    <Award size={15} />
                     <span>Upload Student Paper Marks</span>
                   </Link>
 
                   <Link
-                    href="/sms/attendance"
-                    className="flex-1 min-w-[200px] flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-md transition cursor-pointer"
+                    href={`/sms/attendance`}
+                    className="p-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl font-bold text-xs shadow-md flex items-center justify-center gap-2 transition"
                   >
-                    <CalendarCheck2 size={14} />
+                    <CalendarCheck2 size={15} />
                     <span>Upload Daily Class Attendance</span>
                   </Link>
                 </div>
               </div>
 
-              {/* Assigned Period Schedule Table */}
-              <div className={`${isLight ? "bg-white border-slate-200 shadow-sm" : "bg-[#0b121e] border-[#1e293b]"} border rounded-2xl overflow-hidden shadow-xl`}>
-                <div className={`p-4 border-b ${isLight ? "border-slate-100 bg-slate-50/80" : "border-gray-800 bg-black/40"} flex justify-between items-center`}>
-                  <h3 className={`font-black ${isLight ? "text-slate-900" : "text-white"} text-xs uppercase tracking-wider flex items-center gap-2`}>
-                    <Clock size={14} className={isLight ? "text-emerald-600" : "text-emerald-400"} />
+              {/* Teaching Timetable Matrix */}
+              <div className={`${isLight ? "bg-white border-slate-200 shadow-sm" : "bg-[#0b121e] border-[#1e293b]"} border rounded-2xl p-5 space-y-3`}>
+                <div className="flex justify-between items-center">
+                  <h3 className={`font-black ${isLight ? "text-slate-900" : "text-white"} text-xs uppercase flex items-center gap-2`}>
+                    <Clock className={isLight ? "text-emerald-700 font-bold" : "text-emerald-400"} size={16} />
                     <span>Daily Teaching Period Schedule ({teacherPeriods.length} Periods Scheduled)</span>
                   </h3>
-                  <span className={`text-[10px] ${isLight ? "text-emerald-700 font-bold" : "text-emerald-400"} font-mono`}>Live Timetable Sync</span>
+                  <span className={`text-[10px] font-mono ${isLight ? "text-slate-500" : "text-gray-500"}`}>Live Timetable Sync</span>
                 </div>
 
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs border-collapse">
+                  <table className="w-full text-left text-xs border-collapse font-sans">
                     <thead>
-                      <tr className={`border-b ${isLight ? "border-slate-200 text-slate-600 bg-slate-100/70" : "border-gray-800 text-gray-400 bg-black/20"} font-mono text-[10px]`}>
-                        <th className="p-4 font-bold">Period #</th>
-                        <th className="p-4 font-bold">Time Window</th>
-                        <th className="p-4 font-bold">Assigned Class &amp; Section</th>
-                        <th className="p-4 font-bold">Subject</th>
-                        <th className="p-4 font-bold">Lecture Room</th>
-                        <th className="p-4 font-bold text-center">Status</th>
+                      <tr className={`border-b ${isLight ? "border-slate-200 text-slate-600 bg-slate-100/70" : "border-gray-800 text-gray-400 bg-black/40"} font-mono text-[10px]`}>
+                        <th className="p-3">Period #</th>
+                        <th className="p-3">Time Window</th>
+                        <th className="p-3">Assigned Class &amp; Section</th>
+                        <th className="p-3">Subject</th>
+                        <th className="p-3">Lecture Room</th>
+                        <th className="p-3 text-center">Status</th>
                       </tr>
                     </thead>
-                    <tbody className={`divide-y ${isLight ? "divide-slate-100" : "divide-gray-800/50"} font-mono text-[11px]`}>
+                    <tbody className={`divide-y ${isLight ? "divide-slate-100" : "divide-gray-800/50"} text-xs`}>
                       {teacherPeriods.length === 0 ? (
                         <tr>
-                          <td colSpan={6} className={`p-6 text-center ${isLight ? "text-slate-400" : "text-gray-500"} font-sans`}>
+                          <td colSpan={6} className={`p-6 text-center ${isLight ? "text-slate-400" : "text-gray-500"} italic`}>
                             No periods assigned for this instructor. Timetable period can be mapped in Timetable &amp; Matrix.
                           </td>
                         </tr>
                       ) : (
                         teacherPeriods.map((p) => (
-                          <tr key={p.id} className={`${isLight ? "hover:bg-slate-50/80" : "hover:bg-white/[0.02]"} transition`}>
-                            <td className={`p-4 font-bold ${isLight ? "text-emerald-700" : "text-emerald-400"}`}>Period #{p.periodNumber}</td>
-                            <td className={`p-4 font-bold ${isLight ? "text-slate-900" : "text-white"}`}>{p.timeSlot}</td>
-                            <td className={`p-4 font-sans font-bold ${isLight ? "text-sky-700" : "text-sky-300"}`}>
-                              {p.className} ({p.sectionName})
-                            </td>
-                            <td className={`p-4 font-sans font-bold ${isLight ? "text-slate-900" : "text-white"}`}>{p.subject}</td>
-                            <td className={`p-4 font-sans ${isLight ? "text-slate-600" : "text-gray-400"}`}>{p.room}</td>
-                            <td className="p-4 text-center font-sans">
-                              <span className={`${
-                                isLight ? "bg-emerald-50 text-emerald-700 border-emerald-300" : "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
-                              } border px-2 py-0.5 rounded text-[9px] font-bold`}>
-                                Active Lecture
+                          <tr key={p.id} className={isLight ? "hover:bg-slate-50" : "hover:bg-white/[0.02]"}>
+                            <td className="p-3 font-mono font-bold text-sky-400">Period {p.periodNumber}</td>
+                            <td className="p-3 font-mono">{p.timeSlot}</td>
+                            <td className="p-3 font-bold">{p.className} ({p.sectionName})</td>
+                            <td className="p-3 text-emerald-400 font-bold">{p.subject}</td>
+                            <td className="p-3 font-mono text-gray-400">{p.room}</td>
+                            <td className="p-3 text-center">
+                              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                                Allocated
                               </span>
                             </td>
                           </tr>
@@ -410,7 +426,7 @@ export default function SMSTeachersPage() {
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Sir Shahid Mehmood"
+                  placeholder="e.g. Sir Ahmad Ali"
                   value={form.fullName}
                   onChange={(e) => setForm({ ...form, fullName: e.target.value })}
                   className={`w-full ${
@@ -425,7 +441,7 @@ export default function SMSTeachersPage() {
                   <input
                     type="text"
                     required
-                    placeholder="M.Sc. Physics"
+                    placeholder="M.Sc / M.Phil"
                     value={form.qualification}
                     onChange={(e) => setForm({ ...form, qualification: e.target.value })}
                     className={`w-full ${
@@ -451,6 +467,38 @@ export default function SMSTeachersPage() {
                     <option value="Primary Wing">Primary Wing</option>
                   </select>
                 </div>
+              </div>
+
+              {/* Assign Classes Checkboxes */}
+              <div>
+                <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-sky-700" : "text-sky-400"} mb-1.5`}>
+                  Assign Teaching Classes (Select configured classes)
+                </label>
+                {uniqueClassNames.length === 0 ? (
+                  <p className="text-[11px] text-gray-500">No classes configured yet. Add classes in Settings / Classes.</p>
+                ) : (
+                  <div className="flex flex-wrap gap-2 p-3 rounded-xl border border-slate-200 dark:border-gray-800 bg-slate-50 dark:bg-black/30">
+                    {uniqueClassNames.map((cName) => {
+                      const isChecked = form.assignedClasses.includes(cName);
+                      return (
+                        <button
+                          type="button"
+                          key={cName}
+                          onClick={() => toggleClassAssignment(cName)}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer border ${
+                            isChecked
+                              ? "bg-sky-600 text-white border-sky-600 shadow-sm"
+                              : isLight
+                              ? "bg-white text-slate-700 border-slate-300 hover:bg-slate-100"
+                              : "bg-gray-800 text-gray-300 border-gray-700 hover:bg-gray-700"
+                          }`}
+                        >
+                          {isChecked ? `✓ ${cName}` : `+ ${cName}`}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-3">
