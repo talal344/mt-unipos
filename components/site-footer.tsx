@@ -15,6 +15,7 @@ export default function SiteFooter() {
 
   const QuickLinks = [
     { name: "SaaS Ecosystem", href: "/features" },
+    { name: "Full Case Study", href: "/case-study" },
     { name: "About MTCore", href: "/about" },
     { name: "SaaS Blog", href: "/blog" },
     { name: "Contact Sales", href: "/contact" }
