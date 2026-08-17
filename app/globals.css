@@ -87,7 +87,14 @@ body {
 }
 
 .sky-gradient-text {
-  background: linear-gradient(135deg, #FFFFFF 30%, #38BDF8 70%, #0EA5E9 100%);
+  background: linear-gradient(135deg, #0284c7 0%, #0ea5e9 50%, #2563eb 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.dark .sky-gradient-text,
+[data-theme="dark"] .sky-gradient-text {
+  background: linear-gradient(135deg, #ffffff 30%, #38bdf8 70%, #0ea5e9 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }

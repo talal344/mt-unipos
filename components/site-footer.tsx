@@ -139,11 +139,14 @@ export default function SiteFooter() {
                 </a>
               </div>
 
-              <div className={`flex items-start gap-2.5 pt-1 ${isLight ? "text-slate-500" : "text-gray-400"}`}>
+              <div className={`flex items-start gap-2.5 pt-1 ${isLight ? "text-slate-700" : "text-gray-300"}`}>
                 <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${
-                  isLight ? "bg-slate-200 text-slate-700" : "bg-gray-800 text-gray-400"
+                  isLight ? "bg-sky-100 text-sky-700" : "bg-gray-800 text-gray-400"
                 }`}>
                   <MapPin size={14} />
+                </div>
+                <div className="text-xs leading-relaxed font-medium">
+                  <span className={isLight ? "text-slate-800 font-bold" : "text-gray-200 font-semibold"}>Kohinoor Plaza</span>, Jaranwala Road, Faisalabad, Pakistan
                 </div>
               </div>
             </div>
@@ -151,14 +154,18 @@ export default function SiteFooter() {
 
           {/* Column 3: POS Systems */}
           <div className="space-y-4">
-            <h4 className="text-xs font-black uppercase tracking-widest text-sky-400 flex items-center gap-1.5">
+            <h4 className={`text-xs font-black uppercase tracking-widest flex items-center gap-1.5 ${
+              isLight ? "text-sky-600" : "text-sky-400"
+            }`}>
               <ShoppingBag size={14} />
               <span>Universal POS</span>
             </h4>
             <ul className="space-y-2.5 text-xs">
               {posLinks.map((l) => (
                 <li key={l.name}>
-                  <Link href={l.href} className="hover:text-white transition flex items-center gap-1 group">
+                  <Link href={l.href} className={`transition flex items-center gap-1 group ${
+                    isLight ? "text-slate-600 hover:text-sky-600 font-medium" : "text-gray-400 hover:text-white"
+                  }`}>
                     <ChevronRight size={12} className="text-sky-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                     <span>{l.name}</span>
                   </Link>
@@ -169,14 +176,18 @@ export default function SiteFooter() {
 
           {/* Column 4: HRMS Systems */}
           <div className="space-y-4">
-            <h4 className="text-xs font-black uppercase tracking-widest text-purple-400 flex items-center gap-1.5">
+            <h4 className={`text-xs font-black uppercase tracking-widest flex items-center gap-1.5 ${
+              isLight ? "text-purple-600" : "text-purple-400"
+            }`}>
               <Users size={14} />
               <span>HRMS &amp; Payroll</span>
             </h4>
             <ul className="space-y-2.5 text-xs">
               {hrmsLinks.map((l) => (
                 <li key={l.name}>
-                  <Link href={l.href} className="hover:text-white transition flex items-center gap-1 group">
+                  <Link href={l.href} className={`transition flex items-center gap-1 group ${
+                    isLight ? "text-slate-600 hover:text-purple-600 font-medium" : "text-gray-400 hover:text-white"
+                  }`}>
                     <ChevronRight size={12} className="text-purple-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                     <span>{l.name}</span>
                   </Link>
@@ -187,14 +198,18 @@ export default function SiteFooter() {
 
           {/* Column 5: School SMS 360 */}
           <div className="space-y-4">
-            <h4 className="text-xs font-black uppercase tracking-widest text-emerald-400 flex items-center gap-1.5">
+            <h4 className={`text-xs font-black uppercase tracking-widest flex items-center gap-1.5 ${
+              isLight ? "text-emerald-600" : "text-emerald-400"
+            }`}>
               <GraduationCap size={14} />
               <span>EduCloud SMS</span>
             </h4>
             <ul className="space-y-2.5 text-xs">
               {smsLinks.map((l) => (
                 <li key={l.name}>
-                  <Link href={l.href} className="hover:text-white transition flex items-center gap-1 group">
+                  <Link href={l.href} className={`transition flex items-center gap-1 group ${
+                    isLight ? "text-slate-600 hover:text-emerald-600 font-medium" : "text-gray-400 hover:text-white"
+                  }`}>
                     <ChevronRight size={12} className="text-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                     <span>{l.name}</span>
                   </Link>
@@ -205,14 +220,18 @@ export default function SiteFooter() {
 
           {/* Column 6: Platform & Ecosystem */}
           <div className="space-y-4">
-            <h4 className="text-xs font-black uppercase tracking-widest text-amber-400 flex items-center gap-1.5">
+            <h4 className={`text-xs font-black uppercase tracking-widest flex items-center gap-1.5 ${
+              isLight ? "text-amber-600" : "text-amber-400"
+            }`}>
               <Sparkles size={14} />
               <span>Platform Hub</span>
             </h4>
             <ul className="space-y-2.5 text-xs">
               {platformLinks.map((l) => (
                 <li key={l.name}>
-                  <Link href={l.href} className="hover:text-white transition flex items-center gap-1 group">
+                  <Link href={l.href} className={`transition flex items-center gap-1 group ${
+                    isLight ? "text-slate-600 hover:text-amber-600 font-medium" : "text-gray-400 hover:text-white"
+                  }`}>
                     <ChevronRight size={12} className="text-amber-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                     <span>{l.name}</span>
                   </Link>
@@ -224,44 +243,64 @@ export default function SiteFooter() {
         </div>
 
         {/* Security & Architecture Trust Bar */}
-        <div className="py-8 grid grid-cols-2 sm:grid-cols-4 gap-4 border-b border-gray-800/80 text-xs">
-          <div className="flex items-center gap-3 p-3 rounded-xl bg-black/40 border border-gray-800">
-            <div className="p-2 rounded-lg bg-sky-500/10 text-sky-400"><Lock size={16} /></div>
+        <div className={`py-8 grid grid-cols-2 sm:grid-cols-4 gap-4 border-b text-xs ${
+          isLight ? "border-slate-200" : "border-gray-800/80"
+        }`}>
+          <div className={`flex items-center gap-3 p-3.5 rounded-2xl border transition-all ${
+            isLight ? "bg-white border-slate-200 shadow-xs hover:border-sky-300" : "bg-black/40 border-gray-800"
+          }`}>
+            <div className={`p-2.5 rounded-xl shrink-0 ${
+              isLight ? "bg-sky-50 text-sky-600 border border-sky-200" : "bg-sky-500/10 text-sky-400"
+            }`}><Lock size={16} /></div>
             <div>
-              <div className="font-bold text-white">256-Bit SSL / TLS</div>
-              <div className="text-[10px] text-gray-500">Bank-Grade Encryption</div>
+              <div className={`font-black text-xs ${isLight ? "text-slate-900" : "text-white"}`}>256-Bit SSL / TLS</div>
+              <div className={`text-[10px] ${isLight ? "text-slate-500 font-medium" : "text-gray-500"}`}>Bank-Grade Encryption</div>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 p-3 rounded-xl bg-black/40 border border-gray-800">
-            <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400"><Server size={16} /></div>
+          <div className={`flex items-center gap-3 p-3.5 rounded-2xl border transition-all ${
+            isLight ? "bg-white border-slate-200 shadow-xs hover:border-emerald-300" : "bg-black/40 border-gray-800"
+          }`}>
+            <div className={`p-2.5 rounded-xl shrink-0 ${
+              isLight ? "bg-emerald-50 text-emerald-600 border border-emerald-200" : "bg-emerald-500/10 text-emerald-400"
+            }`}><Server size={16} /></div>
             <div>
-              <div className="font-bold text-white">Multi-Tenant Isolation</div>
-              <div className="text-[10px] text-gray-500">Zero Cross-Tenant Leakage</div>
+              <div className={`font-black text-xs ${isLight ? "text-slate-900" : "text-white"}`}>Multi-Tenant Isolation</div>
+              <div className={`text-[10px] ${isLight ? "text-slate-500 font-medium" : "text-gray-500"}`}>Zero Cross-Tenant Leakage</div>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 p-3 rounded-xl bg-black/40 border border-gray-800">
-            <div className="p-2 rounded-lg bg-purple-500/10 text-purple-400"><ShieldCheck size={16} /></div>
+          <div className={`flex items-center gap-3 p-3.5 rounded-2xl border transition-all ${
+            isLight ? "bg-white border-slate-200 shadow-xs hover:border-purple-300" : "bg-black/40 border-gray-800"
+          }`}>
+            <div className={`p-2.5 rounded-xl shrink-0 ${
+              isLight ? "bg-purple-50 text-purple-600 border border-purple-200" : "bg-purple-500/10 text-purple-400"
+            }`}><ShieldCheck size={16} /></div>
             <div>
-              <div className="font-bold text-white">Cloud Zero-Loss Backup</div>
-              <div className="text-[10px] text-gray-500">Auto Google Drive Sync</div>
+              <div className={`font-black text-xs ${isLight ? "text-slate-900" : "text-white"}`}>Cloud Zero-Loss Backup</div>
+              <div className={`text-[10px] ${isLight ? "text-slate-500 font-medium" : "text-gray-500"}`}>Auto Google Drive Sync</div>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 p-3 rounded-xl bg-black/40 border border-gray-800">
-            <div className="p-2 rounded-lg bg-amber-500/10 text-amber-400"><Award size={16} /></div>
+          <div className={`flex items-center gap-3 p-3.5 rounded-2xl border transition-all ${
+            isLight ? "bg-white border-slate-200 shadow-xs hover:border-amber-300" : "bg-black/40 border-gray-800"
+          }`}>
+            <div className={`p-2.5 rounded-xl shrink-0 ${
+              isLight ? "bg-amber-50 text-amber-600 border border-amber-200" : "bg-amber-500/10 text-amber-400"
+            }`}><Award size={16} /></div>
             <div>
-              <div className="font-bold text-white">99.99% Cloud SLA</div>
-              <div className="text-[10px] text-gray-500">Guaranteed High Availability</div>
+              <div className={`font-black text-xs ${isLight ? "text-slate-900" : "text-white"}`}>99.99% Cloud SLA</div>
+              <div className={`text-[10px] ${isLight ? "text-slate-500 font-medium" : "text-gray-500"}`}>Guaranteed High Availability</div>
             </div>
           </div>
         </div>
 
         {/* Bottom Bar: Copyright & Legal Modal Triggers */}
-        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-500">
+        <div className={`pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs ${
+          isLight ? "text-slate-500 font-medium" : "text-gray-500"
+        }`}>
           <div>
-            <p>© {new Date().getFullYear()} <b>MTCore SaaS Platform</b>. All Rights Reserved. Engineered by Founder <b>Mian Talal</b>.</p>
+            <p>© {new Date().getFullYear()} <b className={isLight ? "text-slate-800" : "text-white"}>MTCore SaaS Platform</b>. All Rights Reserved. Engineered by Founder <b className={isLight ? "text-slate-800" : "text-white"}>Mian Talal</b>.</p>
           </div>
 
           <div className="flex flex-wrap items-center gap-6">

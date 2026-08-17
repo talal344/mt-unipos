@@ -677,41 +677,55 @@ export default function TrackingPage() {
 
             {/* Mode B: Customer Account Search (Customer ID + Registered Phone) */}
             {searchMode === "customer" && (
-              <div className="space-y-3 bg-brand-dark-surface/80 border border-brand-dark-border/80 p-4 rounded-2xl shadow-2xl">
+              <div className={`space-y-3 p-5 rounded-2xl border transition-all ${
+                isLight ? "bg-white border-slate-200 shadow-xl text-slate-900" : "bg-brand-dark-surface/80 border-brand-dark-border/80 shadow-2xl"
+              }`}>
                 <div className="text-left">
-                  <p className="text-[10px] uppercase font-bold text-brand-sky tracking-wider mb-1 flex items-center gap-1.5">
+                  <p className={`text-[10px] uppercase font-bold tracking-wider mb-1 flex items-center gap-1.5 ${
+                    isLight ? "text-sky-600 font-black" : "text-brand-sky"
+                  }`}>
                     <ShieldCheck size={13} /> Registered Customer Authentication
                   </p>
-                  <p className="text-[11px] text-gray-400">Enter your Customer ID and Registered Phone Number to access your full purchase ledger and credit dues statement.</p>
+                  <p className={`text-[11px] ${isLight ? "text-slate-600 font-medium" : "text-gray-400"}`}>
+                    Enter your Customer ID and Registered Phone Number to access your full purchase ledger and credit dues statement.
+                  </p>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   <div className="relative">
-                    <Hash size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                    <Hash size={14} className={`absolute left-3 top-1/2 -translate-y-1/2 ${isLight ? "text-slate-400" : "text-gray-500"}`} />
                     <input
                       type="text"
                       placeholder="Customer ID (e.g. CUST-7294)"
                       value={custNoInput}
                       onChange={(e) => setCustNoInput(e.target.value)}
-                      className="w-full bg-black border border-brand-dark-border/80 pl-9 pr-3 py-3 text-xs text-white placeholder-gray-600 rounded-xl focus:outline-none focus:border-brand-sky font-mono"
+                      className={`w-full pl-9 pr-3 py-3 text-xs rounded-xl focus:outline-none font-mono transition border ${
+                        isLight
+                          ? "bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-sky-500"
+                          : "bg-black border-brand-dark-border/80 text-white placeholder-gray-600 focus:border-brand-sky"
+                      }`}
                     />
                   </div>
                   <div className="relative">
-                    <Phone size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                    <Phone size={14} className={`absolute left-3 top-1/2 -translate-y-1/2 ${isLight ? "text-slate-400" : "text-gray-500"}`} />
                     <input
                       type="text"
                       placeholder="Registered Phone (e.g. 03215550100)"
                       value={phoneInput}
                       onChange={(e) => setPhoneInput(e.target.value)}
-                      className="w-full bg-black border border-brand-dark-border/80 pl-9 pr-3 py-3 text-xs text-white placeholder-gray-600 rounded-xl focus:outline-none focus:border-brand-sky font-mono"
+                      className={`w-full pl-9 pr-3 py-3 text-xs rounded-xl focus:outline-none font-mono transition border ${
+                        isLight
+                          ? "bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-sky-500"
+                          : "bg-black border-brand-dark-border/80 text-white placeholder-gray-600 focus:border-brand-sky"
+                      }`}
                     />
                   </div>
                 </div>
                 <button
                   type="submit"
-                  className="w-full flex items-center justify-center gap-2 bg-brand-sky hover:bg-sky-400 text-black font-black text-xs py-3 rounded-xl transition-all shadow-lg shadow-sky-500/20 uppercase tracking-wider"
+                  className="w-full flex items-center justify-center gap-2 bg-sky-500 hover:bg-sky-600 text-white font-black text-xs py-3 rounded-xl transition-all shadow-lg shadow-sky-500/20 uppercase tracking-wider cursor-pointer"
                 >
                   <Search size={14} />
-                  <span>Verify Credentials & Access Ledger</span>
+                  <span>Verify Credentials &amp; Access Ledger</span>
                 </button>
               </div>
             )}
@@ -719,20 +733,24 @@ export default function TrackingPage() {
             {/* Mode C: Support / Demo Ticket Search */}
             {searchMode === "ticket" && (
               <div className="flex flex-col sm:flex-row gap-2.5">
-                <div className="relative flex-1 sky-glow-border rounded-xl overflow-hidden">
-                  <Ticket size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
+                <div className={`relative flex-1 rounded-xl overflow-hidden border ${
+                  isLight ? "bg-white border-slate-300 shadow-xs" : "bg-brand-dark-surface border-brand-sky/40 sky-glow-border"
+                }`}>
+                  <Ticket size={16} className={`absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none ${isLight ? "text-slate-400" : "text-gray-500"}`} />
                   <input
                     type="text"
                     required
                     placeholder="Enter Ticket # (e.g. TKT-991001-11)"
                     value={ticketInput}
                     onChange={(e) => setTicketInput(e.target.value)}
-                    className="w-full bg-brand-dark-surface pl-10 pr-4 py-3.5 text-xs sm:text-sm text-white placeholder-gray-600 focus:outline-none font-mono tracking-wider"
+                    className={`w-full pl-10 pr-4 py-3.5 text-xs sm:text-sm focus:outline-none font-mono tracking-wider ${
+                      isLight ? "bg-white text-slate-900 placeholder-slate-400" : "bg-brand-dark-surface text-white placeholder-gray-600"
+                    }`}
                   />
                 </div>
                 <button
                   type="submit"
-                  className="flex items-center justify-center gap-2 bg-brand-sky hover:bg-sky-400 text-black font-black text-xs sm:text-sm px-6 py-3.5 rounded-xl transition-all shadow-lg shadow-sky-500/20"
+                  className="flex items-center justify-center gap-2 bg-sky-500 hover:bg-sky-600 text-white font-black text-xs sm:text-sm px-6 py-3.5 rounded-xl transition-all shadow-lg shadow-sky-500/20 cursor-pointer"
                 >
                   <Search size={15} />
                   <span>Track Ticket</span>
@@ -750,27 +768,35 @@ export default function TrackingPage() {
 
           {/* Initial State / Prompt */}
           {!hasSearched && (
-            <div className="text-center py-16 bg-brand-dark-surface/40 border border-brand-dark-border/60 rounded-3xl p-8 shadow-2xl">
-              <div className="w-16 h-16 rounded-2xl bg-brand-sky/10 border border-brand-sky/30 text-brand-sky flex items-center justify-center mx-auto mb-4">
+            <div className={`text-center py-16 rounded-3xl p-8 border transition-all ${
+              isLight ? "bg-white border-slate-200 shadow-md text-slate-900" : "bg-brand-dark-surface/40 border-brand-dark-border/60 shadow-2xl text-white"
+            }`}>
+              <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 border ${
+                isLight ? "bg-sky-50 border-sky-200 text-sky-600 shadow-xs" : "bg-brand-sky/10 border-brand-sky/30 text-brand-sky"
+              }`}>
                 <Receipt size={30} />
               </div>
-              <h3 className="text-white font-bold text-base mb-1">Customer Self-Service Search</h3>
-              <p className="text-gray-400 text-xs max-w-md mx-auto leading-relaxed">
-                Use the search box above to lookup any single receipt invoice, view your complete customer account purchase ledger & credit dues, or track a support ticket.
+              <h3 className={`font-black text-base mb-1 ${isLight ? "text-slate-900" : "text-white"}`}>Customer Self-Service Search</h3>
+              <p className={`text-xs max-w-md mx-auto leading-relaxed ${isLight ? "text-slate-600 font-medium" : "text-gray-400"}`}>
+                Use the search box above to lookup any single receipt invoice, view your complete customer account purchase ledger &amp; credit dues, or track a support ticket.
               </p>
             </div>
           )}
 
           {/* Authentication / Auth Errors */}
           {hasSearched && authError && (
-            <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-6 text-center animate-fade-in-up">
-              <AlertTriangle size={36} className="text-red-400 mx-auto mb-3" />
-              <h3 className="text-red-300 font-bold text-sm mb-1">Authentication Failed</h3>
-              <p className="text-gray-300 text-xs">{authError}</p>
+            <div className={`rounded-2xl p-6 text-center animate-fade-in-up border ${
+              isLight ? "bg-rose-50 border-rose-200 text-rose-900" : "bg-red-500/10 border-red-500/30 text-red-300"
+            }`}>
+              <AlertTriangle size={36} className="text-rose-500 mx-auto mb-3" />
+              <h3 className={`font-black text-sm mb-1 ${isLight ? "text-rose-950" : "text-red-300"}`}>Authentication Failed</h3>
+              <p className={`text-xs ${isLight ? "text-rose-800 font-medium" : "text-gray-300"}`}>{authError}</p>
               <button
                 type="button"
                 onClick={() => { setHasSearched(false); setAuthError(null); }}
-                className="mt-4 inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-white border border-brand-dark-border px-3.5 py-1.5 rounded-lg transition"
+                className={`mt-4 inline-flex items-center gap-1.5 text-xs px-3.5 py-2 rounded-xl transition cursor-pointer border ${
+                  isLight ? "bg-white border-rose-300 text-rose-800 hover:bg-rose-100 shadow-xs" : "border-brand-dark-border text-gray-400 hover:text-white"
+                }`}
               >
                 <RefreshCw size={12} /> Retry Search
               </button>
@@ -779,16 +805,20 @@ export default function TrackingPage() {
 
           {/* Record Not Found State */}
           {hasSearched && !authError && !foundReceipt && !foundSaasInvoice && !foundCustomer && !foundTicket && (
-            <div className="bg-brand-dark-surface border border-red-500/30 rounded-2xl p-8 text-center animate-fade-in-up">
-              <XCircle size={40} className="text-red-500 mx-auto mb-3" />
-              <h3 className="text-white font-bold text-base mb-1">Record Not Found</h3>
-              <p className="text-gray-400 text-xs">
+            <div className={`rounded-2xl p-8 text-center animate-fade-in-up border ${
+              isLight ? "bg-white border-slate-200 shadow-md text-slate-900" : "bg-brand-dark-surface border-red-500/30 text-white"
+            }`}>
+              <XCircle size={40} className="text-rose-500 mx-auto mb-3" />
+              <h3 className={`font-black text-base mb-1 ${isLight ? "text-slate-900" : "text-white"}`}>Record Not Found</h3>
+              <p className={`text-xs ${isLight ? "text-slate-600 font-medium" : "text-gray-400"}`}>
                 No matching receipt, customer profile, or support ticket was found for your query.
               </p>
               <button
                 type="button"
                 onClick={() => { setHasSearched(false); }}
-                className="mt-5 inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-white border border-brand-dark-border px-4 py-2 rounded-lg transition"
+                className={`mt-5 inline-flex items-center gap-1.5 text-xs px-4 py-2 rounded-xl transition cursor-pointer border ${
+                  isLight ? "bg-slate-100 border-slate-300 text-slate-800 hover:bg-slate-200" : "border-brand-dark-border text-gray-400 hover:text-white"
+                }`}
               >
                 <RefreshCw size={13} /> Clear &amp; Try Again
               </button>
@@ -798,29 +828,37 @@ export default function TrackingPage() {
           {/* 🧾 RESULT A: SINGLE DIGITAL RECEIPT LOOKUP RESULT */}
           {hasSearched && searchMode === "receipt" && foundReceipt && (
             <div className="space-y-6 animate-fade-in-up text-left">
-              <div className="bg-brand-dark-surface border border-emerald-500/30 rounded-2xl p-6 sm:p-8 shadow-2xl sky-glow space-y-6">
+              <div className={`rounded-3xl p-6 sm:p-8 border shadow-xl space-y-6 transition-all ${
+                isLight ? "bg-white border-slate-200 shadow-slate-200/60 text-slate-900" : "bg-brand-dark-surface border-emerald-500/30 shadow-2xl sky-glow text-white"
+              }`}>
                 
                 {/* Header Row */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-brand-dark-border/80">
+                <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b ${
+                  isLight ? "border-slate-200" : "border-brand-dark-border/80"
+                }`}>
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0">
+                    <div className={`w-12 h-12 rounded-xl border flex items-center justify-center shrink-0 ${
+                      isLight ? "bg-emerald-50 border-emerald-200 text-emerald-600 shadow-xs" : "bg-emerald-500/15 border-emerald-500/30 text-emerald-400"
+                    }`}>
                       <Receipt size={22} />
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-mono font-black text-emerald-400 uppercase">VERIFIED OFFICIAL RECEIPT</span>
-                        <span className="bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 font-mono text-[9px] px-2 py-0.5 rounded font-bold">
+                        <span className="text-xs font-mono font-black text-emerald-600 uppercase">VERIFIED OFFICIAL RECEIPT</span>
+                        <span className={`font-mono text-[9px] px-2 py-0.5 rounded font-bold border ${
+                          isLight ? "bg-emerald-100 border-emerald-300 text-emerald-800" : "bg-emerald-500/15 border-emerald-500/40 text-emerald-300"
+                        }`}>
                           {foundReceipt.status}
                         </span>
                       </div>
-                      <h2 className="text-xl sm:text-2xl font-black font-mono text-white mt-0.5">{foundReceipt.receiptNumber}</h2>
+                      <h2 className={`text-xl sm:text-2xl font-black font-mono mt-0.5 ${isLight ? "text-slate-900" : "text-white"}`}>{foundReceipt.receiptNumber}</h2>
                     </div>
                   </div>
 
                   <button
                     type="button"
                     onClick={() => handlePrintSlip(foundReceipt)}
-                    className="inline-flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xs px-4 py-2.5 rounded-xl transition shadow-lg shadow-emerald-500/20"
+                    className="inline-flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xs px-4 py-2.5 rounded-xl transition shadow-lg shadow-emerald-500/20 cursor-pointer"
                   >
                     <Printer size={15} />
                     <span>Print / Save PDF Receipt</span>
@@ -829,42 +867,54 @@ export default function TrackingPage() {
 
                 {/* Meta details grid */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
-                  <div className="bg-black/50 border border-brand-dark-border/60 p-3 rounded-xl">
-                    <span className="text-[9px] uppercase font-bold text-gray-500 block mb-0.5 font-sans">Date & Time</span>
-                    <span className="text-white font-bold">
+                  <div className={`p-3.5 rounded-xl border ${
+                    isLight ? "bg-slate-50 border-slate-200" : "bg-black/50 border-brand-dark-border/60"
+                  }`}>
+                    <span className={`text-[9px] uppercase font-bold block mb-0.5 font-sans ${isLight ? "text-slate-500" : "text-gray-500"}`}>Date &amp; Time</span>
+                    <span className={`font-bold ${isLight ? "text-slate-900" : "text-white"}`}>
                       {new Date(foundReceipt.date).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}
                     </span>
                   </div>
-                  <div className="bg-black/50 border border-brand-dark-border/60 p-3 rounded-xl">
-                    <span className="text-[9px] uppercase font-bold text-gray-500 block mb-0.5 font-sans">Customer</span>
-                    <span className="text-white font-bold">{foundReceipt.customerName || "Walk-in Customer"}</span>
+                  <div className={`p-3.5 rounded-xl border ${
+                    isLight ? "bg-slate-50 border-slate-200" : "bg-black/50 border-brand-dark-border/60"
+                  }`}>
+                    <span className={`text-[9px] uppercase font-bold block mb-0.5 font-sans ${isLight ? "text-slate-500" : "text-gray-500"}`}>Customer</span>
+                    <span className={`font-bold ${isLight ? "text-slate-900" : "text-white"}`}>{foundReceipt.customerName || "Walk-in Customer"}</span>
                   </div>
-                  <div className="bg-black/50 border border-brand-dark-border/60 p-3 rounded-xl">
-                    <span className="text-[9px] uppercase font-bold text-gray-500 block mb-0.5 font-sans">Payment Method</span>
-                    <span className="text-emerald-400 font-bold">{foundReceipt.paymentMethod}</span>
+                  <div className={`p-3.5 rounded-xl border ${
+                    isLight ? "bg-slate-50 border-slate-200" : "bg-black/50 border-brand-dark-border/60"
+                  }`}>
+                    <span className={`text-[9px] uppercase font-bold block mb-0.5 font-sans ${isLight ? "text-slate-500" : "text-gray-500"}`}>Payment Method</span>
+                    <span className="text-emerald-600 font-bold">{foundReceipt.paymentMethod}</span>
                   </div>
-                  <div className="bg-black/50 border border-brand-dark-border/60 p-3 rounded-xl">
-                    <span className="text-[9px] uppercase font-bold text-gray-500 block mb-0.5 font-sans">Grand Total</span>
-                    <span className="text-brand-sky font-black text-sm">{currencySymbol} {foundReceipt.total.toLocaleString()}</span>
+                  <div className={`p-3.5 rounded-xl border ${
+                    isLight ? "bg-slate-50 border-slate-200" : "bg-black/50 border-brand-dark-border/60"
+                  }`}>
+                    <span className={`text-[9px] uppercase font-bold block mb-0.5 font-sans ${isLight ? "text-slate-500" : "text-gray-500"}`}>Grand Total</span>
+                    <span className="text-sky-600 font-black text-sm">{currencySymbol} {foundReceipt.total.toLocaleString()}</span>
                   </div>
                 </div>
 
                 {/* Itemized Table */}
                 <div className="space-y-2">
-                  <h4 className="text-xs font-bold text-white uppercase tracking-wider font-sans flex items-center gap-1.5">
-                    <ShoppingBag size={14} className="text-brand-sky" /> Itemized Purchased Products
+                  <h4 className={`text-xs font-bold uppercase tracking-wider font-sans flex items-center gap-1.5 ${
+                    isLight ? "text-slate-900" : "text-white"
+                  }`}>
+                    <ShoppingBag size={14} className="text-sky-500" /> Itemized Purchased Products
                   </h4>
-                  <div className="border border-brand-dark-border/60 rounded-xl overflow-hidden bg-black/40">
-                    <div className="divide-y divide-brand-dark-border/40">
+                  <div className={`rounded-2xl overflow-hidden border ${
+                    isLight ? "border-slate-200 bg-white" : "border-brand-dark-border/60 bg-black/40"
+                  }`}>
+                    <div className={`divide-y ${isLight ? "divide-slate-100" : "divide-brand-dark-border/40"}`}>
                       {foundReceipt.items.map((item, idx) => (
-                        <div key={idx} className="p-3 flex justify-between items-center text-xs font-sans">
+                        <div key={idx} className="p-3.5 flex justify-between items-center text-xs font-sans">
                           <div>
-                            <p className="text-white font-bold">{item.productName}</p>
-                            <p className="text-[10px] text-gray-500 font-mono mt-0.5">
-                              Qty: <span className="text-white font-bold">{item.qty}</span> × {currencySymbol} {item.price.toLocaleString()}
+                            <p className={`font-bold ${isLight ? "text-slate-900" : "text-white"}`}>{item.productName}</p>
+                            <p className={`text-[10px] font-mono mt-0.5 ${isLight ? "text-slate-500" : "text-gray-500"}`}>
+                              Qty: <span className={`font-bold ${isLight ? "text-slate-800" : "text-white"}`}>{item.qty}</span> × {currencySymbol} {item.price.toLocaleString()}
                             </p>
                           </div>
-                          <span className="font-mono font-bold text-emerald-400 text-sm">
+                          <span className="font-mono font-bold text-emerald-600 text-sm">
                             {currencySymbol} {item.subtotal.toLocaleString()}
                           </span>
                         </div>
@@ -872,26 +922,30 @@ export default function TrackingPage() {
                     </div>
 
                     {/* Breakdown Totals */}
-                    <div className="p-4 bg-black/80 border-t border-brand-dark-border/60 flex flex-col items-end gap-1.5 font-mono text-xs">
+                    <div className={`p-4 border-t flex flex-col items-end gap-1.5 font-mono text-xs ${
+                      isLight ? "bg-slate-50 border-slate-200" : "bg-black/80 border-brand-dark-border/60"
+                    }`}>
                       <div className="flex justify-between w-full sm:max-w-[240px]">
-                        <span className="text-gray-400">Subtotal:</span>
-                        <span className="text-white font-bold">{currencySymbol} {(foundReceipt.subtotal || foundReceipt.total).toLocaleString()}</span>
+                        <span className={isLight ? "text-slate-600 font-medium" : "text-gray-400"}>Subtotal:</span>
+                        <span className={`font-bold ${isLight ? "text-slate-900" : "text-white"}`}>{currencySymbol} {(foundReceipt.subtotal || foundReceipt.total).toLocaleString()}</span>
                       </div>
                       {foundReceipt.discount > 0 && (
-                        <div className="flex justify-between w-full sm:max-w-[240px] text-emerald-400">
+                        <div className="flex justify-between w-full sm:max-w-[240px] text-emerald-600 font-bold">
                           <span>Discount:</span>
                           <span>-{currencySymbol} {foundReceipt.discount.toLocaleString()}</span>
                         </div>
                       )}
                       {foundReceipt.tax > 0 && (
-                        <div className="flex justify-between w-full sm:max-w-[240px] text-gray-400">
+                        <div className={`flex justify-between w-full sm:max-w-[240px] ${isLight ? "text-slate-600" : "text-gray-400"}`}>
                           <span>Tax:</span>
-                          <span className="text-white">+{currencySymbol} {foundReceipt.tax.toLocaleString()}</span>
+                          <span className={isLight ? "text-slate-900 font-bold" : "text-white"}>+{currencySymbol} {foundReceipt.tax.toLocaleString()}</span>
                         </div>
                       )}
-                      <div className="flex justify-between w-full sm:max-w-[240px] border-t border-brand-dark-border/60 pt-2 text-sm text-white font-black">
+                      <div className={`flex justify-between w-full sm:max-w-[240px] border-t pt-2 text-sm font-black ${
+                        isLight ? "border-slate-200 text-slate-900" : "border-brand-dark-border/60 text-white"
+                      }`}>
                         <span>Grand Total Paid:</span>
-                        <span className="text-emerald-400">{currencySymbol} {foundReceipt.total.toLocaleString()}</span>
+                        <span className="text-emerald-600">{currencySymbol} {foundReceipt.total.toLocaleString()}</span>
                       </div>
                     </div>
                   </div>
@@ -899,12 +953,16 @@ export default function TrackingPage() {
 
                 {/* Split Payment details if present */}
                 {foundReceipt.splitPayments && Object.keys(foundReceipt.splitPayments).length > 0 && (
-                  <div className="p-4 bg-black/40 border border-brand-dark-border/60 rounded-xl space-y-2">
-                    <p className="text-[10px] uppercase font-bold text-gray-400 font-sans">Payment Channel Breakdown:</p>
+                  <div className={`p-4 rounded-xl border space-y-2 ${
+                    isLight ? "bg-slate-50 border-slate-200 text-slate-900" : "bg-black/40 border-brand-dark-border/60"
+                  }`}>
+                    <p className={`text-[10px] uppercase font-bold font-sans ${isLight ? "text-slate-600" : "text-gray-400"}`}>Payment Channel Breakdown:</p>
                     <div className="flex flex-wrap gap-2 font-mono text-xs">
                       {Object.entries(foundReceipt.splitPayments).map(([mode, amt]) => (
-                        <span key={mode} className="bg-brand-dark-surface border border-brand-dark-border px-3 py-1 rounded-lg">
-                          {mode}: <strong className="text-emerald-400">{currencySymbol} {amt.toLocaleString()}</strong>
+                        <span key={mode} className={`px-3 py-1 rounded-lg border ${
+                          isLight ? "bg-white border-slate-300 text-slate-800" : "bg-brand-dark-surface border-brand-dark-border"
+                        }`}>
+                          {mode}: <strong className="text-emerald-600">{currencySymbol} {amt.toLocaleString()}</strong>
                         </span>
                       ))}
                     </div>
@@ -915,21 +973,29 @@ export default function TrackingPage() {
                 {(() => {
                   const custObj = customers.find(c => c.name.toLowerCase() === (foundReceipt.customerName || "").toLowerCase());
                   return (
-                    <div className="bg-gradient-to-r from-sky-950/40 via-purple-950/30 to-black border border-sky-500/30 rounded-2xl p-5 mt-6 shadow-xl text-xs space-y-3 font-sans">
-                      <div className="flex items-center gap-2 text-sky-400 font-black uppercase tracking-wider text-xs">
+                    <div className={`rounded-2xl p-5 mt-6 border shadow-md text-xs space-y-3 font-sans ${
+                      isLight
+                        ? "bg-gradient-to-r from-sky-50 via-indigo-50 to-purple-50 border-sky-200 text-slate-800"
+                        : "bg-gradient-to-r from-sky-950/40 via-purple-950/30 to-black border-sky-500/30"
+                    }`}>
+                      <div className={`flex items-center gap-2 font-black uppercase tracking-wider text-xs ${
+                        isLight ? "text-sky-700" : "text-sky-400"
+                      }`}>
                         <Sparkles size={16} />
                         <span>Registered Customer Account Portal Guide</span>
                       </div>
-                      <p className="text-gray-300 leading-relaxed">
-                        Dear Customer (<b className="text-white">{foundReceipt.customerName || "Valued Customer"}</b> - <b className="text-sky-300 font-mono">{custObj ? maskPhone(custObj.mobile) : "0300****567"}</b>), your purchase receipt is verified!
+                      <p className={`leading-relaxed ${isLight ? "text-slate-700 font-medium" : "text-gray-300"}`}>
+                        Dear Customer (<b className={isLight ? "text-slate-900" : "text-white"}>{foundReceipt.customerName || "Valued Customer"}</b> - <b className={`font-mono ${isLight ? "text-sky-700" : "text-sky-300"}`}>{custObj ? maskPhone(custObj.mobile) : "0300****567"}</b>), your purchase receipt is verified!
                       </p>
-                      <div className="bg-black/60 border border-brand-dark-border p-3.5 rounded-xl space-y-1.5 text-[11px] text-gray-300">
-                        <div className="font-bold text-purple-400 flex items-center gap-1.5">
+                      <div className={`p-3.5 rounded-xl border space-y-1.5 text-[11px] ${
+                        isLight ? "bg-white border-sky-200 text-slate-700 shadow-xs" : "bg-black/60 border-brand-dark-border text-gray-300"
+                      }`}>
+                        <div className={`font-bold flex items-center gap-1.5 ${isLight ? "text-purple-700" : "text-purple-400"}`}>
                           <span>📱 How to view your complete purchase ledger, credit dues &amp; past receipts online:</span>
                         </div>
-                        <ol className="list-decimal list-inside space-y-1 pl-1 text-gray-400">
+                        <ol className={`list-decimal list-inside space-y-1 pl-1 ${isLight ? "text-slate-600 font-medium" : "text-gray-400"}`}>
                           <li>Click on the <b>Customer Account</b> tab above on this portal.</li>
-                          <li>Enter your registered mobile number: <b className="text-sky-400 font-mono">{custObj ? maskPhone(custObj.mobile) : "0300****567"}</b> (or Customer ID: <b className="text-purple-400 font-mono">{custObj?.customerNo || "CUST-VERIFIED"}</b>).</li>
+                          <li>Enter your registered mobile number: <b className="text-sky-600 font-mono">{custObj ? maskPhone(custObj.mobile) : "0300****567"}</b> (or Customer ID: <b className="text-purple-600 font-mono">{custObj?.customerNo || "CUST-VERIFIED"}</b>).</li>
                           <li>Click <b>Access Customer Ledger</b> to view your entire transaction history, return records, and remaining balance anytime 24/7!</li>
                         </ol>
                       </div>
@@ -944,33 +1010,39 @@ export default function TrackingPage() {
           {/* 🧾 RESULT A-2: SAAS INVOICE LOOKUP RESULT (e.g. INV-2026-5408) */}
           {hasSearched && searchMode === "receipt" && foundSaasInvoice && (
             <div className="space-y-6 animate-fade-in-up text-left">
-              <div className="bg-brand-dark-surface border border-sky-500/40 rounded-2xl p-6 sm:p-8 shadow-2xl space-y-6">
+              <div className={`rounded-3xl p-6 sm:p-8 border shadow-xl space-y-6 transition-all ${
+                isLight ? "bg-white border-slate-200 shadow-slate-200/60 text-slate-900" : "bg-brand-dark-surface border-sky-500/40 shadow-2xl text-white"
+              }`}>
                 
                 {/* Header Row */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-brand-dark-border/80">
+                <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b ${
+                  isLight ? "border-slate-200" : "border-brand-dark-border/80"
+                }`}>
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-xl bg-sky-500/15 border border-sky-500/30 text-sky-400 flex items-center justify-center shrink-0">
+                    <div className={`w-12 h-12 rounded-xl border flex items-center justify-center shrink-0 ${
+                      isLight ? "bg-sky-50 border-sky-200 text-sky-600 shadow-xs" : "bg-sky-500/15 border-sky-500/30 text-sky-400"
+                    }`}>
                       <Receipt size={22} />
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-mono font-black text-sky-400 uppercase">OFFICIAL SAAS BILLING STATEMENT</span>
+                        <span className="text-xs font-mono font-black text-sky-600 uppercase">OFFICIAL SAAS BILLING STATEMENT</span>
                         <span className={`font-mono text-[9px] px-2.5 py-0.5 rounded font-black border uppercase ${
                           foundSaasInvoice.status === "Paid"
-                            ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-300"
-                            : "bg-amber-500/15 border-amber-500/40 text-amber-300"
+                            ? isLight ? "bg-emerald-100 border-emerald-300 text-emerald-800" : "bg-emerald-500/15 border-emerald-500/40 text-emerald-300"
+                            : isLight ? "bg-amber-100 border-amber-300 text-amber-800" : "bg-amber-500/15 border-amber-500/40 text-amber-300"
                         }`}>
                           STATUS: {foundSaasInvoice.status}
                         </span>
                       </div>
-                      <h2 className="text-xl sm:text-2xl font-black font-mono text-white mt-0.5">{foundSaasInvoice.id}</h2>
+                      <h2 className={`text-xl sm:text-2xl font-black font-mono mt-0.5 ${isLight ? "text-slate-900" : "text-white"}`}>{foundSaasInvoice.id}</h2>
                     </div>
                   </div>
 
                   <button
                     type="button"
                     onClick={() => handlePrintSaasSlip(foundSaasInvoice)}
-                    className="inline-flex items-center justify-center gap-2 bg-sky-500 hover:bg-sky-400 text-black font-black text-xs px-4 py-2.5 rounded-xl transition shadow-lg shadow-sky-500/20"
+                    className="inline-flex items-center justify-center gap-2 bg-sky-500 hover:bg-sky-600 text-white font-black text-xs px-4 py-2.5 rounded-xl transition shadow-lg shadow-sky-500/20 cursor-pointer"
                   >
                     <Printer size={15} />
                     <span>Print / Save Executive Invoice</span>
@@ -979,58 +1051,68 @@ export default function TrackingPage() {
 
                 {/* Billed Provider & Client Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-sans">
-                  <div className="bg-black/50 border border-brand-dark-border/80 p-4 rounded-xl space-y-1">
-                    <div className="text-[10px] uppercase font-bold text-sky-400">🏢 BILLED PROVIDER</div>
-                    <div className="font-black text-white text-sm">MT Core Software Suite</div>
-                    <div className="text-[10px] text-gray-400">The core technology behind your business.</div>
-                    <div className="text-gray-400 text-[11px] leading-relaxed">
+                  <div className={`p-4 rounded-xl border space-y-1 ${
+                    isLight ? "bg-slate-50 border-slate-200 text-slate-900" : "bg-black/50 border-brand-dark-border/80 text-white"
+                  }`}>
+                    <div className="text-[10px] uppercase font-bold text-sky-600">🏢 BILLED PROVIDER</div>
+                    <div className={`font-black text-sm ${isLight ? "text-slate-900" : "text-white"}`}>MT Core Software Suite</div>
+                    <div className={`text-[10px] ${isLight ? "text-slate-500" : "text-gray-400"}`}>The core technology behind your business.</div>
+                    <div className={`text-[11px] leading-relaxed ${isLight ? "text-slate-600" : "text-gray-400"}`}>
                       Engineered by Founder <b>Mian Talal</b><br/>
                       Support Contact: <b>03396399895</b><br/>
                       Corporate Email: <b>miantalal2@gmail.com</b><br/>
-                      Official Portal: <b className="text-sky-400">pos.mtcore.xyz</b>
+                      Official Portal: <b className="text-sky-600 font-mono">pos.mtcore.xyz</b>
                     </div>
                   </div>
 
-                  <div className="bg-black/50 border border-brand-dark-border/80 p-4 rounded-xl space-y-1">
-                    <div className="text-[10px] uppercase font-bold text-sky-400">👤 CLIENT / TENANT INFORMATION</div>
-                    <div className="font-black text-white text-sm">{foundSaasInvoice.tenantName}</div>
-                    <div className="text-gray-400 text-[11px] leading-relaxed">
-                      Workspace / Tenant ID: <b className="text-sky-400 font-mono">{foundSaasInvoice.tenantId}</b><br/>
+                  <div className={`p-4 rounded-xl border space-y-1 ${
+                    isLight ? "bg-slate-50 border-slate-200 text-slate-900" : "bg-black/50 border-brand-dark-border/80 text-white"
+                  }`}>
+                    <div className="text-[10px] uppercase font-bold text-sky-600">👤 CLIENT / TENANT INFORMATION</div>
+                    <div className={`font-black text-sm ${isLight ? "text-slate-900" : "text-white"}`}>{foundSaasInvoice.tenantName}</div>
+                    <div className={`text-[11px] leading-relaxed ${isLight ? "text-slate-600" : "text-gray-400"}`}>
+                      Workspace / Tenant ID: <b className="text-sky-600 font-mono">{foundSaasInvoice.tenantId}</b><br/>
                       {(() => {
                         const tObj = tenants.find(t => t.id === foundSaasInvoice.tenantId);
                         return (
                           <>
                             Owner Name: <b>{tObj?.ownerName || foundSaasInvoice.tenantName}</b><br/>
-                            Registered Phone: <b className="text-amber-400 font-mono">{maskPhone(tObj?.phone || "03001234567")}</b><br/>
+                            Registered Phone: <b className="text-amber-600 font-mono">{maskPhone(tObj?.phone || "03001234567")}</b><br/>
                           </>
                         );
                       })()}
                       Issued Date: <b>{foundSaasInvoice.date}</b><br/>
-                      Status: <b className="text-emerald-400">Active</b>
+                      Status: <b className="text-emerald-600">Active</b>
                     </div>
                   </div>
                 </div>
 
                 {/* Financial Details Table */}
-                <div className="border border-brand-dark-border/80 rounded-xl overflow-hidden bg-black/40 text-xs font-sans">
-                  <div className="p-3 bg-black/80 font-bold text-gray-300 uppercase text-[10px]">BILLED PACKAGE &amp; PAYMENT BREAKDOWN</div>
+                <div className={`rounded-xl overflow-hidden border text-xs font-sans ${
+                  isLight ? "border-slate-200 bg-white" : "border-brand-dark-border/80 bg-black/40"
+                }`}>
+                  <div className={`p-3 font-bold uppercase text-[10px] ${
+                    isLight ? "bg-slate-100 text-slate-700" : "bg-black/80 text-gray-300"
+                  }`}>BILLED PACKAGE &amp; PAYMENT BREAKDOWN</div>
                   <div className="p-4 space-y-3 font-mono">
                     <div className="flex justify-between items-center text-sm">
-                      <span className="text-white font-bold">{foundSaasInvoice.plan}</span>
-                      <span className="text-sky-400 font-black">
+                      <span className={`font-bold ${isLight ? "text-slate-900" : "text-white"}`}>{foundSaasInvoice.plan}</span>
+                      <span className="text-sky-600 font-black">
                         {foundSaasInvoice.currency || "PKR"} {foundSaasInvoice.amount.toLocaleString()}
                       </span>
                     </div>
-                    <hr className="border-brand-dark-border/60" />
-                    <div className="flex justify-between text-xs text-gray-400">
+                    <hr className={isLight ? "border-slate-200" : "border-brand-dark-border/60"} />
+                    <div className={`flex justify-between text-xs ${isLight ? "text-slate-600" : "text-gray-400"}`}>
                       <span>Total Bill Amount:</span>
-                      <span className="text-white font-bold">{foundSaasInvoice.currency || "PKR"} {foundSaasInvoice.amount.toLocaleString()}</span>
+                      <span className={`font-bold ${isLight ? "text-slate-900" : "text-white"}`}>{foundSaasInvoice.currency || "PKR"} {foundSaasInvoice.amount.toLocaleString()}</span>
                     </div>
-                    <div className="flex justify-between text-xs text-emerald-400">
+                    <div className="flex justify-between text-xs text-emerald-600 font-bold">
                       <span>Amount Paid / Received:</span>
-                      <span className="font-bold">{foundSaasInvoice.currency || "PKR"} {(foundSaasInvoice.paidAmount ?? (foundSaasInvoice.status === "Paid" ? foundSaasInvoice.amount : 0)).toLocaleString()}</span>
+                      <span>{foundSaasInvoice.currency || "PKR"} {(foundSaasInvoice.paidAmount ?? (foundSaasInvoice.status === "Paid" ? foundSaasInvoice.amount : 0)).toLocaleString()}</span>
                     </div>
-                    <div className="flex justify-between text-sm text-sky-400 font-black pt-1 border-t border-brand-dark-border/60">
+                    <div className={`flex justify-between text-sm text-sky-600 font-black pt-1 border-t ${
+                      isLight ? "border-slate-200" : "border-brand-dark-border/60"
+                    }`}>
                       <span>Remaining Balance Due:</span>
                       <span>{foundSaasInvoice.currency || "PKR"} {(foundSaasInvoice.remainingBalance ?? 0).toLocaleString()}</span>
                     </div>
@@ -1038,22 +1120,30 @@ export default function TrackingPage() {
                 </div>
 
                 {/* Registered Tenant Guide Card */}
-                <div className="bg-gradient-to-r from-sky-950/40 via-purple-950/30 to-black border border-sky-500/30 rounded-2xl p-5 shadow-xl text-xs space-y-3 font-sans">
-                  <div className="flex items-center gap-2 text-sky-400 font-black uppercase tracking-wider text-xs">
+                <div className={`rounded-2xl p-5 border shadow-md text-xs space-y-3 font-sans ${
+                  isLight
+                    ? "bg-gradient-to-r from-sky-50 via-indigo-50 to-purple-50 border-sky-200 text-slate-800"
+                    : "bg-gradient-to-r from-sky-950/40 via-purple-950/30 to-black border-sky-500/30"
+                }`}>
+                  <div className={`flex items-center gap-2 font-black uppercase tracking-wider text-xs ${
+                    isLight ? "text-sky-700" : "text-sky-400"
+                  }`}>
                     <Sparkles size={16} />
                     <span>Registered Tenant Online Portal Guide</span>
                   </div>
-                  <p className="text-gray-300 leading-relaxed">
-                    Dear Tenant (<b className="text-white">{foundSaasInvoice.tenantName}</b> - <b className="text-sky-300 font-mono">{(() => { const t = tenants.find(x => x.id === foundSaasInvoice.tenantId); return maskPhone(t?.phone || "03001234567"); })()}</b>), your SaaS subscription invoice &amp; workspace are active!
+                  <p className={`leading-relaxed ${isLight ? "text-slate-700 font-medium" : "text-gray-300"}`}>
+                    Dear Tenant (<b className={isLight ? "text-slate-900" : "text-white"}>{foundSaasInvoice.tenantName}</b> - <b className={`font-mono ${isLight ? "text-sky-700" : "text-sky-300"}`}>{(() => { const t = tenants.find(x => x.id === foundSaasInvoice.tenantId); return maskPhone(t?.phone || "03001234567"); })()}</b>), your SaaS subscription invoice &amp; workspace are active!
                   </p>
-                  <div className="bg-black/60 border border-brand-dark-border p-3.5 rounded-xl space-y-1.5 text-[11px] text-gray-300">
-                    <div className="font-bold text-purple-400 flex items-center gap-1.5">
+                  <div className={`p-3.5 rounded-xl border space-y-1.5 text-[11px] ${
+                    isLight ? "bg-white border-sky-200 text-slate-700 shadow-xs" : "bg-black/60 border-brand-dark-border text-gray-300"
+                  }`}>
+                    <div className={`font-bold flex items-center gap-1.5 ${isLight ? "text-purple-700" : "text-purple-400"}`}>
                       <span>🌐 Direct Access to Software &amp; Invoice History:</span>
                     </div>
-                    <ol className="list-decimal list-inside space-y-1 pl-1 text-gray-400">
-                      <li>Log in to your POS &amp; ERP Portal: <a href="https://pos.mtcore.xyz/login" target="_blank" rel="noreferrer" className="text-sky-400 underline font-bold">https://pos.mtcore.xyz/login</a></li>
-                      <li>Use your Workspace Tenant ID <b className="text-sky-300 font-mono">{foundSaasInvoice.tenantId}</b> &amp; registered credentials.</li>
-                      <li>To check past invoices anytime, search invoice ID <b className="text-purple-300 font-mono">{foundSaasInvoice.id}</b> in Receipt Lookup above!</li>
+                    <ol className={`list-decimal list-inside space-y-1 pl-1 ${isLight ? "text-slate-600 font-medium" : "text-gray-400"}`}>
+                      <li>Log in to your POS &amp; ERP Portal: <a href="https://pos.mtcore.xyz/login" target="_blank" rel="noreferrer" className="text-sky-600 underline font-bold">https://pos.mtcore.xyz/login</a></li>
+                      <li>Use your Workspace Tenant ID <b className={`font-mono ${isLight ? "text-sky-700" : "text-sky-300"}`}>{foundSaasInvoice.tenantId}</b> &amp; registered credentials.</li>
+                      <li>To check past invoices anytime, search invoice ID <b className={`font-mono ${isLight ? "text-purple-700" : "text-purple-300"}`}>{foundSaasInvoice.id}</b> in Receipt Lookup above!</li>
                     </ol>
                   </div>
                 </div>
@@ -1067,25 +1157,35 @@ export default function TrackingPage() {
             <div className="space-y-6 animate-fade-in-up text-left">
               
               {/* Customer Profile Summary Header */}
-              <div className="bg-brand-dark-surface border border-brand-dark-border rounded-2xl p-6 sm:p-8 sky-glow space-y-6">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-brand-dark-border/60">
+              <div className={`rounded-3xl p-6 sm:p-8 border shadow-xl space-y-6 transition-all ${
+                isLight ? "bg-white border-slate-200 shadow-slate-200/60 text-slate-900" : "bg-brand-dark-surface border-brand-dark-border shadow-2xl sky-glow text-white"
+              }`}>
+                <div className={`flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b ${
+                  isLight ? "border-slate-200" : "border-brand-dark-border/60"
+                }`}>
                   <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 rounded-2xl bg-brand-sky/15 border border-brand-sky/30 text-brand-sky flex items-center justify-center font-black text-2xl font-sans shrink-0">
+                    <div className={`w-16 h-16 rounded-2xl border flex items-center justify-center font-black text-2xl font-sans shrink-0 ${
+                      isLight ? "bg-sky-50 border-sky-200 text-sky-600 shadow-xs" : "bg-brand-sky/15 border-brand-sky/30 text-brand-sky"
+                    }`}>
                       {foundCustomer.name.charAt(0).toUpperCase()}
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <h2 className="text-xl sm:text-2xl font-black text-white font-sans">{foundCustomer.name}</h2>
-                        <span className="bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 font-mono text-[9px] px-2.5 py-0.5 rounded-full font-bold">
+                        <h2 className={`text-xl sm:text-2xl font-black font-sans ${isLight ? "text-slate-900" : "text-white"}`}>{foundCustomer.name}</h2>
+                        <span className={`font-mono text-[9px] px-2.5 py-0.5 rounded-full font-bold border ${
+                          isLight ? "bg-emerald-100 border-emerald-300 text-emerald-800" : "bg-emerald-500/15 border-emerald-500/40 text-emerald-400"
+                        }`}>
                           VERIFIED CUSTOMER
                         </span>
                       </div>
-                      <div className="flex flex-wrap items-center gap-2 mt-1.5 text-xs text-gray-400 font-mono">
-                        <span className="bg-brand-sky/10 border border-brand-sky/30 text-brand-sky font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                      <div className={`flex flex-wrap items-center gap-2 mt-1.5 text-xs font-mono ${isLight ? "text-slate-500" : "text-gray-400"}`}>
+                        <span className={`font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 border ${
+                          isLight ? "bg-sky-50 border-sky-200 text-sky-700" : "bg-brand-sky/10 border-brand-sky/30 text-brand-sky"
+                        }`}>
                           <Hash size={11} /> {foundCustomer.customerNo || "CUST-VERIFIED"}
                         </span>
                         <span className="flex items-center gap-1">
-                          <Phone size={12} className="text-gray-500" /> {foundCustomer.mobile || "0300-0000000"}
+                          <Phone size={12} className={isLight ? "text-slate-400" : "text-gray-500"} /> {foundCustomer.mobile || "0300-0000000"}
                         </span>
                       </div>
                     </div>
@@ -1093,17 +1193,23 @@ export default function TrackingPage() {
 
                   {/* Summary Metric Cards */}
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
-                    <div className="bg-black/50 border border-brand-dark-border/60 rounded-xl p-3 text-center">
-                      <p className="text-[9px] uppercase text-gray-500 font-semibold mb-0.5 font-sans">Loyalty Points</p>
-                      <p className="text-yellow-400 font-mono font-black text-sm">{foundCustomer.loyaltyPoints || 0} pts</p>
+                    <div className={`p-3 rounded-xl border text-center ${
+                      isLight ? "bg-slate-50 border-slate-200" : "bg-black/50 border-brand-dark-border/60"
+                    }`}>
+                      <p className={`text-[9px] uppercase font-semibold mb-0.5 font-sans ${isLight ? "text-slate-500" : "text-gray-500"}`}>Loyalty Points</p>
+                      <p className={`font-mono font-black text-sm ${isLight ? "text-amber-600" : "text-yellow-400"}`}>{foundCustomer.loyaltyPoints || 0} pts</p>
                     </div>
-                    <div className="bg-black/50 border border-brand-dark-border/60 rounded-xl p-3 text-center">
-                      <p className="text-[9px] uppercase text-gray-500 font-semibold mb-0.5 font-sans">Wallet Balance</p>
-                      <p className="text-brand-sky font-mono font-black text-sm">{currencySymbol} {(foundCustomer.walletBalance || 0).toLocaleString()}</p>
+                    <div className={`p-3 rounded-xl border text-center ${
+                      isLight ? "bg-slate-50 border-slate-200" : "bg-black/50 border-brand-dark-border/60"
+                    }`}>
+                      <p className={`text-[9px] uppercase font-semibold mb-0.5 font-sans ${isLight ? "text-slate-500" : "text-gray-500"}`}>Wallet Balance</p>
+                      <p className={`font-mono font-black text-sm ${isLight ? "text-sky-600" : "text-brand-sky"}`}>{currencySymbol} {(foundCustomer.walletBalance || 0).toLocaleString()}</p>
                     </div>
-                    <div className="bg-black/50 border border-brand-dark-border/60 rounded-xl p-3 text-center col-span-2 sm:col-span-1">
-                      <p className="text-[9px] uppercase text-gray-500 font-semibold mb-0.5 font-sans">Credit Dues (Udhar)</p>
-                      <p className={`font-mono font-black text-sm ${foundCustomer.creditBalance > 0 ? "text-red-400 animate-pulse" : "text-emerald-400"}`}>
+                    <div className={`p-3 rounded-xl border text-center col-span-2 sm:col-span-1 ${
+                      isLight ? "bg-slate-50 border-slate-200" : "bg-black/50 border-brand-dark-border/60"
+                    }`}>
+                      <p className={`text-[9px] uppercase font-semibold mb-0.5 font-sans ${isLight ? "text-slate-500" : "text-gray-500"}`}>Credit Dues (Udhar)</p>
+                      <p className={`font-mono font-black text-sm ${foundCustomer.creditBalance > 0 ? (isLight ? "text-rose-600 animate-pulse" : "text-red-400 animate-pulse") : (isLight ? "text-emerald-600" : "text-emerald-400")}`}>
                         {currencySymbol} {(foundCustomer.creditBalance || 0).toLocaleString()}
                       </p>
                     </div>
@@ -1112,30 +1218,36 @@ export default function TrackingPage() {
 
                 {/* Outstanding Credit Alert */}
                 {foundCustomer.creditBalance > 0 ? (
-                  <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-xl flex items-start gap-3">
-                    <AlertTriangle size={18} className="text-red-400 shrink-0 mt-0.5" />
-                    <div className="text-xs text-gray-300 font-sans">
-                      <span className="font-bold text-red-400">Outstanding Udhar Balance:</span> You currently have a pending credit balance of <strong className="text-white font-mono">{currencySymbol} {foundCustomer.creditBalance.toLocaleString()}</strong>. Please visit the store counter to clear your dues.
+                  <div className={`p-4 rounded-xl border flex items-start gap-3 ${
+                    isLight ? "bg-rose-50 border-rose-200 text-rose-900" : "bg-red-500/10 border-red-500/30 text-gray-300"
+                  }`}>
+                    <AlertTriangle size={18} className="text-rose-500 shrink-0 mt-0.5" />
+                    <div className="text-xs font-sans leading-relaxed">
+                      <span className={`font-bold ${isLight ? "text-rose-950" : "text-red-400"}`}>Outstanding Udhar Balance:</span> You currently have a pending credit balance of <strong className={`font-mono ${isLight ? "text-slate-900 font-black" : "text-white"}`}>{currencySymbol} {foundCustomer.creditBalance.toLocaleString()}</strong>. Please visit the store counter to clear your dues.
                     </div>
                   </div>
                 ) : (
-                  <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center gap-2 text-xs text-emerald-400 font-sans">
-                    <CheckCircle2 size={16} />
+                  <div className={`p-3.5 rounded-xl border flex items-center gap-2 text-xs font-sans ${
+                    isLight ? "bg-emerald-50 border-emerald-200 text-emerald-800 font-medium" : "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+                  }`}>
+                    <CheckCircle2 size={16} className="text-emerald-600" />
                     <span>All Credit Dues Cleared! Your account is in excellent standing.</span>
                   </div>
                 )}
               </div>
 
               {/* Sub-Tabs Navigation for Customer Portal */}
-              <div className="bg-brand-dark-surface border border-brand-dark-border rounded-2xl overflow-hidden shadow-2xl">
-                <div className="flex border-b border-brand-dark-border bg-black/40">
+              <div className={`rounded-3xl border overflow-hidden shadow-xl ${
+                isLight ? "bg-white border-slate-200" : "bg-brand-dark-surface border-brand-dark-border"
+              }`}>
+                <div className={`flex border-b ${isLight ? "border-slate-200 bg-slate-50" : "border-brand-dark-border bg-black/40"}`}>
                   <button
                     type="button"
                     onClick={() => setCustSubTab("purchases")}
-                    className={`flex-1 py-4 text-center text-xs font-bold uppercase tracking-wider border-b-2 transition flex items-center justify-center gap-2 ${
+                    className={`flex-1 py-4 text-center text-xs font-bold uppercase tracking-wider border-b-2 transition flex items-center justify-center gap-2 cursor-pointer ${
                       custSubTab === "purchases"
-                        ? "border-brand-sky text-brand-sky bg-brand-sky/5 font-black"
-                        : "border-transparent text-gray-500 hover:text-gray-300"
+                        ? isLight ? "border-sky-500 text-sky-600 bg-sky-50/70 font-black" : "border-brand-sky text-brand-sky bg-brand-sky/5 font-black"
+                        : isLight ? "border-transparent text-slate-600 hover:text-slate-900" : "border-transparent text-gray-500 hover:text-gray-300"
                     }`}
                   >
                     <ShoppingBag size={14} />
@@ -1145,27 +1257,27 @@ export default function TrackingPage() {
                   <button
                     type="button"
                     onClick={() => setCustSubTab("returns")}
-                    className={`flex-1 py-4 text-center text-xs font-bold uppercase tracking-wider border-b-2 transition flex items-center justify-center gap-2 ${
+                    className={`flex-1 py-4 text-center text-xs font-bold uppercase tracking-wider border-b-2 transition flex items-center justify-center gap-2 cursor-pointer ${
                       custSubTab === "returns"
-                        ? "border-brand-sky text-brand-sky bg-brand-sky/5 font-black"
-                        : "border-transparent text-gray-500 hover:text-gray-300"
+                        ? isLight ? "border-sky-500 text-sky-600 bg-sky-50/70 font-black" : "border-brand-sky text-brand-sky bg-brand-sky/5 font-black"
+                        : isLight ? "border-transparent text-slate-600 hover:text-slate-900" : "border-transparent text-gray-500 hover:text-gray-300"
                     }`}
                   >
                     <RotateCcw size={14} />
-                    <span>Returns & Refunds</span>
+                    <span>Returns &amp; Refunds</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setCustSubTab("credit")}
-                    className={`flex-1 py-4 text-center text-xs font-bold uppercase tracking-wider border-b-2 transition flex items-center justify-center gap-2 ${
+                    className={`flex-1 py-4 text-center text-xs font-bold uppercase tracking-wider border-b-2 transition flex items-center justify-center gap-2 cursor-pointer ${
                       custSubTab === "credit"
-                        ? "border-brand-sky text-brand-sky bg-brand-sky/5 font-black"
-                        : "border-transparent text-gray-500 hover:text-gray-300"
+                        ? isLight ? "border-sky-500 text-sky-600 bg-sky-50/70 font-black" : "border-brand-sky text-brand-sky bg-brand-sky/5 font-black"
+                        : isLight ? "border-transparent text-slate-600 hover:text-slate-900" : "border-transparent text-gray-500 hover:text-gray-300"
                     }`}
                   >
                     <CreditCard size={14} />
-                    <span>Udhar & Recovery Ledger</span>
+                    <span>Udhar &amp; Recovery Ledger</span>
                   </button>
                 </div>
 
@@ -1179,7 +1291,7 @@ export default function TrackingPage() {
 
                       if (custSales.length === 0) {
                         return (
-                          <div className="text-center py-12 text-gray-500 text-xs font-sans">
+                          <div className={`text-center py-12 text-xs font-sans ${isLight ? "text-slate-500" : "text-gray-500"}`}>
                             No purchases recorded for this customer account yet.
                           </div>
                         );
@@ -1188,23 +1300,31 @@ export default function TrackingPage() {
                       return custSales.map((sale) => {
                         const isExpanded = !!expandedSales[sale.id];
                         return (
-                          <div key={sale.id} className="border border-brand-dark-border/60 bg-black/40 rounded-xl overflow-hidden text-left">
+                          <div key={sale.id} className={`rounded-2xl border overflow-hidden text-left transition-all ${
+                            isLight ? "border-slate-200 bg-white shadow-xs" : "border-brand-dark-border/60 bg-black/40"
+                          }`}>
                             <div
                               onClick={() => toggleSaleExpand(sale.id)}
-                              className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer hover:bg-brand-dark-surface/40 transition"
+                              className={`p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer transition ${
+                                isLight ? "hover:bg-slate-50" : "hover:bg-brand-dark-surface/40"
+                              }`}
                             >
                               <div className="flex items-center gap-3">
-                                <div className="w-9 h-9 rounded-xl bg-brand-sky/10 border border-brand-sky/30 flex items-center justify-center shrink-0 text-brand-sky">
+                                <div className={`w-9 h-9 rounded-xl border flex items-center justify-center shrink-0 ${
+                                  isLight ? "bg-sky-50 border-sky-200 text-sky-600" : "bg-brand-sky/10 border-brand-sky/30 text-brand-sky"
+                                }`}>
                                   <ShoppingBag size={16} />
                                 </div>
                                 <div>
-                                  <p className="font-mono font-black text-xs text-white flex items-center gap-2">
+                                  <p className={`font-mono font-black text-xs flex items-center gap-2 ${isLight ? "text-slate-900" : "text-white"}`}>
                                     {sale.receiptNumber}
-                                    <span className="text-[9px] bg-brand-dark-surface border border-brand-dark-border px-2 py-0.5 rounded text-gray-400 font-sans">
+                                    <span className={`text-[9px] px-2 py-0.5 rounded font-sans border ${
+                                      isLight ? "bg-slate-100 border-slate-200 text-slate-700" : "bg-brand-dark-surface border-brand-dark-border text-gray-400"
+                                    }`}>
                                       {sale.paymentMethod}
                                     </span>
                                   </p>
-                                  <p className="text-[10px] text-gray-500 mt-0.5 font-sans">
+                                  <p className={`text-[10px] mt-0.5 font-sans ${isLight ? "text-slate-500 font-medium" : "text-gray-500"}`}>
                                     {new Date(sale.date).toLocaleString(undefined, {
                                       month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit"
                                     })}
@@ -1214,21 +1334,25 @@ export default function TrackingPage() {
 
                               <div className="flex items-center justify-between sm:justify-end gap-5">
                                 <div className="text-right font-mono">
-                                  <span className="text-emerald-400 font-black text-sm block">
+                                  <span className="text-emerald-600 font-black text-sm block">
                                     {currencySymbol} {sale.total.toLocaleString()}
                                   </span>
-                                  <span className="text-[9px] text-gray-500">{sale.items.length} item(s)</span>
+                                  <span className={`text-[9px] ${isLight ? "text-slate-500 font-medium" : "text-gray-500"}`}>{sale.items.length} item(s)</span>
                                 </div>
                                 <div className="flex items-center gap-2">
                                   <button
                                     type="button"
                                     onClick={(e) => { e.stopPropagation(); handlePrintSlip(sale); }}
-                                    className="p-1.5 rounded-lg bg-black border border-brand-dark-border text-gray-400 hover:text-white"
+                                    className={`p-1.5 rounded-lg border transition ${
+                                      isLight ? "bg-slate-100 border-slate-300 text-slate-700 hover:bg-slate-200" : "bg-black border-brand-dark-border text-gray-400 hover:text-white"
+                                    }`}
                                     title="Print Digital Slip"
                                   >
                                     <Printer size={13} />
                                   </button>
-                                  <button type="button" className="p-1.5 rounded-lg bg-black border border-brand-dark-border text-gray-400 hover:text-white">
+                                  <button type="button" className={`p-1.5 rounded-lg border transition ${
+                                    isLight ? "bg-slate-100 border-slate-300 text-slate-700 hover:bg-slate-200" : "bg-black border-brand-dark-border text-gray-400 hover:text-white"
+                                  }`}>
                                     {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                                   </button>
                                 </div>
@@ -1237,23 +1361,27 @@ export default function TrackingPage() {
 
                             {/* Itemized Drilldown */}
                             {isExpanded && (
-                              <div className="px-4 pb-4 pt-2 border-t border-brand-dark-border/50 bg-black/20 text-xs space-y-3 font-sans">
-                                <div className="divide-y divide-brand-dark-border/40">
+                              <div className={`px-4 pb-4 pt-2 border-t text-xs space-y-3 font-sans ${
+                                isLight ? "bg-slate-50 border-slate-200 text-slate-800" : "border-brand-dark-border/50 bg-black/20 text-gray-300"
+                              }`}>
+                                <div className={`divide-y ${isLight ? "divide-slate-200" : "divide-brand-dark-border/40"}`}>
                                   {sale.items.map((it, idx) => (
-                                    <div key={idx} className="py-2.5 flex justify-between items-center text-gray-300">
+                                    <div key={idx} className="py-2.5 flex justify-between items-center">
                                       <div>
-                                        <p className="font-semibold text-white">{it.productName}</p>
-                                        <p className="text-[10px] text-gray-500 font-mono">x{it.qty} @ {currencySymbol} {it.price.toLocaleString()}</p>
+                                        <p className={`font-semibold ${isLight ? "text-slate-900" : "text-white"}`}>{it.productName}</p>
+                                        <p className={`text-[10px] font-mono ${isLight ? "text-slate-500" : "text-gray-500"}`}>x{it.qty} @ {currencySymbol} {it.price.toLocaleString()}</p>
                                       </div>
-                                      <span className="font-mono text-white font-bold">{currencySymbol} {it.subtotal.toLocaleString()}</span>
+                                      <span className={`font-mono font-bold ${isLight ? "text-slate-900" : "text-white"}`}>{currencySymbol} {it.subtotal.toLocaleString()}</span>
                                     </div>
                                   ))}
                                 </div>
 
-                                <div className="border-t border-brand-dark-border/40 pt-2 flex flex-col items-end gap-1 font-mono text-xs">
+                                <div className={`border-t pt-2 flex flex-col items-end gap-1 font-mono text-xs ${
+                                  isLight ? "border-slate-200" : "border-brand-dark-border/40"
+                                }`}>
                                   <div className="flex justify-between w-full sm:max-w-[200px]">
-                                    <span className="text-gray-400">Total:</span>
-                                    <span className="text-emerald-400 font-bold">{currencySymbol} {sale.total.toLocaleString()}</span>
+                                    <span className={isLight ? "text-slate-600 font-medium" : "text-gray-400"}>Total:</span>
+                                    <span className="text-emerald-600 font-bold">{currencySymbol} {sale.total.toLocaleString()}</span>
                                   </div>
                                 </div>
                               </div>
@@ -1276,28 +1404,32 @@ export default function TrackingPage() {
 
                       if (returnsList.length === 0) {
                         return (
-                          <div className="text-center py-12 text-gray-500 text-xs font-sans">
+                          <div className={`text-center py-12 text-xs font-sans ${isLight ? "text-slate-500" : "text-gray-500"}`}>
                             No return or refund records found for this customer.
                           </div>
                         );
                       }
 
                       return returnsList.map(ret => (
-                        <div key={ret.id} className="p-4 border border-red-500/20 bg-red-500/5 rounded-xl flex justify-between items-center font-sans text-xs">
+                        <div key={ret.id} className={`p-4 rounded-2xl border flex justify-between items-center font-sans text-xs ${
+                          isLight ? "border-rose-200 bg-rose-50/60" : "border-red-500/20 bg-red-500/5"
+                        }`}>
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-red-500/15 text-red-400 flex items-center justify-center shrink-0">
+                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                              isLight ? "bg-rose-100 text-rose-700" : "bg-red-500/15 text-red-400"
+                            }`}>
                               <RotateCcw size={15} />
                             </div>
                             <div>
-                              <p className="font-mono font-bold text-white">{ret.receiptNumber}</p>
-                              <p className="text-[10px] text-gray-400 mt-0.5">
+                              <p className={`font-mono font-bold ${isLight ? "text-slate-900" : "text-white"}`}>{ret.receiptNumber}</p>
+                              <p className={`text-[10px] mt-0.5 ${isLight ? "text-slate-500 font-medium" : "text-gray-400"}`}>
                                 {new Date(ret.date).toLocaleDateString()} · {ret.items.length} item(s) refunded
                               </p>
                             </div>
                           </div>
                           <div className="text-right font-mono">
-                            <span className="text-red-400 font-black text-sm block">-{currencySymbol} {ret.total.toLocaleString()}</span>
-                            <span className="text-[9px] uppercase text-red-300 font-bold">{ret.status}</span>
+                            <span className="text-rose-600 font-black text-sm block">-{currencySymbol} {ret.total.toLocaleString()}</span>
+                            <span className={`text-[9px] uppercase font-bold ${isLight ? "text-rose-700" : "text-red-300"}`}>{ret.status}</span>
                           </div>
                         </div>
                       ));
@@ -1309,30 +1441,34 @@ export default function TrackingPage() {
                 {custSubTab === "credit" && (
                   <div className="p-6 space-y-6">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-sans">
-                      <div className="p-4 bg-black/40 border border-brand-dark-border/60 rounded-xl">
-                        <span className="text-[9px] uppercase font-bold text-gray-500 block mb-1">Total Credit Taken</span>
+                      <div className={`p-4 rounded-xl border ${
+                        isLight ? "bg-slate-50 border-slate-200 text-slate-900" : "bg-black/40 border-brand-dark-border/60 text-white"
+                      }`}>
+                        <span className={`text-[9px] uppercase font-bold block mb-1 ${isLight ? "text-slate-500" : "text-gray-500"}`}>Total Credit Taken</span>
                         {(() => {
                           const creditSales = sales.filter(
                             s => (s.customerNo === foundCustomer.customerNo || s.customerName === foundCustomer.name) &&
                             (s.paymentMethod === "On Credit" || (s.splitPayments && (s.splitPayments["On Credit"] || 0) > 0))
                           );
                           const totalCredit = creditSales.reduce((sum, s) => sum + (s.splitPayments ? (s.splitPayments["On Credit"] || 0) : s.total), 0);
-                          return <span className="text-xl font-mono font-black text-white">{currencySymbol} {totalCredit.toLocaleString()}</span>;
+                          return <span className={`text-xl font-mono font-black ${isLight ? "text-slate-900" : "text-white"}`}>{currencySymbol} {totalCredit.toLocaleString()}</span>;
                         })()}
                       </div>
 
-                      <div className="p-4 bg-black/40 border border-brand-dark-border/60 rounded-xl">
-                        <span className="text-[9px] uppercase font-bold text-gray-500 block mb-1">Total Udhar Recovered</span>
+                      <div className={`p-4 rounded-xl border ${
+                        isLight ? "bg-slate-50 border-slate-200 text-slate-900" : "bg-black/40 border-brand-dark-border/60 text-white"
+                      }`}>
+                        <span className={`text-[9px] uppercase font-bold block mb-1 ${isLight ? "text-slate-500" : "text-gray-500"}`}>Total Udhar Recovered</span>
                         {(() => {
                           const totalRecovered = (foundCustomer.dueRecoveryHistory || []).reduce((sum: number, r: any) => sum + r.amount, 0);
-                          return <span className="text-xl font-mono font-black text-emerald-400">{currencySymbol} {totalRecovered.toLocaleString()}</span>;
+                          return <span className="text-xl font-mono font-black text-emerald-600">{currencySymbol} {totalRecovered.toLocaleString()}</span>;
                         })()}
                       </div>
                     </div>
 
                     {/* Timeline */}
                     <div className="space-y-3">
-                      <h4 className="text-xs font-bold text-white uppercase tracking-wider font-sans">Account Statement Ledger History</h4>
+                      <h4 className={`text-xs font-bold uppercase tracking-wider font-sans ${isLight ? "text-slate-900" : "text-white"}`}>Account Statement Ledger History</h4>
                       {(() => {
                         const creditEvents = sales
                           .filter(
@@ -1356,26 +1492,32 @@ export default function TrackingPage() {
                         const timeline = [...creditEvents, ...recoveryEvents].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
                         if (timeline.length === 0) {
-                          return <div className="text-center py-10 text-gray-500 text-xs font-sans">No credit ledger history found.</div>;
+                          return <div className={`text-center py-10 text-xs font-sans ${isLight ? "text-slate-500" : "text-gray-500"}`}>No credit ledger history found.</div>;
                         }
 
                         return (
-                          <div className="border border-brand-dark-border/60 rounded-xl divide-y divide-brand-dark-border/40 overflow-hidden bg-black/30 text-xs font-sans">
+                          <div className={`rounded-xl divide-y overflow-hidden border text-xs font-sans ${
+                            isLight ? "border-slate-200 bg-white divide-slate-100 shadow-xs" : "border-brand-dark-border/60 bg-black/30 divide-brand-dark-border/40"
+                          }`}>
                             {timeline.map((ev, idx) => {
                               const isCharge = ev.type === "credit_charge";
                               return (
                                 <div key={idx} className="p-3.5 flex justify-between items-center">
                                   <div className="flex items-center gap-3">
-                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${isCharge ? "bg-red-500/10 text-red-400" : "bg-emerald-500/10 text-emerald-400"}`}>
+                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                                      isCharge
+                                        ? isLight ? "bg-rose-100 text-rose-600" : "bg-red-500/10 text-red-400"
+                                        : isLight ? "bg-emerald-100 text-emerald-600" : "bg-emerald-500/10 text-emerald-400"
+                                    }`}>
                                       <CreditCard size={15} />
                                     </div>
                                     <div>
-                                      <p className="font-bold text-white">{isCharge ? `Udhar Charge (${ev.receipt})` : "Credit Dues Settlement Payment"}</p>
-                                      <p className="text-[10px] text-gray-500 mt-0.5">{new Date(ev.date).toLocaleDateString()}</p>
+                                      <p className={`font-bold ${isLight ? "text-slate-900" : "text-white"}`}>{isCharge ? `Udhar Charge (${ev.receipt})` : "Credit Dues Settlement Payment"}</p>
+                                      <p className={`text-[10px] mt-0.5 ${isLight ? "text-slate-500" : "text-gray-500"}`}>{new Date(ev.date).toLocaleDateString()}</p>
                                     </div>
                                   </div>
                                   <div className="text-right font-mono">
-                                    <span className={`font-black text-sm ${isCharge ? "text-red-400" : "text-emerald-400"}`}>
+                                    <span className={`font-black text-sm ${isCharge ? "text-rose-600" : "text-emerald-600"}`}>
                                       {isCharge ? "+" : "-"}{currencySymbol} {ev.amount.toLocaleString()}
                                     </span>
                                   </div>
@@ -1396,40 +1538,50 @@ export default function TrackingPage() {
           {/* 🎫 RESULT C: SUPPORT TICKET & DEMO TRACKER RESULT */}
           {hasSearched && searchMode === "ticket" && foundTicket && (
             <div className="space-y-6 animate-fade-in-up text-left">
-              <div className="bg-brand-dark-surface border border-brand-dark-border rounded-2xl p-6 sm:p-8 sky-glow">
+              <div className={`rounded-3xl p-6 sm:p-8 border shadow-xl transition-all ${
+                isLight ? "bg-white border-slate-200 shadow-slate-200/60 text-slate-900" : "bg-brand-dark-surface border-brand-dark-border shadow-2xl sky-glow text-white"
+              }`}>
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
                   <div>
-                    <p className="text-[10px] uppercase tracking-widest text-gray-500 mb-1 font-semibold">
+                    <p className={`text-[10px] uppercase tracking-widest mb-1 font-bold ${isLight ? "text-slate-500" : "text-gray-500"}`}>
                       {foundTicketType === "demo" ? "Demo Ticket Number" : "Support Ticket Number"}
                     </p>
-                    <p className="text-2xl sm:text-3xl font-black font-mono text-brand-sky sky-neon-text tracking-wider">
+                    <p className="text-2xl sm:text-3xl font-black font-mono text-sky-500 tracking-wider">
                       {foundTicketType === "demo" ? foundTicket.ticketNumber : foundTicket.ticketNumber}
                     </p>
                     {foundTicketType === "support" && (
-                      <p className="text-sm font-bold text-white mt-2">{foundTicket.subject}</p>
+                      <p className={`text-sm font-bold mt-2 ${isLight ? "text-slate-900" : "text-white"}`}>{foundTicket.subject}</p>
                     )}
                   </div>
                   {foundTicketType === "demo" ? (
                     <StatusBadge status={foundTicket.status} />
                   ) : (
-                    <span className="inline-flex items-center px-3 py-1 rounded-full border text-[10px] font-black tracking-widest uppercase bg-blue-500/15 text-blue-400 border-blue-500/40">
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full border text-[10px] font-black tracking-widest uppercase ${
+                      isLight ? "bg-sky-100 text-sky-800 border-sky-300" : "bg-blue-500/15 text-blue-400 border-blue-500/40"
+                    }`}>
                       {foundTicket.status}
                     </span>
                   )}
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 text-sm">
-                  <div className="bg-black/40 border border-brand-dark-border/60 rounded-xl p-4">
-                    <p className="text-[10px] uppercase text-gray-500 font-semibold mb-1 tracking-wide">Business</p>
-                    <p className="text-white font-semibold">{foundTicket.businessName}</p>
+                  <div className={`p-4 rounded-xl border ${
+                    isLight ? "bg-slate-50 border-slate-200 text-slate-900" : "bg-black/40 border-brand-dark-border/60 text-white"
+                  }`}>
+                    <p className={`text-[10px] uppercase font-bold mb-1 tracking-wide ${isLight ? "text-slate-500" : "text-gray-500"}`}>Business</p>
+                    <p className={`font-semibold ${isLight ? "text-slate-900" : "text-white"}`}>{foundTicket.businessName}</p>
                   </div>
-                  <div className="bg-black/40 border border-brand-dark-border/60 rounded-xl p-4">
-                    <p className="text-[10px] uppercase text-gray-500 font-semibold mb-1 tracking-wide">Contact / Category</p>
-                    <p className="text-white font-semibold">{foundTicketType === "demo" ? foundTicket.name : foundTicket.category}</p>
+                  <div className={`p-4 rounded-xl border ${
+                    isLight ? "bg-slate-50 border-slate-200 text-slate-900" : "bg-black/40 border-brand-dark-border/60 text-white"
+                  }`}>
+                    <p className={`text-[10px] uppercase font-bold mb-1 tracking-wide ${isLight ? "text-slate-500" : "text-gray-500"}`}>Contact / Category</p>
+                    <p className={`font-semibold ${isLight ? "text-slate-900" : "text-white"}`}>{foundTicketType === "demo" ? foundTicket.name : foundTicket.category}</p>
                   </div>
-                  <div className="bg-black/40 border border-brand-dark-border/60 rounded-xl p-4">
-                    <p className="text-[10px] uppercase text-gray-500 font-semibold mb-1 tracking-wide">Submitted</p>
-                    <p className="text-white font-semibold">
+                  <div className={`p-4 rounded-xl border ${
+                    isLight ? "bg-slate-50 border-slate-200 text-slate-900" : "bg-black/40 border-brand-dark-border/60 text-white"
+                  }`}>
+                    <p className={`text-[10px] uppercase font-bold mb-1 tracking-wide ${isLight ? "text-slate-500" : "text-gray-500"}`}>Submitted</p>
+                    <p className={`font-semibold ${isLight ? "text-slate-900" : "text-white"}`}>
                       {new Date(foundTicket.date).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" })}
                     </p>
                   </div>
@@ -1437,38 +1589,50 @@ export default function TrackingPage() {
 
                 {foundTicketType === "demo" && (
                   <div className="mb-2">
-                    <p className="text-[10px] uppercase text-gray-500 font-semibold mb-3 tracking-wide">Request Progress</p>
+                    <p className={`text-[10px] uppercase font-bold mb-3 tracking-wide ${isLight ? "text-slate-500" : "text-gray-500"}`}>Request Progress</p>
                     <StatusTimeline status={foundTicket.status} />
                   </div>
                 )}
               </div>
 
               {/* Chat Panel */}
-              <div className="bg-brand-dark-surface border border-brand-dark-border rounded-2xl overflow-hidden">
-                <div className="flex items-center gap-3 px-6 py-4 border-b border-brand-dark-border">
-                  <MessageCircle size={18} className="text-brand-sky" />
-                  <p className="text-white font-bold text-sm">Support Chat</p>
+              <div className={`rounded-3xl border overflow-hidden shadow-xl ${
+                isLight ? "bg-white border-slate-200" : "bg-brand-dark-surface border-brand-dark-border"
+              }`}>
+                <div className={`flex items-center gap-3 px-6 py-4 border-b ${
+                  isLight ? "border-slate-200 bg-slate-50 text-slate-900" : "border-brand-dark-border text-white"
+                }`}>
+                  <MessageCircle size={18} className="text-sky-500" />
+                  <p className="font-bold text-sm">Support Chat</p>
                 </div>
-                <div className="px-5 py-4 space-y-4 max-h-80 overflow-y-auto bg-black/30">
+                <div className={`px-5 py-4 space-y-4 max-h-80 overflow-y-auto ${
+                  isLight ? "bg-slate-50/50" : "bg-black/30"
+                }`}>
                   {(foundTicketType === "demo" ? foundTicket.messages : foundTicket.replies).map((msg: any, idx: number) => (
                     <ChatBubble key={idx} sender={msg.sender} message={msg.message} date={msg.date} />
                   ))}
                   <div ref={chatEndRef} />
                 </div>
-                <div className="px-5 pb-5 pt-3 border-t border-brand-dark-border/50 bg-brand-dark-surface space-y-3">
+                <div className={`px-5 pb-5 pt-3 border-t space-y-3 ${
+                  isLight ? "border-slate-200 bg-white" : "border-brand-dark-border/50 bg-brand-dark-surface"
+                }`}>
                   <textarea
                     rows={3}
                     placeholder="Type your message here…"
                     value={messageText}
                     onChange={(e) => setMessageText(e.target.value)}
-                    className="w-full bg-black border border-brand-dark-border rounded-xl p-3.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-brand-sky resize-none"
+                    className={`w-full p-3.5 rounded-xl text-sm focus:outline-none resize-none transition border ${
+                      isLight
+                        ? "bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-sky-500"
+                        : "bg-black border-brand-dark-border text-white placeholder-gray-600 focus:border-brand-sky"
+                    }`}
                   />
                   <div className="flex items-center justify-between">
-                    <p className="text-gray-600 text-[10px]">Press Ctrl+Enter to send</p>
+                    <p className={`text-[10px] ${isLight ? "text-slate-500 font-medium" : "text-gray-600"}`}>Press Ctrl+Enter to send</p>
                     <button
                       onClick={handleSendMessage}
                       disabled={!messageText.trim()}
-                      className="inline-flex items-center gap-2 bg-brand-sky text-black font-black text-xs px-5 py-2 rounded-xl"
+                      className="inline-flex items-center gap-2 bg-sky-500 hover:bg-sky-600 text-white font-black text-xs px-5 py-2.5 rounded-xl shadow-xs transition cursor-pointer disabled:opacity-50"
                     >
                       <Send size={13} />
                       <span>Send Message</span>
