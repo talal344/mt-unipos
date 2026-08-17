@@ -22,8 +22,8 @@ export default function SiteFooter() {
 
 
   return (
-    <footer className="bg-brand-dark-surface border-t border-brand-dark-border pt-16 pb-8 px-6 lg:px-16 xl:px-24 font-sans">
-      <div suppressHydrationWarning className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
+    <footer className="bg-brand-dark-surface border-t border-brand-dark-border pt-16 pb-8 px-4 sm:px-8 lg:px-12 xl:px-16 font-sans">
+      <div suppressHydrationWarning className="w-full max-w-[1800px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
         
         {/* Branding & Contact */}
         <div className="space-y-4">
@@ -83,7 +83,7 @@ export default function SiteFooter() {
 
       </div>
 
-      <div className="max-w-7xl mx-auto pt-8 border-t border-brand-dark-border/50 flex flex-col sm:flex-row items-center justify-between text-xs text-gray-500">
+      <div className="w-full max-w-[1800px] mx-auto pt-8 border-t border-brand-dark-border/50 flex flex-col sm:flex-row items-center justify-between text-xs text-gray-500">
         <p>© {new Date().getFullYear()} MTCore SaaS Platform. All Rights Reserved. Engineered by Founder Mian Talal.</p>
         <div className="flex gap-4 mt-4 sm:mt-0">
           <span className="hover:text-gray-400 transition cursor-pointer">Privacy Policy</span>

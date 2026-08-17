@@ -166,7 +166,7 @@ export default function SoftwareShowcase() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-12">
+      <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 relative z-10 space-y-12">
         {/* Section Title */}
         <div className="text-center max-w-3xl mx-auto space-y-3">
           <div className="inline-flex items-center gap-2 bg-[#0b121e] border border-sky-500/30 px-3.5 py-1.5 rounded-full text-xs font-black uppercase text-sky-400">

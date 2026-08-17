@@ -45,7 +45,7 @@ export default function FeaturesPage() {
 
       {/* Filter Buttons */}
       <section className="py-8 bg-brand-dark-surface/30 border-b border-brand-dark-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-wrap gap-2 justify-center">
+        <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 flex flex-wrap gap-2 justify-center">
           {categories.map((cat) => (
             <button
               key={cat}
@@ -63,7 +63,7 @@ export default function FeaturesPage() {
       </section>
 
       {/* Modules Grid */}
-      <section className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-16 w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredModules.map((mod) => {
             const Icon = mod.icon;

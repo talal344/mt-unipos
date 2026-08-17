@@ -56,7 +56,7 @@ export default function AboutPage() {
       </section>
 
       {/* Vision & Mission Grid */}
-      <section className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-3 gap-8">
+      <section className="py-16 w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 grid grid-cols-1 md:grid-cols-3 gap-8">
         
         {/* Mission */}
         <div className="bg-brand-dark-surface/50 border border-brand-dark-border p-6 rounded-2xl">
@@ -159,7 +159,7 @@ export default function AboutPage() {
       </section>
 
       {/* Core Capabilities Section */}
-      <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-b border-brand-dark-border">
+      <section className="py-20 w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 border-b border-brand-dark-border">
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-1.5 bg-brand-dark-surface border border-brand-dark-border px-3 py-1 rounded-full text-[10px] text-gray-400 font-black uppercase tracking-wider mb-3">
             <Zap size={12} className="text-brand-sky" />
@@ -190,7 +190,7 @@ export default function AboutPage() {
       </section>
 
       {/* Executive Leadership */}
-      <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-20 w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16">
         <div className="text-center mb-12">
           <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tight mb-2">Executive Leadership</h2>
           <p className="text-xs sm:text-sm text-gray-500 max-w-md mx-auto">

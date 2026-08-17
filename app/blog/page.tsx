@@ -151,7 +151,7 @@ export default function BlogPage() {
       </section>
 
       {/* Main Container */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 grid grid-cols-1 lg:grid-cols-4 gap-8">
+      <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 py-12 grid grid-cols-1 lg:grid-cols-4 gap-8">
         
         {/* Left: Sidebar Filters */}
         <div className="space-y-6 lg:col-span-1">

@@ -73,7 +73,7 @@ export default function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-brand-dark-border bg-black/80 backdrop-blur-md glass-panel font-sans">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-[1800px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16">
         <div className="flex h-20 items-center justify-between py-2">
 
           {/* Logo */}

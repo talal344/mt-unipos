@@ -85,7 +85,7 @@ export default function DemoPage() {
         {/* Glow background */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(14,165,233,0.06),transparent_60%)] pointer-events-none" />
 
-        <div className="max-w-md w-full mx-auto px-4 relative z-10">
+        <div className="max-w-xl w-full mx-auto px-4 sm:px-6 relative z-10">
           <div className="bg-brand-dark-surface/80 border border-brand-sky/20 rounded-3xl p-8 sky-glow glass-panel">
 
             {/* Header */}

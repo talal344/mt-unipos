@@ -128,7 +128,7 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(14,165,233,0.10),transparent_65%)] pointer-events-none" />
         <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[900px] h-[400px] bg-brand-sky/4 rounded-full blur-[130px] pointer-events-none" />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+        <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 text-center relative z-10">
           <div className="inline-flex items-center gap-2 bg-[#0b121e] border border-sky-500/30 px-4 py-1.5 rounded-full mb-6 shadow-lg shadow-sky-500/10 animate-fade-in-up">
             <Sparkles className="text-sky-400 animate-bounce" size={14} />
             <span className="text-xs font-black uppercase tracking-wider text-sky-400">
@@ -173,7 +173,7 @@ export default function HomePage() {
           </div>
 
           {/* Animated Product Demo */}
-          <div className="relative max-w-4xl mx-auto mt-12 mb-8 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+          <div className="relative w-full max-w-5xl xl:max-w-6xl mx-auto mt-12 mb-8 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
             <div className="absolute inset-0 bg-gradient-to-r from-brand-sky/20 to-purple-500/20 blur-3xl opacity-50 rounded-[40px]"></div>
             <div className="relative bg-[#09090b] border border-white/10 rounded-[24px] shadow-2xl overflow-hidden shadow-brand-sky/10 ring-1 ring-white/5">
               {/* Fake Window Header */}
@@ -299,7 +299,7 @@ export default function HomePage() {
           STATS BAR
       ══════════════════════════════════════════════════════════════════════ */}
       <section className="py-10 border-b border-brand-dark-border bg-brand-dark-surface/30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16">
           <div className="grid grid-cols-3 lg:grid-cols-6 gap-6 text-center">
             {statsBar.map(s => (
               <div key={s.label}>
@@ -318,7 +318,7 @@ export default function HomePage() {
           INDUSTRIES & SOFTWARE SUITES
       ══════════════════════════════════════════════════════════════════════ */}
       <section className="py-20 bg-brand-dark-surface/20 border-b border-brand-dark-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16">
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-2 bg-brand-dark-surface border border-brand-dark-border px-3 py-1.5 rounded-full mb-4">
               <Layers size={12} className="text-emerald-400" />
@@ -363,7 +363,7 @@ export default function HomePage() {
       ══════════════════════════════════════════════════════════════════════ */}
       <section className="py-20 border-b border-brand-dark-border relative overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-emerald-500/3 rounded-full blur-[120px] pointer-events-none" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 relative z-10">
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-2 bg-brand-dark-surface border border-brand-dark-border px-3 py-1.5 rounded-full mb-4">
               <Sparkles size={11} className="text-emerald-400" />
@@ -399,7 +399,7 @@ export default function HomePage() {
           HOW IT WORKS
       ══════════════════════════════════════════════════════════════════════ */}
       <section className="py-20 bg-brand-dark-surface/20 border-b border-brand-dark-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16">
           <div className="text-center mb-12">
             <h2 className="text-2xl sm:text-4xl font-black text-white mb-4">Get Started in 4 Simple Steps</h2>
             <p className="text-xs sm:text-sm text-gray-500">From demo request to live operations in under 48 hours.</p>
@@ -430,7 +430,7 @@ export default function HomePage() {
           TESTIMONIALS
       ══════════════════════════════════════════════════════════════════════ */}
       <section className="py-20 bg-brand-dark-surface/20 border-b border-brand-dark-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16">
           <div className="text-center mb-12">
             <h2 className="text-2xl sm:text-4xl font-black text-white mb-4">Loved by Leading Businesses</h2>
             <p className="text-xs sm:text-sm text-gray-500 max-w-xl mx-auto">
@@ -462,7 +462,7 @@ export default function HomePage() {
       ══════════════════════════════════════════════════════════════════════ */}
       <section className="py-20 border-b border-brand-dark-border relative overflow-hidden" id="demo-section">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(14,165,233,0.06),transparent_70%)] pointer-events-none" />
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="w-full max-w-5xl xl:max-w-6xl mx-auto px-4 sm:px-8 lg:px-12 relative z-10">
           <div className="bg-brand-dark-surface/80 border border-brand-sky/20 rounded-3xl p-8 shadow-2xl shadow-brand-sky/5">
             <div className="text-center mb-8">
               <h2 className="text-2xl sm:text-3xl font-black text-white mb-2">Request a Custom Live Demo</h2>
@@ -560,7 +560,7 @@ export default function HomePage() {
       ══════════════════════════════════════════════════════════════════════ */}
       <section className="py-16 relative overflow-hidden border-b border-brand-dark-border">
         <div className="absolute inset-0 bg-gradient-to-r from-brand-sky/5 via-transparent to-purple-500/5 pointer-events-none" />
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+        <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 text-center relative z-10">
           <h2 className="text-2xl sm:text-3xl font-black text-white mb-4">
             Ready to transform your business?
           </h2>
