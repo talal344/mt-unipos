@@ -64,7 +64,6 @@ export default function SiteHeader() {
 
   const navLinks = [
     { name: "Features",     href: "/features"      },
-    { name: "Case Study",   href: "/case-study"    },
     { name: "About Us",     href: "/about"         },
     { name: "SaaS Blog",    href: "/blog"          },
     { name: "Tracking",     href: "/track-ticket"  },
