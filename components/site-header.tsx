@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Laptop, Menu, X, ArrowRight, ShieldAlert, KeyRound, Sun, Moon } from "lucide-react";
+import { Laptop, Menu, X, ArrowRight, ShieldAlert, KeyRound, Sun, Moon, LogIn } from "lucide-react";
 import MTCoreLogo from "@/components/mt-logo";
 import { useGlobalContext } from "@/context/global-context";
 
@@ -130,13 +130,23 @@ export default function SiteHeader() {
                 <ShieldAlert size={12} /> Super Admin
               </button>
             )}
-            <Link href="/login"
-              className={`text-sm font-semibold transition-colors duration-200 ${isLight ? "text-slate-700 hover:text-slate-900" : "text-gray-300 hover:text-white"}`}>
-              Sign In
+            <Link
+              href="/login"
+              className={`group relative inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold tracking-wide transition-all duration-300 transform hover:-translate-y-0.5 active:scale-95 border ${
+                isLight
+                  ? "bg-slate-100/90 hover:bg-white text-slate-800 hover:text-sky-600 border-slate-200/90 hover:border-sky-400 shadow-xs hover:shadow-md hover:shadow-sky-500/10"
+                  : "bg-white/[0.04] hover:bg-sky-500/10 text-gray-200 hover:text-sky-300 border-white/10 hover:border-sky-500/40 shadow-xs hover:shadow-lg hover:shadow-sky-500/15"
+              }`}
+            >
+              <LogIn size={14} className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-sky-500" />
+              <span>Sign In</span>
+              <span className={`absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none ${
+                isLight ? "bg-gradient-to-r from-sky-500/5 via-sky-400/10 to-transparent" : "bg-gradient-to-r from-sky-500/10 via-transparent to-transparent"
+              }`} />
             </Link>
             <Link href="/demo"
-              className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 px-5 py-2.5 text-sm font-black text-white hover:opacity-90 shadow-md shadow-sky-500/20 transition-all duration-200 transform hover:scale-105">
-              Request Demo <ArrowRight size={14} />
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 px-5 py-2.5 text-xs sm:text-sm font-black text-white hover:opacity-95 shadow-md shadow-sky-500/25 transition-all duration-300 transform hover:-translate-y-0.5 hover:scale-105 active:scale-95">
+              <span>Request Demo</span> <ArrowRight size={14} className="transition-transform duration-300 group-hover:translate-x-1" />
             </Link>
           </div>
 
@@ -173,14 +183,18 @@ export default function SiteHeader() {
               </Link>
             ))}
             <Link href="/login" onClick={() => setMobileMenuOpen(false)}
-              className={`text-center text-sm font-semibold py-2.5 rounded-xl border transition ${
-                isLight ? "text-slate-800 border-slate-300 hover:bg-slate-50" : "text-gray-300 hover:text-white border-brand-dark-border"
+              className={`flex items-center justify-center gap-2 text-center text-xs font-bold py-3 rounded-xl border transition-all active:scale-95 ${
+                isLight
+                  ? "text-slate-800 bg-slate-100 border-slate-300 hover:bg-white hover:text-sky-600 hover:border-sky-400 shadow-xs"
+                  : "text-gray-200 bg-white/[0.04] hover:bg-sky-500/10 hover:text-sky-300 border-white/10 hover:border-sky-500/40 shadow-xs"
               }`}>
-              Sign In
+              <LogIn size={15} />
+              <span>Sign In to Portal</span>
             </Link>
             <Link href="/demo" onClick={() => setMobileMenuOpen(false)}
-              className="text-center text-sm font-black py-2.5 bg-sky-500 hover:bg-sky-600 text-white rounded-xl shadow-xs">
-              Request Demo
+              className="flex items-center justify-center gap-2 text-center text-xs font-black py-3 bg-gradient-to-r from-sky-500 to-indigo-600 hover:opacity-95 text-white rounded-xl shadow-md shadow-sky-500/20 active:scale-95">
+              <span>Request Demo</span>
+              <ArrowRight size={15} />
             </Link>
           </nav>
         </div>
