@@ -450,7 +450,7 @@ export default function TrackingPage() {
         </head>
         <body>
           <div class="center">
-            <img src="/logo.png" style="height:44px;max-width:160px;object-fit:contain;margin:0 auto 4px auto;display:block" alt="MT Core" />
+            <img src="/rectangle dark.png" style="height:44px;max-width:160px;object-fit:contain;margin:0 auto 4px auto;display:block" alt="MT Core" />
             <h2 style="margin:0;">${businessSettings?.businessName || "MT CORE STORE"}</h2>
             <p style="margin:2px 0;font-size:10px;">${businessSettings?.address || "Official Retail Outlet"}</p>
             <p style="margin:2px 0;font-size:9px;">Ph: ${businessSettings?.phone || "0300-1234567"}</p>
@@ -517,7 +517,7 @@ export default function TrackingPage() {
 </head>
 <body>
   <div class="header">
-    <img src="/logo.png" style="height:46px;max-width:180px;object-fit:contain;margin:0 auto 6px auto;display:block" alt="MT Core" />
+    <img src="/rectangle dark.png" style="height:46px;max-width:180px;object-fit:contain;margin:0 auto 6px auto;display:block" alt="MT Core" />
     <h2 style="margin:0;color:#0284c7;">MT Core Software Suite</h2>
     <div style="font-size:8px;color:#64748b;margin-top:2px;">The core technology behind your business.</div>
     <p style="margin:4px 0;font-size:11px;">Official SaaS Invoice Receipt: <b>${inv.id}</b></p>

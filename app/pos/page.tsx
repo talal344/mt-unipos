@@ -2117,7 +2117,7 @@ export default function PosPage() {
                     if (printWin) {
                       printWin.document.write(`<!DOCTYPE html><html><head><style>@page{size:80mm auto;margin:0}body{font-family:Arial;font-size:11px;padding:10px;width:80mm}</style></head><body>
                         <div style="text-align:center">
-                          <img src="/logo.png" style="height:40px;max-width:140px;object-fit:contain;margin:0 auto 4px auto;display:block" alt="MT Core" />
+                          <img src="/rectangle dark.png" style="height:40px;max-width:140px;object-fit:contain;margin:0 auto 4px auto;display:block" alt="MT Core" />
                           <div style="font-size:13px;font-weight:900">MT Core</div>
                           <div style="font-size:8px;color:#666">The core technology behind your business.</div>
                           <div style="font-weight:700">${successReceipt.customerName}</div>

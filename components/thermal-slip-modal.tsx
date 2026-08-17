@@ -158,7 +158,7 @@ function buildSlipHTML(
 
   <!-- Header -->
   <div style="text-align:center;margin-bottom:8px">
-    <img src="/logo.png" style="height:48px;max-width:170px;object-fit:contain;margin:0 auto 4px auto;display:block" alt="MT Core" />
+    <img src="/rectangle dark.png" style="height:48px;max-width:170px;object-fit:contain;margin:0 auto 4px auto;display:block" alt="MT Core" />
     <div style="font-size:10px;font-weight:700;letter-spacing:1px;color:#555;margin-bottom:2px">MT CORE</div>
     <div style="font-size:7px;color:#888;margin-bottom:4px">The core technology behind your business.</div>
     <div style="font-size:13px;font-weight:900;letter-spacing:1px;margin-top:4px;text-transform:uppercase">${businessName}</div>
@@ -461,7 +461,7 @@ export default function ThermalSlipModal({
           >
             {/* ── Store Header ── */}
             <div style={{ textAlign: "center", marginBottom: "8px" }}>
-              <img src="/logo.png" style={{ height: "48px", maxWidth: "170px", objectFit: "contain", margin: "0 auto 4px auto", display: "block" }} alt="MT Core Logo" />
+              <img src="/rectangle dark.png" style={{ height: "48px", maxWidth: "170px", objectFit: "contain", margin: "0 auto 4px auto", display: "block" }} alt="MT Core Logo" />
               <span className="text-[10px] font-mono tracking-widest text-gray-500 uppercase font-bold block">MT Core</span>
               <span className="text-[7px] text-gray-400 block">The core technology behind your business.</span>
               <div style={{ fontSize: "14px", fontWeight: 900, letterSpacing: "0.5px", marginTop: "4px", textTransform: "uppercase" }}>{businessName}</div>

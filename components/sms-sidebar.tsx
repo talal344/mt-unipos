@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSMS, SMSRole } from "@/context/sms-context";
+import MTCoreLogo from "@/components/mt-logo";
 import {
   GraduationCap,
   LayoutDashboard,
@@ -315,18 +316,13 @@ export default function SMSSidebar() {
         {/* Brand Header */}
         <div className={`p-4 border-b ${isLight ? "border-slate-200" : "border-[#1e293b]"} flex items-center justify-between`}>
           <Link href="/sms" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-600 via-indigo-600 to-cyan-400 flex items-center justify-center text-white shadow-lg shadow-sky-600/20 group-hover:scale-105 transition duration-300">
-              <GraduationCap size={22} className="animate-pulse" />
-            </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className={`font-black tracking-tight ${isLight ? "text-slate-900" : "text-white"} text-base`}>MT CORE</span>
-                <span className="text-[10px] bg-sky-500/20 border border-sky-500/40 text-sky-500 font-black px-1.5 py-0.2 rounded uppercase">
-                  SMS
-                </span>
-              </div>
-              <span className={`text-[10px] ${isLight ? "text-slate-500" : "text-gray-400"} block font-medium`}>Enterprise School ERP</span>
-            </div>
+            <MTCoreLogo
+              variant="emerald"
+              size="md"
+              shape="rectangle"
+              theme={isLight ? "light" : "dark"}
+              showText={true}
+            />
           </Link>
         </div>
 
