@@ -632,6 +632,11 @@ export interface JournalEntry {
 }
 
 interface GlobalContextType {
+  // Theme State
+  theme: "light" | "dark";
+  setTheme: (theme: "light" | "dark") => void;
+  toggleTheme: () => void;
+
   // SaaS Admin State
   demoRequests: DemoRequest[];
   tenants: Tenant[];
@@ -1052,6 +1057,28 @@ const SEED_HR_LOANS: HRLoan[] = [];
 const GlobalContext = createContext<GlobalContextType | undefined>(undefined);
 
 export function GlobalProvider({ children }: { children: React.ReactNode }) {
+  const [theme, setThemeState] = useState<"light" | "dark">("dark");
+
+  const setTheme = (newTheme: "light" | "dark") => {
+    setThemeState(newTheme);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("mt_site_theme", newTheme);
+    }
+  };
+
+  const toggleTheme = () => {
+    setTheme(theme === "light" ? "dark" : "light");
+  };
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("mt_site_theme");
+      if (stored === "light" || stored === "dark") {
+        setThemeState(stored);
+      }
+    }
+  }, []);
+
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
 
   useEffect(() => {
@@ -5369,6 +5396,10 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         salesTaxRate,
         setSalesTaxRate,
         isOffline,
+
+        theme,
+        setTheme,
+        toggleTheme,
 
         isOnlineOnlyBlocked,
       }}

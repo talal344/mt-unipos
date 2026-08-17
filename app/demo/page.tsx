@@ -16,7 +16,8 @@ import {
 } from "lucide-react";
 
 export default function DemoPage() {
-  const { addDemoRequest } = useGlobalContext();
+  const { addDemoRequest, theme } = useGlobalContext();
+  const isLight = theme === "light";
 
   const [demoForm, setDemoForm] = useState({
     name: "",
@@ -78,23 +79,31 @@ export default function DemoPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-black font-sans text-gray-100">
+    <div className={`flex flex-col min-h-screen font-sans transition-colors duration-200 ${
+      isLight ? "bg-slate-50 text-slate-900" : "bg-black text-gray-100"
+    }`}>
       <SiteHeader />
 
-      <section className="relative py-24 flex-grow flex items-center justify-center overflow-hidden border-b border-brand-dark-border">
+      <section className={`relative py-24 flex-grow flex items-center justify-center overflow-hidden border-b transition-colors duration-200 ${
+        isLight ? "bg-white border-slate-200" : "border-brand-dark-border"
+      }`}>
         {/* Glow background */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(14,165,233,0.06),transparent_60%)] pointer-events-none" />
 
         <div className="max-w-xl w-full mx-auto px-4 sm:px-6 relative z-10">
-          <div className="bg-brand-dark-surface/80 border border-brand-sky/20 rounded-3xl p-8 sky-glow glass-panel">
+          <div className={`rounded-3xl p-8 border shadow-2xl transition-all ${
+            isLight
+              ? "bg-white border-slate-200 shadow-slate-200/80"
+              : "bg-brand-dark-surface/80 border-brand-sky/20 shadow-brand-sky/5"
+          }`}>
 
             {/* Header */}
             <div className="text-center mb-8">
-              <Laptop className="text-brand-sky mx-auto mb-3" size={32} />
-              <h2 className="text-xl sm:text-2xl font-black text-white mb-2">
+              <Laptop className="text-sky-500 mx-auto mb-3" size={32} />
+              <h2 className={`text-xl sm:text-2xl font-black mb-2 ${isLight ? "text-slate-900" : "text-white"}`}>
                 {submitted ? "Request Submitted!" : "Configure Sandbox"}
               </h2>
-              <p className="text-xs text-gray-400 leading-relaxed">
+              <p className={`text-xs leading-relaxed ${isLight ? "text-slate-600 font-medium" : "text-gray-400"}`}>
                 {submitted
                   ? "Your demo request has been received. Save your ticket number to track status."
                   : "MT Core provides an instant secure demo environment sharded specifically for your industry line. The core technology behind your business."}
@@ -105,14 +114,16 @@ export default function DemoPage() {
             {submitted ? (
               <div className="space-y-4 animate-fade-in-up">
                 {/* Ticket Number box */}
-                <div className="bg-black/60 border border-brand-sky/40 rounded-2xl px-6 py-5 text-center">
-                  <p className="text-[9px] uppercase tracking-widest text-gray-500 mb-1.5 font-semibold">
+                <div className={`rounded-2xl px-6 py-5 text-center border ${
+                  isLight ? "bg-slate-50 border-sky-300 shadow-xs" : "bg-black/60 border-brand-sky/40"
+                }`}>
+                  <p className={`text-[9px] uppercase tracking-widest mb-1.5 font-bold ${isLight ? "text-slate-500" : "text-gray-500"}`}>
                     Your Ticket Number
                   </p>
-                  <p className="text-3xl font-black font-mono text-brand-sky tracking-widest">
+                  <p className="text-3xl font-black font-mono text-sky-500 tracking-widest">
                     {ticketNo}
                   </p>
-                  <p className="text-[10px] text-gray-500 mt-2">
+                  <p className={`text-[10px] mt-2 ${isLight ? "text-slate-500" : "text-gray-500"}`}>
                     Save this number — you&apos;ll need it to track your demo request
                   </p>
                 </div>
@@ -121,20 +132,24 @@ export default function DemoPage() {
                 <div className="grid grid-cols-1 gap-2">
                   <button
                     onClick={() => setShowReceiptModal(true)}
-                    className="w-full flex items-center justify-center gap-2 py-3 bg-brand-sky hover:bg-brand-sky-light text-black font-black text-xs uppercase rounded-xl transition-all transform hover:scale-[1.01]"
+                    className="w-full flex items-center justify-center gap-2 py-3 bg-sky-500 hover:bg-sky-600 text-white font-black text-xs uppercase rounded-xl transition-all transform hover:scale-[1.01] shadow-xs cursor-pointer"
                   >
                     <Receipt size={14} /> View Full Receipt
                   </button>
                   <div className="grid grid-cols-2 gap-2">
                     <button
                       onClick={() => window.print()}
-                      className="flex items-center justify-center gap-1.5 py-2.5 border border-brand-dark-border text-gray-300 text-[10px] font-black uppercase rounded-xl hover:bg-white/5 transition"
+                      className={`flex items-center justify-center gap-1.5 py-2.5 border text-[10px] font-black uppercase rounded-xl transition cursor-pointer ${
+                        isLight ? "border-slate-200 text-slate-700 hover:bg-slate-50" : "border-brand-dark-border text-gray-300 hover:bg-white/5"
+                      }`}
                     >
                       <Printer size={12} /> Print
                     </button>
                     <a
                       href="/tracking"
-                      className="flex items-center justify-center gap-1.5 py-2.5 border border-brand-dark-border text-gray-300 text-[10px] font-black uppercase rounded-xl hover:bg-white/5 transition"
+                      className={`flex items-center justify-center gap-1.5 py-2.5 border text-[10px] font-black uppercase rounded-xl transition cursor-pointer ${
+                        isLight ? "border-slate-200 text-slate-700 hover:bg-slate-50" : "border-brand-dark-border text-gray-300 hover:bg-white/5"
+                      }`}
                     >
                       <ExternalLink size={12} /> Track Status
                     </a>
@@ -143,7 +158,9 @@ export default function DemoPage() {
 
                 <button
                   onClick={handleReset}
-                  className="w-full text-[10px] text-gray-600 hover:text-gray-400 transition pt-2"
+                  className={`w-full text-[10px] transition pt-2 cursor-pointer ${
+                    isLight ? "text-slate-500 hover:text-slate-800" : "text-gray-600 hover:text-gray-400"
+                  }`}
                 >
                   Submit another request
                 </button>
@@ -152,13 +169,13 @@ export default function DemoPage() {
               /* ── Form ── */
               <form onSubmit={handleSubmit} className="space-y-4 text-xs">
                 {errorMsg && (
-                  <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-3 rounded-xl text-xs font-bold flex items-center gap-2">
-                    <AlertTriangle size={16} className="shrink-0 text-red-400" />
+                  <div className="bg-red-500/10 border border-red-500/30 text-red-500 p-3 rounded-xl text-xs font-bold flex items-center gap-2">
+                    <AlertTriangle size={16} className="shrink-0 text-red-500" />
                     <span>{errorMsg}</span>
                   </div>
                 )}
                 <div>
-                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
+                  <label className={`block text-[10px] uppercase font-bold mb-1 ${isLight ? "text-slate-600" : "text-gray-400"}`}>
                     Your Full Name
                   </label>
                   <input
@@ -167,12 +184,16 @@ export default function DemoPage() {
                     placeholder="e.g. Mian Talal"
                     value={demoForm.name}
                     onChange={(e) => setDemoForm({ ...demoForm, name: e.target.value })}
-                    className="w-full bg-black border border-brand-dark-border p-2.5 rounded text-white focus:outline-none focus:border-brand-sky"
+                    className={`w-full p-2.5 rounded-xl transition border focus:outline-none ${
+                      isLight
+                        ? "bg-slate-50 border-slate-300 text-slate-900 focus:bg-white focus:border-sky-500"
+                        : "bg-black border-brand-dark-border text-white focus:border-brand-sky"
+                    }`}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
+                  <label className={`block text-[10px] uppercase font-bold mb-1 ${isLight ? "text-slate-600" : "text-gray-400"}`}>
                     Business Name
                   </label>
                   <input
@@ -181,12 +202,16 @@ export default function DemoPage() {
                     placeholder="e.g. Al-Fatah Stores"
                     value={demoForm.businessName}
                     onChange={(e) => setDemoForm({ ...demoForm, businessName: e.target.value })}
-                    className="w-full bg-black border border-brand-dark-border p-2.5 rounded text-white focus:outline-none focus:border-brand-sky"
+                    className={`w-full p-2.5 rounded-xl transition border focus:outline-none ${
+                      isLight
+                        ? "bg-slate-50 border-slate-300 text-slate-900 focus:bg-white focus:border-sky-500"
+                        : "bg-black border-brand-dark-border text-white focus:border-brand-sky"
+                    }`}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
+                  <label className={`block text-[10px] uppercase font-bold mb-1 ${isLight ? "text-slate-600" : "text-gray-400"}`}>
                     Email Address
                   </label>
                   <input
@@ -195,12 +220,16 @@ export default function DemoPage() {
                     placeholder="e.g. sales@company.com"
                     value={demoForm.email}
                     onChange={(e) => setDemoForm({ ...demoForm, email: e.target.value })}
-                    className="w-full bg-black border border-brand-dark-border p-2.5 rounded text-white focus:outline-none focus:border-brand-sky"
+                    className={`w-full p-2.5 rounded-xl transition border focus:outline-none ${
+                      isLight
+                        ? "bg-slate-50 border-slate-300 text-slate-900 focus:bg-white focus:border-sky-500"
+                        : "bg-black border-brand-dark-border text-white focus:border-brand-sky"
+                    }`}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
+                  <label className={`block text-[10px] uppercase font-bold mb-1 ${isLight ? "text-slate-600" : "text-gray-400"}`}>
                     Phone Number
                   </label>
                   <input
@@ -208,19 +237,27 @@ export default function DemoPage() {
                     placeholder="e.g. +92 321 5550100"
                     value={demoForm.phone}
                     onChange={(e) => setDemoForm({ ...demoForm, phone: e.target.value })}
-                    className="w-full bg-black border border-brand-dark-border p-2.5 rounded text-white focus:outline-none focus:border-brand-sky"
+                    className={`w-full p-2.5 rounded-xl transition border focus:outline-none ${
+                      isLight
+                        ? "bg-slate-50 border-slate-300 text-slate-900 focus:bg-white focus:border-sky-500"
+                        : "bg-black border-brand-dark-border text-white focus:border-brand-sky"
+                    }`}
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
+                    <label className={`block text-[10px] uppercase font-bold mb-1 ${isLight ? "text-slate-600" : "text-gray-400"}`}>
                       Country
                     </label>
                     <select
                       value={demoForm.country}
                       onChange={(e) => setDemoForm({ ...demoForm, country: e.target.value })}
-                      className="w-full bg-black border border-brand-dark-border p-2.5 rounded text-white focus:outline-none focus:border-brand-sky"
+                      className={`w-full p-2.5 rounded-xl transition border focus:outline-none ${
+                        isLight
+                          ? "bg-slate-50 border-slate-300 text-slate-900 focus:bg-white focus:border-sky-500"
+                          : "bg-black border-brand-dark-border text-white focus:border-brand-sky"
+                      }`}
                     >
                       <option>Pakistan</option>
                       <option>Saudi Arabia</option>
@@ -229,13 +266,17 @@ export default function DemoPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
+                    <label className={`block text-[10px] uppercase font-bold mb-1 ${isLight ? "text-slate-600" : "text-gray-400"}`}>
                       Software Line of Business
                     </label>
                     <select
                       value={demoForm.businessType}
                       onChange={(e) => setDemoForm({ ...demoForm, businessType: e.target.value })}
-                      className="w-full bg-black border border-brand-dark-border p-2.5 rounded text-white focus:outline-none focus:border-brand-sky font-bold"
+                      className={`w-full p-2.5 rounded-xl transition border focus:outline-none font-bold ${
+                        isLight
+                          ? "bg-slate-50 border-slate-300 text-slate-900 focus:bg-white focus:border-sky-500"
+                          : "bg-black border-brand-dark-border text-white focus:border-brand-sky"
+                      }`}
                     >
                       <option value="POS (Supermarkets & Retail)">🏬 POS (Supermarkets &amp; Retail Stores)</option>
                       <option value="HRMS (Human Resources & Payroll)">👥 HRMS (Human Resources &amp; Payroll)</option>
@@ -246,15 +287,17 @@ export default function DemoPage() {
 
                 <button
                   type="submit"
-                  className="w-full py-3 bg-brand-sky hover:bg-brand-sky-light text-black font-black uppercase text-xs tracking-wider rounded transition-all transform hover:scale-[1.01]"
+                  className="w-full py-3.5 bg-gradient-to-r from-sky-500 to-indigo-600 hover:opacity-95 text-white font-black uppercase text-xs tracking-wider rounded-xl transition-all transform hover:scale-[1.01] shadow-md shadow-sky-500/20 cursor-pointer"
                 >
                   Confirm Demo Allocation
                 </button>
               </form>
             )}
 
-            <div className="flex items-center gap-1.5 justify-center text-[10px] text-gray-500 mt-6 border-t border-brand-dark-border/40 pt-4">
-              <ShieldCheck size={14} className="text-emerald-400" />
+            <div className={`flex items-center gap-1.5 justify-center text-[10px] mt-6 border-t pt-4 ${
+              isLight ? "border-slate-200 text-slate-500" : "border-brand-dark-border/40 text-gray-500"
+            }`}>
+              <ShieldCheck size={14} className="text-emerald-500" />
               <span>Simulated SSL Sharded Security Standard</span>
             </div>
           </div>

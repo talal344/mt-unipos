@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useState } from "react";
 import Link from "next/link";
 import {
@@ -25,11 +23,14 @@ import {
   Globe
 } from "lucide-react";
 import MTCoreLogo from "@/components/mt-logo";
+import { useGlobalContext } from "@/context/global-context";
 
 type LegalModalType = "privacy" | "terms" | "sla" | null;
 
 export default function SiteFooter() {
   const [activeModal, setActiveModal] = useState<LegalModalType>(null);
+  const { theme } = useGlobalContext();
+  const isLight = theme === "light";
 
   const posLinks = [
     { name: "Supermarket & Retail POS", href: "/pos" },
@@ -68,55 +69,69 @@ export default function SiteFooter() {
   ];
 
   return (
-    <footer className="bg-gradient-to-b from-[#060a10] via-black to-black border-t border-gray-800 text-gray-400 font-sans relative overflow-hidden">
+    <footer className={`transition-colors duration-200 ${
+      isLight
+        ? "bg-slate-50 border-t border-slate-200 text-slate-600"
+        : "bg-gradient-to-b from-[#060a10] via-black to-black border-t border-gray-800 text-gray-400"
+    } font-sans relative overflow-hidden`}>
       {/* Top Ambient Glow */}
       <div className="absolute top-0 left-1/4 w-96 h-32 bg-sky-500/5 blur-3xl pointer-events-none" />
       <div className="absolute top-0 right-1/4 w-96 h-32 bg-emerald-500/5 blur-3xl pointer-events-none" />
 
       {/* Main Multi-Column Footer Grid */}
       <div className="w-full max-w-[1800px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 pt-16 pb-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-10 xl:gap-12 pb-14 border-b border-gray-800/80">
+        <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-10 xl:gap-12 pb-14 border-b ${
+          isLight ? "border-slate-200" : "border-gray-800/80"
+        }`}>
           
           {/* Column 1 & 2: Brand Identity & Contact */}
           <div className="lg:col-span-2 space-y-6">
             <Link href="/" className="inline-block">
-              <MTCoreLogo variant="sky" size="lg" shape="rectangle" showText={true} />
+              <MTCoreLogo variant="sky" size="lg" shape="rectangle" showText={true} theme={isLight ? "light" : "dark"} />
             </Link>
 
-            <p className="text-xs text-gray-400 leading-relaxed max-w-md">
-              <b>MT Core</b> is a next-generation, autonomous Multi-Tenant Cloud ERP ecosystem uniting 
-              <b>Universal POS &amp; Retail</b>, <b>Corporate HRMS &amp; Payroll</b>, and 
-              <b>EduCloud SMS 360</b> into a single, high-speed platform.
+            <p className={`text-xs leading-relaxed max-w-md ${isLight ? "text-slate-600" : "text-gray-400"}`}>
+              <b className={isLight ? "text-slate-900" : "text-white"}>MT Core</b> is a next-generation, autonomous Multi-Tenant Cloud ERP ecosystem uniting 
+              <b className={isLight ? "text-slate-900" : "text-white"}> Universal POS &amp; Retail</b>, <b className={isLight ? "text-slate-900" : "text-white"}>Corporate HRMS &amp; Payroll</b>, and 
+              <b className={isLight ? "text-slate-900" : "text-white"}> EduCloud SMS 360</b> into a single, high-speed platform.
             </p>
 
             {/* Live System Status Widget */}
-            <div className="inline-flex items-center gap-2.5 px-3.5 py-2 rounded-xl bg-[#0b121e] border border-emerald-500/30 text-xs text-gray-300 shadow-sm">
-              <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
+            <div className={`inline-flex items-center gap-2.5 px-3.5 py-2 rounded-xl border text-xs shadow-xs ${
+              isLight ? "bg-white border-emerald-300 text-slate-800" : "bg-[#0b121e] border-emerald-500/30 text-gray-300"
+            }`}>
+              <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
               <div className="flex items-center gap-1.5 font-bold">
-                <span className="text-emerald-400">Operational</span>
-                <span className="text-gray-500">&bull;</span>
-                <span className="text-gray-400 text-[11px] font-mono">114 Microservices Live (&lt;15ms)</span>
+                <span className="text-emerald-600">Operational</span>
+                <span className="text-gray-400">&bull;</span>
+                <span className={`text-[11px] font-mono ${isLight ? "text-slate-500" : "text-gray-400"}`}>114 Microservices Live (&lt;15ms)</span>
               </div>
             </div>
 
             {/* Direct Contact Matrix */}
             <div className="space-y-2.5 text-xs">
-              <div className="flex items-center gap-2.5 text-gray-300 hover:text-sky-400 transition">
-                <div className="w-7 h-7 rounded-lg bg-sky-500/10 border border-sky-500/20 text-sky-400 flex items-center justify-center shrink-0">
+              <div className={`flex items-center gap-2.5 transition ${isLight ? "text-slate-700 hover:text-sky-600" : "text-gray-300 hover:text-sky-400"}`}>
+                <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
+                  isLight ? "bg-sky-100 text-sky-700" : "bg-sky-500/10 border border-sky-500/20 text-sky-400"
+                }`}>
                   <Mail size={14} />
                 </div>
                 <a href="mailto:miantalal2@gmail.com" className="font-bold">miantalal2@gmail.com</a>
               </div>
 
-              <div className="flex items-center gap-2.5 text-gray-300 hover:text-emerald-400 transition">
-                <div className="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+              <div className={`flex items-center gap-2.5 transition ${isLight ? "text-slate-700 hover:text-emerald-600" : "text-gray-300 hover:text-emerald-400"}`}>
+                <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
+                  isLight ? "bg-emerald-100 text-emerald-700" : "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400"
+                }`}>
                   <Phone size={14} />
                 </div>
                 <a href="tel:03396399895" className="font-bold">03396399895</a>
               </div>
 
-              <div className="flex items-center gap-2.5 text-emerald-400 hover:underline transition">
-                <div className="w-7 h-7 rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0">
+              <div className={`flex items-center gap-2.5 transition ${isLight ? "text-emerald-700 hover:underline" : "text-emerald-400 hover:underline"}`}>
+                <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
+                  isLight ? "bg-emerald-100 text-emerald-700" : "bg-emerald-500/20 border border-emerald-500/30 text-emerald-400"
+                }`}>
                   <MessageCircle size={14} />
                 </div>
                 <a href="https://wa.me/923396399895" target="_blank" rel="noreferrer" className="font-black tracking-wide">
@@ -124,11 +139,12 @@ export default function SiteFooter() {
                 </a>
               </div>
 
-              <div className="flex items-start gap-2.5 text-gray-400 pt-1">
-                <div className="w-7 h-7 rounded-lg bg-gray-800 text-gray-400 flex items-center justify-center shrink-0 mt-0.5">
+              <div className={`flex items-start gap-2.5 pt-1 ${isLight ? "text-slate-500" : "text-gray-400"}`}>
+                <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${
+                  isLight ? "bg-slate-200 text-slate-700" : "bg-gray-800 text-gray-400"
+                }`}>
                   <MapPin size={14} />
                 </div>
-                <span className="text-[11px] leading-snug">Headquarters: Kohinoor Plaza, Jaranwala Road, Faisalabad, Pakistan.</span>
               </div>
             </div>
           </div>

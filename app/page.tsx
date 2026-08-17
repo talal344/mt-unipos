@@ -85,8 +85,8 @@ const howItWorks = [
 ];
 
 export default function HomePage() {
-
-  const { addDemoRequest } = useGlobalContext();
+  const { addDemoRequest, theme } = useGlobalContext();
+  const isLight = theme === "light";
   const [billingCycle, setBillingCycle]         = useState<"monthly"|"yearly">("yearly");
   const [selectedIndustry, setSelectedIndustry]   = useState("Super Markets");
   const [demoSubmitted, setDemoSubmitted]         = useState(false);
@@ -118,20 +118,26 @@ export default function HomePage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-black font-sans text-gray-100">
+    <div className={`flex flex-col min-h-screen font-sans transition-colors duration-200 ${
+      isLight ? "bg-slate-50 text-slate-900" : "bg-black text-gray-100"
+    }`}>
       <SiteHeader />
 
       {/* ══════════════════════════════════════════════════════════════════════
           HERO
       ══════════════════════════════════════════════════════════════════════ */}
-      <section className="relative pt-24 pb-28 overflow-hidden border-b border-brand-dark-border">
+      <section className={`relative pt-24 pb-28 overflow-hidden border-b transition-colors duration-200 ${
+        isLight ? "bg-white border-slate-200" : "border-brand-dark-border"
+      }`}>
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(14,165,233,0.10),transparent_65%)] pointer-events-none" />
         <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[900px] h-[400px] bg-brand-sky/4 rounded-full blur-[130px] pointer-events-none" />
 
         <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 text-center relative z-10">
-          <div className="inline-flex items-center gap-2 bg-[#0b121e] border border-sky-500/30 px-4 py-1.5 rounded-full mb-6 shadow-lg shadow-sky-500/10 animate-fade-in-up">
-            <Sparkles className="text-sky-400 animate-bounce" size={14} />
-            <span className="text-xs font-black uppercase tracking-wider text-sky-400">
+          <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-6 shadow-sm animate-fade-in-up ${
+            isLight ? "bg-sky-50 border border-sky-200 text-sky-700" : "bg-[#0b121e] border border-sky-500/30 text-sky-400 shadow-sky-500/10"
+          }`}>
+            <Sparkles className="text-sky-500 animate-bounce" size={14} />
+            <span className="text-xs font-black uppercase tracking-wider">
               MT Core 3.0 — The Unified Autonomous Enterprise Ecosystem
             </span>
           </div>
@@ -141,33 +147,43 @@ export default function HomePage() {
               One Unified Engine.
             </span>
             <br />
-            <span className="text-white">Three Standalone Super-Systems.</span>
+            <span className={isLight ? "text-slate-900" : "text-white"}>Three Standalone Super-Systems.</span>
           </h1>
 
           {/* 3 Flagship Pills */}
           <div className="flex flex-wrap justify-center items-center gap-3 mb-8">
-            <span className="px-3.5 py-1.5 rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/30 text-xs font-bold flex items-center gap-1.5 shadow-sm">
+            <span className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs border ${
+              isLight ? "bg-sky-50 text-sky-700 border-sky-200" : "bg-sky-500/10 text-sky-400 border-sky-500/30"
+            }`}>
               <Laptop size={14} /> 🏬 Retail &amp; Supermarket POS ERP
             </span>
-            <span className="px-3.5 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs font-bold flex items-center gap-1.5 shadow-sm">
+            <span className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs border ${
+              isLight ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+            }`}>
               <Users size={14} /> 👥 Corporate HRMS &amp; Payroll
             </span>
-            <span className="px-3.5 py-1.5 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/30 text-xs font-bold flex items-center gap-1.5 shadow-sm">
+            <span className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs border ${
+              isLight ? "bg-purple-50 text-purple-700 border-purple-200" : "bg-purple-500/10 text-purple-400 border-purple-500/30"
+            }`}>
               <GraduationCap size={14} /> 🎓 School &amp; Campus ERP (SMS)
             </span>
           </div>
 
-          <p className="max-w-2xl mx-auto text-sm sm:text-base text-gray-400 leading-relaxed mb-10">
+          <p className={`max-w-2xl mx-auto text-sm sm:text-base leading-relaxed mb-10 ${
+            isLight ? "text-slate-600 font-medium" : "text-gray-400"
+          }`}>
             MT Core powers high-volume retail transactions, corporate employee lifecycles, and academic institutional governance through independent, ultra-secure, multi-tenant architectures.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
             <Link href="/demo"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 via-emerald-500 to-purple-500 px-8 py-4 text-sm font-black text-black hover:opacity-95 transition-all transform hover:scale-105 shadow-2xl shadow-emerald-900/30">
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 via-emerald-500 to-purple-500 px-8 py-4 text-sm font-black text-white hover:opacity-95 transition-all transform hover:scale-105 shadow-xl shadow-sky-500/20">
               Request Free Demo Sandbox <ArrowRight size={16} />
             </Link>
             <Link href="/login"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-gray-800 bg-[#0b121e] hover:bg-[#121c2e] px-8 py-4 text-sm font-bold text-white transition">
+              className={`w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border px-8 py-4 text-sm font-bold transition ${
+                isLight ? "border-slate-300 bg-white hover:bg-slate-100 text-slate-800 shadow-sm" : "border-gray-800 bg-[#0b121e] hover:bg-[#121c2e] text-white"
+              }`}>
               <Laptop size={14} /> Instant Access Portals
             </Link>
           </div>
@@ -175,83 +191,98 @@ export default function HomePage() {
           {/* Animated Product Demo */}
           <div className="relative w-full max-w-5xl xl:max-w-6xl mx-auto mt-12 mb-8 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
             <div className="absolute inset-0 bg-gradient-to-r from-brand-sky/20 to-purple-500/20 blur-3xl opacity-50 rounded-[40px]"></div>
-            <div className="relative bg-[#09090b] border border-white/10 rounded-[24px] shadow-2xl overflow-hidden shadow-brand-sky/10 ring-1 ring-white/5">
+            <div className={`relative border rounded-[24px] shadow-2xl overflow-hidden ${
+              isLight ? "bg-white border-slate-200 ring-1 ring-slate-200/50" : "bg-[#09090b] border-white/10 shadow-brand-sky/10 ring-1 ring-white/5"
+            }`}>
               {/* Fake Window Header */}
-              <div className="bg-[#18181b] px-4 py-3 flex items-center gap-2 border-b border-white/5">
+              <div className={`px-4 py-3 flex items-center gap-2 border-b ${
+                isLight ? "bg-slate-100 border-slate-200" : "bg-[#18181b] border-white/5"
+              }`}>
                 <div className="flex gap-1.5">
                   <div className="w-3 h-3 rounded-full bg-red-500/80"></div>
                   <div className="w-3 h-3 rounded-full bg-yellow-500/80"></div>
                   <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
                 </div>
-                <div className="mx-auto flex items-center gap-2 text-[10px] text-gray-400 font-mono bg-black/40 px-3 py-1 rounded border border-white/5">
-                  <Lock size={10} className="text-emerald-400" />
+                <div className={`mx-auto flex items-center gap-2 text-[10px] font-mono px-3 py-1 rounded border ${
+                  isLight ? "text-slate-600 bg-white border-slate-300" : "text-gray-400 bg-black/40 border-white/5"
+                }`}>
+                  <Lock size={10} className="text-emerald-500" />
                   pos.mtcore.xyz/pos
                 </div>
               </div>
               {/* Fake POS Interface */}
               <div className="flex h-[350px]">
                 {/* Left: Products */}
-                <div className="w-2/3 p-4 bg-[#09090b] overflow-hidden relative">
+                <div className={`w-2/3 p-4 overflow-hidden relative ${isLight ? "bg-slate-50" : "bg-[#09090b]"}`}>
                   <div className="grid grid-cols-3 gap-3">
                     {/* Animated Item 1 */}
-                    <div className="bg-[#18181b] border border-white/10 p-3 rounded-xl flex flex-col items-center justify-center h-28 relative group">
+                    <div className={`border p-3 rounded-xl flex flex-col items-center justify-center h-28 relative group ${
+                      isLight ? "bg-white border-slate-200 shadow-xs" : "bg-[#18181b] border-white/10"
+                    }`}>
                       <div className="w-10 h-10 bg-brand-sky/20 rounded-full mb-2 flex items-center justify-center"><Package size={16} className="text-brand-sky" /></div>
-                      <div className="text-[10px] font-bold text-white">Wireless Mouse</div>
-                      <div className="text-[10px] text-gray-500">$29.99</div>
+                      <div className={`text-[10px] font-bold ${isLight ? "text-slate-900" : "text-white"}`}>Wireless Mouse</div>
+                      <div className={`text-[10px] ${isLight ? "text-slate-500 font-semibold" : "text-gray-500"}`}>$29.99</div>
                       {/* Scan Laser Animation */}
                       <div className="absolute inset-0 border border-brand-sky rounded-xl opacity-0 animate-[scan_3s_ease-in-out_infinite]"></div>
                       <div className="absolute top-0 left-0 w-full h-[2px] bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)] opacity-0 animate-[laser_3s_ease-in-out_infinite]"></div>
                     </div>
                     {/* Item 2 */}
-                    <div className="bg-[#18181b] border border-white/10 p-3 rounded-xl flex flex-col items-center justify-center h-28">
+                    <div className={`border p-3 rounded-xl flex flex-col items-center justify-center h-28 ${
+                      isLight ? "bg-white border-slate-200 shadow-xs" : "bg-[#18181b] border-white/10"
+                    }`}>
                       <div className="w-10 h-10 bg-purple-500/20 rounded-full mb-2 flex items-center justify-center"><Laptop size={16} className="text-purple-400" /></div>
-                      <div className="text-[10px] font-bold text-white">Mechanical Keyboard</div>
-                      <div className="text-[10px] text-gray-500">$89.99</div>
+                      <div className={`text-[10px] font-bold ${isLight ? "text-slate-900" : "text-white"}`}>Mechanical Keyboard</div>
+                      <div className={`text-[10px] ${isLight ? "text-slate-500 font-semibold" : "text-gray-500"}`}>$89.99</div>
                     </div>
                     {/* Item 3 */}
-                    <div className="bg-[#18181b] border border-white/10 p-3 rounded-xl flex flex-col items-center justify-center h-28">
+                    <div className={`border p-3 rounded-xl flex flex-col items-center justify-center h-28 ${
+                      isLight ? "bg-white border-slate-200 shadow-xs" : "bg-[#18181b] border-white/10"
+                    }`}>
                       <div className="w-10 h-10 bg-emerald-500/20 rounded-full mb-2 flex items-center justify-center"><HeadphonesIcon size={16} className="text-emerald-400" /></div>
-                      <div className="text-[10px] font-bold text-white">Gaming Headset</div>
-                      <div className="text-[10px] text-gray-500">$59.99</div>
+                      <div className={`text-[10px] font-bold ${isLight ? "text-slate-900" : "text-white"}`}>Gaming Headset</div>
+                      <div className={`text-[10px] ${isLight ? "text-slate-500 font-semibold" : "text-gray-500"}`}>$59.99</div>
                     </div>
                   </div>
                   
                   {/* Floating Add to Cart notification */}
-                  <div className="absolute top-6 left-1/2 -translate-x-1/2 bg-emerald-500 text-black text-[10px] font-bold px-3 py-1.5 rounded-full flex items-center gap-1 opacity-0 animate-[pop-in_3s_ease-in-out_infinite]">
-                    <CheckCircle2 size={12} />
-                    Added to cart
+                  <div className="absolute top-6 left-1/2 -translate-x-1/2 bg-emerald-500 text-white text-[10px] font-bold px-3 py-1.5 rounded-full flex items-center gap-1 opacity-0 animate-[pop-in_3s_ease-in-out_infinite] shadow-md">
+                    <CheckCircle2 size={12} /> Added to Cart
                   </div>
                 </div>
 
-                {/* Right: Cart */}
-                <div className="w-1/3 bg-[#18181b] border-l border-white/5 p-4 flex flex-col">
-                  <div className="text-xs font-bold text-white mb-4 flex items-center gap-2">
-                    <Receipt size={14} className="text-brand-sky" />
-                    Current Order
-                  </div>
-                  <div className="flex-1">
-                    {/* Animated Cart Item */}
-                    <div className="flex justify-between items-center bg-black/40 border border-white/5 p-2 rounded mb-2 overflow-hidden relative">
-                      <div className="absolute inset-0 bg-brand-sky/10 animate-[flash_3s_ease-in-out_infinite]"></div>
-                      <div>
-                        <div className="text-[10px] font-bold text-white relative z-10">Wireless Mouse</div>
-                        <div className="text-[9px] text-gray-500 relative z-10">1 x $29.99</div>
+                {/* Right: Cart Panel */}
+                <div className={`w-1/3 p-4 flex flex-col justify-between ${
+                  isLight ? "bg-white border-l border-slate-200 text-slate-900" : "bg-[#121215] border-l border-white/5 text-white"
+                }`}>
+                  <div>
+                    <div className="flex justify-between items-center mb-3">
+                      <div className={`text-xs font-bold ${isLight ? "text-slate-900" : "text-white"}`}>Current Order #1042</div>
+                      <div className="text-[10px] bg-emerald-500/20 text-emerald-500 font-bold px-1.5 py-0.5 rounded">Walk-in</div>
+                    </div>
+                    {/* Cart Item Row */}
+                    <div className={`flex items-center justify-between p-2 rounded-lg border text-xs relative overflow-hidden ${
+                      isLight ? "bg-slate-50 border-slate-200" : "bg-[#18181b] border-white/10"
+                    }`}>
+                      <div className="absolute inset-0 bg-brand-sky/20 opacity-0 animate-[flash_3s_ease-in-out_infinite]"></div>
+                      <div className="relative z-10">
+                        <div className={`font-bold text-[10px] ${isLight ? "text-slate-900" : "text-white"}`}>Wireless Mouse</div>
+                        <div className={`text-[8px] ${isLight ? "text-slate-500" : "text-gray-500"}`}>Qty: 1</div>
                       </div>
                       <div className="text-[10px] font-mono text-brand-sky relative z-10">$29.99</div>
                     </div>
                   </div>
-                  <div className="pt-3 border-t border-white/10">
-                    <div className="flex justify-between items-center text-xs text-gray-400 mb-1">
+                  <div className={`pt-3 border-t ${isLight ? "border-slate-200" : "border-white/10"}`}>
+                    <div className={`flex justify-between items-center text-xs mb-1 ${isLight ? "text-slate-600" : "text-gray-400"}`}>
                       <span>Subtotal</span><span>$29.99</span>
                     </div>
-                    <div className="flex justify-between items-center text-xs text-gray-400 mb-2">
+                    <div className={`flex justify-between items-center text-xs mb-2 ${isLight ? "text-slate-600" : "text-gray-400"}`}>
                       <span>Tax (10%)</span><span>$3.00</span>
                     </div>
-                    <div className="flex justify-between items-center text-sm font-bold text-white mb-4">
-                      <span>Total</span><span className="text-brand-sky">$32.99</span>
+                    <div className={`flex justify-between items-center text-sm font-bold mb-4 ${isLight ? "text-slate-900" : "text-white"}`}>
+                      <span>Total</span><span className="text-brand-sky font-black">$32.99</span>
                     </div>
-                    <button className="w-full bg-brand-sky text-black text-xs font-bold py-2 rounded-lg flex items-center justify-center gap-2 relative overflow-hidden group">
-                      <span className="relative z-10">Pay Now</span>
+                    <button className="w-full bg-brand-sky text-black text-xs font-bold py-2 rounded-lg flex items-center justify-center gap-2 relative overflow-hidden group shadow-sm">
+                      <span className="relative z-10 font-black">Pay Now</span>
                       <ArrowRight size={14} className="relative z-10" />
                       <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform"></div>
                     </button>
@@ -298,13 +329,17 @@ export default function HomePage() {
       {/* ══════════════════════════════════════════════════════════════════════
           STATS BAR
       ══════════════════════════════════════════════════════════════════════ */}
-      <section className="py-10 border-b border-brand-dark-border bg-brand-dark-surface/30">
+      <section className={`py-10 border-b transition-colors duration-200 ${
+        isLight ? "bg-white border-slate-200 text-slate-900" : "bg-brand-dark-surface/30 border-brand-dark-border"
+      }`}>
         <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16">
           <div className="grid grid-cols-3 lg:grid-cols-6 gap-6 text-center">
             {statsBar.map(s => (
               <div key={s.label}>
-                <div className="text-2xl sm:text-3xl font-black font-mono text-brand-sky">{s.value}</div>
-                <div className="text-[10px] text-gray-500 uppercase tracking-wider mt-0.5">{s.label}</div>
+                <div className="text-2xl sm:text-3xl font-black font-mono text-sky-500">{s.value}</div>
+                <div className={`text-[10px] uppercase tracking-wider mt-0.5 font-bold ${
+                  isLight ? "text-slate-500" : "text-gray-500"
+                }`}>{s.label}</div>
               </div>
             ))}
           </div>
@@ -312,20 +347,21 @@ export default function HomePage() {
       </section>
 
       {/* ══════════════════════════════════════════════════════════════════════
-          INDUSTRIES
-      ══════════════════════════════════════════════════════════════════════ */}
-      {/* ══════════════════════════════════════════════════════════════════════
           INDUSTRIES & SOFTWARE SUITES
       ══════════════════════════════════════════════════════════════════════ */}
-      <section className="py-20 bg-brand-dark-surface/20 border-b border-brand-dark-border">
+      <section className={`py-20 border-b transition-colors duration-200 ${
+        isLight ? "bg-slate-50 border-slate-200 text-slate-900" : "bg-brand-dark-surface/20 border-brand-dark-border"
+      }`}>
         <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16">
           <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 bg-brand-dark-surface border border-brand-dark-border px-3 py-1.5 rounded-full mb-4">
-              <Layers size={12} className="text-emerald-400" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Industries &amp; Software Lines</span>
+            <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-4 border ${
+              isLight ? "bg-white border-slate-200 text-slate-700 shadow-xs" : "bg-brand-dark-surface border-brand-dark-border text-gray-400"
+            }`}>
+              <Layers size={12} className="text-emerald-500" />
+              <span className="text-[10px] font-black uppercase tracking-widest">Industries &amp; Software Lines</span>
             </div>
-            <h2 className="text-2xl sm:text-4xl font-black text-white mb-4">Designed for Multi-Industry Operations</h2>
-            <p className="text-xs sm:text-sm text-gray-400 max-w-xl mx-auto">
+            <h2 className={`text-2xl sm:text-4xl font-black mb-4 ${isLight ? "text-slate-900" : "text-white"}`}>Designed for Multi-Industry Operations</h2>
+            <p className={`text-xs sm:text-sm max-w-xl mx-auto ${isLight ? "text-slate-600 font-medium" : "text-gray-400"}`}>
               MTCore powers retail stores, supermarkets, corporate HR &amp; payroll operations, educational institutions, healthcare clinics, and real estate networks.
             </p>
           </div>
@@ -336,22 +372,36 @@ export default function HomePage() {
               const active = selectedIndustry === ind.name;
               return (
                 <button key={ind.name} onClick={() => setSelectedIndustry(ind.name)}
-                  className={`p-4 rounded-2xl text-left border transition-all duration-300 ${active ? "bg-emerald-500/10 border-emerald-500 shadow-lg shadow-emerald-900/10" : "bg-black/40 border-brand-dark-border/60 hover:border-emerald-500/30"}`}>
-                  <div className={`p-2.5 rounded-lg w-fit mb-3 ${active ? "bg-emerald-500 text-black font-bold" : "bg-brand-dark-border text-gray-400"}`}>
+                  className={`p-4 rounded-2xl text-left border transition-all duration-300 cursor-pointer ${
+                    active
+                      ? isLight
+                        ? "bg-emerald-50 border-emerald-500 shadow-md text-slate-900"
+                        : "bg-emerald-500/10 border-emerald-500 shadow-lg shadow-emerald-900/10"
+                      : isLight
+                      ? "bg-white border-slate-200 hover:border-emerald-400 text-slate-800 shadow-xs"
+                      : "bg-black/40 border-brand-dark-border/60 hover:border-emerald-500/30"
+                  }`}>
+                  <div className={`p-2.5 rounded-lg w-fit mb-3 ${
+                    active ? "bg-emerald-500 text-white font-bold" : isLight ? "bg-slate-100 text-slate-600" : "bg-brand-dark-border text-gray-400"
+                  }`}>
                     <Icon size={16} />
                   </div>
-                  <h4 className="text-white font-bold text-xs mb-1">{ind.name}</h4>
-                  <p className="text-[9px] text-gray-500 leading-snug">{ind.desc}</p>
+                  <h4 className={`font-bold text-xs mb-1 ${isLight ? "text-slate-900" : "text-white"}`}>{ind.name}</h4>
+                  <p className={`text-[9px] leading-snug ${isLight ? "text-slate-500 font-medium" : "text-gray-500"}`}>{ind.desc}</p>
                 </button>
               );
             })}
           </div>
 
-          <div className="bg-black/50 border border-brand-dark-border rounded-xl p-4 text-center text-[10px]">
-            <span className="text-gray-500 mr-2">Supported Enterprise Sectors:</span>
+          <div className={`border rounded-xl p-4 text-center text-[10px] ${
+            isLight ? "bg-white border-slate-200 shadow-xs" : "bg-black/50 border-brand-dark-border"
+          }`}>
+            <span className={`mr-2 font-bold ${isLight ? "text-slate-500" : "text-gray-500"}`}>Supported Enterprise Sectors:</span>
             <span className="inline-flex flex-wrap justify-center gap-1.5">
               {["Supermarkets & Departmental Stores","HR & Payroll Management","Schools & Colleges","Hospitals & Clinics","Real Estate & Property","Retail Boutiques","Pharmacies","Restaurants & Cafes","Wholesale & Distribution"].map(t => (
-                <span key={t} className="bg-brand-dark-surface border border-brand-dark-border/50 px-2.5 py-1 rounded-lg text-gray-300 font-bold">{t}</span>
+                <span key={t} className={`border px-2.5 py-1 rounded-lg font-bold ${
+                  isLight ? "bg-slate-50 border-slate-200 text-slate-700" : "bg-brand-dark-surface border-brand-dark-border/50 text-gray-300"
+                }`}>{t}</span>
               ))}
             </span>
           </div>
@@ -361,16 +411,20 @@ export default function HomePage() {
       {/* ══════════════════════════════════════════════════════════════════════
           FEATURES GRID (12 cards)
       ══════════════════════════════════════════════════════════════════════ */}
-      <section className="py-20 border-b border-brand-dark-border relative overflow-hidden">
+      <section className={`py-20 border-b relative overflow-hidden transition-colors duration-200 ${
+        isLight ? "bg-white border-slate-200" : "border-brand-dark-border"
+      }`}>
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-emerald-500/3 rounded-full blur-[120px] pointer-events-none" />
         <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 relative z-10">
           <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 bg-brand-dark-surface border border-brand-dark-border px-3 py-1.5 rounded-full mb-4">
-              <Sparkles size={11} className="text-emerald-400" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Enterprise Platform Features</span>
+            <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-4 border ${
+              isLight ? "bg-slate-50 border-slate-200 text-slate-700" : "bg-brand-dark-surface border-brand-dark-border text-gray-400"
+            }`}>
+              <Sparkles size={11} className="text-emerald-500" />
+              <span className="text-[10px] font-black uppercase tracking-widest">Enterprise Platform Features</span>
             </div>
-            <h2 className="text-2xl sm:text-4xl font-black text-white mb-4">Everything Your Enterprise Needs</h2>
-            <p className="text-xs sm:text-sm text-gray-400 max-w-xl mx-auto">
+            <h2 className={`text-2xl sm:text-4xl font-black mb-4 ${isLight ? "text-slate-900" : "text-white"}`}>Everything Your Enterprise Needs</h2>
+            <p className={`text-xs sm:text-sm max-w-xl mx-auto ${isLight ? "text-slate-600 font-medium" : "text-gray-400"}`}>
               Multi-SaaS architecture — from POS barcode checkout and HR payroll to real-time analytics and double-entry accounting.
             </p>
           </div>
@@ -380,13 +434,21 @@ export default function HomePage() {
               const Icon = f.icon;
               return (
                 <div key={f.title}
-                  className={`bg-brand-dark-surface/40 border ${f.bg} hover:shadow-lg rounded-2xl p-5 flex items-start gap-4 group transition-all duration-200 hover:scale-[1.02]`}>
-                  <div className={`w-9 h-9 rounded-xl border ${f.bg} flex items-center justify-center shrink-0`}>
+                  className={`rounded-2xl p-5 flex items-start gap-4 group transition-all duration-200 hover:scale-[1.02] border ${
+                    isLight
+                      ? "bg-slate-50/80 border-slate-200 hover:border-slate-300 hover:bg-white shadow-xs"
+                      : `bg-brand-dark-surface/40 ${f.bg} hover:shadow-lg`
+                  }`}>
+                  <div className={`w-9 h-9 rounded-xl border flex items-center justify-center shrink-0 ${
+                    isLight ? "bg-white border-slate-200 shadow-xs" : f.bg
+                  }`}>
                     <Icon size={16} className={f.color} />
                   </div>
                   <div>
-                    <h4 className={`text-xs font-black text-white mb-1 group-hover:${f.color} transition`}>{f.title}</h4>
-                    <p className="text-[10px] text-gray-400 leading-snug">{f.desc}</p>
+                    <h4 className={`text-xs font-black mb-1 transition ${
+                      isLight ? "text-slate-900 group-hover:text-sky-600" : `text-white group-hover:${f.color}`
+                    }`}>{f.title}</h4>
+                    <p className={`text-[10px] leading-snug ${isLight ? "text-slate-600 font-medium" : "text-gray-400"}`}>{f.desc}</p>
                   </div>
                 </div>
               );
@@ -398,25 +460,31 @@ export default function HomePage() {
       {/* ══════════════════════════════════════════════════════════════════════
           HOW IT WORKS
       ══════════════════════════════════════════════════════════════════════ */}
-      <section className="py-20 bg-brand-dark-surface/20 border-b border-brand-dark-border">
+      <section className={`py-20 border-b transition-colors duration-200 ${
+        isLight ? "bg-slate-50 border-slate-200" : "bg-brand-dark-surface/20 border-brand-dark-border"
+      }`}>
         <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16">
           <div className="text-center mb-12">
-            <h2 className="text-2xl sm:text-4xl font-black text-white mb-4">Get Started in 4 Simple Steps</h2>
-            <p className="text-xs sm:text-sm text-gray-500">From demo request to live operations in under 48 hours.</p>
+            <h2 className={`text-2xl sm:text-4xl font-black mb-4 ${isLight ? "text-slate-900" : "text-white"}`}>Get Started in 4 Simple Steps</h2>
+            <p className={`text-xs sm:text-sm ${isLight ? "text-slate-500 font-bold" : "text-gray-500"}`}>From demo request to live operations in under 48 hours.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 relative">
             {/* Connecting line */}
-            <div className="hidden md:block absolute top-10 left-[12.5%] right-[12.5%] h-px bg-gradient-to-r from-transparent via-brand-sky/30 to-transparent" />
-            {howItWorks.map((s, i) => {
+            <div className={`hidden md:block absolute top-10 left-[12.5%] right-[12.5%] h-px ${
+              isLight ? "bg-slate-200" : "bg-gradient-to-r from-transparent via-brand-sky/30 to-transparent"
+            }`} />
+            {howItWorks.map((s) => {
               const Icon = s.icon;
               return (
                 <div key={s.step} className="text-center group">
-                  <div className={`w-16 h-16 rounded-2xl border ${s.border} bg-black/60 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300`}>
+                  <div className={`w-16 h-16 rounded-2xl border flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 ${
+                    isLight ? "bg-white border-slate-200 shadow-md" : `${s.border} bg-black/60`
+                  }`}>
                     <Icon size={24} className={s.color} />
                   </div>
                   <div className={`text-[10px] font-black ${s.color} tracking-widest mb-1`}>STEP {s.step}</div>
-                  <h4 className="text-sm font-black text-white mb-2">{s.title}</h4>
-                  <p className="text-[11px] text-gray-500 leading-relaxed">{s.desc}</p>
+                  <h4 className={`text-sm font-black mb-2 ${isLight ? "text-slate-900" : "text-white"}`}>{s.title}</h4>
+                  <p className={`text-[11px] leading-relaxed ${isLight ? "text-slate-600 font-medium" : "text-gray-500"}`}>{s.desc}</p>
                 </div>
               );
             })}
@@ -424,31 +492,35 @@ export default function HomePage() {
         </div>
       </section>
 
-
-
       {/* ══════════════════════════════════════════════════════════════════════
           TESTIMONIALS
       ══════════════════════════════════════════════════════════════════════ */}
-      <section className="py-20 bg-brand-dark-surface/20 border-b border-brand-dark-border">
+      <section className={`py-20 border-b transition-colors duration-200 ${
+        isLight ? "bg-white border-slate-200" : "bg-brand-dark-surface/20 border-brand-dark-border"
+      }`}>
         <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16">
           <div className="text-center mb-12">
-            <h2 className="text-2xl sm:text-4xl font-black text-white mb-4">Loved by Leading Businesses</h2>
-            <p className="text-xs sm:text-sm text-gray-500 max-w-xl mx-auto">
+            <h2 className={`text-2xl sm:text-4xl font-black mb-4 ${isLight ? "text-slate-900" : "text-white"}`}>Loved by Leading Businesses</h2>
+            <p className={`text-xs sm:text-sm max-w-xl mx-auto ${isLight ? "text-slate-600 font-medium" : "text-gray-500"}`}>
               Retail owners, pharmacy directors, and wholesale bosses share how MT Core transformed their operations.
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {testimonials.map(t => (
-              <div key={t.name} className="bg-brand-dark-surface/60 border border-brand-dark-border p-6 rounded-2xl hover:border-brand-sky/30 transition-all group">
+              <div key={t.name} className={`p-6 rounded-2xl transition-all group border ${
+                isLight
+                  ? "bg-slate-50 border-slate-200 hover:border-sky-300 hover:bg-white shadow-xs"
+                  : "bg-brand-dark-surface/60 border-brand-dark-border hover:border-brand-sky/30"
+              }`}>
                 <div className="flex gap-1 text-amber-400 mb-4">
                   {Array(t.stars).fill(0).map((_,i) => <Star key={i} size={13} fill="currentColor" />)}
                 </div>
-                <p className="text-xs text-gray-300 italic mb-5 leading-relaxed">"{t.text}"</p>
+                <p className={`text-xs italic mb-5 leading-relaxed ${isLight ? "text-slate-700 font-medium" : "text-gray-300"}`}>"{t.text}"</p>
                 <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-full ${t.color} text-white font-black flex items-center justify-center text-xs shrink-0`}>{t.initials}</div>
+                  <div className={`w-10 h-10 rounded-full ${t.color} text-white font-black flex items-center justify-center text-xs shrink-0 shadow-sm`}>{t.initials}</div>
                   <div>
-                    <h4 className="text-white font-black text-xs">{t.name}</h4>
-                    <p className="text-[9px] text-gray-500">{t.role}</p>
+                    <h4 className={`font-black text-xs ${isLight ? "text-slate-900" : "text-white"}`}>{t.name}</h4>
+                    <p className={`text-[9px] ${isLight ? "text-slate-500 font-semibold" : "text-gray-500"}`}>{t.role}</p>
                   </div>
                 </div>
               </div>
@@ -460,40 +532,52 @@ export default function HomePage() {
       {/* ══════════════════════════════════════════════════════════════════════
           DEMO REQUEST FORM
       ══════════════════════════════════════════════════════════════════════ */}
-      <section className="py-20 border-b border-brand-dark-border relative overflow-hidden" id="demo-section">
+      <section className={`py-20 border-b relative overflow-hidden transition-colors duration-200 ${
+        isLight ? "bg-slate-50 border-slate-200" : "border-brand-dark-border"
+      }`} id="demo-section">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(14,165,233,0.06),transparent_70%)] pointer-events-none" />
         <div className="w-full max-w-5xl xl:max-w-6xl mx-auto px-4 sm:px-8 lg:px-12 relative z-10">
-          <div className="bg-brand-dark-surface/80 border border-brand-sky/20 rounded-3xl p-8 shadow-2xl shadow-brand-sky/5">
+          <div className={`rounded-3xl p-8 shadow-2xl border ${
+            isLight ? "bg-white border-slate-200 shadow-slate-200/50" : "bg-brand-dark-surface/80 border-brand-sky/20 shadow-brand-sky/5"
+          }`}>
             <div className="text-center mb-8">
-              <h2 className="text-2xl sm:text-3xl font-black text-white mb-2">Request a Custom Live Demo</h2>
-              <p className="text-xs text-gray-400">Schedule your personalized walkthrough or start a 14-day free trial sandbox.</p>
+              <h2 className={`text-2xl sm:text-3xl font-black mb-2 ${isLight ? "text-slate-900" : "text-white"}`}>Request a Custom Live Demo</h2>
+              <p className={`text-xs ${isLight ? "text-slate-600 font-medium" : "text-gray-400"}`}>Schedule your personalized walkthrough or start a 14-day free trial sandbox.</p>
             </div>
 
             {demoSubmitted ? (
-              <div className="bg-brand-dark-surface border border-emerald-500/40 p-6 rounded-2xl text-center animate-fade-in-up space-y-4">
-                <CheckCircle2 size={40} className="text-emerald-400 mx-auto" />
-                <h4 className="text-white font-black text-sm">Demo Request Received!</h4>
+              <div className={`p-6 rounded-2xl text-center animate-fade-in-up space-y-4 border ${
+                isLight ? "bg-slate-50 border-emerald-400" : "bg-brand-dark-surface border-emerald-500/40"
+              }`}>
+                <CheckCircle2 size={40} className="text-emerald-500 mx-auto" />
+                <h4 className={`font-black text-sm ${isLight ? "text-slate-900" : "text-white"}`}>Demo Request Received!</h4>
                 {/* Ticket number — always visible */}
-                <div className="bg-black/60 border border-brand-sky/30 rounded-xl px-6 py-4">
-                  <p className="text-[9px] uppercase tracking-widest text-gray-500 mb-1">Your Ticket Number</p>
-                  <p className="text-2xl font-black font-mono text-brand-sky tracking-widest">{demoTicketNo}</p>
-                  <p className="text-[10px] text-gray-500 mt-1">Save this number to track your request status</p>
+                <div className={`rounded-xl px-6 py-4 border ${
+                  isLight ? "bg-white border-sky-300 shadow-xs" : "bg-black/60 border-brand-sky/30"
+                }`}>
+                  <p className={`text-[9px] uppercase tracking-widest mb-1 ${isLight ? "text-slate-500 font-bold" : "text-gray-500"}`}>Your Ticket Number</p>
+                  <p className="text-2xl font-black font-mono text-sky-500 tracking-widest">{demoTicketNo}</p>
+                  <p className={`text-[10px] mt-1 ${isLight ? "text-slate-500" : "text-gray-500"}`}>Save this number to track your request status</p>
                 </div>
                 <div className="flex gap-2 justify-center flex-wrap">
                   <button
                     onClick={() => setShowReceiptModal(true)}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-brand-sky text-black text-[10px] font-black uppercase rounded-xl hover:bg-brand-sky-light transition"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-sky-500 text-white text-[10px] font-black uppercase rounded-xl hover:bg-sky-600 transition shadow-xs cursor-pointer"
                   >
                     <Receipt size={12} /> View Receipt
                   </button>
                   <button
                     onClick={() => window.print()}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 border border-brand-dark-border text-gray-300 text-[10px] font-black uppercase rounded-xl hover:bg-white/5 transition"
+                    className={`inline-flex items-center gap-1.5 px-4 py-2 border text-[10px] font-black uppercase rounded-xl transition cursor-pointer ${
+                      isLight ? "border-slate-300 bg-white text-slate-700 hover:bg-slate-100" : "border-brand-dark-border text-gray-300 hover:bg-white/5"
+                    }`}
                   >
                     <Printer size={12} /> Print
                   </button>
                   <a href="/tracking"
-                    className="inline-flex items-center gap-1.5 px-4 py-2 border border-brand-dark-border text-gray-300 text-[10px] font-black uppercase rounded-xl hover:bg-white/5 transition"
+                    className={`inline-flex items-center gap-1.5 px-4 py-2 border text-[10px] font-black uppercase rounded-xl transition ${
+                      isLight ? "border-slate-300 bg-white text-slate-700 hover:bg-slate-100" : "border-brand-dark-border text-gray-300 hover:bg-white/5"
+                    }`}
                   >
                     <ExternalLink size={12} /> Track Status
                   </a>
@@ -504,7 +588,7 @@ export default function HomePage() {
                     setDemoTicketNo("");
                     setDemoForm({ name: "", businessName: "", email: "", phone: "", country: "Pakistan", businessType: "POS (Supermarkets, Retail & Restaurant ERP)" });
                   }}
-                  className="text-[10px] text-gray-600 hover:text-gray-400 transition"
+                  className={`text-[10px] transition cursor-pointer ${isLight ? "text-slate-500 hover:text-slate-800" : "text-gray-600 hover:text-gray-400"}`}
                 >
                   Submit another request
                 </button>
@@ -519,26 +603,38 @@ export default function HomePage() {
                     { label: "Mobile Hotline",  key: "phone",        placeholder: "+92 321 1234567",     type: "tel"   },
                   ].map(field => (
                     <div key={field.key}>
-                      <label className="block text-[10px] uppercase tracking-wider font-bold text-gray-500 mb-1.5">{field.label}</label>
+                      <label className={`block text-[10px] uppercase tracking-wider font-bold mb-1.5 ${isLight ? "text-slate-600" : "text-gray-500"}`}>{field.label}</label>
                       <input type={field.type} required={field.key !== "phone"} placeholder={field.placeholder}
                         value={(demoForm as any)[field.key]}
                         onChange={e => setDemoForm({...demoForm, [field.key]: e.target.value})}
-                        className="w-full bg-black border border-brand-dark-border p-3 rounded-xl text-xs text-white focus:outline-none focus:border-brand-sky transition" />
+                        className={`w-full p-3 rounded-xl text-xs focus:outline-none transition border ${
+                          isLight
+                            ? "bg-slate-50 border-slate-300 text-slate-900 focus:bg-white focus:border-sky-500"
+                            : "bg-black border-brand-dark-border text-white focus:border-brand-sky"
+                        }`} />
                     </div>
                   ))}
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[10px] uppercase tracking-wider font-bold text-gray-500 mb-1.5">Country</label>
+                    <label className={`block text-[10px] uppercase tracking-wider font-bold mb-1.5 ${isLight ? "text-slate-600" : "text-gray-500"}`}>Country</label>
                     <select value={demoForm.country} onChange={e => setDemoForm({...demoForm, country: e.target.value})}
-                      className="w-full bg-black border border-brand-dark-border p-3 rounded-xl text-xs text-white focus:outline-none focus:border-brand-sky transition">
+                      className={`w-full p-3 rounded-xl text-xs focus:outline-none transition border ${
+                        isLight
+                          ? "bg-slate-50 border-slate-300 text-slate-900 focus:bg-white focus:border-sky-500"
+                          : "bg-black border-brand-dark-border text-white focus:border-brand-sky"
+                      }`}>
                       {["Pakistan","United Arab Emirates","Saudi Arabia","United Kingdom","United States"].map(c => <option key={c}>{c}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[10px] uppercase tracking-wider font-bold text-gray-500 mb-1.5">Select Software System</label>
+                    <label className={`block text-[10px] uppercase tracking-wider font-bold mb-1.5 ${isLight ? "text-slate-600" : "text-gray-500"}`}>Select Software System</label>
                     <select value={demoForm.businessType} onChange={e => setDemoForm({...demoForm, businessType: e.target.value})}
-                      className="w-full bg-black border border-brand-dark-border p-3 rounded-xl text-xs text-white font-bold focus:outline-none focus:border-brand-sky transition">
+                      className={`w-full p-3 rounded-xl text-xs font-bold focus:outline-none transition border ${
+                        isLight
+                          ? "bg-slate-50 border-slate-300 text-slate-900 focus:bg-white focus:border-sky-500"
+                          : "bg-black border-brand-dark-border text-white focus:border-brand-sky"
+                      }`}>
                       <option value="POS (Supermarkets, Retail & Restaurant ERP)">🏬 1. POS (Supermarkets, Retail &amp; Restaurants)</option>
                       <option value="HRMS (Human Resources & Payroll Suite)">👥 2. HRMS (Human Resources &amp; Payroll Suite)</option>
                       <option value="SMS (School & College Management ERP)">🎓 3. SMS (School &amp; College Management ERP)</option>
@@ -546,7 +642,7 @@ export default function HomePage() {
                   </div>
                 </div>
                 <button type="submit"
-                  className="w-full py-3.5 bg-brand-sky hover:bg-brand-sky-light text-black font-black text-xs rounded-xl uppercase tracking-widest transition-all transform hover:scale-[1.01] shadow-lg shadow-brand-sky/20">
+                  className="w-full py-3.5 bg-gradient-to-r from-sky-500 to-indigo-600 hover:opacity-95 text-white font-black text-xs rounded-xl uppercase tracking-widest transition-all transform hover:scale-[1.01] shadow-lg shadow-sky-500/20 cursor-pointer">
                   Configure My Free Demo Environment →
                 </button>
               </form>
@@ -558,22 +654,26 @@ export default function HomePage() {
       {/* ══════════════════════════════════════════════════════════════════════
           CTA BANNER
       ══════════════════════════════════════════════════════════════════════ */}
-      <section className="py-16 relative overflow-hidden border-b border-brand-dark-border">
+      <section className={`py-16 relative overflow-hidden border-b transition-colors duration-200 ${
+        isLight ? "bg-white border-slate-200" : "border-brand-dark-border"
+      }`}>
         <div className="absolute inset-0 bg-gradient-to-r from-brand-sky/5 via-transparent to-purple-500/5 pointer-events-none" />
         <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 text-center relative z-10">
-          <h2 className="text-2xl sm:text-3xl font-black text-white mb-4">
+          <h2 className={`text-2xl sm:text-3xl font-black mb-4 ${isLight ? "text-slate-900" : "text-white"}`}>
             Ready to transform your business?
           </h2>
-          <p className="text-sm text-gray-400 mb-8 max-w-xl mx-auto">
+          <p className={`text-sm mb-8 max-w-xl mx-auto ${isLight ? "text-slate-600 font-medium" : "text-gray-400"}`}>
             Join 500+ businesses already running on MT Core. The core technology behind your business. No credit card required for the 14-day trial.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link href="/demo"
-              className="inline-flex items-center gap-2 rounded-xl bg-brand-sky px-8 py-3.5 text-sm font-black text-black hover:bg-brand-sky-light transition transform hover:scale-105 shadow-xl shadow-brand-sky/25">
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 px-8 py-3.5 text-sm font-black text-white hover:opacity-95 transition transform hover:scale-105 shadow-xl shadow-sky-500/25">
               Start Free 14-Day Trial <ArrowRight size={15} />
             </Link>
             <Link href="/login"
-              className="inline-flex items-center gap-2 text-sm font-bold text-gray-400 hover:text-white transition">
+              className={`inline-flex items-center gap-2 text-sm font-bold transition ${
+                isLight ? "text-slate-700 hover:text-slate-900" : "text-gray-400 hover:text-white"
+              }`}>
               <Laptop size={14} /> View Live Demo <ChevronRight size={13} />
             </Link>
           </div>

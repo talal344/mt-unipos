@@ -208,8 +208,10 @@ export default function TrackingPage() {
     customers,
     sales,
     currencySymbol,
-    businessSettings
+    businessSettings,
+    theme
   } = useGlobalContext();
+  const isLight = theme === "light";
 
   // Search Mode: 'receipt' | 'customer' | 'ticket'
   const [searchMode, setSearchMode] = useState<"receipt" | "customer" | "ticket">("receipt");
@@ -565,36 +567,46 @@ export default function TrackingPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-black font-sans text-gray-100">
+    <div className={`flex flex-col min-h-screen font-sans transition-colors duration-200 ${
+      isLight ? "bg-slate-50 text-slate-900" : "bg-black text-gray-100"
+    }`}>
       <SiteHeader />
 
       {/* Hero / Portal Header */}
-      <section className="relative py-16 border-b border-brand-dark-border overflow-hidden">
+      <section className={`relative py-16 border-b overflow-hidden transition-colors duration-200 ${
+        isLight ? "bg-white border-slate-200" : "border-brand-dark-border"
+      }`}>
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(14,165,233,0.08),transparent_70%)] pointer-events-none" />
         <div className="relative z-10 max-w-3xl mx-auto px-4 text-center">
           
-          <div className="inline-flex items-center gap-2 bg-brand-sky/10 border border-brand-sky/30 rounded-full px-4 py-1.5 mb-5 shadow-lg shadow-sky-500/10">
-            <Sparkles size={14} className="text-brand-sky animate-pulse" />
-            <span className="text-xs font-bold text-brand-sky tracking-wide font-sans uppercase">
-              Customer Self-Service & Support Portal
+          <div className={`inline-flex items-center gap-2 rounded-full px-4 py-1.5 mb-5 border ${
+            isLight ? "bg-sky-50 border-sky-200 text-sky-700 shadow-sm" : "bg-brand-sky/10 border-brand-sky/30 text-brand-sky shadow-lg shadow-sky-500/10"
+          }`}>
+            <Sparkles size={14} className="text-sky-500 animate-pulse" />
+            <span className="text-xs font-bold tracking-wide font-sans uppercase">
+              Customer Self-Service &amp; Support Portal
             </span>
           </div>
 
-          <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white mb-3 font-sans">
-            Track Receipt, <span className="text-brand-sky sky-neon-text font-sans">Customer Account</span> & Tickets
+          <h1 className={`text-3xl sm:text-4xl font-black tracking-tight mb-3 font-sans ${isLight ? "text-slate-900" : "text-white"}`}>
+            Track Receipt, <span className="text-sky-500 font-sans">Customer Account</span> &amp; Tickets
           </h1>
-          <p className="text-xs sm:text-sm text-gray-400 mb-8 max-w-lg mx-auto leading-relaxed font-sans">
-            Verify purchase receipts, review your full customer purchase ledger & credit dues, or track support ticket status in real-time.
+          <p className={`text-xs sm:text-sm mb-8 max-w-lg mx-auto leading-relaxed font-sans ${isLight ? "text-slate-600 font-medium" : "text-gray-400"}`}>
+            Verify purchase receipts, review your full customer purchase ledger &amp; credit dues, or track support ticket status in real-time.
           </p>
 
           {/* Search Mode Switcher Tabs */}
-          <div className="grid grid-cols-3 gap-2 p-1.5 bg-brand-dark-surface/90 border border-brand-dark-border/90 rounded-2xl max-w-xl mx-auto mb-8 shadow-xl">
+          <div className={`grid grid-cols-3 gap-2 p-1.5 rounded-2xl max-w-xl mx-auto mb-8 border ${
+            isLight ? "bg-slate-100 border-slate-200 shadow-sm" : "bg-brand-dark-surface/90 border-brand-dark-border/90 shadow-xl"
+          }`}>
             <button
               type="button"
               onClick={() => { setSearchMode("receipt"); setHasSearched(false); setAuthError(null); }}
-              className={`flex items-center justify-center gap-2 py-3 px-3 rounded-xl text-xs font-bold transition-all ${
+              className={`flex items-center justify-center gap-2 py-3 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 searchMode === "receipt"
-                  ? "bg-brand-sky text-black shadow-lg shadow-sky-500/25 scale-[1.02]"
+                  ? "bg-sky-500 text-white shadow-md shadow-sky-500/25 scale-[1.02]"
+                  : isLight
+                  ? "text-slate-600 hover:text-slate-900 hover:bg-white"
                   : "text-gray-400 hover:text-white hover:bg-black/40"
               }`}
             >
@@ -605,9 +617,11 @@ export default function TrackingPage() {
             <button
               type="button"
               onClick={() => { setSearchMode("customer"); setHasSearched(false); setAuthError(null); }}
-              className={`flex items-center justify-center gap-2 py-3 px-3 rounded-xl text-xs font-bold transition-all ${
+              className={`flex items-center justify-center gap-2 py-3 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 searchMode === "customer"
-                  ? "bg-brand-sky text-black shadow-lg shadow-sky-500/25 scale-[1.02]"
+                  ? "bg-sky-500 text-white shadow-md shadow-sky-500/25 scale-[1.02]"
+                  : isLight
+                  ? "text-slate-600 hover:text-slate-900 hover:bg-white"
                   : "text-gray-400 hover:text-white hover:bg-black/40"
               }`}
             >
@@ -618,9 +632,11 @@ export default function TrackingPage() {
             <button
               type="button"
               onClick={() => { setSearchMode("ticket"); setHasSearched(false); setAuthError(null); }}
-              className={`flex items-center justify-center gap-2 py-3 px-3 rounded-xl text-xs font-bold transition-all ${
+              className={`flex items-center justify-center gap-2 py-3 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 searchMode === "ticket"
-                  ? "bg-brand-sky text-black shadow-lg shadow-sky-500/25 scale-[1.02]"
+                  ? "bg-sky-500 text-white shadow-md shadow-sky-500/25 scale-[1.02]"
+                  : isLight
+                  ? "text-slate-600 hover:text-slate-900 hover:bg-white"
                   : "text-gray-400 hover:text-white hover:bg-black/40"
               }`}
             >
@@ -634,20 +650,24 @@ export default function TrackingPage() {
             {/* Mode A: Receipt Search */}
             {searchMode === "receipt" && (
               <div className="flex flex-col sm:flex-row gap-2.5">
-                <div className="relative flex-1 sky-glow-border rounded-xl overflow-hidden">
-                  <Receipt size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
+                <div className={`relative flex-1 rounded-xl overflow-hidden border ${
+                  isLight ? "bg-white border-slate-300 shadow-xs" : "bg-brand-dark-surface border-brand-sky/40 sky-glow-border"
+                }`}>
+                  <Receipt size={16} className={`absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none ${isLight ? "text-slate-400" : "text-gray-500"}`} />
                   <input
                     type="text"
                     required
                     placeholder="Enter Invoice / Receipt # (e.g. MT-TXN-0908260005)"
                     value={receiptInput}
                     onChange={(e) => setReceiptInput(e.target.value)}
-                    className="w-full bg-brand-dark-surface pl-10 pr-4 py-3.5 text-xs sm:text-sm text-white placeholder-gray-600 focus:outline-none font-mono tracking-wider"
+                    className={`w-full pl-10 pr-4 py-3.5 text-xs sm:text-sm focus:outline-none font-mono tracking-wider ${
+                      isLight ? "bg-white text-slate-900 placeholder-slate-400" : "bg-brand-dark-surface text-white placeholder-gray-600"
+                    }`}
                   />
                 </div>
                 <button
                   type="submit"
-                  className="flex items-center justify-center gap-2 bg-brand-sky hover:bg-sky-400 text-black font-black text-xs sm:text-sm px-6 py-3.5 rounded-xl transition-all shadow-lg shadow-sky-500/20"
+                  className="flex items-center justify-center gap-2 bg-sky-500 hover:bg-sky-600 text-white font-black text-xs sm:text-sm px-6 py-3.5 rounded-xl transition-all shadow-lg shadow-sky-500/20 cursor-pointer"
                 >
                   <Search size={15} />
                   <span>Search Receipt</span>
