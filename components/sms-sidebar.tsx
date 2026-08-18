@@ -314,8 +314,8 @@ export default function SMSSidebar() {
       {/* Top Section */}
       <div className="flex flex-col">
         {/* Brand Header */}
-        <div className={`p-4 border-b ${isLight ? "border-slate-200" : "border-[#1e293b]"} flex items-center justify-between`}>
-          <Link href="/sms" className="flex items-center gap-3 group">
+        <div className={`p-4 border-b ${isLight ? "border-slate-200" : "border-[#1e293b]"} flex items-center justify-center`}>
+          <Link href="/sms" className="flex items-center justify-center group">
             <MTCoreLogo
               variant="emerald"
               size="md"

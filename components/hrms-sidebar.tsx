@@ -204,8 +204,8 @@ export default function HRMSSidebar() {
       </button>
 
       {/* Brand Header */}
-      <div className="p-3 border-b border-gray-800/80 bg-black/50 flex items-center justify-between">
-        <Link href="/hrms" className="flex items-center gap-2 overflow-hidden">
+      <div className={`p-3 border-b border-gray-800/80 bg-black/50 flex items-center ${collapsed ? "justify-center" : "justify-center relative"}`}>
+        <Link href="/hrms" className="flex items-center justify-center gap-2 overflow-hidden">
           <MTCoreLogo
             variant="emerald"
             size="sm"
@@ -214,7 +214,7 @@ export default function HRMSSidebar() {
           />
         </Link>
         {!collapsed && (
-          <span className="bg-emerald-500/20 text-emerald-400 text-[8px] px-1.5 py-0.5 rounded font-black tracking-widest uppercase shrink-0">
+          <span className="absolute right-3 bg-emerald-500/20 text-emerald-400 text-[8px] px-1.5 py-0.5 rounded font-black tracking-widest uppercase shrink-0">
             HRMS
           </span>
         )}
