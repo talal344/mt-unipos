@@ -57,7 +57,6 @@ function buildThermalInvoiceHTML(invoice: any, tenantEmail: string): string {
 <body>
   <div class="center" style="margin-bottom:10px">
     <img src="/rectangle dark.png" style="height:44px;max-width:160px;object-fit:contain;margin:0 auto 6px auto;display:block" alt="MT Core" />
-    <div style="font-size:14px;font-weight:900;font-family:Arial,sans-serif;letter-spacing:1px">MT CORE</div>
     <div style="font-size:8px;color:#666;margin-top:2px;">The core technology behind your business.</div>
     <div style="font-size:8px;text-transform:uppercase;letter-spacing:2px;color:#555">SaaS Enterprise Billing</div>
     <div style="font-size:9px">Superadmin Master Console</div>
@@ -301,7 +300,6 @@ function buildA4ExecutiveInvoiceHTML(invoice: any, tenant: any): string {
     <div class="header">
       <div>
         <img src="/rectangle dark.png" style="height:52px;max-width:200px;object-fit:contain;margin-bottom:8px;display:block" alt="MT Core" />
-        <div class="brand-title">MT Core</div>
         <div class="brand-sub">THE CORE TECHNOLOGY BEHIND YOUR BUSINESS</div>
         <div style="font-size: 10px; color: #64748b; margin-top: 4px;">Super Admin Billing Statement & Receipt</div>
       </div>
@@ -693,7 +691,7 @@ export default function AdminInvoicesPage() {
     container.innerHTML = `
       <div style="text-align:center;margin-bottom:10px;">
         <img src="/rectangle dark.png" style="height:44px;max-width:160px;object-fit:contain;margin:0 auto 6px auto;display:block" alt="MT Core" />
-        <div style="font-size:14px;font-weight:900;font-family:Arial,sans-serif;letter-spacing:1px">MT CORE</div>
+        <div style="font-size:8px;color:#666;margin-top:2px;">The core technology behind your business.</div>
         <div style="font-size:8px;text-transform:uppercase;letter-spacing:2px;color:#555">SaaS Platform Billing</div>
         <div style="font-size:9px">Superadmin Console</div>
       </div>
@@ -1261,7 +1259,7 @@ export default function AdminInvoicesPage() {
                   >
                     {/* Header */}
                     <div className="text-center mb-3 space-y-0.5">
-                      <div className="font-sans font-black text-sm tracking-tight">MT CORE</div>
+                      <img src="/rectangle dark.png" style={{ height: "40px", maxWidth: "140px", objectFit: "contain", margin: "0 auto 4px auto", display: "block" }} alt="MT Core" />
                       <div className="text-[9px] text-gray-500 font-sans">The core technology behind your business.</div>
                       <div className="text-[8px] uppercase tracking-widest text-gray-500">SaaS Platform Billing</div>
                       <div className="text-[9px] text-gray-700">Superadmin Console</div>

@@ -1854,7 +1854,7 @@ export default function ReportsPage() {
                   <img src="/rectangle dark.png" style={{ height: "50px", width: "auto", objectFit: "contain" }} alt="MT Core Logo" />
                   <div>
                     <h1 className="text-xl font-black uppercase tracking-tight text-gray-900">
-                      MT Core - {activeTab.toUpperCase()} REPORT
+                      {activeTab.toUpperCase()} REPORT
                     </h1>
                     <p className="text-[11px] text-gray-500 mt-0.5">
                       The core technology behind your business. · Branch: {currentBranch} · Period: {PERIOD_LABELS[period]}

@@ -1114,7 +1114,6 @@ export default function AdminClientsPage() {
     <div class="header">
       <div>
         <img src="/rectangle dark.png" style="height:48px;max-width:180px;object-fit:contain;margin-bottom:6px;display:block" alt="MT Core" />
-        <div class="brand-title">MT Core</div>
         <div class="brand-sub">THE CORE TECHNOLOGY BEHIND YOUR BUSINESS</div>
         <div style="font-size: 12px; color: #475569; margin-top: 4px;">SuperAdmin Provider: Mian Talal (03396399895 | miantalal2@gmail.com)</div>
       </div>
