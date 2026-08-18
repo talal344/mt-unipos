@@ -55,6 +55,46 @@ export default function SuperAdminLoginPage() {
           : "bg-[radial-gradient(ellipse_at_center,rgba(168,85,247,0.09),transparent_65%)]"
       }`} />
 
+      {/* Floating Animated Tech Stickers & Badges in Background */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none select-none z-0">
+        {/* Top Left Floating Sticker */}
+        <div className={`hidden xl:flex items-center gap-2 px-3.5 py-1.5 rounded-2xl border text-[11px] font-bold shadow-lg animate-float-slow absolute top-16 left-10 ${
+          isLight
+            ? "bg-white/80 border-purple-200/80 text-purple-800 shadow-purple-500/5 backdrop-blur-md"
+            : "bg-[#0f091a]/80 border-purple-500/30 text-purple-300 shadow-purple-500/10 backdrop-blur-md"
+        }`}>
+          <span className="w-2 h-2 rounded-full bg-purple-400 animate-ping" />
+          <span>🛡️ Master SaaS Control Plane</span>
+        </div>
+
+        {/* Top Right Floating Sticker */}
+        <div className={`hidden xl:flex items-center gap-2 px-3.5 py-1.5 rounded-2xl border text-[11px] font-bold shadow-lg animate-float-reverse absolute top-24 right-20 ${
+          isLight
+            ? "bg-white/80 border-indigo-200/80 text-indigo-800 shadow-indigo-500/5 backdrop-blur-md"
+            : "bg-[#0f091a]/80 border-indigo-500/30 text-indigo-300 shadow-indigo-500/10 backdrop-blur-md"
+        }`}>
+          <span>⚡ &lt;10ms Sharded DB Latency</span>
+        </div>
+
+        {/* Bottom Left Floating Sticker */}
+        <div className={`hidden xl:flex items-center gap-2 px-3.5 py-1.5 rounded-2xl border text-[11px] font-bold shadow-lg animate-float-reverse absolute bottom-16 left-12 ${
+          isLight
+            ? "bg-white/80 border-sky-200/80 text-sky-800 shadow-sky-500/5 backdrop-blur-md"
+            : "bg-[#0f091a]/80 border-sky-500/30 text-sky-300 shadow-sky-500/10 backdrop-blur-md"
+        }`}>
+          <span>🚀 Zero-Loss Auto Backups</span>
+        </div>
+
+        {/* Bottom Right Floating Sticker */}
+        <div className={`hidden xl:flex items-center gap-2 px-3.5 py-1.5 rounded-2xl border text-[11px] font-bold shadow-lg animate-float-slow absolute bottom-20 right-16 ${
+          isLight
+            ? "bg-white/80 border-amber-200/80 text-amber-800 shadow-amber-500/5 backdrop-blur-md"
+            : "bg-[#0f091a]/80 border-amber-500/30 text-amber-300 shadow-amber-500/10 backdrop-blur-md"
+        }`}>
+          <span>🔒 Cryptographic License Keys</span>
+        </div>
+      </div>
+
       {/* Top Floating Controls */}
       <div className="absolute top-6 right-6 z-20 flex items-center gap-3">
         <Link
@@ -229,6 +269,19 @@ export default function SuperAdminLoginPage() {
                 <Zap size={14} className="text-amber-500" />
                 <span>⚡ Autofill Demo Credentials</span>
               </button>
+            </div>
+
+            {/* Live Security & Node Status Pill */}
+            <div className={`p-2.5 rounded-xl border flex items-center justify-between text-[9px] font-mono ${
+              isLight ? "bg-slate-50 border-slate-200 text-slate-600" : "bg-black/40 border-white/5 text-gray-400"
+            }`}>
+              <div className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" />
+                <span className="font-bold">Control Plane: Active</span>
+              </div>
+              <span className={isLight ? "text-purple-700 font-bold" : "text-purple-400 font-bold"}>
+                🛡️ Master Privileges
+              </span>
             </div>
 
             {/* Footer Navigation */}

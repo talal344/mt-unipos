@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useMemo } from "react";
 import HRMSSidebar from "@/components/hrms-sidebar";
 import HRMSTopHeader from "@/components/hrms-top-header";
 import { useGlobalContext } from "@/context/global-context";
+import MTCoreLogo from "@/components/mt-logo";
 import {
   FileText,
   PenTool,
@@ -1000,16 +1001,14 @@ Authorized Signatory: ${signatoryName} (${signatoryDesignation})
                           <div className="border-b-2 border-emerald-800/20 pb-5">
                             <div className="flex items-start justify-between">
                               <div className="space-y-1">
-                                <div className="flex items-center gap-2">
-                                  <div className="w-8 h-8 rounded-lg bg-emerald-700 text-white font-black text-sm flex items-center justify-center shadow-md">
-                                    MT
-                                  </div>
-                                  <div>
-                                    <h1 className="text-xl font-black text-gray-900 tracking-tight leading-none uppercase">
+                                <div className="flex items-center gap-3">
+                                  <MTCoreLogo variant="emerald" size="md" shape="rectangle" showText={true} theme="light" />
+                                  <div className="border-l border-gray-300 pl-3">
+                                    <h1 className="text-base font-black text-gray-900 tracking-tight leading-none uppercase">
                                       {businessName}
                                     </h1>
-                                    <p className="text-[10px] text-emerald-800 font-bold uppercase tracking-widest mt-0.5">
-                                      Human Resources & Corporate Governance
+                                    <p className="text-[9px] text-emerald-800 font-bold uppercase tracking-widest mt-0.5">
+                                      Human Resources &amp; Corporate Governance
                                     </p>
                                   </div>
                                 </div>

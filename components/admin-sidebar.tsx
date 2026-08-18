@@ -205,20 +205,21 @@ export default function AdminSidebar() {
 
       <div className="flex flex-col flex-1 min-h-0">
         {/* Brand Header */}
-        <div className="py-3 px-4 border-b border-brand-dark-border shrink-0 bg-black/60 flex items-center justify-between">
-          <Link href="/admin/dashboard" className="flex items-center gap-2">
+        <div className="py-3 px-4 border-b border-brand-dark-border shrink-0 bg-black/60 flex items-center justify-center relative">
+          <Link href="/admin/dashboard" className="flex items-center justify-center gap-2">
             <MTCoreLogo variant="purple" size="sm" showText={true} />
+            <span className="bg-purple-500/20 text-purple-400 text-[8px] px-1.5 py-0.5 rounded font-black tracking-widest uppercase shrink-0">
+              Admin
+            </span>
           </Link>
-          <span className="bg-purple-500/20 text-purple-400 text-[8px] px-1.5 py-0.5 rounded font-black tracking-widest uppercase shrink-0">
-            Admin
-          </span>
           
           {/* Bell Icon Notification Button */}
           <button
             onClick={() => setShowNotifications(v => !v)}
-            className={`relative ml-1 w-8 h-8 flex items-center justify-center rounded-lg transition shrink-0 ${
+            className={`absolute right-3 w-8 h-8 flex items-center justify-center rounded-lg transition shrink-0 ${
               showNotifications ? "bg-purple-500/20 border border-purple-500/40" : "hover:bg-brand-dark-border"
             }`}
+            title="Notifications"
           >
             <Bell size={14} className={totalNotifications > 0 ? "text-purple-400" : "text-gray-500"} />
             {totalNotifications > 0 && (

@@ -498,6 +498,46 @@ function LoginContent() {
           : "bg-[radial-gradient(ellipse_at_center,rgba(14,165,233,0.07),transparent_65%)]"
       }`} />
 
+      {/* Floating Animated Tech Stickers & Badges in Background */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none select-none z-0">
+        {/* Top Left Floating Sticker */}
+        <div className={`hidden xl:flex items-center gap-2 px-3.5 py-1.5 rounded-2xl border text-[11px] font-bold shadow-lg animate-float-slow absolute top-20 left-12 ${
+          isLight
+            ? "bg-white/80 border-sky-200/80 text-sky-800 shadow-sky-500/5 backdrop-blur-md"
+            : "bg-[#0b121e]/80 border-sky-500/30 text-sky-300 shadow-sky-500/10 backdrop-blur-md"
+        }`}>
+          <span className="w-2 h-2 rounded-full bg-sky-400 animate-ping" />
+          <span>🛡️ AES-256 Cloud Vault</span>
+        </div>
+
+        {/* Top Right Floating Sticker */}
+        <div className={`hidden xl:flex items-center gap-2 px-3.5 py-1.5 rounded-2xl border text-[11px] font-bold shadow-lg animate-float-reverse absolute top-28 right-24 ${
+          isLight
+            ? "bg-white/80 border-emerald-200/80 text-emerald-800 shadow-emerald-500/5 backdrop-blur-md"
+            : "bg-[#0b121e]/80 border-emerald-500/30 text-emerald-300 shadow-emerald-500/10 backdrop-blur-md"
+        }`}>
+          <span>⚡ &lt;15ms Latency</span>
+        </div>
+
+        {/* Bottom Left Floating Sticker */}
+        <div className={`hidden xl:flex items-center gap-2 px-3.5 py-1.5 rounded-2xl border text-[11px] font-bold shadow-lg animate-float-reverse absolute bottom-16 left-16 ${
+          isLight
+            ? "bg-white/80 border-purple-200/80 text-purple-800 shadow-purple-500/5 backdrop-blur-md"
+            : "bg-[#0b121e]/80 border-purple-500/30 text-purple-300 shadow-purple-500/10 backdrop-blur-md"
+        }`}>
+          <span>🌐 Sharded Multi-Tenancy</span>
+        </div>
+
+        {/* Bottom Right Floating Sticker */}
+        <div className={`hidden xl:flex items-center gap-2 px-3.5 py-1.5 rounded-2xl border text-[11px] font-bold shadow-lg animate-float-slow absolute bottom-20 right-20 ${
+          isLight
+            ? "bg-white/80 border-amber-200/80 text-amber-800 shadow-amber-500/5 backdrop-blur-md"
+            : "bg-[#0b121e]/80 border-amber-500/30 text-amber-300 shadow-amber-500/10 backdrop-blur-md"
+        }`}>
+          <span>💳 FBR POS Compliant</span>
+        </div>
+      </div>
+
       {/* Floating Top Navigation & Theme Toggle */}
       <div className="absolute top-6 right-6 z-20 flex items-center gap-3">
         <Link
@@ -517,7 +557,7 @@ function LoginContent() {
         {superVisible && (
           <Link
             href="/admin/login"
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider text-purple-400 border border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/20 transition animate-pulse"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider text-purple-400 border border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/20 transition animate-pulse shadow-lg shadow-purple-500/20"
             title="Super Admin Portal"
           >
             <ShieldAlert size={14} />
@@ -744,11 +784,16 @@ function LoginContent() {
             {/* ── LOGIN FORM ── */}
             <form onSubmit={handleCredentialsSubmit} className="space-y-4 text-xs">
               <div>
-                <label className={`block text-[10px] uppercase font-bold tracking-wider mb-1.5 ${
-                  isLight ? "text-sky-700" : "text-brand-sky"
-                }`}>
-                  <Building2 size={9} className="inline mr-1" /> Workspace / Tenant ID
-                </label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className={`block text-[10px] uppercase font-bold tracking-wider ${
+                    isLight ? "text-sky-700" : "text-brand-sky"
+                  }`}>
+                    <Building2 size={9} className="inline mr-1" /> Workspace / Tenant ID
+                  </label>
+                  <span className={`text-[9px] font-mono ${isLight ? "text-slate-400" : "text-gray-500"}`}>
+                    e.g. AFS-1234
+                  </span>
+                </div>
                 <input 
                   type="text" 
                   required 
@@ -767,6 +812,47 @@ function LoginContent() {
                       : `bg-black text-white ${tenantGlowClass}`
                   }`} 
                 />
+
+                {/* Quick Workspace Presets Chips */}
+                <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                  <span className={`text-[9px] font-bold uppercase ${isLight ? "text-slate-400" : "text-gray-500"}`}>Quick Pick:</span>
+                  <button
+                    type="button"
+                    onClick={() => { setInputTenantId("AFS-1234"); setEmail("owner@alfatah.com"); setPassword("owner123"); }}
+                    className={`text-[9px] font-mono px-2 py-0.5 rounded-md border transition cursor-pointer ${
+                      isLight
+                        ? "bg-slate-100 hover:bg-sky-50 border-slate-200 hover:border-sky-300 text-slate-700"
+                        : "bg-white/5 hover:bg-sky-500/20 border-white/10 hover:border-sky-500/40 text-gray-300 hover:text-white"
+                    }`}
+                    title="Al-Fatah Supermarket (POS)"
+                  >
+                    🛒 AFS-1234
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setInputTenantId("CORP-101"); setEmail("director@corporate.com"); setPassword("talal344"); }}
+                    className={`text-[9px] font-mono px-2 py-0.5 rounded-md border transition cursor-pointer ${
+                      isLight
+                        ? "bg-slate-100 hover:bg-emerald-50 border-slate-200 hover:border-emerald-300 text-slate-700"
+                        : "bg-white/5 hover:bg-emerald-500/20 border-white/10 hover:border-emerald-500/40 text-gray-300 hover:text-white"
+                    }`}
+                    title="Corporate Headquarters (HRMS)"
+                  >
+                    🏢 CORP-101
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setInputTenantId("SMS-2026"); setEmail("principal@mtcoreschool.edu.pk"); setPassword("talal344"); }}
+                    className={`text-[9px] font-mono px-2 py-0.5 rounded-md border transition cursor-pointer ${
+                      isLight
+                        ? "bg-slate-100 hover:bg-purple-50 border-slate-200 hover:border-purple-300 text-slate-700"
+                        : "bg-white/5 hover:bg-purple-500/20 border-white/10 hover:border-purple-500/40 text-gray-300 hover:text-white"
+                    }`}
+                    title="Model School & College (SMS)"
+                  >
+                    🎓 SMS-2026
+                  </button>
+                </div>
               </div>
 
               <div>
@@ -820,8 +906,21 @@ function LoginContent() {
               </button>
             </form>
 
+            {/* Live Security & Node Status Pill */}
+            <div className={`p-2.5 rounded-xl border flex items-center justify-between text-[9px] font-mono ${
+              isLight ? "bg-slate-50 border-slate-200 text-slate-600" : "bg-black/40 border-white/5 text-gray-400"
+            }`}>
+              <div className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="font-bold">Cloud Node: Operational</span>
+              </div>
+              <span className={isLight ? "text-sky-700 font-bold" : "text-sky-400 font-bold"}>
+                🔒 256-Bit SSL/TLS
+              </span>
+            </div>
+
             {/* Quick links & Desktop action bar */}
-            <div className="space-y-2 text-center pt-2">
+            <div className="space-y-2 text-center pt-1">
               <div className={`flex items-center justify-center gap-3 text-[10px] flex-wrap ${
                 isLight ? "text-slate-500 font-medium" : "text-gray-400"
               }`}>

@@ -3,6 +3,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import AdminSidebar from "@/components/admin-sidebar";
 import { useGlobalContext, Tenant } from "@/context/global-context";
+import MTCoreLogo from "@/components/mt-logo";
 import {
   Mail,
   Send,
@@ -663,11 +664,8 @@ export default function AdminEmailsPage() {
                   {/* Top Header */}
                   <div className="flex justify-between items-start mb-6">
                     <div>
-                      <h1 className="text-2xl font-black text-sky-600 m-0">MT Core</h1>
-                      <div className="text-[11px] font-extrabold uppercase text-slate-600 tracking-wider mt-0.5">
-                        THE CORE TECHNOLOGY BEHIND YOUR BUSINESS
-                      </div>
-                      <div className="text-[10px] font-semibold text-slate-500 mt-0.5">
+                      <MTCoreLogo variant="sky" size="md" shape="rectangle" showText={true} theme="light" />
+                      <div className="text-[10px] font-semibold text-slate-500 mt-1.5">
                         Super Admin Billing Statement &amp; Tenant Credentials
                       </div>
                     </div>
