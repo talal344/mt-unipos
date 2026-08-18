@@ -110,21 +110,21 @@ export default function SiteHeader() {
             {/* Theme Toggle Button */}
             <button
               onClick={toggleTheme}
-              className={`p-2.5 rounded-xl border transition cursor-pointer flex items-center justify-center ${
+              className={`w-10 h-10 rounded-xl border transition cursor-pointer flex items-center justify-center shrink-0 ${
                 isLight
-                  ? "bg-slate-100 border-slate-200 text-slate-800 hover:bg-slate-200"
+                  ? "bg-slate-100 border-slate-200 text-slate-800 hover:bg-slate-200 shadow-xs"
                   : "bg-[#0b121e] border-gray-800 text-yellow-400 hover:bg-white/10"
               }`}
               title={isLight ? "Switch to Dark Mode" : "Switch to Light Mode"}
             >
-              {isLight ? <Moon size={16} className="text-slate-800" /> : <Sun size={16} className="text-yellow-400" />}
+              {isLight ? <Moon size={15} className="text-slate-800" /> : <Sun size={15} className="text-yellow-400" />}
             </button>
 
             {/* Hidden Super Admin Button — only visible after passcode */}
             {superVisible && (
               <button
                 onClick={handleSuperAdminClick}
-                className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-purple-400 border border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/20 px-3 py-1.5 rounded-lg transition animate-pulse"
+                className="h-10 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-purple-400 border border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/20 px-3 rounded-xl transition animate-pulse"
                 title="Super Admin Portal"
               >
                 <ShieldAlert size={12} /> Super Admin
@@ -132,7 +132,7 @@ export default function SiteHeader() {
             )}
             <Link
               href="/login"
-              className={`group relative inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold tracking-wide transition-all duration-300 transform hover:-translate-y-0.5 active:scale-95 border ${
+              className={`group relative inline-flex items-center justify-center gap-2 h-10 px-4 py-2.5 rounded-xl text-xs font-bold tracking-wide transition-all duration-300 transform hover:-translate-y-0.5 active:scale-95 border ${
                 isLight
                   ? "bg-slate-100/90 hover:bg-white text-slate-800 hover:text-sky-600 border-slate-200/90 hover:border-sky-400 shadow-xs hover:shadow-md hover:shadow-sky-500/10"
                   : "bg-white/[0.04] hover:bg-sky-500/10 text-gray-200 hover:text-sky-300 border-white/10 hover:border-sky-500/40 shadow-xs hover:shadow-lg hover:shadow-sky-500/15"
@@ -144,9 +144,12 @@ export default function SiteHeader() {
                 isLight ? "bg-gradient-to-r from-sky-500/5 via-sky-400/10 to-transparent" : "bg-gradient-to-r from-sky-500/10 via-transparent to-transparent"
               }`} />
             </Link>
-            <Link href="/demo"
-              className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 px-5 py-2.5 text-xs sm:text-sm font-black text-white hover:opacity-95 shadow-md shadow-sky-500/25 transition-all duration-300 transform hover:-translate-y-0.5 hover:scale-105 active:scale-95">
-              <span>Request Demo</span> <ArrowRight size={14} className="transition-transform duration-300 group-hover:translate-x-1" />
+            <Link
+              href="/demo"
+              className="group relative inline-flex items-center justify-center gap-1.5 h-10 px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-sky-500 to-indigo-600 hover:opacity-95 shadow-md shadow-sky-500/25 transition-all duration-300 transform hover:-translate-y-0.5 active:scale-95 cursor-pointer"
+            >
+              <span>Request Demo</span>
+              <ArrowRight size={14} className="transition-transform duration-300 group-hover:translate-x-0.5" />
             </Link>
           </div>
 
