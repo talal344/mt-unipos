@@ -8,14 +8,15 @@ import { supabase } from "@/lib/supabase";
 import MTCoreLogo from "@/components/mt-logo";
 import {
   Laptop, ArrowRight, CheckCircle2, AlertCircle, Eye, EyeOff, Building2, Lock,
-  Users, GraduationCap, Zap, Sparkles
+  Users, GraduationCap, Zap, Sparkles, Sun, Moon, ShieldAlert, Home
 } from "lucide-react";
 
 
 function LoginContent() {
   const router       = useRouter();
   const searchParams = useSearchParams();
-  const { tenants, setCurrentUser } = useGlobalContext();
+  const { tenants, setCurrentUser, theme, toggleTheme } = useGlobalContext();
+  const isLight = theme === "light";
 
   const [inputTenantId, setInputTenantId] = useState("");
   const [email,    setEmail]    = useState("");
@@ -449,238 +450,365 @@ function LoginContent() {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-screen bg-black font-sans text-gray-100 justify-center items-center gap-12 lg:gap-16 xl:gap-24 px-6 lg:px-16 xl:px-24 relative overflow-y-auto py-12">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(14,165,233,0.07),transparent_65%)] pointer-events-none" />
+    <div className={`flex flex-col min-h-screen font-sans justify-center items-center relative overflow-y-auto py-12 px-6 lg:px-16 xl:px-24 transition-colors duration-200 ${
+      isLight ? "bg-slate-50 text-slate-900" : "bg-black text-gray-100"
+    }`}>
+      {/* Background Radial Glow */}
+      <div className={`absolute inset-0 pointer-events-none ${
+        isLight
+          ? "bg-[radial-gradient(ellipse_at_top,rgba(14,165,233,0.08),transparent_65%)]"
+          : "bg-[radial-gradient(ellipse_at_center,rgba(14,165,233,0.07),transparent_65%)]"
+      }`} />
 
-      {/* LEFT COLUMN: Features & Details Showcase (Hidden on Mobile) */}
-      <div className="hidden lg:flex flex-col max-w-lg space-y-6 relative z-10">
-        <div>
-          <span className="bg-brand-sky/10 border border-brand-sky/30 text-brand-sky font-bold text-[10px] uppercase tracking-widest px-3 py-1 rounded-full">
-            MT Core — The core technology behind your business.
-          </span>
-          <h1 className="text-3xl xl:text-4xl font-black tracking-tight text-white mt-4 leading-tight">
-            Streamline your store, dining floor & sharded databases.
-          </h1>
-          <p className="text-gray-400 text-xs mt-3 leading-relaxed">
-            MT Core provides enterprise-grade sharded database tenancy, real-time inventory tracking, dual ledger accounting, and interactive kitchen routing in one unified suite.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-brand-dark-surface/40 border border-brand-dark-border/50 p-4 rounded-xl space-y-1.5 sky-glow-border transition hover:scale-[1.01]">
-            <h3 className="text-white font-black text-xs uppercase tracking-wider text-brand-sky">Real-time Stock</h3>
-            <p className="text-gray-500 text-[10px] leading-normal">Monitor stock valuation, barcode registries, low-stock notifications, and auto-purchase orders.</p>
-          </div>
-          <div className="bg-brand-dark-surface/40 border border-brand-dark-border/50 p-4 rounded-xl space-y-1.5 sky-glow-border transition hover:scale-[1.01]">
-            <h3 className="text-white font-black text-xs uppercase tracking-wider text-brand-sky">Restaurant POS</h3>
-            <p className="text-gray-500 text-[10px] leading-normal">Visual physical table maps, custom waiter routing, and instant kitchen display status syncing.</p>
-          </div>
-          <div className="bg-brand-dark-surface/40 border border-brand-dark-border/50 p-4 rounded-xl space-y-1.5 sky-glow-border transition hover:scale-[1.01]">
-            <h3 className="text-white font-black text-xs uppercase tracking-wider text-brand-sky">Double Ledger</h3>
-            <p className="text-gray-500 text-[10px] leading-normal">Automated transactional entries, accounts receivable tracking, payroll shunts, and cash book ledgers.</p>
-          </div>
-          <div className="bg-brand-dark-surface/40 border border-brand-dark-border/50 p-4 rounded-xl space-y-1.5 sky-glow-border transition hover:scale-[1.01]">
-            <h3 className="text-white font-black text-xs uppercase tracking-wider text-brand-sky">AI Analytics</h3>
-            <p className="text-gray-500 text-[10px] leading-normal">Interactive demand forecasting, peak times reporting, sales matrix analysis, and data-driven insights.</p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-6 text-[9px] font-mono text-gray-500 pt-2 border-t border-brand-dark-border/40">
-          <div>
-            <span className="text-white font-bold block text-xs">99.9%</span>
-            Uptime SLA
-          </div>
-          <div>
-            <span className="text-white font-bold block text-xs">AES-256</span>
-            Data Encryption
-          </div>
-          <div>
-            <span className="text-white font-bold block text-xs">Tenancy</span>
-            Multi-Tenant Isolation
-          </div>
-        </div>
-      </div>
-
-      {/* RIGHT COLUMN: Sign In Card & Logo */}
-      <div className="flex flex-col items-center w-full max-w-md relative z-10 shrink-0">
-        
-        {/* Welcome shop name header (Floating absolute above) */}
-        {isValidTenant && activeTenant && (
-          <div className="absolute bottom-full left-0 right-0 mb-5 text-center animate-fade-in-up">
-            <span className="text-brand-sky text-[9px] font-mono uppercase tracking-widest bg-brand-sky/10 border border-brand-sky/20 px-2.5 py-0.5 rounded">Connected Workspace</span>
-            <h2 className="text-2xl font-black sky-gradient-text mt-1.5 px-4 leading-snug">
-              Welcome to {activeTenant.businessName}
-            </h2>
-          </div>
-        )}
-
-        {/* Logo */}
-        <Link href="/" className="flex flex-col items-center justify-center mb-8 group cursor-pointer">
-          <div className="transition-all duration-300 group-hover:scale-105 group-hover:drop-shadow-[0_0_32px_rgba(14,165,233,0.5)]">
-            <MTCoreLogo variant="sky" size="lg" showText={true} collapsed={false} />
-          </div>
-          <span className="text-[10px] text-gray-500 font-medium mt-3 tracking-wider uppercase">The core technology behind your business.</span>
+      {/* Floating Top Navigation & Theme Toggle */}
+      <div className="absolute top-6 right-6 z-20 flex items-center gap-3">
+        <Link
+          href="/"
+          className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition border ${
+            isLight
+              ? "bg-white border-slate-200 text-slate-700 hover:text-sky-600 hover:border-sky-300 shadow-xs"
+              : "bg-white/5 border-white/10 text-gray-300 hover:text-white hover:border-sky-500/40"
+          }`}
+          title="Return to Home"
+        >
+          <Home size={14} />
+          <span className="hidden sm:inline">Back to Home</span>
         </Link>
 
-        {/* Sign In Box */}
-        <div className="bg-brand-dark-surface border border-brand-dark-border/80 w-full p-7 rounded-2xl glass-panel sky-glow space-y-6">
+        <Link
+          href="/admin/login"
+          className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition border ${
+            isLight
+              ? "bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100 shadow-xs"
+              : "bg-purple-500/10 border-purple-500/30 text-purple-300 hover:bg-purple-500/20"
+          }`}
+          title="Super Admin Portal"
+        >
+          <ShieldAlert size={14} />
+          <span className="hidden sm:inline">Super Admin</span>
+        </Link>
 
-          <div className="text-center">
-            <h2 className="text-lg font-black text-white">Client Portal Sign In</h2>
-            <p className="text-[10px] text-gray-500 mt-1">
-              Access POS terminals, inventory, accounting &amp; CRM.
+        <button
+          type="button"
+          onClick={toggleTheme}
+          className={`p-2.5 rounded-xl border transition cursor-pointer flex items-center justify-center ${
+            isLight
+              ? "bg-white border-slate-200 text-slate-800 hover:bg-slate-100 shadow-xs"
+              : "bg-white/5 border-white/10 text-yellow-400 hover:bg-white/10"
+          }`}
+          title={isLight ? "Switch to Dark Mode" : "Switch to Light Mode"}
+        >
+          {isLight ? <Moon size={15} className="text-slate-800" /> : <Sun size={15} className="text-yellow-400" />}
+        </button>
+      </div>
+
+      <div className="flex flex-col lg:flex-row w-full max-w-6xl justify-center items-center gap-12 lg:gap-16 xl:gap-20 relative z-10 my-auto">
+
+        {/* LEFT COLUMN: Features & Details Showcase (Hidden on Mobile) */}
+        <div className="hidden lg:flex flex-col max-w-lg space-y-6">
+          <div>
+            <span className={`font-bold text-[10px] uppercase tracking-widest px-3 py-1 rounded-full border inline-block ${
+              isLight ? "bg-sky-50 border-sky-200 text-sky-700 font-black" : "bg-brand-sky/10 border-brand-sky/30 text-brand-sky"
+            }`}>
+              MT Core — The core technology behind your business.
+            </span>
+            <h1 className={`text-3xl xl:text-4xl font-black tracking-tight mt-4 leading-tight ${
+              isLight ? "text-slate-900" : "text-white"
+            }`}>
+              Streamline your store, dining floor &amp; sharded databases.
+            </h1>
+            <p className={`text-xs mt-3 leading-relaxed ${isLight ? "text-slate-600 font-medium" : "text-gray-400"}`}>
+              MT Core provides enterprise-grade sharded database tenancy, real-time inventory tracking, dual ledger accounting, and interactive kitchen routing in one unified suite.
             </p>
           </div>
 
-          {showSuccess && (
-            <div className="bg-emerald-500/10 border border-emerald-500/40 p-3 rounded-xl text-xs flex items-start gap-2 text-emerald-400">
-              <CheckCircle2 size={15} className="shrink-0 mt-0.5" />
-              Tenant provisioned! Login with the auto-filled Owner credentials below.
+          <div className="grid grid-cols-2 gap-4">
+            <div className={`p-4 rounded-2xl border space-y-1.5 transition-all hover:scale-[1.01] ${
+              isLight ? "bg-white border-slate-200 shadow-xs hover:border-sky-300 hover:shadow-md" : "bg-brand-dark-surface/40 border-brand-dark-border/50 sky-glow-border"
+            }`}>
+              <h3 className={`font-black text-xs uppercase tracking-wider ${isLight ? "text-sky-600 font-black" : "text-brand-sky"}`}>Real-time Stock</h3>
+              <p className={`text-[10px] leading-normal ${isLight ? "text-slate-600 font-medium" : "text-gray-500"}`}>Monitor stock valuation, barcode registries, low-stock notifications, and auto-purchase orders.</p>
             </div>
-          )}
-
-          {errorMessage && (
-            <div className="bg-red-500/10 border border-red-500/30 p-3 rounded-xl text-xs flex items-start gap-2 text-red-400">
-              <AlertCircle size={15} className="shrink-0 mt-0.5" /> {errorMessage}
+            <div className={`p-4 rounded-2xl border space-y-1.5 transition-all hover:scale-[1.01] ${
+              isLight ? "bg-white border-slate-200 shadow-xs hover:border-sky-300 hover:shadow-md" : "bg-brand-dark-surface/40 border-brand-dark-border/50 sky-glow-border"
+            }`}>
+              <h3 className={`font-black text-xs uppercase tracking-wider ${isLight ? "text-sky-600 font-black" : "text-brand-sky"}`}>Restaurant POS</h3>
+              <p className={`text-[10px] leading-normal ${isLight ? "text-slate-600 font-medium" : "text-gray-500"}`}>Visual physical table maps, custom waiter routing, and instant kitchen display status syncing.</p>
             </div>
-          )}
-
-          {/* ── 1-CLICK INSTANT DEMO ACCESS CARDS (POS • HRMS • SMS) ── */}
-          <div className="p-3.5 rounded-2xl bg-gradient-to-b from-[#0e1626] to-[#080d14] border border-sky-500/30 space-y-2.5">
-            <div className="flex items-center justify-between text-[11px] font-black text-sky-400">
-              <div className="flex items-center gap-1.5">
-                <Zap size={14} className="text-amber-400 fill-amber-400 animate-pulse" />
-                <span>1-CLICK INSTANT DEMO LOGIN</span>
-              </div>
-              <span className="text-[9px] bg-sky-500/10 text-sky-300 font-mono px-2 py-0.5 rounded-md border border-sky-500/20">
-                FAST ACCESS
-              </span>
+            <div className={`p-4 rounded-2xl border space-y-1.5 transition-all hover:scale-[1.01] ${
+              isLight ? "bg-white border-slate-200 shadow-xs hover:border-sky-300 hover:shadow-md" : "bg-brand-dark-surface/40 border-brand-dark-border/50 sky-glow-border"
+            }`}>
+              <h3 className={`font-black text-xs uppercase tracking-wider ${isLight ? "text-sky-600 font-black" : "text-brand-sky"}`}>Double Ledger</h3>
+              <p className={`text-[10px] leading-normal ${isLight ? "text-slate-600 font-medium" : "text-gray-500"}`}>Automated transactional entries, accounts receivable tracking, payroll shunts, and cash book ledgers.</p>
             </div>
-
-            <div className="grid grid-cols-3 gap-2">
-              {/* POS DEMO */}
-              <button
-                type="button"
-                onClick={() => handleDemoLogin("POS")}
-                className="p-2.5 rounded-xl bg-sky-500/10 hover:bg-sky-600 border border-sky-500/30 text-sky-300 hover:text-white transition flex flex-col items-center justify-center gap-1 group shadow-sm hover:scale-[1.02] cursor-pointer"
-                title="Instant 1-Click Login to POS & Retail System"
-              >
-                <Laptop size={16} className="text-sky-400 group-hover:text-white transition" />
-                <span className="text-[11px] font-black leading-none">POS ERP</span>
-                <span className="text-[8px] text-gray-400 group-hover:text-sky-100 uppercase font-mono">Retail &amp; Store</span>
-              </button>
-
-              {/* HRMS DEMO */}
-              <button
-                type="button"
-                onClick={() => handleDemoLogin("HRMS")}
-                className="p-2.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-600 border border-emerald-500/30 text-emerald-300 hover:text-white transition flex flex-col items-center justify-center gap-1 group shadow-sm hover:scale-[1.02] cursor-pointer"
-                title="Instant 1-Click Login to HRMS & Payroll Suite"
-              >
-                <Users size={16} className="text-emerald-400 group-hover:text-white transition" />
-                <span className="text-[11px] font-black leading-none">HRMS</span>
-                <span className="text-[8px] text-gray-400 group-hover:text-emerald-100 uppercase font-mono">Staff &amp; Payroll</span>
-              </button>
-
-              {/* SMS DEMO */}
-              <button
-                type="button"
-                onClick={() => handleDemoLogin("SMS")}
-                className="p-2.5 rounded-xl bg-purple-500/10 hover:bg-purple-600 border border-purple-500/30 text-purple-300 hover:text-white transition flex flex-col items-center justify-center gap-1 group shadow-sm hover:scale-[1.02] cursor-pointer"
-                title="Instant 1-Click Login to School Management ERP"
-              >
-                <GraduationCap size={16} className="text-purple-400 group-hover:text-white transition" />
-                <span className="text-[11px] font-black leading-none">School SMS</span>
-                <span className="text-[8px] text-gray-400 group-hover:text-purple-100 uppercase font-mono">Academic ERP</span>
-              </button>
+            <div className={`p-4 rounded-2xl border space-y-1.5 transition-all hover:scale-[1.01] ${
+              isLight ? "bg-white border-slate-200 shadow-xs hover:border-sky-300 hover:shadow-md" : "bg-brand-dark-surface/40 border-brand-dark-border/50 sky-glow-border"
+            }`}>
+              <h3 className={`font-black text-xs uppercase tracking-wider ${isLight ? "text-sky-600 font-black" : "text-brand-sky"}`}>AI Analytics</h3>
+              <p className={`text-[10px] leading-normal ${isLight ? "text-slate-600 font-medium" : "text-gray-500"}`}>Interactive demand forecasting, peak times reporting, sales matrix analysis, and data-driven insights.</p>
             </div>
           </div>
 
-          <div className="relative flex items-center justify-center py-1">
-            <div className="border-t border-gray-800 w-full" />
-            <span className="bg-brand-dark-surface px-3 text-[9px] font-bold text-gray-500 uppercase tracking-wider shrink-0">
-              OR SIGN IN WITH CREDENTIALS
+          <div className={`flex items-center gap-6 text-[9px] font-mono pt-2 border-t ${
+            isLight ? "border-slate-200 text-slate-500" : "border-brand-dark-border/40 text-gray-500"
+          }`}>
+            <div>
+              <span className={`font-bold block text-xs ${isLight ? "text-slate-900" : "text-white"}`}>99.9%</span>
+              Uptime SLA
+            </div>
+            <div>
+              <span className={`font-bold block text-xs ${isLight ? "text-slate-900" : "text-white"}`}>AES-256</span>
+              Data Encryption
+            </div>
+            <div>
+              <span className={`font-bold block text-xs ${isLight ? "text-slate-900" : "text-white"}`}>Tenancy</span>
+              Multi-Tenant Isolation
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT COLUMN: Sign In Card & Logo */}
+        <div className="flex flex-col items-center w-full max-w-md shrink-0">
+          
+          {/* Welcome shop name header (Floating absolute above) */}
+          {isValidTenant && activeTenant && (
+            <div className="mb-4 text-center animate-fade-in-up">
+              <span className={`text-[9px] font-mono uppercase tracking-widest px-2.5 py-0.5 rounded border ${
+                isLight ? "bg-sky-50 border-sky-200 text-sky-700 font-bold" : "bg-brand-sky/10 border-brand-sky/20 text-brand-sky"
+              }`}>Connected Workspace</span>
+              <h2 className={`text-2xl font-black mt-1.5 px-4 leading-snug ${isLight ? "text-sky-700" : "sky-gradient-text"}`}>
+                Welcome to {activeTenant.businessName}
+              </h2>
+            </div>
+          )}
+
+          {/* Logo */}
+          <Link href="/" className="flex flex-col items-center justify-center mb-6 group cursor-pointer">
+            <div className="transition-all duration-300 group-hover:scale-105">
+              <MTCoreLogo variant="sky" size="lg" showText={true} collapsed={false} theme={isLight ? "light" : "dark"} />
+            </div>
+            <span className={`text-[10px] font-medium mt-3 tracking-wider uppercase ${isLight ? "text-slate-500" : "text-gray-500"}`}>
+              The core technology behind your business.
             </span>
-            <div className="border-t border-gray-800 w-full" />
-          </div>
+          </Link>
 
-          {/* ── LOGIN FORM ── */}
-          <form onSubmit={handleCredentialsSubmit} className="space-y-4 text-xs">
-            <div>
-              <label className="block text-[10px] uppercase font-bold text-brand-sky tracking-wider mb-1.5">
-                <Building2 size={9} className="inline mr-1" /> Workspace / Tenant ID
-              </label>
-              <input 
-                type="text" 
-                required 
-                value={inputTenantId}
-                onChange={e => { setInputTenantId(e.target.value.toUpperCase()); setErrorMessage(""); }}
-                placeholder="e.g. AFS-1234"
-                className={`w-full bg-black border p-3 rounded-xl text-white outline-none transition-all duration-300 ${tenantGlowClass}`} 
-              />
+          {/* Sign In Box */}
+          <div className={`w-full p-7 rounded-3xl border space-y-6 transition-all ${
+            isLight
+              ? "bg-white border-slate-200 shadow-xl shadow-slate-200/50 text-slate-900"
+              : "bg-brand-dark-surface border-brand-dark-border/80 glass-panel sky-glow text-white"
+          }`}>
+
+            <div className="text-center">
+              <h2 className={`text-lg font-black ${isLight ? "text-slate-900" : "text-white"}`}>Client Portal Sign In</h2>
+              <p className={`text-[10px] mt-1 ${isLight ? "text-slate-500 font-medium" : "text-gray-500"}`}>
+                Access POS terminals, inventory, accounting &amp; CRM.
+              </p>
             </div>
 
-            <div>
-              <label className="block text-[10px] uppercase font-bold text-gray-400 tracking-wider mb-1.5">User ID / Username or Email</label>
-              <input type="text" required value={email} onChange={e => setEmail(e.target.value)}
-                placeholder="e.g. parent.tariq or student@domain.com"
-                className="w-full bg-black border border-brand-dark-border p-3 rounded-xl text-white focus:outline-none focus:border-brand-sky transition font-bold" />
-            </div>
-
-            <div>
-              <div className="flex justify-between items-center mb-1.5">
-                <label className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Secure Password</label>
-                <button type="button" className="text-[10px] text-brand-sky hover:underline">Forgot Password?</button>
+            {showSuccess && (
+              <div className={`p-3 rounded-xl text-xs flex items-start gap-2 border ${
+                isLight ? "bg-emerald-50 border-emerald-200 text-emerald-800" : "bg-emerald-500/10 border-emerald-500/40 text-emerald-400"
+              }`}>
+                <CheckCircle2 size={15} className="shrink-0 mt-0.5" />
+                Tenant provisioned! Login with the auto-filled Owner credentials below.
               </div>
-              <div className="relative">
-                <input type={showPwd ? "text" : "password"} required value={password} onChange={e => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full bg-black border border-brand-dark-border p-3 pr-10 rounded-xl text-white focus:outline-none focus:border-brand-sky transition font-bold" />
-                <button type="button" onClick={() => setShowPwd(v => !v)}
-                  className="absolute right-3 top-3 text-gray-500 hover:text-white transition">
-                  {showPwd ? <EyeOff size={14} /> : <Eye size={14} />}
+            )}
+
+            {errorMessage && (
+              <div className={`p-3 rounded-xl text-xs flex items-start gap-2 border ${
+                isLight ? "bg-rose-50 border-rose-200 text-rose-800 font-medium" : "bg-red-500/10 border-red-500/30 text-red-400"
+              }`}>
+                <AlertCircle size={15} className="shrink-0 mt-0.5" /> {errorMessage}
+              </div>
+            )}
+
+            {/* ── 1-CLICK INSTANT DEMO ACCESS CARDS (POS • HRMS • SMS) ── */}
+            <div className={`p-3.5 rounded-2xl border space-y-2.5 ${
+              isLight
+                ? "bg-gradient-to-b from-sky-50/70 to-indigo-50/40 border-sky-200"
+                : "bg-gradient-to-b from-[#0e1626] to-[#080d14] border-sky-500/30"
+            }`}>
+              <div className={`flex items-center justify-between text-[11px] font-black ${
+                isLight ? "text-sky-700" : "text-sky-400"
+              }`}>
+                <div className="flex items-center gap-1.5">
+                  <Zap size={14} className="text-amber-500 fill-amber-500 animate-pulse" />
+                  <span>1-CLICK INSTANT DEMO LOGIN</span>
+                </div>
+                <span className={`text-[9px] font-mono px-2 py-0.5 rounded-md border ${
+                  isLight ? "bg-sky-100 border-sky-200 text-sky-800" : "bg-sky-500/10 text-sky-300 border-sky-500/20"
+                }`}>
+                  FAST ACCESS
+                </span>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2">
+                {/* POS DEMO */}
+                <button
+                  type="button"
+                  onClick={() => handleDemoLogin("POS")}
+                  className={`p-2.5 rounded-xl border transition flex flex-col items-center justify-center gap-1 group shadow-xs hover:scale-[1.02] cursor-pointer ${
+                    isLight
+                      ? "bg-white border-sky-200 text-sky-800 hover:bg-sky-500 hover:text-white"
+                      : "bg-sky-500/10 hover:bg-sky-600 border-sky-500/30 text-sky-300 hover:text-white"
+                  }`}
+                  title="Instant 1-Click Login to POS & Retail System"
+                >
+                  <Laptop size={16} className={`transition ${isLight ? "text-sky-600 group-hover:text-white" : "text-sky-400 group-hover:text-white"}`} />
+                  <span className="text-[11px] font-black leading-none">POS ERP</span>
+                  <span className={`text-[8px] uppercase font-mono ${isLight ? "text-slate-500 group-hover:text-sky-100" : "text-gray-400 group-hover:text-sky-100"}`}>Retail &amp; Store</span>
+                </button>
+
+                {/* HRMS DEMO */}
+                <button
+                  type="button"
+                  onClick={() => handleDemoLogin("HRMS")}
+                  className={`p-2.5 rounded-xl border transition flex flex-col items-center justify-center gap-1 group shadow-xs hover:scale-[1.02] cursor-pointer ${
+                    isLight
+                      ? "bg-white border-emerald-200 text-emerald-800 hover:bg-emerald-500 hover:text-white"
+                      : "bg-emerald-500/10 hover:bg-emerald-600 border-emerald-500/30 text-emerald-300 hover:text-white"
+                  }`}
+                  title="Instant 1-Click Login to HRMS & Payroll Suite"
+                >
+                  <Users size={16} className={`transition ${isLight ? "text-emerald-600 group-hover:text-white" : "text-emerald-400 group-hover:text-white"}`} />
+                  <span className="text-[11px] font-black leading-none">HRMS</span>
+                  <span className={`text-[8px] uppercase font-mono ${isLight ? "text-slate-500 group-hover:text-emerald-100" : "text-gray-400 group-hover:text-emerald-100"}`}>Staff &amp; Payroll</span>
+                </button>
+
+                {/* SMS DEMO */}
+                <button
+                  type="button"
+                  onClick={() => handleDemoLogin("SMS")}
+                  className={`p-2.5 rounded-xl border transition flex flex-col items-center justify-center gap-1 group shadow-xs hover:scale-[1.02] cursor-pointer ${
+                    isLight
+                      ? "bg-white border-purple-200 text-purple-800 hover:bg-purple-500 hover:text-white"
+                      : "bg-purple-500/10 hover:bg-purple-600 border-purple-500/30 text-purple-300 hover:text-white"
+                  }`}
+                  title="Instant 1-Click Login to School Management ERP"
+                >
+                  <GraduationCap size={16} className={`transition ${isLight ? "text-purple-600 group-hover:text-white" : "text-purple-400 group-hover:text-white"}`} />
+                  <span className="text-[11px] font-black leading-none">School SMS</span>
+                  <span className={`text-[8px] uppercase font-mono ${isLight ? "text-slate-500 group-hover:text-purple-100" : "text-gray-400 group-hover:text-purple-100"}`}>Academic ERP</span>
                 </button>
               </div>
             </div>
 
-            <label className="flex items-center gap-2 text-[10px] text-gray-400 cursor-pointer select-none">
-              <input type="checkbox" checked={rememberMe} onChange={e => setRememberMe(e.target.checked)}
-                className="rounded border-brand-dark-border text-brand-sky" />
-              Remember this terminal for 30 days
-            </label>
-
-            <button type="submit" disabled={loading}
-              className="w-full py-3 bg-brand-sky hover:bg-brand-sky-light disabled:opacity-60 text-black font-black uppercase text-xs tracking-wider rounded-xl flex items-center justify-center gap-2 transition transform hover:scale-[1.01] shadow-lg shadow-brand-sky/20">
-              {loading
-                ? <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
-                : <>Sign In to Workspace <ArrowRight size={14} /></>}
-            </button>
-          </form>
-
-
-
-          {/* Quick links & Desktop action bar */}
-          <div className="space-y-2 text-center pt-2">
-            <div className="flex items-center justify-center gap-3 text-[10px] text-gray-400 flex-wrap">
-              <Link href="/demo" className="text-brand-sky font-bold hover:underline flex items-center gap-1">
-                📝 Apply for Demo
-              </Link>
-              <span>·</span>
-              <Link href="/tracking" className="text-purple-400 font-bold hover:underline flex items-center gap-1">
-                🔍 Self-Service Tracking
-              </Link>
-              <span>·</span>
-              <Link href="/features" className="text-emerald-400 font-bold hover:underline flex items-center gap-1">
-                ✨ Features
-              </Link>
+            <div className="relative flex items-center justify-center py-1">
+              <div className={`border-t w-full ${isLight ? "border-slate-200" : "border-gray-800"}`} />
+              <span className={`px-3 text-[9px] font-bold uppercase tracking-wider shrink-0 ${
+                isLight ? "bg-white text-slate-400" : "bg-brand-dark-surface text-gray-500"
+              }`}>
+                OR SIGN IN WITH CREDENTIALS
+              </span>
+              <div className={`border-t w-full ${isLight ? "border-slate-200" : "border-gray-800"}`} />
             </div>
-              <p className="text-[9px] text-gray-600">
-                <Link href="/" className="text-gray-500 hover:text-white">← Back to Website</Link>
+
+            {/* ── LOGIN FORM ── */}
+            <form onSubmit={handleCredentialsSubmit} className="space-y-4 text-xs">
+              <div>
+                <label className={`block text-[10px] uppercase font-bold tracking-wider mb-1.5 ${
+                  isLight ? "text-sky-700" : "text-brand-sky"
+                }`}>
+                  <Building2 size={9} className="inline mr-1" /> Workspace / Tenant ID
+                </label>
+                <input 
+                  type="text" 
+                  required 
+                  value={inputTenantId}
+                  onChange={e => { setInputTenantId(e.target.value.toUpperCase()); setErrorMessage(""); }}
+                  placeholder="e.g. AFS-1234"
+                  className={`w-full p-3 rounded-xl outline-none transition-all duration-300 font-mono text-xs border ${
+                    isLight
+                      ? `bg-slate-50 text-slate-900 placeholder-slate-400 focus:bg-white ${
+                          !showValidation
+                            ? "border-slate-300 focus:border-sky-500"
+                            : isValidTenant
+                            ? "border-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.2)] focus:border-emerald-400"
+                            : "border-rose-500 shadow-[0_0_10px_rgba(239,68,68,0.2)] focus:border-rose-400"
+                        }`
+                      : `bg-black text-white ${tenantGlowClass}`
+                  }`} 
+                />
+              </div>
+
+              <div>
+                <label className={`block text-[10px] uppercase font-bold tracking-wider mb-1.5 ${
+                  isLight ? "text-slate-600" : "text-gray-400"
+                }`}>User ID / Username or Email</label>
+                <input type="text" required value={email} onChange={e => setEmail(e.target.value)}
+                  placeholder="e.g. parent.tariq or student@domain.com"
+                  className={`w-full p-3 rounded-xl focus:outline-none transition font-bold border ${
+                    isLight
+                      ? "bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-sky-500"
+                      : "bg-black border-brand-dark-border text-white placeholder-gray-600 focus:border-brand-sky"
+                  }`} />
+              </div>
+
+              <div>
+                <div className="flex justify-between items-center mb-1.5">
+                  <label className={`text-[10px] uppercase font-bold tracking-wider ${
+                    isLight ? "text-slate-600" : "text-gray-400"
+                  }`}>Secure Password</label>
+                  <button type="button" className={`text-[10px] hover:underline ${isLight ? "text-sky-600 font-semibold" : "text-brand-sky"}`}>Forgot Password?</button>
+                </div>
+                <div className="relative">
+                  <input type={showPwd ? "text" : "password"} required value={password} onChange={e => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className={`w-full p-3 pr-10 rounded-xl focus:outline-none transition font-bold border ${
+                      isLight
+                        ? "bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-sky-500"
+                        : "bg-black border-brand-dark-border text-white placeholder-gray-600 focus:border-brand-sky"
+                    }`} />
+                  <button type="button" onClick={() => setShowPwd(v => !v)}
+                    className={`absolute right-3 top-3 transition ${isLight ? "text-slate-400 hover:text-slate-800" : "text-gray-500 hover:text-white"}`}>
+                    {showPwd ? <EyeOff size={14} /> : <Eye size={14} />}
+                  </button>
+                </div>
+              </div>
+
+              <label className={`flex items-center gap-2 text-[10px] cursor-pointer select-none ${
+                isLight ? "text-slate-600 font-medium" : "text-gray-400"
+              }`}>
+                <input type="checkbox" checked={rememberMe} onChange={e => setRememberMe(e.target.checked)}
+                  className="rounded text-sky-500" />
+                Remember this terminal for 30 days
+              </label>
+
+              <button type="submit" disabled={loading}
+                className="w-full py-3 bg-sky-500 hover:bg-sky-600 disabled:opacity-60 text-white font-black uppercase text-xs tracking-wider rounded-xl flex items-center justify-center gap-2 transition transform hover:scale-[1.01] active:scale-95 shadow-lg shadow-sky-500/25 cursor-pointer">
+                {loading
+                  ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  : <>Sign In to Workspace <ArrowRight size={14} /></>}
+              </button>
+            </form>
+
+            {/* Quick links & Desktop action bar */}
+            <div className="space-y-2 text-center pt-2">
+              <div className={`flex items-center justify-center gap-3 text-[10px] flex-wrap ${
+                isLight ? "text-slate-500 font-medium" : "text-gray-400"
+              }`}>
+                <Link href="/demo" className="text-sky-600 font-bold hover:underline flex items-center gap-1">
+                  📝 Apply for Demo
+                </Link>
+                <span>·</span>
+                <Link href="/tracking" className="text-purple-600 font-bold hover:underline flex items-center gap-1">
+                  🔍 Self-Service Tracking
+                </Link>
+                <span>·</span>
+                <Link href="/features" className="text-emerald-600 font-bold hover:underline flex items-center gap-1">
+                  ✨ Features
+                </Link>
+              </div>
+              <p className={`text-[9px] ${isLight ? "text-slate-400" : "text-gray-600"}`}>
+                <Link href="/" className={`hover:underline ${isLight ? "text-slate-600 hover:text-slate-900" : "text-gray-500 hover:text-white"}`}>← Back to Website</Link>
+                {" · "}
+                <Link href="/admin/login" className={`hover:underline font-bold ${isLight ? "text-purple-700" : "text-purple-400"}`}>Super Admin Gate →</Link>
               </p>
+            </div>
           </div>
+
         </div>
-
-
 
       </div>
 
