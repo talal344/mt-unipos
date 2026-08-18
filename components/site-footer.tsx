@@ -65,7 +65,7 @@ export default function SiteFooter() {
     { name: "Commercial SaaS Blog", href: "/blog" },
     { name: "Request Live Demo", href: "/demo" },
     { name: "Track Demo Ticket", href: "/track-ticket" },
-    { name: "Super Admin Gateway", href: "/admin/login" }
+    { name: "Developer API Docs", href: "/api-docs" }
   ];
 
   return (

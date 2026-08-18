@@ -81,9 +81,17 @@ export default function SiteHeader() {
       <div className="w-full max-w-[1800px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16">
         <div className="flex h-20 items-center justify-between py-2">
 
-          {/* Logo */}
-          <div className="flex-shrink-0 flex items-center cursor-pointer select-none" onClick={handleLogoTap}>
-            <Link href="/" className="flex items-center gap-2 group">
+          {/* Logo with 5-Tap Secret Super Admin Unlock */}
+          <div className="flex-shrink-0 flex items-center cursor-pointer select-none">
+            <Link
+              href="/"
+              onClick={(e) => {
+                handleLogoTap();
+                if (pathname === "/") e.preventDefault();
+              }}
+              className="flex items-center gap-2 group"
+              title="MT Core"
+            >
               <MTCoreLogo variant="sky" size="md" shape="rectangle" showText={true} theme={isLight ? "light" : "dark"} />
             </Link>
           </div>

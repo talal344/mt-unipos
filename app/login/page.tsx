@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useGlobalContext } from "@/context/global-context";
@@ -11,6 +11,7 @@ import {
   Users, GraduationCap, Zap, Sparkles, Sun, Moon, ShieldAlert, Home
 } from "lucide-react";
 
+const SUPER_ADMIN_PASSCODE = "talal344";
 
 function LoginContent() {
   const router       = useRouter();
@@ -26,6 +27,43 @@ function LoginContent() {
   const [errorMessage, setErrorMessage] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
   const [loading, setLoading]   = useState(false);
+
+  // Hidden Super Admin access state
+  const [keyBuffer, setKeyBuffer] = useState("");
+  const [superVisible, setSuperVisible] = useState(false);
+  const [logoTaps, setLogoTaps] = useState(0);
+  const bufferTimer = useRef<ReturnType<typeof setTimeout>|null>(null);
+  const tapTimer = useRef<ReturnType<typeof setTimeout>|null>(null);
+
+  // Listen for keyboard typing of secret code anywhere on the page
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.target as HTMLElement).tagName === "INPUT" || (e.target as HTMLElement).tagName === "TEXTAREA") return;
+      const next = (keyBuffer + e.key).slice(-SUPER_ADMIN_PASSCODE.length);
+      setKeyBuffer(next);
+      if (next === SUPER_ADMIN_PASSCODE) {
+        setSuperVisible(true);
+        setKeyBuffer("");
+      }
+      if (bufferTimer.current) clearTimeout(bufferTimer.current);
+      bufferTimer.current = setTimeout(() => setKeyBuffer(""), 3000);
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [keyBuffer]);
+
+  const handleLogoTap = () => {
+    setLogoTaps(prev => {
+      const next = prev + 1;
+      if (next >= 5) {
+        setSuperVisible(true);
+        return 0;
+      }
+      return next;
+    });
+    if (tapTimer.current) clearTimeout(tapTimer.current);
+    tapTimer.current = setTimeout(() => setLogoTaps(0), 2000);
+  };
 
   // Activation Modal State
   const [showActivationModal, setShowActivationModal] = useState(false);
@@ -475,18 +513,17 @@ function LoginContent() {
           <span className="hidden sm:inline">Back to Home</span>
         </Link>
 
-        <Link
-          href="/admin/login"
-          className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition border ${
-            isLight
-              ? "bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100 shadow-xs"
-              : "bg-purple-500/10 border-purple-500/30 text-purple-300 hover:bg-purple-500/20"
-          }`}
-          title="Super Admin Portal"
-        >
-          <ShieldAlert size={14} />
-          <span className="hidden sm:inline">Super Admin</span>
-        </Link>
+        {/* Secret Super Admin Button — only revealed after typing talal344 or 5 logo clicks */}
+        {superVisible && (
+          <Link
+            href="/admin/login"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider text-purple-400 border border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/20 transition animate-pulse"
+            title="Super Admin Portal"
+          >
+            <ShieldAlert size={14} />
+            <span>Super Admin</span>
+          </Link>
+        )}
 
         <button
           type="button"
@@ -582,15 +619,15 @@ function LoginContent() {
             </div>
           )}
 
-          {/* Logo */}
-          <Link href="/" className="flex flex-col items-center justify-center mb-6 group cursor-pointer">
+          {/* Logo with 5-tap Secret Unlock */}
+          <div onClick={handleLogoTap} className="flex flex-col items-center justify-center mb-6 group cursor-pointer select-none" title="MT Core">
             <div className="transition-all duration-300 group-hover:scale-105">
               <MTCoreLogo variant="sky" size="lg" showText={true} collapsed={false} theme={isLight ? "light" : "dark"} />
             </div>
             <span className={`text-[10px] font-medium mt-3 tracking-wider uppercase ${isLight ? "text-slate-500" : "text-gray-500"}`}>
               The core technology behind your business.
             </span>
-          </Link>
+          </div>
 
           {/* Sign In Box */}
           <div className={`w-full p-7 rounded-3xl border space-y-6 transition-all ${
@@ -800,10 +837,8 @@ function LoginContent() {
                   ✨ Features
                 </Link>
               </div>
-              <p className={`text-[9px] ${isLight ? "text-slate-400" : "text-gray-600"}`}>
+              <p className={`text-[10px] ${isLight ? "text-slate-400" : "text-gray-600"}`}>
                 <Link href="/" className={`hover:underline ${isLight ? "text-slate-600 hover:text-slate-900" : "text-gray-500 hover:text-white"}`}>← Back to Website</Link>
-                {" · "}
-                <Link href="/admin/login" className={`hover:underline font-bold ${isLight ? "text-purple-700" : "text-purple-400"}`}>Super Admin Gate →</Link>
               </p>
             </div>
           </div>
