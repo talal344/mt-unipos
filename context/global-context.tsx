@@ -69,6 +69,7 @@ export interface TenantPreset {
   id: string;
   label: string;
   email: string;
+  username?: string;
   pass: string;
   role: "Owner" | "Manager" | "Cashier" | "Accountant" | "Warehouse Staff";
 }
@@ -78,6 +79,7 @@ export interface Tenant {
   businessName: string;
   ownerName: string;
   email: string;
+  username?: string;
   phone: string;
   businessType: string;
   plan: "Starter" | "Professional" | "Enterprise";
@@ -3057,7 +3059,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       branches: ["Main Branch"],
       defaultCurrency: dealCurrency,
       credentialPresets: [
-        { id: `CRED-${Math.floor(1000 + Math.random() * 9000)}`, label: "Owner (Full ERP)", email: tenant.email, pass: "owner123", role: "Owner" }
+        { id: `CRED-${Math.floor(1000 + Math.random() * 9000)}`, label: "Owner (Full ERP)", email: tenant.email, username: tenant.username || "", pass: "owner123", role: "Owner" }
       ]
     };
     const updated = [newTenant, ...tenants];

@@ -1251,6 +1251,7 @@ export default function AdminClientsPage() {
     businessName: "",
     ownerName: "",
     email: "",
+    username: "",
     phone: "",
     businessType: "Super Mart",
     plan: "Starter" as const,
@@ -1304,6 +1305,7 @@ export default function AdminClientsPage() {
         businessName: "",
         ownerName: "",
         email: "",
+        username: "",
         phone: "",
         businessType: "Super Mart",
         plan: "Starter",
@@ -2222,6 +2224,21 @@ export default function AdminClientsPage() {
                     setAddForm({ ...addForm, email: e.target.value })
                   }
                   className="w-full bg-black border border-brand-dark-border p-2.5 rounded text-white focus:outline-none focus:border-purple-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] uppercase font-bold text-sky-400 mb-1">
+                  Login Username <span className="text-gray-500 normal-case">(Optional — client can login with email or username)</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. talal.owner"
+                  value={addForm.username}
+                  onChange={(e) =>
+                    setAddForm({ ...addForm, username: e.target.value.toLowerCase().replace(/\s/g, '') })
+                  }
+                  className="w-full bg-black border border-sky-500/30 p-2.5 rounded text-white focus:outline-none focus:border-sky-400 font-mono"
                 />
               </div>
 

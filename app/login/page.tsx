@@ -175,13 +175,15 @@ function LoginContent() {
 
     let targetTenant = tenants.find((t) => t.id.toUpperCase() === cleanTenantId);
 
-    // Auto-resolve tenant if user entered a valid email & password registered in any tenant's credentialPresets
+    // Auto-resolve tenant if user entered a valid email/username & password registered in any tenant's credentialPresets
     if (!targetTenant) {
       for (const t of tenants) {
         const foundPreset = (t.credentialPresets || []).find(
-          (p) => p.email.toLowerCase() === email.trim().toLowerCase() && p.pass === password
+          (p) =>
+            (p.email.toLowerCase() === email.trim().toLowerCase() || (p.username && p.username.toLowerCase() === email.trim().toLowerCase())) &&
+            p.pass === password
         );
-        if (foundPreset || (t.email && t.email.toLowerCase() === email.trim().toLowerCase())) {
+        if (foundPreset || (t.email && t.email.toLowerCase() === email.trim().toLowerCase()) || (t.username && t.username.toLowerCase() === email.trim().toLowerCase())) {
           targetTenant = t;
           setInputTenantId(t.id);
           break;
@@ -260,10 +262,10 @@ function LoginContent() {
 
     const normInput = email.trim().toLowerCase();
 
-    // 1. STRICT PRESET MATCHING (Matches by Email or Username)
+    // 1. STRICT PRESET MATCHING (Matches by Email, Username, or Label)
     let presetMatch = (targetTenant.credentialPresets || []).find(
       (p) =>
-        (p.email.toLowerCase() === normInput || (p.label && p.label.toLowerCase() === normInput)) &&
+        (p.email.toLowerCase() === normInput || (p.username && p.username.toLowerCase() === normInput) || (p.label && p.label.toLowerCase() === normInput)) &&
         (p.pass === password || p.pass === "talal344" || p.pass === "owner123")
     );
 
@@ -271,7 +273,7 @@ function LoginContent() {
       for (const t of tenants) {
         const found = (t.credentialPresets || []).find(
           (p) =>
-            (p.email.toLowerCase() === normInput || (p.label && p.label.toLowerCase() === normInput)) &&
+            (p.email.toLowerCase() === normInput || (p.username && p.username.toLowerCase() === normInput) || (p.label && p.label.toLowerCase() === normInput)) &&
             (p.pass === password || p.pass === "talal344" || p.pass === "owner123")
         );
         if (found) {
@@ -333,11 +335,12 @@ function LoginContent() {
 
     // 5. OWNER FALLBACK MATCH
     if (!presetMatch && !hrEmpMatch && !smsUserMatch && targetTenant && (targetTenant.status === "Active" || targetTenant.status === "Trial")) {
-      if ((targetTenant.email && targetTenant.email.toLowerCase() === normInput) || password === "owner123" || password === "talal344") {
+      if ((targetTenant.email && targetTenant.email.toLowerCase() === normInput) || (targetTenant.username && targetTenant.username.toLowerCase() === normInput) || password === "owner123" || password === "talal344") {
         presetMatch = {
           id: `CRED-${targetTenant.id}`,
           label: "Owner (Full ERP)",
           email: normInput,
+          username: targetTenant.username || "",
           pass: password,
           role: "Owner"
         };
