@@ -339,7 +339,7 @@ function LoginContent() {
         presetMatch = {
           id: `CRED-${targetTenant.id}`,
           label: "Owner (Full ERP)",
-          email: normInput,
+          email: targetTenant.email,
           username: targetTenant.username || "",
           pass: password,
           role: "Owner"
@@ -372,8 +372,8 @@ function LoginContent() {
       const user = {
         name,
         role,
-        email: smsUserMatch?.email || email.trim().toLowerCase(),
-        username: smsUserMatch?.username || email.trim().toLowerCase(),
+        email: smsUserMatch?.email || presetMatch?.email || employeeMatch?.email || hrEmpMatch?.email || email.trim().toLowerCase(),
+        username: smsUserMatch?.username || presetMatch?.username || employeeMatch?.email || hrEmpMatch?.email || email.trim().toLowerCase(),
         businessName: targetTenant?.businessName || (isSMS ? "MT Campus & School ERP" : "Unknown"),
         tenantId: targetTenant?.id || resolvedTenantId,
         assignedSoftware

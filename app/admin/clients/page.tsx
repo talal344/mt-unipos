@@ -898,6 +898,7 @@ export default function AdminClientsPage() {
     tenants,
     registerTenant,
     updateTenantStatus,
+    updateTenant,
     deleteTenant,
     setTenantCurrency,
     addTenantCredential,
@@ -1269,12 +1270,16 @@ export default function AdminClientsPage() {
     billingCycle: "monthly" as const,
     defaultCurrency: "PKR",
     connectivityPlan: "hybrid" as "offline-only" | "online-only" | "hybrid",
+    ownerName: "",
+    email: "",
+    username: "",
   });
 
   const [credForm, setCredForm] = useState({
     id: "",
     label: "",
     email: "",
+    username: "",
     pass: "",
     role: "Owner" as "Owner" | "Manager" | "Cashier" | "Accountant" | "Warehouse Staff",
   });
@@ -1330,6 +1335,9 @@ export default function AdminClientsPage() {
       billingCycle: tenant.billingCycle,
       defaultCurrency: tenant.defaultCurrency || "PKR",
       connectivityPlan: tenant.connectivityPlan || "hybrid",
+      ownerName: tenant.ownerName || "",
+      email: tenant.email || "",
+      username: tenant.username || "",
     });
     setShowEditModal(true);
   };
@@ -1337,13 +1345,34 @@ export default function AdminClientsPage() {
   const handleEditSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedTenant) return;
-    selectedTenant.plan = editForm.plan;
-    selectedTenant.billingCycle = editForm.billingCycle;
-    selectedTenant.connectivityPlan = editForm.connectivityPlan;
-    setTenantCurrency(selectedTenant.id, editForm.defaultCurrency);
-    setShowEditModal(false);
-    setSelectedTenant(null);
-    triggerToast("Successfully updated Tenant shard configurations!");
+
+    const cleanUsername = editForm.username.trim().toLowerCase().replace(/[^a-z0-9._-]/g, '');
+    if (cleanUsername) {
+      const isDuplicate = (selectedTenant.credentialPresets || []).some(
+        (p: any) => p.role !== "Owner" && p.username && p.username.toLowerCase() === cleanUsername
+      );
+      if (isDuplicate) {
+        triggerToast("⛔ ERROR: Username is already taken within this Tenant!");
+        return;
+      }
+    }
+
+    try {
+      updateTenant(selectedTenant.id, {
+        plan: editForm.plan,
+        billingCycle: editForm.billingCycle,
+        connectivityPlan: editForm.connectivityPlan,
+        defaultCurrency: editForm.defaultCurrency,
+        ownerName: editForm.ownerName,
+        email: editForm.email,
+        username: cleanUsername,
+      });
+      setShowEditModal(false);
+      setSelectedTenant(null);
+      triggerToast("Successfully updated Tenant shard configurations!");
+    } catch (err: any) {
+      triggerToast(err.message || "Failed to update Tenant!");
+    }
   };
 
   const handleToggleStatus = (id: string, currentStatus: string) => {
@@ -1365,31 +1394,56 @@ export default function AdminClientsPage() {
 
   const handleOpenPresets = (tenant: any) => {
     setSelectedTenant(tenant);
-    setCredForm({ id: "", label: "", email: "", pass: "", role: "Owner" });
+    setCredForm({ id: "", label: "", email: "", username: "", pass: "", role: "Owner" });
     setShowPresetsModal(true);
   };
 
   const handleSaveCredential = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedTenant || !credForm.label || !credForm.email || !credForm.pass) return;
-    if (credForm.id) {
-      updateTenantCredential(selectedTenant.id, credForm.id, {
-        label: credForm.label,
-        email: credForm.email,
-        pass: credForm.pass,
-        role: credForm.role,
-      });
-      triggerToast("Updated credential preset successfully!");
-    } else {
-      addTenantCredential(selectedTenant.id, {
-        label: credForm.label,
-        email: credForm.email,
-        pass: credForm.pass,
-        role: credForm.role,
-      });
-      triggerToast("Added new credential preset!");
+
+    // Uniqueness validation within the same tenant
+    const cleanUsername = (credForm.username || "").trim().toLowerCase().replace(/[^a-z0-9._-]/g, '');
+    if (cleanUsername) {
+      // 1. Check against the tenant's own main/owner username
+      if (selectedTenant.username && selectedTenant.username.toLowerCase() === cleanUsername) {
+        triggerToast("⛔ ERROR: Username is already taken by the Tenant Owner!");
+        return;
+      }
+      // 2. Check against other presets in the same tenant
+      const isDuplicate = (selectedTenant.credentialPresets || []).some(
+        (p: any) => p.id !== credForm.id && p.username && p.username.toLowerCase() === cleanUsername
+      );
+      if (isDuplicate) {
+        triggerToast("⛔ ERROR: Username is already taken within this Tenant!");
+        return;
+      }
     }
-    setCredForm({ id: "", label: "", email: "", pass: "", role: "Owner" });
+
+    try {
+      if (credForm.id) {
+        updateTenantCredential(selectedTenant.id, credForm.id, {
+          label: credForm.label,
+          email: credForm.email,
+          username: cleanUsername,
+          pass: credForm.pass,
+          role: credForm.role,
+        });
+        triggerToast("Updated credential preset successfully!");
+      } else {
+        addTenantCredential(selectedTenant.id, {
+          label: credForm.label,
+          email: credForm.email,
+          username: cleanUsername,
+          pass: credForm.pass,
+          role: credForm.role,
+        });
+        triggerToast("Added new credential preset!");
+      }
+      setCredForm({ id: "", label: "", email: "", username: "", pass: "", role: "Owner" });
+    } catch (err: any) {
+      triggerToast(`⛔ ERROR: ${err.message || "Failed to save credential preset!"}`);
+    }
   };
 
   const handleEditCredential = (cred: any) => {
@@ -1397,6 +1451,7 @@ export default function AdminClientsPage() {
       id: cred.id,
       label: cred.label,
       email: cred.email,
+      username: cred.username || "",
       pass: cred.pass,
       role: cred.role,
     });
@@ -2357,7 +2412,7 @@ export default function AdminClientsPage() {
       {/* Edit Limits & Currency Modal */}
       {showEditModal && selectedTenant && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4">
-          <div className="bg-brand-dark-surface border border-purple-500/30 p-6 rounded-2xl w-full max-w-sm shadow-2xl animate-fade-in-up font-sans">
+          <div className="bg-brand-dark-surface border border-purple-500/30 p-6 rounded-2xl w-full max-w-md shadow-2xl animate-fade-in-up font-sans">
             <div className="flex justify-between items-center border-b border-brand-dark-border pb-3 mb-4 text-xs">
               <h3 className="font-black text-white">Adjust Shard Plan Limits</h3>
               <button
@@ -2376,6 +2431,53 @@ export default function AdminClientsPage() {
                 <p className="text-[10px] text-gray-500 font-mono">
                   Tenant ID: {selectedTenant.id}
                 </p>
+              </div>
+
+              <div>
+                <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
+                  Owner Name
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Mian Talal"
+                  value={editForm.ownerName}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, ownerName: e.target.value })
+                  }
+                  className="w-full bg-black border border-brand-dark-border p-2.5 rounded text-white focus:outline-none focus:border-purple-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
+                  Corporate Email
+                </label>
+                <input
+                  type="email"
+                  required
+                  placeholder="e.g. owner@alhamd.com"
+                  value={editForm.email}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, email: e.target.value })
+                  }
+                  className="w-full bg-black border border-brand-dark-border p-2.5 rounded text-white focus:outline-none focus:border-purple-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] uppercase font-bold text-sky-400 mb-1">
+                  Owner Username <span className="text-gray-500 normal-case">(Optional)</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. talal.owner"
+                  value={editForm.username}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, username: e.target.value.toLowerCase().replace(/[^a-z0-9._-]/g, '') })
+                  }
+                  className="w-full bg-black border border-sky-500/30 p-2.5 rounded text-white focus:outline-none focus:border-sky-400 font-mono"
+                />
               </div>
 
               <div>
@@ -2533,6 +2635,21 @@ export default function AdminClientsPage() {
 
                 <div className="space-y-1">
                   <label className="block text-[9px] uppercase font-bold text-gray-400">
+                    Login Username (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. cashier.store"
+                    value={credForm.username || ""}
+                    onChange={(e) =>
+                      setCredForm({ ...credForm, username: e.target.value.toLowerCase().replace(/[^a-z0-9._-]/g, '') })
+                    }
+                    className="w-full bg-black border border-brand-dark-border p-2 rounded text-white font-mono"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-[9px] uppercase font-bold text-gray-400">
                     Preset Password
                   </label>
                   <input
@@ -2563,6 +2680,7 @@ export default function AdminClientsPage() {
                         id: "",
                         label: "",
                         email: "",
+                        username: "",
                         pass: "",
                         role: "Owner",
                       })
@@ -2599,6 +2717,7 @@ export default function AdminClientsPage() {
                             {pre.role}
                           </div>
                           <div className="text-gray-400 mt-1">E: {pre.email}</div>
+                          {pre.username && <div className="text-sky-400">U: {pre.username}</div>}
                           <div className="text-gray-500">P: {pre.pass}</div>
                         </div>
                         <div className="flex gap-1">

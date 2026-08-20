@@ -662,6 +662,7 @@ interface GlobalContextType {
   deleteDemoRequest: (id: string) => void;
   registerTenant: (tenant: Omit<Tenant, "id" | "signupDate" | "status" | "usersCount" | "monthlyRevenue" | "branches"> & { id?: string; customDealAmount?: number; customCurrency?: "PKR" | "USD" }) => string;
   updateTenantStatus: (id: string, status: Tenant["status"]) => void;
+  updateTenant: (id: string, updates: Partial<Tenant>) => void;
   deleteTenant: (id: string) => Promise<void>;
   setTenantCurrency: (id: string, currency: string) => void;
   addTenantCredential: (tenantId: string, cred: Omit<TenantPreset, "id">) => void;
@@ -3058,8 +3059,8 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       monthlyRevenue: 0,
       branches: ["Main Branch"],
       defaultCurrency: dealCurrency,
-      credentialPresets: [
-        { id: `CRED-${Math.floor(1000 + Math.random() * 9000)}`, label: "Owner (Full ERP)", email: tenant.email, username: tenant.username || "", pass: "owner123", role: "Owner" }
+      credentialPresets: tenant.credentialPresets || [
+        { id: `CRED-${Math.floor(1000 + Math.random() * 9000)}`, label: "Owner (Full ERP)", email: tenant.email, username: (tenant.username || "").trim().toLowerCase().replace(/[^a-z0-9._-]/g, ''), pass: "owner123", role: "Owner" }
       ]
     };
     const updated = [newTenant, ...tenants];
@@ -3158,6 +3159,36 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     } catch {}
   };
 
+  const updateTenant = (id: string, updates: Partial<Tenant>) => {
+    const updated = tenants.map(t => {
+      if (t.id === id) {
+        let nextPresets = t.credentialPresets || [];
+        if (updates.username !== undefined) {
+          nextPresets = nextPresets.map(p =>
+            p.role === "Owner" ? { ...p, username: updates.username || undefined } : p
+          );
+        }
+        if (updates.email !== undefined) {
+          nextPresets = nextPresets.map(p =>
+            p.role === "Owner" ? { ...p, email: updates.email || p.email } : p
+          );
+        }
+        return {
+          ...t,
+          ...updates,
+          credentialPresets: nextPresets
+        };
+      }
+      return t;
+    });
+    setTenants(updated);
+    localStorage.setItem("unipos_tenants", JSON.stringify(updated));
+
+    try {
+      supabase.from('unipos_global').upsert({ key: 'unipos_tenants', value: updated }).then(() => {});
+    } catch {}
+  };
+
   // ─── ALL localStorage keys that store per-tenant data ───────────────────────
   const TENANT_DATA_KEYS = [
     "unipos_products", "unipos_customers", "unipos_suppliers", "unipos_sales",
@@ -3238,8 +3269,25 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
   };
 
   const addTenantCredential = (tenantId: string, cred: Omit<TenantPreset, "id">) => {
+    const targetTenant = tenants.find(t => t.id === tenantId);
+    if (!targetTenant) return;
+
+    const cleanUsername = (cred.username || "").trim().toLowerCase().replace(/[^a-z0-9._-]/g, '');
+    if (cleanUsername) {
+      if (targetTenant.username && targetTenant.username.toLowerCase() === cleanUsername) {
+        throw new Error("Username is already taken by the Tenant Owner!");
+      }
+      const isDup = (targetTenant.credentialPresets || []).some(
+        p => p.username && p.username.toLowerCase() === cleanUsername
+      );
+      if (isDup) {
+        throw new Error("Username is already taken within this Tenant!");
+      }
+    }
+
     const newCred: TenantPreset = {
       ...cred,
+      username: cleanUsername || undefined,
       id: `CRED-${Math.floor(1000 + Math.random() * 9000)}`
     };
     const updated = tenants.map(t => {
@@ -3253,20 +3301,49 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     });
     setTenants(updated);
     localStorage.setItem("unipos_tenants", JSON.stringify(updated));
+    try {
+      supabase.from('unipos_global').upsert({ key: 'unipos_tenants', value: updated }).then(() => {});
+    } catch {}
   };
 
   const updateTenantCredential = (tenantId: string, credId: string, updatedCred: Partial<Omit<TenantPreset, "id">>) => {
+    const targetTenant = tenants.find(t => t.id === tenantId);
+    if (!targetTenant) return;
+
+    let nextCred = { ...updatedCred };
+    if (nextCred.username !== undefined) {
+      const cleanUsername = (nextCred.username || "").trim().toLowerCase().replace(/[^a-z0-9._-]/g, '');
+      if (cleanUsername) {
+        const currentCred = (targetTenant.credentialPresets || []).find(p => p.id === credId);
+        const isOwnerPreset = currentCred?.role === "Owner";
+
+        if (!isOwnerPreset && targetTenant.username && targetTenant.username.toLowerCase() === cleanUsername) {
+          throw new Error("Username is already taken by the Tenant Owner!");
+        }
+        const isDup = (targetTenant.credentialPresets || []).some(
+          p => p.id !== credId && p.username && p.username.toLowerCase() === cleanUsername
+        );
+        if (isDup) {
+          throw new Error("Username is already taken within this Tenant!");
+        }
+      }
+      nextCred.username = cleanUsername || undefined;
+    }
+
     const updated = tenants.map(t => {
       if (t.id === tenantId) {
         return {
           ...t,
-          credentialPresets: (t.credentialPresets || []).map(c => c.id === credId ? { ...c, ...updatedCred } : c)
+          credentialPresets: (t.credentialPresets || []).map(c => c.id === credId ? { ...c, ...nextCred } : c)
         };
       }
       return t;
     });
     setTenants(updated);
     localStorage.setItem("unipos_tenants", JSON.stringify(updated));
+    try {
+      supabase.from('unipos_global').upsert({ key: 'unipos_tenants', value: updated }).then(() => {});
+    } catch {}
   };
 
   const deleteTenantCredential = (tenantId: string, credId: string) => {
@@ -5240,6 +5317,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         deleteDemoRequest,
         registerTenant,
         updateTenantStatus,
+        updateTenant,
         deleteTenant,
         setTenantCurrency,
         addTenantCredential,
