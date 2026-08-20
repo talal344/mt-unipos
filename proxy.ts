@@ -17,13 +17,18 @@ export function proxy(request: NextRequest) {
     currentSubdomain = hostname.replace('.localhost', '').split(':')[0]
   }
 
-  // If no subdomain or 'www', serve main landing page
+  // If no subdomain or 'www', serve main landing page as normal
   if (!currentSubdomain || currentSubdomain === 'www') {
     return NextResponse.next()
   }
 
-  // Handle specific subdomains by rewriting to appropriate sub-routes internally
   const path = url.pathname
+
+  // Global shared routes across all subdomains (e.g. login, auth, support)
+  const globalRoutes = ['/login', '/about', '/contact', '/privacy', '/terms', '/support', '/demo']
+  if (globalRoutes.some((route) => path === route || path.startsWith(`${route}/`))) {
+    return NextResponse.next()
+  }
 
   // Subdomain mapping table
   const subdomainRoutes: Record<string, string> = {
@@ -43,9 +48,9 @@ export function proxy(request: NextRequest) {
   const targetFolder = subdomainRoutes[currentSubdomain.toLowerCase()]
 
   if (targetFolder) {
-    // Avoid double prefixing if path already starts with targetFolder
+    // If path is not already prefixed with targetFolder
     if (!path.startsWith(targetFolder)) {
-      url.pathname = `${targetFolder}${path}`
+      url.pathname = `${targetFolder}${path === '/' ? '' : path}`
       return NextResponse.rewrite(url)
     }
   }
@@ -56,7 +61,7 @@ export function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * Match all request paths except for the ones starting with:
+     * Match all request paths except:
      * - api (API routes)
      * - _next/static (static files)
      * - _next/image (image optimization files)
