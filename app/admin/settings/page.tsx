@@ -129,39 +129,49 @@ export default function AdminSettingsPage() {
           <div className="lg:col-span-2 space-y-6">
             
             {/* SaaS Platform Branding config */}
-            <form onSubmit={handleSaveBranding} className="bg-brand-dark-surface/50 border border-brand-dark-border p-6 rounded-2xl space-y-4">
-              <h3 className="text-xs font-black uppercase text-gray-400 tracking-wider flex items-center gap-1.5 border-b border-brand-dark-border pb-2.5">
-                <Sparkles size={14} className="text-purple-400" />
+            <form onSubmit={handleSaveBranding} className={`border p-6 rounded-2xl space-y-4 ${
+              isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/50 border-brand-dark-border text-gray-100"
+            }`}>
+              <h3 className={`text-xs font-black uppercase tracking-wider flex items-center gap-1.5 border-b pb-2.5 ${
+                isLight ? "text-slate-900 border-slate-200" : "text-gray-400 border-brand-dark-border"
+              }`}>
+                <Sparkles size={14} className="text-purple-500" />
                 Platform Identity &amp; Aesthetics
               </h3>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                 <div className="space-y-1">
-                  <label className="block text-[10px] uppercase font-bold text-gray-400">Platform Portal Title</label>
+                  <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-slate-600" : "text-gray-400"}`}>Platform Portal Title</label>
                   <input
                     type="text"
                     value={platformTitle}
                     onChange={(e) => setPlatformTitle(e.target.value)}
-                    className="w-full bg-black border border-brand-dark-border p-2.5 rounded text-white focus:outline-none focus:border-purple-500"
+                    className={`w-full border p-2.5 rounded text-xs focus:outline-none focus:border-purple-500 ${
+                      isLight ? "bg-white border-slate-300 text-slate-900" : "bg-black border-brand-dark-border text-white"
+                    }`}
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block text-[10px] uppercase font-bold text-gray-400">Founder &amp; CEO Credits</label>
+                  <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-slate-600" : "text-gray-400"}`}>Founder &amp; CEO Credits</label>
                   <input
                     type="text"
                     value={founderCredit}
                     onChange={(e) => setFounderCredit(e.target.value)}
-                    className="w-full bg-black border border-brand-dark-border p-2.5 rounded text-white focus:outline-none focus:border-purple-500"
+                    className={`w-full border p-2.5 rounded text-xs focus:outline-none focus:border-purple-500 ${
+                      isLight ? "bg-white border-slate-300 text-slate-900" : "bg-black border-brand-dark-border text-white"
+                    }`}
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block text-[10px] uppercase font-bold text-gray-400">Global Default Currency Symbol</label>
+                  <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-slate-600" : "text-gray-400"}`}>Global Default Currency Symbol</label>
                   <select
                     value={baseCurrency}
                     onChange={(e) => setBaseCurrency(e.target.value)}
-                    className="w-full bg-black border border-brand-dark-border p-2.5 rounded text-white focus:outline-none focus:border-purple-500 font-sans"
+                    className={`w-full border p-2.5 rounded text-xs focus:outline-none focus:border-purple-500 font-sans ${
+                      isLight ? "bg-white border-slate-300 text-slate-900" : "bg-black border-brand-dark-border text-white"
+                    }`}
                   >
                     <option value="PKR">PKR (Rs) - Default</option>
                     <option value="USD">USD ($)</option>
@@ -171,11 +181,13 @@ export default function AdminSettingsPage() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block text-[10px] uppercase font-bold text-gray-400">Neon Glow Highlights Intensity</label>
+                  <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-slate-600" : "text-gray-400"}`}>Neon Glow Highlights Intensity</label>
                   <select
                     value={neonIntensity}
                     onChange={(e) => setNeonIntensity(e.target.value)}
-                    className="w-full bg-black border border-brand-dark-border p-2.5 rounded text-white focus:outline-none focus:border-purple-500 font-sans"
+                    className={`w-full border p-2.5 rounded text-xs focus:outline-none focus:border-purple-500 font-sans ${
+                      isLight ? "bg-white border-slate-300 text-slate-900" : "bg-black border-brand-dark-border text-white"
+                    }`}
                   >
                     <option>Low</option>
                     <option>Medium</option>
@@ -192,30 +204,38 @@ export default function AdminSettingsPage() {
             </form>
 
             {/* Plan database limitations configs */}
-            <form onSubmit={handleSaveLimits} className="bg-brand-dark-surface/50 border border-brand-dark-border p-6 rounded-2xl space-y-4">
-              <h3 className="text-xs font-black uppercase text-gray-400 tracking-wider flex items-center gap-1.5 border-b border-brand-dark-border pb-2.5">
-                <Grid size={14} className="text-purple-400" />
+            <form onSubmit={handleSaveLimits} className={`border p-6 rounded-2xl space-y-4 ${
+              isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/50 border-brand-dark-border text-gray-100"
+            }`}>
+              <h3 className={`text-xs font-black uppercase tracking-wider flex items-center gap-1.5 border-b pb-2.5 ${
+                isLight ? "text-slate-900 border-slate-200" : "text-gray-400 border-brand-dark-border"
+              }`}>
+                <Grid size={14} className="text-purple-500" />
                 SaaS Shard Limit Thresholds
               </h3>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-mono">
                 <div className="space-y-1">
-                  <label className="block text-[10px] uppercase font-bold text-gray-400 font-sans">Starter Plan Max SKUs</label>
+                  <label className={`block text-[10px] uppercase font-bold font-sans ${isLight ? "text-slate-600" : "text-gray-400"}`}>Starter Plan Max SKUs</label>
                   <input
                     type="number"
                     value={starterProducts}
                     onChange={(e) => setStarterProducts(parseInt(e.target.value) || 0)}
-                    className="w-full bg-black border border-brand-dark-border p-2.5 rounded text-white"
+                    className={`w-full border p-2.5 rounded text-xs ${
+                      isLight ? "bg-white border-slate-300 text-slate-900" : "bg-black border-brand-dark-border text-white"
+                    }`}
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block text-[10px] uppercase font-bold text-gray-400 font-sans">Pro Plan Max SKUs</label>
+                  <label className={`block text-[10px] uppercase font-bold font-sans ${isLight ? "text-slate-600" : "text-gray-400"}`}>Pro Plan Max SKUs</label>
                   <input
                     type="number"
                     value={proProducts}
                     onChange={(e) => setProProducts(parseInt(e.target.value) || 0)}
-                    className="w-full bg-black border border-brand-dark-border p-2.5 rounded text-white"
+                    className={`w-full border p-2.5 rounded text-xs ${
+                      isLight ? "bg-white border-slate-300 text-slate-900" : "bg-black border-brand-dark-border text-white"
+                    }`}
                   />
                 </div>
               </div>
@@ -229,16 +249,18 @@ export default function AdminSettingsPage() {
             </form>
 
             {/* SMTP and External API Gateway configs */}
-            <form onSubmit={handleSaveApiKeys} className="bg-brand-dark-surface/50 border border-brand-dark-border p-6 rounded-2xl space-y-4">
-              <div className="flex justify-between items-center border-b border-brand-dark-border pb-2.5">
-                <h3 className="text-xs font-black uppercase text-gray-400 tracking-wider flex items-center gap-1.5">
-                  <Key size={14} className="text-purple-400" />
+            <form onSubmit={handleSaveApiKeys} className={`border p-6 rounded-2xl space-y-4 ${
+              isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/50 border-brand-dark-border text-gray-100"
+            }`}>
+              <div className={`flex justify-between items-center border-b pb-2.5 ${isLight ? "border-slate-200" : "border-brand-dark-border"}`}>
+                <h3 className={`text-xs font-black uppercase tracking-wider flex items-center gap-1.5 ${isLight ? "text-slate-900" : "text-gray-400"}`}>
+                  <Key size={14} className="text-purple-500" />
                   SaaS External SMTP &amp; API Gateways
                 </h3>
                 <button
                   type="button"
                   onClick={() => setShowApiKeys(!showApiKeys)}
-                  className="text-purple-400 hover:text-purple-300 text-[10px] font-bold flex items-center gap-1 focus:outline-none"
+                  className="text-purple-500 hover:text-purple-600 text-[10px] font-bold flex items-center gap-1 focus:outline-none"
                 >
                   {showApiKeys ? <EyeOff size={12} /> : <Eye size={12} />}
                   <span>{showApiKeys ? "Mask Credentials" : "Show Credentials"}</span>
@@ -249,9 +271,9 @@ export default function AdminSettingsPage() {
                 {/* Resend.com API Key */}
                 <div>
                   <div className="flex items-center justify-between">
-                    <label className="text-[9px] uppercase font-bold text-emerald-400 font-sans flex items-center gap-1">
+                    <label className="text-[9px] uppercase font-bold text-emerald-600 font-sans flex items-center gap-1">
                       <span>⚡ Resend.com Email API Key</span>
-                      <span className="text-[8px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-1.5 py-0.5 rounded font-black">RECOMMENDED FREE (3,000/mo)</span>
+                      <span className="text-[8px] bg-emerald-500/20 text-emerald-600 border border-emerald-500/40 px-1.5 py-0.5 rounded font-black">RECOMMENDED FREE (3,000/mo)</span>
                     </label>
                   </div>
                   <input
@@ -259,41 +281,49 @@ export default function AdminSettingsPage() {
                     value={resendApiKey}
                     onChange={(e) => setResendApiKey(e.target.value)}
                     placeholder="e.g. re_123456789_abcdef..."
-                    className="w-full bg-black border border-emerald-500/40 p-2.5 rounded-xl text-emerald-300 font-bold mt-1 focus:outline-none focus:border-emerald-400"
+                    className={`w-full border p-2.5 rounded-xl text-emerald-600 font-bold mt-1 focus:outline-none focus:border-emerald-500 ${
+                      isLight ? "bg-emerald-50/50 border-emerald-300" : "bg-black border-emerald-500/40"
+                    }`}
                   />
-                  <p className="text-[9px] text-gray-500 font-sans mt-1">Get your free API Key from <a href="https://resend.com" target="_blank" rel="noreferrer" className="text-sky-400 underline">resend.com</a> (Includes 3,000 free emails/month).</p>
+                  <p className={`text-[9px] font-sans mt-1 ${isLight ? "text-slate-500" : "text-gray-500"}`}>Get your free API Key from <a href="https://resend.com" target="_blank" rel="noreferrer" className="text-sky-500 underline">resend.com</a> (Includes 3,000 free emails/month).</p>
                 </div>
 
                 {/* SendGrid API Key */}
                 <div>
-                  <label className="text-[9px] uppercase font-bold text-gray-400 font-sans block">SendGrid SMTP API Key</label>
+                  <label className={`text-[9px] uppercase font-bold font-sans block ${isLight ? "text-slate-600" : "text-gray-400"}`}>SendGrid SMTP API Key</label>
                   <input
                     type={showApiKeys ? "text" : "password"}
                     value={sendgridApiKey}
                     onChange={(e) => setSendgridApiKey(e.target.value)}
-                    className="w-full bg-black border border-brand-dark-border/60 p-2 rounded-xl text-gray-300 mt-1 focus:outline-none focus:border-purple-500"
+                    className={`w-full border p-2 rounded-xl mt-1 focus:outline-none focus:border-purple-500 ${
+                      isLight ? "bg-white border-slate-300 text-slate-900" : "bg-black border-brand-dark-border/60 text-gray-300"
+                    }`}
                   />
                 </div>
 
                 {/* Twilio SMS Gateway */}
                 <div>
-                  <label className="text-[9px] uppercase font-bold text-gray-400 font-sans block">Twilio SMS Gateway Token</label>
+                  <label className={`text-[9px] uppercase font-bold font-sans block ${isLight ? "text-slate-600" : "text-gray-400"}`}>Twilio SMS Gateway Token</label>
                   <input
                     type={showApiKeys ? "text" : "password"}
                     value={twilioToken}
                     onChange={(e) => setTwilioToken(e.target.value)}
-                    className="w-full bg-black border border-brand-dark-border/60 p-2 rounded-xl text-gray-300 mt-1 focus:outline-none focus:border-purple-500"
+                    className={`w-full border p-2 rounded-xl mt-1 focus:outline-none focus:border-purple-500 ${
+                      isLight ? "bg-white border-slate-300 text-slate-900" : "bg-black border-brand-dark-border/60 text-gray-300"
+                    }`}
                   />
                 </div>
 
                 {/* Stripe Webhook Secret */}
                 <div>
-                  <label className="text-[9px] uppercase font-bold text-gray-400 font-sans block">Stripe SaaS Billing Webhook Secret</label>
+                  <label className={`text-[9px] uppercase font-bold font-sans block ${isLight ? "text-slate-600" : "text-gray-400"}`}>Stripe SaaS Billing Webhook Secret</label>
                   <input
                     type={showApiKeys ? "text" : "password"}
                     value={stripeSecret}
                     onChange={(e) => setStripeSecret(e.target.value)}
-                    className="w-full bg-black border border-brand-dark-border/60 p-2 rounded-xl text-gray-300 mt-1 focus:outline-none focus:border-purple-500"
+                    className={`w-full border p-2 rounded-xl mt-1 focus:outline-none focus:border-purple-500 ${
+                      isLight ? "bg-white border-slate-300 text-slate-900" : "bg-black border-brand-dark-border/60 text-gray-300"
+                    }`}
                   />
                 </div>
 
@@ -313,13 +343,17 @@ export default function AdminSettingsPage() {
           <div className="lg:col-span-1 space-y-6">
             
             {/* Database backups engine */}
-            <div className="bg-brand-dark-surface/50 border border-brand-dark-border p-6 rounded-2xl space-y-4">
-              <h3 className="text-xs font-black uppercase text-gray-400 tracking-wider flex items-center gap-1.5 border-b border-brand-dark-border pb-2.5">
-                <Database size={14} className="text-purple-400" />
+            <div className={`border p-6 rounded-2xl space-y-4 ${
+              isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/50 border-brand-dark-border text-gray-100"
+            }`}>
+              <h3 className={`text-xs font-black uppercase tracking-wider flex items-center gap-1.5 border-b pb-2.5 ${
+                isLight ? "text-slate-900 border-slate-200" : "text-gray-400 border-brand-dark-border"
+              }`}>
+                <Database size={14} className="text-purple-500" />
                 Relational DB Shard Backups
               </h3>
 
-              <p className="text-[10px] text-gray-500 leading-normal">
+              <p className={`text-[10px] leading-normal ${isLight ? "text-slate-500" : "text-gray-500"}`}>
                 Generates a state snapshot of all tenant schemas, ledgers, POS sales, and tickets, storing it sharded inside AWS S3.
               </p>
 
@@ -334,7 +368,11 @@ export default function AdminSettingsPage() {
 
                 <button
                   onClick={handleRebuildIndexes}
-                  className="w-full py-2 bg-brand-dark-border hover:bg-brand-dark-border/80 text-gray-300 text-[10px] font-bold rounded-xl flex items-center justify-center gap-1.5 transition"
+                  className={`w-full py-2 border text-[10px] font-bold rounded-xl flex items-center justify-center gap-1.5 transition ${
+                    isLight 
+                      ? "bg-slate-100 border-slate-300 text-slate-700 hover:bg-slate-200" 
+                      : "bg-brand-dark-border hover:bg-brand-dark-border/80 text-gray-300 border-transparent"
+                  }`}
                 >
                   <RefreshCw size={12} />
                   <span>Rebuild PostgreSQL Indexes</span>
@@ -343,16 +381,24 @@ export default function AdminSettingsPage() {
             </div>
 
             {/* Backups log console */}
-            <div className="bg-brand-dark-surface/50 border border-brand-dark-border p-6 rounded-2xl space-y-4">
-              <h3 className="text-xs font-black uppercase text-gray-400 tracking-wider flex items-center gap-1.5 border-b border-brand-dark-border pb-2.5">
-                <Braces size={14} className="text-purple-400" />
+            <div className={`border p-6 rounded-2xl space-y-4 ${
+              isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/50 border-brand-dark-border text-gray-100"
+            }`}>
+              <h3 className={`text-xs font-black uppercase tracking-wider flex items-center gap-1.5 border-b pb-2.5 ${
+                isLight ? "text-slate-900 border-slate-200" : "text-gray-400 border-brand-dark-border"
+              }`}>
+                <Braces size={14} className="text-purple-500" />
                 Snapshot Registry Console
               </h3>
 
-              <div className="bg-black/60 border border-brand-dark-border/80 p-4 rounded-xl font-mono text-[9px] text-emerald-400 space-y-2.5 max-h-[220px] overflow-y-auto leading-relaxed">
+              <div className={`border p-4 rounded-xl font-mono text-[9px] space-y-2.5 max-h-[220px] overflow-y-auto leading-relaxed ${
+                isLight 
+                  ? "bg-slate-900 border-slate-800 text-emerald-400" 
+                  : "bg-black/60 border-brand-dark-border/80 text-emerald-400"
+              }`}>
                 {backupLogs.map((log, idx) => (
                   <div key={idx} className="flex gap-1.5 items-start">
-                    <span className="text-gray-600 select-none">#</span>
+                    <span className="text-gray-500 select-none">#</span>
                     <span>{log}</span>
                   </div>
                 ))}
@@ -360,8 +406,12 @@ export default function AdminSettingsPage() {
             </div>
 
             {/* System warning panel */}
-            <div className="bg-red-500/5 border border-red-500/20 p-4 rounded-2xl text-[10px] text-gray-400 leading-relaxed flex gap-2">
-              <ShieldAlert size={16} className="text-red-400 shrink-0 mt-0.5" />
+            <div className={`border p-4 rounded-2xl text-[10px] leading-relaxed flex gap-2 ${
+              isLight 
+                ? "bg-red-50 border-red-200 text-red-700" 
+                : "bg-red-500/5 border-red-500/20 text-gray-400"
+            }`}>
+              <ShieldAlert size={16} className="text-red-500 shrink-0 mt-0.5" />
               <span>
                 <strong>Attention SuperAdmin:</strong> Changing plan limitations will retroactively cap Starter-tier stores during their next product catalog update. Proceed with caution.
               </span>

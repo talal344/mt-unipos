@@ -472,35 +472,45 @@ export default function AdminEmailsPage() {
 
         {/* Top KPI Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-brand-dark-surface/60 border border-brand-dark-border p-4 rounded-2xl">
-            <div className="text-[10px] uppercase font-bold text-gray-400">Total Emails Dispatched</div>
-            <div className="text-xl font-black text-white mt-1">{logs.length} Sent</div>
-            <div className="text-[9px] text-purple-400 font-bold mt-1">Logged in SaaS Shard</div>
+          <div className={`border p-4 rounded-2xl ${
+            isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/60 border-brand-dark-border text-gray-100"
+          }`}>
+            <div className={`text-[10px] uppercase font-bold ${isLight ? "text-slate-500" : "text-gray-400"}`}>Total Emails Dispatched</div>
+            <div className={`text-xl font-black mt-1 ${isLight ? "text-slate-900" : "text-white"}`}>{logs.length} Sent</div>
+            <div className="text-[9px] text-purple-500 font-bold mt-1">Logged in SaaS Shard</div>
           </div>
-          <div className="bg-brand-dark-surface/60 border border-brand-dark-border p-4 rounded-2xl">
-            <div className="text-[10px] uppercase font-bold text-gray-400">Resend Delivery Status</div>
-            <div className="text-xl font-black text-emerald-400 mt-1">
+          <div className={`border p-4 rounded-2xl ${
+            isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/60 border-brand-dark-border text-gray-100"
+          }`}>
+            <div className={`text-[10px] uppercase font-bold ${isLight ? "text-slate-500" : "text-gray-400"}`}>Resend Delivery Status</div>
+            <div className="text-xl font-black text-emerald-500 mt-1">
               {logs.filter(l => l.status === "Delivered").length} Verified
             </div>
             <div className="text-[9px] text-emerald-500 font-bold mt-1">Resend API Active</div>
           </div>
-          <div className="bg-brand-dark-surface/60 border border-brand-dark-border p-4 rounded-2xl">
-            <div className="text-[10px] uppercase font-bold text-gray-400">Sender Custom Domain</div>
-            <div className="text-sm font-black text-sky-400 mt-1 font-mono truncate">billing@updates.mtcore.xyz</div>
-            <div className="text-[9px] text-sky-300 font-bold mt-1">DKIM &amp; SPF Verified</div>
+          <div className={`border p-4 rounded-2xl ${
+            isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/60 border-brand-dark-border text-gray-100"
+          }`}>
+            <div className={`text-[10px] uppercase font-bold ${isLight ? "text-slate-500" : "text-gray-400"}`}>Sender Custom Domain</div>
+            <div className="text-sm font-black text-sky-500 mt-1 font-mono truncate">billing@updates.mtcore.xyz</div>
+            <div className="text-[9px] text-sky-500 font-bold mt-1">DKIM &amp; SPF Verified</div>
           </div>
-          <div className="bg-brand-dark-surface/60 border border-brand-dark-border p-4 rounded-2xl">
-            <div className="text-[10px] uppercase font-bold text-gray-400">Official Web Portal</div>
-            <div className="text-sm font-black text-white mt-1 font-mono flex items-center gap-1">
+          <div className={`border p-4 rounded-2xl ${
+            isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/60 border-brand-dark-border text-gray-100"
+          }`}>
+            <div className={`text-[10px] uppercase font-bold ${isLight ? "text-slate-500" : "text-gray-400"}`}>Official Web Portal</div>
+            <div className={`text-sm font-black mt-1 font-mono flex items-center gap-1 ${isLight ? "text-slate-900" : "text-white"}`}>
               <span>pos.mtcore.xyz</span>
-              <ExternalLink size={12} className="text-purple-400" />
+              <ExternalLink size={12} className="text-purple-500" />
             </div>
-            <div className="text-[9px] text-gray-400 mt-1">Direct Login Portal</div>
+            <div className={`text-[9px] mt-1 ${isLight ? "text-slate-500" : "text-gray-400"}`}>Direct Login Portal</div>
           </div>
         </div>
 
         {/* Filter and Search Bar */}
-        <div className="bg-brand-dark-surface/50 border border-brand-dark-border p-4 rounded-2xl flex flex-col sm:flex-row justify-between items-center gap-3">
+        <div className={`border p-4 rounded-2xl flex flex-col sm:flex-row justify-between items-center gap-3 ${
+          isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/50 border-brand-dark-border text-gray-100"
+        }`}>
           <div className="relative w-full sm:w-80">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
             <input
@@ -508,19 +518,25 @@ export default function AdminEmailsPage() {
               placeholder="Search by email, business, tenant ID, or subject..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="w-full bg-black border border-brand-dark-border pl-9 pr-3 py-2 rounded-xl text-xs text-white focus:outline-none focus:border-purple-500"
+              className={`w-full border pl-9 pr-3 py-2 rounded-xl text-xs focus:outline-none focus:border-purple-500 ${
+                isLight 
+                  ? "bg-white border-slate-300 text-slate-900 placeholder-slate-400" 
+                  : "bg-black border-brand-dark-border text-white placeholder-gray-600"
+              }`}
             />
           </div>
 
           <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-            <span className="text-[10px] uppercase font-bold text-gray-500">Status:</span>
+            <span className={`text-[10px] uppercase font-bold ${isLight ? "text-slate-500" : "text-gray-500"}`}>Status:</span>
             {(["All", "Delivered", "Queued", "Failed"] as const).map(st => (
               <button
                 key={st}
                 onClick={() => setStatusFilter(st)}
                 className={`px-3 py-1.5 rounded-lg text-[10px] font-bold border transition ${
                   statusFilter === st
-                    ? "bg-purple-600 border-purple-500 text-white"
+                    ? "bg-purple-600 border-purple-500 text-white shadow-xs"
+                    : isLight
+                    ? "bg-white border-slate-200 text-slate-600 hover:bg-slate-100"
                     : "bg-black border-brand-dark-border text-gray-400 hover:text-white"
                 }`}
               >
@@ -531,11 +547,15 @@ export default function AdminEmailsPage() {
         </div>
 
         {/* Email Logs Table */}
-        <div className="bg-brand-dark-surface/50 border border-brand-dark-border rounded-2xl overflow-hidden shadow-xl">
+        <div className={`border rounded-2xl overflow-hidden shadow-xl ${
+          isLight ? "bg-white border-slate-200 text-slate-900" : "bg-brand-dark-surface/50 border-brand-dark-border text-gray-100"
+        }`}>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="bg-black/60 border-b border-brand-dark-border text-[10px] font-black uppercase text-gray-400 tracking-wider">
+                <tr className={`border-b text-[10px] font-black uppercase tracking-wider ${
+                  isLight ? "bg-slate-50 border-slate-200 text-slate-700" : "bg-black/60 border-brand-dark-border text-gray-400"
+                }`}>
                   <th className="p-4">Log ID</th>
                   <th className="p-4">Recipient Client</th>
                   <th className="p-4">Tenant ID</th>
@@ -545,29 +565,29 @@ export default function AdminEmailsPage() {
                   <th className="p-4 text-center">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-brand-dark-border/40">
+              <tbody className={`divide-y ${isLight ? "divide-slate-100" : "divide-brand-dark-border/40"}`}>
                 {filteredLogs.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="p-8 text-center text-gray-500 font-bold">
+                    <td colSpan={7} className={`p-8 text-center font-bold ${isLight ? "text-slate-500" : "text-gray-500"}`}>
                       No email dispatch logs found matching your criteria.
                     </td>
                   </tr>
                 ) : (
                   filteredLogs.map(entry => (
-                    <tr key={entry.id} className="hover:bg-purple-950/10 transition group">
-                      <td className="p-4 font-mono font-bold text-purple-400">{entry.id}</td>
+                    <tr key={entry.id} className={`transition group ${isLight ? "hover:bg-purple-50/50" : "hover:bg-purple-950/10"}`}>
+                      <td className="p-4 font-mono font-bold text-purple-500">{entry.id}</td>
                       <td className="p-4">
-                        <div className="font-bold text-white text-xs">{entry.businessName}</div>
-                        <div className="text-[10px] text-gray-400 font-mono">{entry.to}</div>
+                        <div className={`font-bold text-xs ${isLight ? "text-slate-900" : "text-white"}`}>{entry.businessName}</div>
+                        <div className={`text-[10px] font-mono ${isLight ? "text-slate-500" : "text-gray-400"}`}>{entry.to}</div>
                       </td>
-                      <td className="p-4 font-mono font-bold text-sky-400">{entry.tenantId}</td>
+                      <td className="p-4 font-mono font-bold text-sky-500">{entry.tenantId}</td>
                       <td className="p-4">
-                        <div className="font-bold text-white">{entry.plan}</div>
-                        <div className="text-[10px] text-emerald-400 font-black">
+                        <div className={`font-bold ${isLight ? "text-slate-900" : "text-white"}`}>{entry.plan}</div>
+                        <div className="text-[10px] text-emerald-500 font-black">
                           {entry.currency} {entry.amount.toLocaleString()}
                         </div>
                       </td>
-                      <td className="p-4 text-[11px] text-gray-400 font-mono">
+                      <td className={`p-4 text-[11px] font-mono ${isLight ? "text-slate-500" : "text-gray-400"}`}>
                         {new Date(entry.sentAt).toLocaleString("en-US", {
                           month: "short",
                           day: "numeric",

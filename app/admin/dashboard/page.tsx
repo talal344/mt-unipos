@@ -103,6 +103,21 @@ export default function AdminDashboardPage() {
     }));
   }, [chartView, tenants]);
 
+  const cardBg = isLight 
+    ? "bg-white border-slate-200 shadow-xs text-slate-900" 
+    : "bg-brand-dark-surface/50 border-brand-dark-border text-gray-100";
+  const cardBgSolid = isLight 
+    ? "bg-white border-slate-200 shadow-xs text-slate-900" 
+    : "bg-brand-dark-surface/30 border-brand-dark-border text-gray-100";
+  const textHead = isLight ? "text-slate-900" : "text-white";
+  const textSub = isLight ? "text-slate-500" : "text-gray-400";
+  const subBoxBg = isLight ? "bg-slate-50 border-slate-200 text-slate-800" : "bg-black/40 border-brand-dark-border/60 text-white";
+  const progressBg = isLight ? "bg-slate-100 border-slate-200" : "bg-black border-brand-dark-border/40";
+  const borderLine = isLight ? "border-slate-200" : "border-brand-dark-border/60";
+  const buttonBg = isLight 
+    ? "bg-slate-100 border-slate-300 text-slate-700 hover:bg-slate-200" 
+    : "bg-brand-dark-surface border-brand-dark-border text-gray-400 hover:text-white";
+
   return (
     <div className={`flex min-h-screen font-sans ${isLight ? "bg-slate-100 text-slate-900" : "bg-black text-gray-100"}`}>
       <AdminSidebar />
@@ -111,23 +126,23 @@ export default function AdminDashboardPage() {
       <main className="flex-grow p-6 sm:p-8 space-y-6 overflow-y-auto max-h-screen">
         
         {/* Header */}
-        <div className="flex justify-between items-center border-b border-brand-dark-border/60 pb-4">
+        <div className={`flex justify-between items-center border-b pb-4 ${borderLine}`}>
           <div>
-            <h1 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
+            <h1 className={`text-xl font-black tracking-tight flex items-center gap-2 ${textHead}`}>
               <Activity className="text-purple-500 animate-pulse" size={20} />
               SaaS Platform Statistics
             </h1>
-            <p className="text-[10px] text-gray-500">Live PostgreSQL database shards &amp; Stripe transaction ledger feeds.</p>
+            <p className={`text-[10px] ${textSub}`}>Live PostgreSQL database shards &amp; Stripe transaction ledger feeds.</p>
           </div>
           <div className="flex items-center gap-3">
             <button 
               onClick={handleRefresh}
-              className="p-1.5 bg-brand-dark-surface border border-brand-dark-border rounded-lg text-gray-400 hover:text-white transition flex items-center gap-1 text-[10px]"
+              className={`p-1.5 border rounded-lg transition flex items-center gap-1 text-[10px] ${buttonBg}`}
             >
               <RefreshCw size={12} className={isRefreshing ? "animate-spin" : ""} />
               Sync Feeds
             </button>
-            <span className="text-[10px] font-mono text-gray-500 bg-brand-dark-surface border border-brand-dark-border px-2 py-1 rounded">
+            <span className={`text-[10px] font-mono px-2 py-1 rounded border ${buttonBg}`}>
               Last backup: 1 hour ago
             </span>
           </div>
@@ -136,44 +151,44 @@ export default function AdminDashboardPage() {
         {/* Metrics Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           
-          <div className="bg-brand-dark-surface/50 border border-brand-dark-border p-4 rounded-xl space-y-2 hover:border-purple-500/40 transition duration-300">
-            <div className="flex justify-between items-center text-gray-400">
+          <div className={`border p-4 rounded-xl space-y-2 hover:border-purple-500/40 transition duration-300 ${cardBg}`}>
+            <div className={`flex justify-between items-center ${textSub}`}>
               <span className="text-[10px] uppercase font-bold tracking-wide">Total Client Tenancies</span>
               <Users size={16} className="text-purple-500" />
             </div>
-            <div className="text-2xl font-black text-white">{totalClients}</div>
-            <p className="text-[9px] text-gray-500">{activeClients} Active • {trialClients} Trial</p>
+            <div className={`text-2xl font-black ${textHead}`}>{totalClients}</div>
+            <p className={`text-[9px] ${textSub}`}>{activeClients} Active • {trialClients} Trial</p>
           </div>
 
-          <div className="bg-brand-dark-surface/50 border border-brand-dark-border p-4 rounded-xl space-y-2 hover:border-emerald-500/40 transition duration-300">
-            <div className="flex justify-between items-center text-gray-400">
+          <div className={`border p-4 rounded-xl space-y-2 hover:border-emerald-500/40 transition duration-300 ${cardBg}`}>
+            <div className={`flex justify-between items-center ${textSub}`}>
               <span className="text-[10px] uppercase font-bold tracking-wide">Monthly SaaS Revenue</span>
-              <DollarSign size={16} className="text-emerald-400" />
+              <DollarSign size={16} className="text-emerald-500" />
             </div>
-            <div className="text-2xl font-black text-white">
+            <div className={`text-2xl font-black ${textHead}`}>
               ${(totalClients > 0 ? totalRevenue : 0).toLocaleString()}
             </div>
-            <p className="text-[9px] text-emerald-400">100% Invoice Clearance rate</p>
+            <p className="text-[9px] text-emerald-500 font-bold">100% Invoice Clearance rate</p>
           </div>
 
-          <div className="bg-brand-dark-surface/50 border border-brand-dark-border p-4 rounded-xl space-y-2 hover:border-brand-sky/40 transition duration-300">
-            <div className="flex justify-between items-center text-gray-400">
+          <div className={`border p-4 rounded-xl space-y-2 hover:border-sky-500/40 transition duration-300 ${cardBg}`}>
+            <div className={`flex justify-between items-center ${textSub}`}>
               <span className="text-[10px] uppercase font-bold tracking-wide">Active Store Branches</span>
-              <Layers size={16} className="text-brand-sky" />
+              <Layers size={16} className="text-sky-500" />
             </div>
-            <div className="text-2xl font-black text-white">{totalBranches}</div>
-            <p className="text-[9px] text-gray-500">
+            <div className={`text-2xl font-black ${textHead}`}>{totalBranches}</div>
+            <p className={`text-[9px] ${textSub}`}>
               {totalClients > 0 ? `Averaging ${(totalBranches / totalClients).toFixed(1)} branches per tenant` : "0 branches provisioned"}
             </p>
           </div>
 
-          <div className="bg-brand-dark-surface/50 border border-brand-dark-border p-4 rounded-xl space-y-2 hover:border-amber-500/40 transition duration-300">
-            <div className="flex justify-between items-center text-gray-400">
+          <div className={`border p-4 rounded-xl space-y-2 hover:border-amber-500/40 transition duration-300 ${cardBg}`}>
+            <div className={`flex justify-between items-center ${textSub}`}>
               <span className="text-[10px] uppercase font-bold tracking-wide">Platform Terminal Users</span>
               <UserCheck size={16} className="text-amber-500" />
             </div>
-            <div className="text-2xl font-black text-white">{totalUsers}</div>
-            <p className="text-[9px] text-gray-500">Owner, Manager &amp; Staff accounts</p>
+            <div className={`text-2xl font-black ${textHead}`}>{totalUsers}</div>
+            <p className={`text-[9px] ${textSub}`}>Owner, Manager &amp; Staff accounts</p>
           </div>
 
         </div>
@@ -182,9 +197,9 @@ export default function AdminDashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
           {/* Sharded Database Container Monitor */}
-          <div className="bg-brand-dark-surface/30 border border-brand-dark-border p-5 rounded-2xl space-y-4">
-            <h3 className="text-xs uppercase font-bold text-white tracking-wide border-b border-brand-dark-border pb-2 flex items-center gap-1.5">
-              <Cpu size={14} className="text-purple-400" />
+          <div className={`border p-5 rounded-2xl space-y-4 ${cardBgSolid}`}>
+            <h3 className={`text-xs uppercase font-bold tracking-wide border-b pb-2 flex items-center gap-1.5 ${textHead} ${borderLine}`}>
+              <Cpu size={14} className="text-purple-500" />
               SaaS Sharding Health Monitor
             </h3>
             
@@ -192,10 +207,10 @@ export default function AdminDashboardPage() {
               {/* CPU load */}
               <div className="space-y-1.5">
                 <div className="flex justify-between text-[10px] font-mono">
-                  <span className="text-gray-400">CPU Usage (Aggregated)</span>
-                  <span className="text-emerald-400 font-bold">{totalClients > 0 ? "14.2%" : "1.8%"}</span>
+                  <span className={textSub}>CPU Usage (Aggregated)</span>
+                  <span className="text-emerald-500 font-bold">{totalClients > 0 ? "14.2%" : "1.8%"}</span>
                 </div>
-                <div className="w-full bg-black h-1.5 rounded-full overflow-hidden border border-brand-dark-border/40">
+                <div className={`w-full h-1.5 rounded-full overflow-hidden border ${progressBg}`}>
                   <div className="bg-emerald-500 h-full transition-all duration-500" style={{ width: totalClients > 0 ? "14%" : "2%" }} />
                 </div>
               </div>
@@ -203,10 +218,10 @@ export default function AdminDashboardPage() {
               {/* Memory load */}
               <div className="space-y-1.5">
                 <div className="flex justify-between text-[10px] font-mono">
-                  <span className="text-gray-400">Memory Usage (RDS)</span>
-                  <span className="text-emerald-400 font-bold">{totalClients > 0 ? "3.4 GB / 16 GB" : "0.8 GB / 16 GB"}</span>
+                  <span className={textSub}>Memory Usage (RDS)</span>
+                  <span className="text-emerald-500 font-bold">{totalClients > 0 ? "3.4 GB / 16 GB" : "0.8 GB / 16 GB"}</span>
                 </div>
-                <div className="w-full bg-black h-1.5 rounded-full overflow-hidden border border-brand-dark-border/40">
+                <div className={`w-full h-1.5 rounded-full overflow-hidden border ${progressBg}`}>
                   <div className="bg-emerald-500 h-full transition-all duration-500" style={{ width: totalClients > 0 ? "21%" : "5%" }} />
                 </div>
               </div>
@@ -214,40 +229,40 @@ export default function AdminDashboardPage() {
               {/* Shard Disks */}
               <div className="space-y-1.5">
                 <div className="flex justify-between text-[10px] font-mono">
-                  <span className="text-gray-400">Database Storage Limit</span>
-                  <span className="text-brand-sky font-bold">{totalClients > 0 ? `${(totalClients * 0.12).toFixed(2)} GB / 500 GB` : "0 GB / 500 GB"}</span>
+                  <span className={textSub}>Database Storage Limit</span>
+                  <span className="text-sky-500 font-bold">{totalClients > 0 ? `${(totalClients * 0.12).toFixed(2)} GB / 500 GB` : "0 GB / 500 GB"}</span>
                 </div>
-                <div className="w-full bg-black h-1.5 rounded-full overflow-hidden border border-brand-dark-border/40">
-                  <div className="bg-brand-sky h-full transition-all duration-500" style={{ width: totalClients > 0 ? `${Math.max(1, (totalClients * 0.12 / 500) * 100)}%` : "0%" }} />
+                <div className={`w-full h-1.5 rounded-full overflow-hidden border ${progressBg}`}>
+                  <div className="bg-sky-500 h-full transition-all duration-500" style={{ width: totalClients > 0 ? `${Math.max(1, (totalClients * 0.12 / 500) * 100)}%` : "0%" }} />
                 </div>
               </div>
 
               {/* Server Stats */}
               <div className="grid grid-cols-2 gap-2 pt-2 text-[10px] font-mono">
-                <div className="bg-black/40 border border-brand-dark-border/60 p-2 rounded flex flex-col justify-between">
-                  <span className="text-gray-500 text-[8px] uppercase">Shard Latency</span>
-                  <span className="text-emerald-400 font-bold mt-0.5">{totalClients > 0 ? "8.4 ms" : "1.2 ms"}</span>
+                <div className={`border p-2 rounded flex flex-col justify-between ${subBoxBg}`}>
+                  <span className={`text-[8px] uppercase ${textSub}`}>Shard Latency</span>
+                  <span className="text-emerald-500 font-bold mt-0.5">{totalClients > 0 ? "8.4 ms" : "1.2 ms"}</span>
                 </div>
-                <div className="bg-black/40 border border-brand-dark-border/60 p-2 rounded flex flex-col justify-between">
-                  <span className="text-gray-500 text-[8px] uppercase">DB Connections</span>
-                  <span className="text-white font-bold mt-0.5">{totalClients > 0 ? `${totalClients * 4} Active` : "0 Pool"}</span>
+                <div className={`border p-2 rounded flex flex-col justify-between ${subBoxBg}`}>
+                  <span className={`text-[8px] uppercase ${textSub}`}>DB Connections</span>
+                  <span className={`font-bold mt-0.5 ${textHead}`}>{totalClients > 0 ? `${totalClients * 4} Active` : "0 Pool"}</span>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Industry Distribution Breakdown */}
-          <div className="bg-brand-dark-surface/30 border border-brand-dark-border p-5 rounded-2xl space-y-4">
-            <h3 className="text-xs uppercase font-bold text-white tracking-wide border-b border-brand-dark-border pb-2 flex items-center gap-1.5">
-              <PieChart size={14} className="text-purple-400" />
+          <div className={`border p-5 rounded-2xl space-y-4 ${cardBgSolid}`}>
+            <h3 className={`text-xs uppercase font-bold tracking-wide border-b pb-2 flex items-center gap-1.5 ${textHead} ${borderLine}`}>
+              <PieChart size={14} className="text-purple-500" />
               Top Industry Distributions
             </h3>
             
             {totalClients === 0 ? (
-              <div className="h-40 flex flex-col items-center justify-center text-center text-xs text-gray-500">
-                <Database size={24} className="mb-2 text-gray-700" />
+              <div className={`h-40 flex flex-col items-center justify-center text-center text-xs ${textSub}`}>
+                <Database size={24} className={`mb-2 ${textSub}`} />
                 <span>No active client shards.</span>
-                <span className="text-[10px] text-gray-600">Register a client to map distribution.</span>
+                <span className={`text-[10px] ${textSub}`}>Register a client to map distribution.</span>
               </div>
             ) : (
               <div className="space-y-2.5 pt-1 text-xs">
@@ -256,13 +271,13 @@ export default function AdminDashboardPage() {
                   return (
                     <div key={industry} className="space-y-1">
                       <div className="flex justify-between text-[10px]">
-                        <span className="text-gray-400 flex items-center gap-1">
+                        <span className={`flex items-center gap-1 ${textSub}`}>
                           <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
                           {industry}
                         </span>
-                        <span className="text-white font-mono font-bold">{count} ({percentage}%)</span>
+                        <span className={`font-mono font-bold ${textHead}`}>{count} ({percentage}%)</span>
                       </div>
-                      <div className="w-full bg-black h-1.5 rounded-full overflow-hidden border border-brand-dark-border/30">
+                      <div className={`w-full h-1.5 rounded-full overflow-hidden border ${progressBg}`}>
                         <div className="bg-gradient-to-r from-purple-600 to-purple-400 h-full" style={{ width: `${percentage}%` }} />
                       </div>
                     </div>
@@ -273,23 +288,23 @@ export default function AdminDashboardPage() {
           </div>
 
           {/* Live System Audit Logs Console */}
-          <div className="bg-brand-dark-surface/30 border border-brand-dark-border p-5 rounded-2xl space-y-4">
-            <h3 className="text-xs uppercase font-bold text-white tracking-wide border-b border-brand-dark-border pb-2 flex items-center gap-1.5">
-              <Terminal size={14} className="text-purple-400" />
+          <div className={`border p-5 rounded-2xl space-y-4 ${cardBgSolid}`}>
+            <h3 className={`text-xs uppercase font-bold tracking-wide border-b pb-2 flex items-center gap-1.5 ${textHead} ${borderLine}`}>
+              <Terminal size={14} className="text-purple-500" />
               Live Platform Audit Logs
             </h3>
-            <div className="font-mono text-[9px] space-y-2 h-44 overflow-y-auto scrollbar-thin scrollbar-thumb-brand-dark-border scrollbar-track-transparent pr-1">
+            <div className="font-mono text-[9px] space-y-2 h-44 overflow-y-auto pr-1">
               {auditLogs.map(log => (
-                <div key={log.id} className="border-b border-brand-dark-border/40 pb-1.5 leading-relaxed">
-                  <div className="flex justify-between text-gray-500 mb-0.5">
+                <div key={log.id} className={`border-b pb-1.5 leading-relaxed ${borderLine}`}>
+                  <div className="flex justify-between mb-0.5">
                     <span className={`font-bold ${
-                      log.type === "SEC" ? "text-red-400" :
-                      log.type === "PROV" ? "text-emerald-400" :
-                      log.type === "WARN" ? "text-amber-500" : "text-brand-sky"
+                      log.type === "SEC" ? "text-red-500" :
+                      log.type === "PROV" ? "text-emerald-500" :
+                      log.type === "WARN" ? "text-amber-500" : "text-sky-500"
                     }`}>[{log.type}]</span>
-                    <span>{log.time}</span>
+                    <span className={textSub}>{log.time}</span>
                   </div>
-                  <p className="text-gray-300">{log.message}</p>
+                  <p className={textSub}>{log.message}</p>
                 </div>
               ))}
             </div>
@@ -300,23 +315,23 @@ export default function AdminDashboardPage() {
         {/* Revenue Velocity Chart */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
-          <div className="lg:col-span-2 bg-brand-dark-surface/30 border border-brand-dark-border p-5 rounded-2xl space-y-4">
-            <div className="flex justify-between items-center border-b border-brand-dark-border pb-2">
-              <h3 className="text-xs uppercase font-bold text-white tracking-wide flex items-center gap-1.5">
-                <TrendingUp size={14} className="text-purple-400" />
+          <div className={`lg:col-span-2 border p-5 rounded-2xl space-y-4 ${cardBgSolid}`}>
+            <div className={`flex justify-between items-center border-b pb-2 ${borderLine}`}>
+              <h3 className={`text-xs uppercase font-bold tracking-wide flex items-center gap-1.5 ${textHead}`}>
+                <TrendingUp size={14} className="text-purple-500" />
                 Revenue Streams &amp; Projections
               </h3>
               {/* Toggle controls */}
-              <div className="flex bg-black p-0.5 rounded-lg border border-brand-dark-border text-[9px]">
+              <div className={`flex p-0.5 rounded-lg border text-[9px] ${subBoxBg}`}>
                 <button
                   onClick={() => setChartView("monthly")}
-                  className={`px-2.5 py-1 rounded font-bold transition ${chartView === "monthly" ? "bg-purple-600 text-white" : "text-gray-400 hover:text-white"}`}
+                  className={`px-2.5 py-1 rounded font-bold transition ${chartView === "monthly" ? "bg-purple-600 text-white" : textSub}`}
                 >
                   Monthly MRR
                 </button>
                 <button
                   onClick={() => setChartView("annual")}
-                  className={`px-2.5 py-1 rounded font-bold transition ${chartView === "annual" ? "bg-purple-600 text-white" : "text-gray-400 hover:text-white"}`}
+                  className={`px-2.5 py-1 rounded font-bold transition ${chartView === "annual" ? "bg-purple-600 text-white" : textSub}`}
                 >
                   Annualized (ARR)
                 </button>
@@ -325,21 +340,21 @@ export default function AdminDashboardPage() {
             
             {/* Visual CSS Grid Chart */}
             {totalClients === 0 ? (
-              <div className="h-44 flex flex-col items-center justify-center text-center text-xs text-gray-500">
-                <DollarSign size={24} className="mb-2 text-gray-700 font-bold" />
+              <div className={`h-44 flex flex-col items-center justify-center text-center text-xs ${textSub}`}>
+                <DollarSign size={24} className={`mb-2 font-bold ${textSub}`} />
                 <span>No revenue data available.</span>
-                <span className="text-[10px] text-gray-600">Register active tenants to generate billings.</span>
+                <span className={`text-[10px] ${textSub}`}>Register active tenants to generate billings.</span>
               </div>
             ) : (
               <div className="h-44 flex items-end justify-between gap-2 pt-6 font-mono text-[9px]">
                 {chartData.map(bar => (
                   <div key={bar.label} className="flex-grow flex flex-col items-center gap-2">
-                    <span className="text-brand-sky font-bold">${bar.val.toLocaleString()}</span>
+                    <span className="text-sky-500 font-bold">${bar.val.toLocaleString()}</span>
                     <div
                       style={{ height: `${Math.min(100, Math.max(8, (bar.val / (chartView === "annual" ? 1200 * 12 : 1200)) * 100))}%` }}
                       className="w-full bg-gradient-to-t from-purple-900 to-purple-500 rounded-t-sm shadow-lg shadow-purple-500/20 transition-all duration-500"
                     />
-                    <span className="text-gray-500">{bar.label}</span>
+                    <span className={textSub}>{bar.label}</span>
                   </div>
                 ))}
               </div>
@@ -347,52 +362,52 @@ export default function AdminDashboardPage() {
           </div>
 
           {/* Client Status Distribution */}
-          <div className="bg-brand-dark-surface/30 border border-brand-dark-border p-5 rounded-2xl space-y-4">
-            <h3 className="text-xs uppercase font-bold text-white tracking-wide border-b border-brand-dark-border pb-2 flex items-center gap-1.5">
-              <ShieldCheck size={14} className="text-purple-400" />
+          <div className={`border p-5 rounded-2xl space-y-4 ${cardBgSolid}`}>
+            <h3 className={`text-xs uppercase font-bold tracking-wide border-b pb-2 flex items-center gap-1.5 ${textHead} ${borderLine}`}>
+              <ShieldCheck size={14} className="text-purple-500" />
               Tenant Status Distribution
             </h3>
             
             <div className="space-y-3 pt-2 text-xs">
               <div className="space-y-1.5">
                 <div className="flex justify-between text-[10px]">
-                  <span className="text-emerald-400 font-bold flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                  <span className="text-emerald-500 font-bold flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                     Active Shards
                   </span>
-                  <span className="text-white font-bold">
+                  <span className={`font-bold ${textHead}`}>
                     {activeClients} {totalClients > 0 ? `(${Math.round(activeClients / totalClients * 100)}%)` : ""}
                   </span>
                 </div>
-                <div className="w-full bg-black h-2 rounded-full overflow-hidden border border-brand-dark-border/40">
+                <div className={`w-full h-2 rounded-full overflow-hidden border ${progressBg}`}>
                   <div className="bg-emerald-500 h-full transition-all duration-500" style={{ width: totalClients > 0 ? `${activeClients / totalClients * 100}%` : "0%" }} />
                 </div>
               </div>
 
               <div className="space-y-1.5">
                 <div className="flex justify-between text-[10px]">
-                  <span className="text-brand-sky font-bold flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-brand-sky" />
+                  <span className="text-sky-500 font-bold flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-sky-500" />
                     Trial Sandbox Tiers
                   </span>
-                  <span className="text-white font-bold">
+                  <span className={`font-bold ${textHead}`}>
                     {trialClients} {totalClients > 0 ? `(${Math.round(trialClients / totalClients * 100)}%)` : ""}
                   </span>
                 </div>
-                <div className="w-full bg-black h-2 rounded-full overflow-hidden border border-brand-dark-border/40">
-                  <div className="bg-brand-sky h-full transition-all duration-500" style={{ width: totalClients > 0 ? `${trialClients / totalClients * 100}%` : "0%" }} />
+                <div className={`w-full h-2 rounded-full overflow-hidden border ${progressBg}`}>
+                  <div className="bg-sky-500 h-full transition-all duration-500" style={{ width: totalClients > 0 ? `${trialClients / totalClients * 100}%` : "0%" }} />
                 </div>
               </div>
 
               <div className="space-y-1.5">
                 <div className="flex justify-between text-[10px]">
-                  <span className="text-purple-400 font-bold flex items-center gap-1">
+                  <span className="text-purple-500 font-bold flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
                     Pending Demo Requests
                   </span>
-                  <span className="text-white font-bold">{demoRequests.filter(d => d.status === "Pending").length} Requests</span>
+                  <span className={`font-bold ${textHead}`}>{demoRequests.filter(d => d.status === "Pending").length} Requests</span>
                 </div>
-                <div className="w-full bg-black h-2 rounded-full overflow-hidden border border-brand-dark-border/40">
+                <div className={`w-full h-2 rounded-full overflow-hidden border ${progressBg}`}>
                   <div className="bg-purple-500 h-full transition-all duration-500" style={{ width: demoRequests.length > 0 ? `${Math.min(100, (demoRequests.filter(d => d.status === "Pending").length / Math.max(1, demoRequests.length)) * 100)}%` : "0%" }} />
                 </div>
               </div>
@@ -403,20 +418,20 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Lower Grid: Demo requests */}
-        <div className="bg-brand-dark-surface/40 border border-brand-dark-border p-5 rounded-2xl space-y-4">
-          <h3 className="text-xs uppercase font-bold text-white tracking-wide border-b border-brand-dark-border pb-2 flex items-center gap-1.5">
-            <HardDrive size={14} className="text-purple-400" />
+        <div className={`border p-5 rounded-2xl space-y-4 ${cardBgSolid}`}>
+          <h3 className={`text-xs uppercase font-bold tracking-wide border-b pb-2 flex items-center gap-1.5 ${textHead} ${borderLine}`}>
+            <HardDrive size={14} className="text-purple-500" />
             Recent Onboarding Demo Requests
           </h3>
           {recentDemos.length === 0 ? (
-            <div className="py-6 text-center text-xs text-gray-500 font-sans">
+            <div className={`py-6 text-center text-xs font-sans ${textSub}`}>
               No recent onboarding requests in pipeline.
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="border-b border-brand-dark-border text-gray-500 font-sans">
+                  <tr className={`border-b font-sans ${textSub} ${borderLine}`}>
                     <th className="pb-2 font-semibold">Lead ID</th>
                     <th className="pb-2 font-semibold">Contact Name</th>
                     <th className="pb-2 font-semibold">Business Name</th>
@@ -425,20 +440,20 @@ export default function AdminDashboardPage() {
                     <th className="pb-2 font-semibold">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-brand-dark-border/40 font-mono text-[11px]">
+                <tbody className={`divide-y font-mono text-[11px] ${borderLine}`}>
                   {recentDemos.map(req => (
-                    <tr key={req.id} className="hover:bg-brand-dark-surface/60 transition">
-                      <td className="py-2.5 text-brand-sky font-bold">{req.id}</td>
-                      <td className="py-2.5 text-white">{req.name}</td>
-                      <td className="py-2.5 text-white">{req.businessName}</td>
-                      <td className="py-2.5 text-gray-400">{req.phone}</td>
-                      <td className="py-2.5 text-gray-400">{req.businessType}</td>
+                    <tr key={req.id} className={`transition ${isLight ? "hover:bg-slate-50" : "hover:bg-brand-dark-surface/60"}`}>
+                      <td className="py-2.5 text-sky-500 font-bold">{req.id}</td>
+                      <td className={`py-2.5 ${textHead}`}>{req.name}</td>
+                      <td className={`py-2.5 ${textHead}`}>{req.businessName}</td>
+                      <td className={`py-2.5 ${textSub}`}>{req.phone}</td>
+                      <td className={`py-2.5 ${textSub}`}>{req.businessType}</td>
                       <td className="py-2.5">
                         <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                          req.status === "Approved" ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400" :
-                          req.status === "Pending" ? "bg-amber-500/10 border border-amber-500/30 text-amber-400" :
-                          req.status === "Reviewed" ? "bg-sky-500/10 border border-sky-500/30 text-sky-400" :
-                          "bg-red-500/10 border border-red-500/30 text-red-400"
+                          req.status === "Approved" ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-500" :
+                          req.status === "Pending" ? "bg-amber-500/10 border border-amber-500/30 text-amber-500" :
+                          req.status === "Reviewed" ? "bg-sky-500/10 border border-sky-500/30 text-sky-500" :
+                          "bg-red-500/10 border border-red-500/30 text-red-500"
                         }`}>
                           {req.status}
                         </span>

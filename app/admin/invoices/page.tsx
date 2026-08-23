@@ -854,10 +854,10 @@ export default function AdminInvoicesPage() {
       <main className="flex-grow p-6 sm:p-8 space-y-6 overflow-y-auto max-h-screen">
         
         {/* Header */}
-        <div className="flex justify-between items-center border-b border-brand-dark-border/60 pb-4">
+        <div className={`flex justify-between items-center border-b pb-4 ${isLight ? "border-slate-200" : "border-brand-dark-border/60"}`}>
           <div>
-            <h1 className="text-xl font-black tracking-tight text-white">SaaS Client Invoices</h1>
-            <p className="text-[10px] text-gray-500">Track automatic recurring billing cycles, stripe payouts, and custom bank receipt audits.</p>
+            <h1 className={`text-xl font-black tracking-tight ${isLight ? "text-slate-900" : "text-white"}`}>SaaS Client Invoices</h1>
+            <p className={`text-[10px] ${isLight ? "text-slate-500" : "text-gray-500"}`}>Track automatic recurring billing cycles, stripe payouts, and custom bank receipt audits.</p>
           </div>
           <button
             onClick={() => setShowCreateModal(true)}
@@ -869,7 +869,7 @@ export default function AdminInvoicesPage() {
         </div>
 
         {successMsg && (
-          <div className="bg-emerald-500/10 border border-emerald-500 p-3 rounded-lg text-xs flex items-center gap-2 text-emerald-400 font-bold animate-fade-in-up">
+          <div className="bg-emerald-500/10 border border-emerald-500 p-3 rounded-lg text-xs flex items-center gap-2 text-emerald-500 font-bold animate-fade-in-up">
             <CheckCircle2 size={16} />
             <span>{successMsg}</span>
           </div>
@@ -877,31 +877,31 @@ export default function AdminInvoicesPage() {
 
         {/* Dynamic Invoices Statistics summary (PKR & USD) */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-brand-dark-surface/40 border border-brand-dark-border rounded-xl p-4 space-y-1">
-            <div className="text-[9px] text-gray-500 uppercase font-bold tracking-wider">Total Invoiced</div>
-            <div className="text-lg font-black text-white">
-              PKR {stats.totalPKR.toLocaleString()} <span className="text-xs text-gray-400 font-normal">/ ${stats.totalUSD.toLocaleString()}</span>
+          <div className={`border rounded-xl p-4 space-y-1 ${isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/40 border-brand-dark-border text-gray-100"}`}>
+            <div className={`text-[9px] uppercase font-bold tracking-wider ${isLight ? "text-slate-500" : "text-gray-500"}`}>Total Invoiced</div>
+            <div className={`text-lg font-black ${isLight ? "text-slate-900" : "text-white"}`}>
+              PKR {stats.totalPKR.toLocaleString()} <span className={`text-xs font-normal ${isLight ? "text-slate-400" : "text-gray-400"}`}>/ ${stats.totalUSD.toLocaleString()}</span>
             </div>
-            <div className="text-[9px] text-purple-400 font-mono">Gross platform revenue</div>
+            <div className="text-[9px] text-purple-500 font-mono">Gross platform revenue</div>
           </div>
-          <div className="bg-brand-dark-surface/40 border border-brand-dark-border rounded-xl p-4 space-y-1">
-            <div className="text-[9px] text-gray-500 uppercase font-bold tracking-wider">Total Collected</div>
-            <div className="text-lg font-black text-emerald-400">
+          <div className={`border rounded-xl p-4 space-y-1 ${isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/40 border-brand-dark-border text-gray-100"}`}>
+            <div className={`text-[9px] uppercase font-bold tracking-wider ${isLight ? "text-slate-500" : "text-gray-500"}`}>Total Collected</div>
+            <div className="text-lg font-black text-emerald-500">
               PKR {stats.paidPKR.toLocaleString()} <span className="text-xs text-emerald-600/80 font-normal">/ ${stats.paidUSD.toLocaleString()}</span>
             </div>
             <div className="text-[9px] text-emerald-500/80 font-mono">Paid clear status</div>
           </div>
-          <div className="bg-brand-dark-surface/40 border border-brand-dark-border rounded-xl p-4 space-y-1">
-            <div className="text-[9px] text-gray-500 uppercase font-bold tracking-wider">Outstanding Receivables</div>
+          <div className={`border rounded-xl p-4 space-y-1 ${isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/40 border-brand-dark-border text-gray-100"}`}>
+            <div className={`text-[9px] uppercase font-bold tracking-wider ${isLight ? "text-slate-500" : "text-gray-500"}`}>Outstanding Receivables</div>
             <div className="text-lg font-black text-amber-500">
               PKR {stats.unpaidPKR.toLocaleString()} <span className="text-xs text-amber-600/80 font-normal">/ ${stats.unpaidUSD.toLocaleString()}</span>
             </div>
             <div className="text-[9px] text-amber-500/80 font-mono">Unpaid pending standing</div>
           </div>
-          <div className="bg-brand-dark-surface/40 border border-brand-dark-border rounded-xl p-4 space-y-1">
-            <div className="text-[9px] text-gray-500 uppercase font-bold tracking-wider">Collection Rate</div>
-            <div className="text-xl font-black text-brand-sky">{stats.rate.toFixed(1)}%</div>
-            <div className="text-[9px] text-brand-sky/85 font-mono">SaaS financial efficiency</div>
+          <div className={`border rounded-xl p-4 space-y-1 ${isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/40 border-brand-dark-border text-gray-100"}`}>
+            <div className={`text-[9px] uppercase font-bold tracking-wider ${isLight ? "text-slate-500" : "text-gray-500"}`}>Collection Rate</div>
+            <div className="text-xl font-black text-sky-500">{stats.rate.toFixed(1)}%</div>
+            <div className="text-[9px] text-sky-500/85 font-mono">SaaS financial efficiency</div>
           </div>
         </div>
 
@@ -915,7 +915,11 @@ export default function AdminInvoicesPage() {
               placeholder="Search by invoice number or tenant client name..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-brand-dark-surface/40 border border-brand-dark-border pl-9 pr-3 py-2 rounded-lg text-xs text-white focus:outline-none focus:border-purple-500 placeholder-gray-600"
+              className={`w-full border pl-9 pr-3 py-2 rounded-lg text-xs focus:outline-none focus:border-purple-500 ${
+                isLight 
+                  ? "bg-white border-slate-300 text-slate-900 placeholder-slate-400" 
+                  : "bg-brand-dark-surface/40 border-brand-dark-border text-white placeholder-gray-600"
+              }`}
             />
           </div>
 
@@ -956,11 +960,15 @@ export default function AdminInvoicesPage() {
         </div>
 
         {/* Invoice List */}
-        <div className="bg-brand-dark-surface/30 border border-brand-dark-border rounded-2xl overflow-hidden">
+        <div className={`border rounded-2xl overflow-hidden ${
+          isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/30 border-brand-dark-border text-gray-100"
+        }`}>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="border-b border-brand-dark-border text-gray-500 font-mono">
+                <tr className={`border-b font-mono ${
+                  isLight ? "bg-slate-50 border-slate-200 text-slate-700" : "bg-black/60 border-brand-dark-border text-gray-400"
+                }`}>
                   <th className="p-4 font-semibold">Invoice No</th>
                   <th className="p-4 font-semibold">Tenant Client Name</th>
                   <th className="p-4 font-semibold">Deploy Plan</th>

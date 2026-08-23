@@ -193,20 +193,22 @@ export default function AdminReportsPage() {
       <main className="flex-grow p-6 sm:p-8 space-y-6 overflow-y-auto max-h-screen">
         
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:justify-between md:items-center border-b border-brand-dark-border/60 pb-4 gap-4">
+        <div className={`flex flex-col md:flex-row md:justify-between md:items-center border-b pb-4 gap-4 ${isLight ? "border-slate-200" : "border-brand-dark-border/60"}`}>
           <div>
-            <h1 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
-              <PieChart size={24} className="text-purple-400" />
+            <h1 className={`text-xl font-black tracking-tight flex items-center gap-2 ${isLight ? "text-slate-900" : "text-white"}`}>
+              <PieChart size={24} className="text-purple-500" />
               Super SaaS Analytics &amp; Reports
             </h1>
-            <p className="text-[10px] text-gray-500 font-sans">Cross-tenant statistics, database sharding capacities, and platform revenue metrics.</p>
+            <p className={`text-[10px] font-sans ${isLight ? "text-slate-500" : "text-gray-500"}`}>Cross-tenant statistics, database sharding capacities, and platform revenue metrics.</p>
           </div>
 
           <div className="flex flex-wrap gap-2">
             <select
               value={planFilter}
               onChange={(e) => setPlanFilter(e.target.value as any)}
-              className="bg-brand-dark-surface border border-brand-dark-border px-3 py-1.5 rounded-xl text-[10px] text-gray-300 focus:outline-none focus:border-purple-500 font-sans"
+              className={`px-3 py-1.5 rounded-xl text-[10px] focus:outline-none focus:border-purple-500 font-sans border ${
+                isLight ? "bg-white border-slate-300 text-slate-900" : "bg-brand-dark-surface border-brand-dark-border text-gray-300"
+              }`}
             >
               <option value="All">All Plans</option>
               <option value="Starter">Starter Plan</option>
@@ -217,7 +219,9 @@ export default function AdminReportsPage() {
             <select
               value={sectorFilter}
               onChange={(e) => setSectorFilter(e.target.value)}
-              className="bg-brand-dark-surface border border-brand-dark-border px-3 py-1.5 rounded-xl text-[10px] text-gray-300 focus:outline-none focus:border-purple-500 font-sans"
+              className={`px-3 py-1.5 rounded-xl text-[10px] focus:outline-none focus:border-purple-500 font-sans border ${
+                isLight ? "bg-white border-slate-300 text-slate-900" : "bg-brand-dark-surface border-brand-dark-border text-gray-300"
+              }`}
             >
               <option value="All">All Sectors</option>
               <option value="Super Markets">Super Markets</option>
@@ -239,55 +243,63 @@ export default function AdminReportsPage() {
 
         {/* Dynamic SaaS Financial KPI metrics */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-brand-dark-surface/50 border border-brand-dark-border p-5 rounded-2xl relative overflow-hidden flex flex-col justify-between min-h-[110px]">
-            <div className="flex justify-between items-start text-gray-500">
+          <div className={`border p-5 rounded-2xl relative overflow-hidden flex flex-col justify-between min-h-[110px] ${
+            isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/50 border-brand-dark-border text-gray-100"
+          }`}>
+            <div className={`flex justify-between items-start ${isLight ? "text-slate-500" : "text-gray-500"}`}>
               <span className="text-[10px] uppercase font-bold tracking-wider">Monthly Recurring Revenue (MRR)</span>
-              <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400"><TrendingUp size={14} /></div>
+              <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-500"><TrendingUp size={14} /></div>
             </div>
             <div>
-              <div className="text-2xl font-black text-white font-mono mt-2">
+              <div className={`text-2xl font-black font-mono mt-2 ${isLight ? "text-slate-900" : "text-white"}`}>
                 Rs. {currentMRR.toLocaleString(undefined, { maximumFractionDigits: 0 })}
               </div>
-              <p className="text-[9px] text-gray-500 mt-1">PKR equivalent sharded sum</p>
+              <p className={`text-[9px] mt-1 ${isLight ? "text-slate-500" : "text-gray-500"}`}>PKR equivalent sharded sum</p>
             </div>
           </div>
 
-          <div className="bg-brand-dark-surface/50 border border-brand-dark-border p-5 rounded-2xl relative overflow-hidden flex flex-col justify-between min-h-[110px]">
-            <div className="flex justify-between items-start text-gray-500">
+          <div className={`border p-5 rounded-2xl relative overflow-hidden flex flex-col justify-between min-h-[110px] ${
+            isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/50 border-brand-dark-border text-gray-100"
+          }`}>
+            <div className={`flex justify-between items-start ${isLight ? "text-slate-500" : "text-gray-500"}`}>
               <span className="text-[10px] uppercase font-bold tracking-wider">Projected ARR</span>
-              <div className="p-1.5 rounded-lg bg-purple-500/10 text-purple-400"><DollarSign size={14} /></div>
+              <div className="p-1.5 rounded-lg bg-purple-500/10 text-purple-500"><DollarSign size={14} /></div>
             </div>
             <div>
-              <div className="text-2xl font-black text-white font-mono mt-2">
+              <div className={`text-2xl font-black font-mono mt-2 ${isLight ? "text-slate-900" : "text-white"}`}>
                 Rs. {projectedARR.toLocaleString(undefined, { maximumFractionDigits: 0 })}
               </div>
-              <p className="text-[9px] text-gray-500 mt-1">Based on current customer base</p>
+              <p className={`text-[9px] mt-1 ${isLight ? "text-slate-500" : "text-gray-500"}`}>Based on current customer base</p>
             </div>
           </div>
 
-          <div className="bg-brand-dark-surface/50 border border-brand-dark-border p-5 rounded-2xl relative overflow-hidden flex flex-col justify-between min-h-[110px]">
-            <div className="flex justify-between items-start text-gray-500">
+          <div className={`border p-5 rounded-2xl relative overflow-hidden flex flex-col justify-between min-h-[110px] ${
+            isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/50 border-brand-dark-border text-gray-100"
+          }`}>
+            <div className={`flex justify-between items-start ${isLight ? "text-slate-500" : "text-gray-500"}`}>
               <span className="text-[10px] uppercase font-bold tracking-wider">Invoices Collection Rate</span>
-              <div className="p-1.5 rounded-lg bg-brand-sky/10 text-brand-sky"><Percent size={14} /></div>
+              <div className="p-1.5 rounded-lg bg-sky-500/10 text-sky-500"><Percent size={14} /></div>
             </div>
             <div>
-              <div className="text-2xl font-black text-white font-mono mt-2">
+              <div className={`text-2xl font-black font-mono mt-2 ${isLight ? "text-slate-900" : "text-white"}`}>
                 {collectionRate.toFixed(1)}%
               </div>
-              <p className="text-[9px] text-gray-500 mt-1">Rs. {paidInvoicesPKR.toLocaleString(undefined, { maximumFractionDigits: 0 })} collected in cash</p>
+              <p className={`text-[9px] mt-1 ${isLight ? "text-slate-500" : "text-gray-500"}`}>Rs. {paidInvoicesPKR.toLocaleString(undefined, { maximumFractionDigits: 0 })} collected in cash</p>
             </div>
           </div>
 
-          <div className="bg-brand-dark-surface/50 border border-brand-dark-border p-5 rounded-2xl relative overflow-hidden flex flex-col justify-between min-h-[110px]">
-            <div className="flex justify-between items-start text-gray-500">
+          <div className={`border p-5 rounded-2xl relative overflow-hidden flex flex-col justify-between min-h-[110px] ${
+            isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/50 border-brand-dark-border text-gray-100"
+          }`}>
+            <div className={`flex justify-between items-start ${isLight ? "text-slate-500" : "text-gray-500"}`}>
               <span className="text-[10px] uppercase font-bold tracking-wider">Lead Conversion Funnel</span>
-              <div className="p-1.5 rounded-lg bg-purple-500/10 text-purple-400"><Users size={14} /></div>
+              <div className="p-1.5 rounded-lg bg-purple-500/10 text-purple-500"><Users size={14} /></div>
             </div>
             <div>
-              <div className="text-2xl font-black text-white font-mono mt-2">
+              <div className={`text-2xl font-black font-mono mt-2 ${isLight ? "text-slate-900" : "text-white"}`}>
                 {leadConversionRate.toFixed(1)}%
               </div>
-              <p className="text-[9px] text-gray-500 mt-1">{convertedLeads} out of {totalLeads} requests processed</p>
+              <p className={`text-[9px] mt-1 ${isLight ? "text-slate-500" : "text-gray-500"}`}>{convertedLeads} out of {totalLeads} requests processed</p>
             </div>
           </div>
         </div>
@@ -296,36 +308,48 @@ export default function AdminReportsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
           {/* Left: Sharded Database Load Metrics */}
-          <div className="lg:col-span-1 bg-brand-dark-surface/30 border border-brand-dark-border p-6 rounded-2xl space-y-4">
-            <h3 className="text-xs font-black uppercase text-gray-400 tracking-wider flex items-center gap-1.5">
-              <Database size={14} className="text-purple-400" />
+          <div className={`lg:col-span-1 border p-6 rounded-2xl space-y-4 ${
+            isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/30 border-brand-dark-border text-gray-100"
+          }`}>
+            <h3 className={`text-xs font-black uppercase tracking-wider flex items-center gap-1.5 ${isLight ? "text-slate-700" : "text-gray-400"}`}>
+              <Database size={14} className="text-purple-500" />
               Platform Database Shards (PostgreSQL)
             </h3>
             
             <div className="space-y-4 pt-2">
-              <div className="bg-black/40 border border-brand-dark-border/80 p-3 rounded-lg flex justify-between items-center text-xs font-mono">
-                <span className="text-gray-400">Total Active Shards:</span>
-                <span className="text-white font-bold">{totalTenantsCount} Databases</span>
+              <div className={`border p-3 rounded-lg flex justify-between items-center text-xs font-mono ${
+                isLight ? "bg-slate-50 border-slate-200 text-slate-800" : "bg-black/40 border-brand-dark-border/80 text-white"
+              }`}>
+                <span className={isLight ? "text-slate-500" : "text-gray-400"}>Total Active Shards:</span>
+                <span className={`font-bold ${isLight ? "text-slate-900" : "text-white"}`}>{totalTenantsCount} Databases</span>
               </div>
 
-              <div className="bg-black/40 border border-brand-dark-border/80 p-3 rounded-lg flex justify-between items-center text-xs font-mono">
-                <span className="text-gray-400">Total Shard Size:</span>
-                <span className="text-purple-400 font-bold">{totalShardsSizeMB.toFixed(1)} MB</span>
+              <div className={`border p-3 rounded-lg flex justify-between items-center text-xs font-mono ${
+                isLight ? "bg-slate-50 border-slate-200 text-slate-800" : "bg-black/40 border-brand-dark-border/80 text-white"
+              }`}>
+                <span className={isLight ? "text-slate-500" : "text-gray-400"}>Total Shard Size:</span>
+                <span className="text-purple-500 font-bold">{totalShardsSizeMB.toFixed(1)} MB</span>
               </div>
 
-              <div className="bg-black/40 border border-brand-dark-border/80 p-3 rounded-lg flex justify-between items-center text-xs font-mono">
-                <span className="text-gray-400">Avg Query Response:</span>
-                <span className="text-emerald-400 font-bold">{avgQueryLatencyMs} ms</span>
+              <div className={`border p-3 rounded-lg flex justify-between items-center text-xs font-mono ${
+                isLight ? "bg-slate-50 border-slate-200 text-slate-800" : "bg-black/40 border-brand-dark-border/80 text-white"
+              }`}>
+                <span className={isLight ? "text-slate-500" : "text-gray-400"}>Avg Query Response:</span>
+                <span className="text-emerald-500 font-bold">{avgQueryLatencyMs} ms</span>
               </div>
 
-              <div className="bg-black/40 border border-brand-dark-border/80 p-3 rounded-lg flex justify-between items-center text-xs font-mono">
-                <span className="text-gray-400">24h REST API Hits:</span>
-                <span className="text-brand-sky font-bold">{restApiHits24h.toLocaleString()} hits</span>
+              <div className={`border p-3 rounded-lg flex justify-between items-center text-xs font-mono ${
+                isLight ? "bg-slate-50 border-slate-200 text-slate-800" : "bg-black/40 border-brand-dark-border/80 text-white"
+              }`}>
+                <span className={isLight ? "text-slate-500" : "text-gray-400"}>24h REST API Hits:</span>
+                <span className="text-sky-500 font-bold">{restApiHits24h.toLocaleString()} hits</span>
               </div>
 
-              <div className="bg-black/40 border border-brand-dark-border/80 p-3 rounded-lg flex justify-between items-center text-xs font-mono">
-                <span className="text-gray-400">Cache Hit Ratio:</span>
-                <span className="text-emerald-400 font-bold">{totalTenantsCount > 0 ? "99.8% (Redis Active)" : "—"}</span>
+              <div className={`border p-3 rounded-lg flex justify-between items-center text-xs font-mono ${
+                isLight ? "bg-slate-50 border-slate-200 text-slate-800" : "bg-black/40 border-brand-dark-border/80 text-white"
+              }`}>
+                <span className={isLight ? "text-slate-500" : "text-gray-400"}>Cache Hit Ratio:</span>
+                <span className="text-emerald-500 font-bold">{totalTenantsCount > 0 ? "99.8% (Redis Active)" : "—"}</span>
               </div>
             </div>
           </div>
@@ -334,19 +358,23 @@ export default function AdminReportsPage() {
           <div className="lg:col-span-2 space-y-6">
             
             {/* Plan distribution */}
-            <div className="bg-brand-dark-surface/40 border border-brand-dark-border p-6 rounded-2xl space-y-4">
-              <h3 className="text-xs font-black uppercase text-gray-400 tracking-wider flex items-center gap-1.5">
-                <Layers size={14} className="text-purple-400" />
+            <div className={`border p-6 rounded-2xl space-y-4 ${
+              isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/40 border-brand-dark-border text-gray-100"
+            }`}>
+              <h3 className={`text-xs font-black uppercase tracking-wider flex items-center gap-1.5 ${isLight ? "text-slate-700" : "text-gray-400"}`}>
+                <Layers size={14} className="text-purple-500" />
                 Subscription Plan Tiers Distribution
               </h3>
 
               <div className="grid grid-cols-3 gap-4 pt-2">
-                <div className="bg-black/30 border border-brand-dark-border/60 p-4 rounded-xl text-center space-y-1">
-                  <div className="text-[10px] uppercase font-bold text-gray-500">Starter Plan</div>
-                  <div className="text-xl font-mono font-black text-white">{planStarter}</div>
-                  <div className="text-[8px] text-gray-500 font-sans">Starter DB schema sharded</div>
-                  <div className="w-full bg-gray-800 h-1 rounded-full overflow-hidden mt-2">
-                    <div className="bg-brand-sky h-full" style={{ width: `${totalTenantsCount > 0 ? (planStarter / totalTenantsCount) * 100 : 0}%` }} />
+                <div className={`border p-4 rounded-xl text-center space-y-1 ${
+                  isLight ? "bg-slate-50 border-slate-200 text-slate-900" : "bg-black/30 border-brand-dark-border/60 text-white"
+                }`}>
+                  <div className={`text-[10px] uppercase font-bold ${isLight ? "text-slate-500" : "text-gray-500"}`}>Starter Plan</div>
+                  <div className={`text-xl font-mono font-black ${isLight ? "text-slate-900" : "text-white"}`}>{planStarter}</div>
+                  <div className={`text-[8px] font-sans ${isLight ? "text-slate-400" : "text-gray-500"}`}>Starter DB schema sharded</div>
+                  <div className="w-full bg-slate-200 h-1 rounded-full overflow-hidden mt-2">
+                    <div className="bg-sky-500 h-full" style={{ width: `${totalTenantsCount > 0 ? (planStarter / totalTenantsCount) * 100 : 0}%` }} />
                   </div>
                 </div>
 

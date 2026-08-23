@@ -230,119 +230,231 @@ export default function AdminSupportPage() {
                         {/* Delete individual message */}
                         <button
                           onClick={() => handleDeleteReply(idx)}
-                          title="Delete this message"
-                          className="absolute top-1 -right-7 opacity-0 group-hover:opacity-100 p-1 text-gray-600 hover:text-red-500 hover:bg-red-500/10 rounded transition cursor-pointer"
-                        >
-                          <Trash size={11} />
-                        </button>
+                          {t.priority}
+                        </span>
                       </div>
-                    </div>
+                      <h4 className={`font-bold text-xs leading-snug truncate ${isLight ? "text-slate-900" : "text-white"}`}>{t.subject}</h4>
+                      <div className="flex justify-between items-center mt-1 text-[9px]">
+                        <span className={`truncate max-w-[70%] ${isLight ? "text-slate-500" : "text-gray-500"}`}>{t.businessName}</span>
+                        <span className="font-semibold text-[8px] bg-purple-500/10 px-1 py-0.2 rounded text-purple-500 uppercase tracking-wide">
+                          {t.category}
+                        </span>
+                      </div>
+                      
+                      <div className={`flex justify-between items-center mt-3 pt-2 border-t text-[9px] font-mono ${
+                        isLight ? "border-slate-200 text-slate-400" : "border-brand-dark-border/30 text-gray-400"
+                      }`}>
+                        <span>{t.date}</span>
+                        <span className={`font-bold ${t.status === "Open" ? "text-red-500 animate-pulse" : "text-emerald-500"}`}>
+                          {t.status}
+                        </span>
+                      </div>
+                    </button>
                   );
-                })}
-              </div>
+                })
+              )}
+            </div>
+          </div>
 
-              {/* Software Request Info (if applicable) */}
-              {selectedTicket.softwareRequestData && (
-                <div className="bg-brand-sky/10 border border-brand-sky/30 rounded-xl p-4 mb-4">
-                  <h4 className="text-brand-sky font-bold text-xs uppercase tracking-widest mb-2 flex items-center gap-2">
-                    <CheckCircle2 size={14} /> Software Provisioning Request
-                  </h4>
-                  <div className="grid grid-cols-2 gap-4 text-xs">
-                    <div>
-                      <span className="text-gray-500 block mb-1">Requested By</span>
-                      <span className="text-white font-semibold">{selectedTicket.softwareRequestData.name}</span>
+          {/* Right Column: Ticket Conversation details thread */}
+          <div className="lg:col-span-2 flex flex-col max-h-[85vh]">
+            {selectedTicket ? (
+              <div className={`border p-6 rounded-2xl flex flex-col justify-between flex-grow h-full overflow-hidden ${
+                isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/40 border-brand-dark-border text-gray-100"
+              }`}>
+                
+                {/* Ticket Top bar */}
+                <div className={`border-b pb-4 mb-4 flex justify-between items-start ${isLight ? "border-slate-200" : "border-brand-dark-border"}`}>
+                  <div className="flex-grow">
+                    <div className="flex justify-between items-center text-[10px] font-mono mb-2">
+                      <span className="text-purple-500 font-bold">Ticket ID: {selectedTicket.id}</span>
+                      <span className={isLight ? "text-slate-400" : "text-gray-500"}>Issued Date: {selectedTicket.date}</span>
                     </div>
-                    <div>
-                      <span className="text-gray-500 block mb-1">Nature of Business</span>
-                      <span className="text-white font-semibold">{selectedTicket.softwareRequestData.businessNature}</span>
-                    </div>
-                    <div className="col-span-2">
-                      <span className="text-gray-500 block mb-1">Additional Features Required</span>
-                      <span className="text-white font-semibold">{selectedTicket.softwareRequestData.features}</span>
+                    <h3 className={`text-base font-black leading-tight ${isLight ? "text-slate-900" : "text-white"}`}>{selectedTicket.subject}</h3>
+                    <div className="flex gap-4 mt-2 text-[10px]">
+                      <div><span className={isLight ? "text-slate-500" : "text-gray-500"}>From Client:</span> <span className={`font-bold ${isLight ? "text-slate-900" : "text-white"}`}>{selectedTicket.businessName}</span></div>
+                      <div><span className={isLight ? "text-slate-500" : "text-gray-500"}>Category:</span> <span className="text-sky-500 font-bold uppercase">{selectedTicket.category}</span></div>
                     </div>
                   </div>
-                  {selectedTicket.status !== "Resolved" && (
-                    <div className="mt-4 border-t border-brand-sky/20 pt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                      <div className="space-y-1">
-                        <label className="text-[10px] text-gray-400 font-bold uppercase block">Assign POS Vertical Module</label>
-                        <select
-                          value={provisionVertical}
-                          onChange={(e) => setProvisionVertical(e.target.value)}
-                          className="bg-black border border-brand-dark-border text-white text-xs p-2 rounded focus:border-brand-sky focus:outline-none"
-                        >
-                          <option value="Restaurant">Restaurant / F&B POS</option>
-                          <option value="Retail">Retail Store POS</option>
-                          <option value="Pharmacy">Pharmacy / Medical POS</option>
-                          <option value="Bookstore">Bookstore POS</option>
-                        </select>
-                      </div>
-                      <button
-                        onClick={() => {
-                          const name = selectedTicket.softwareRequestData?.name || "Client";
-                          const username = name.split(" ")[0].toLowerCase() + "@mtcore.xyz";
-                          const password = "Pass@" + Math.floor(1000 + Math.random() * 9000);
-                          
-                          const newTenantId = registerTenant({
-                            businessName: `${name}'s ${provisionVertical}`,
-                            ownerName: name,
-                            email: username,
-                            phone: "+00 0000 0000",
-                            businessType: provisionVertical,
-                            plan: "Professional",
-                            billingCycle: "monthly",
-                            defaultCurrency: "PKR",
-                            credentialPresets: [
-                              { id: `CRED-${Math.floor(1000 + Math.random() * 9000)}`, label: "Super Admin", email: username, pass: password, role: "Owner" }
-                            ]
-                          });
 
-                          const replyMessage = `Your ${provisionVertical} POS is ready! Here are your credentials:\n\nLogin URL: /login\nWorkspace ID: ${newTenantId}\nUsername: ${username}\nPassword: ${password}\n\nPlease keep these credentials safe. Welcome to MT Core — The core technology behind your business.`;
-                          replyToTicket(selectedTicket.id, replyMessage, "Admin");
-                          updateSupportTicket(selectedTicket.id, { status: "Resolved" });
-                        }}
-                        className="w-full sm:w-auto bg-brand-sky hover:bg-brand-sky-light text-black font-black text-xs px-6 py-2.5 rounded transition shadow-lg shadow-brand-sky/20"
-                      >
-                        Approve &amp; Provision Credentials
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Reply box form */}
-              <form onSubmit={handleReplySubmit} className="bg-black/60 border border-brand-dark-border p-3.5 rounded-xl space-y-3">
-                <textarea
-                  required
-                  rows={2}
-                  value={replyText}
-                  onChange={(e) => setReplyText(e.target.value)}
-                  placeholder="Type support reply or solution steps..."
-                  className="w-full bg-brand-dark-surface border border-brand-dark-border/80 p-2.5 rounded text-xs text-white focus:outline-none focus:border-purple-500 resize-none"
-                />
-                <div className="flex justify-between items-center">
-                  <span className="text-[9px] text-gray-500">Press send to dispatch solution to client inbox.</span>
+                  {/* Delete entire conversation */}
                   <button
-                    type="submit"
-                    className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-black text-xs uppercase rounded flex items-center gap-1.5 shadow"
+                    onClick={handleDeleteConversation}
+                    title="Delete entire conversation"
+                    className="ml-4 p-2.5 bg-red-500/10 border border-red-500/25 hover:bg-red-500 hover:text-white text-red-500 rounded-xl transition flex items-center gap-1 text-[10px] font-black uppercase tracking-wider shrink-0"
                   >
-                    <Send size={12} />
-                    Dispatch Reply
+                    <Trash2 size={13} />
+                    Delete Thread
                   </button>
                 </div>
-              </form>
 
-            </div>
-          ) : (
-            <div className="bg-brand-dark-surface/20 border border-brand-dark-border rounded-2xl flex items-center justify-center p-8 text-center h-full">
-              <div>
-                <MessageSquare className="text-gray-600 mx-auto mb-3" size={32} />
-                <p className="text-xs text-gray-500 italic">Select a support ticket from the queue list to answer client queries.</p>
+                {/* Chat Thread */}
+                <div className="space-y-4 overflow-y-auto flex-grow pr-2 mb-4">
+                  {selectedTicket.replies.length === 0 ? (
+                    <div className={`p-4 border rounded-xl text-xs ${
+                      isLight ? "bg-slate-50 border-slate-200 text-slate-600" : "bg-black/40 border-brand-dark-border text-gray-400"
+                    }`}>
+                      {selectedTicket.message}
+                    </div>
+                  ) : (
+                    selectedTicket.replies.map((reply, idx) => (
+                      <div
+                        key={idx}
+                        className={`flex flex-col ${
+                          reply.sender === "Admin" ? "items-end" : "items-start"
+                        }`}
+                      >
+                        <div className="flex items-center gap-1.5 mb-1 text-[9px] font-mono">
+                          <span className={`font-bold ${reply.sender === "Admin" ? "text-purple-500" : "text-sky-500"}`}>
+                            {reply.sender}
+                          </span>
+                          <span className={isLight ? "text-slate-400" : "text-gray-500"}>{reply.timestamp}</span>
+                        </div>
+                        <div
+                          className={`p-3.5 rounded-2xl max-w-[85%] text-xs leading-relaxed ${
+                            reply.sender === "Admin"
+                              ? "bg-purple-600 text-white font-medium shadow-xs"
+                              : isLight
+                              ? "bg-slate-100 border border-slate-200 text-slate-900"
+                              : "bg-black/60 border border-brand-dark-border text-gray-200"
+                          }`}
+                        >
+                          {reply.message}
+                          <button
+                            onClick={() => handleDeleteReply(idx)}
+                            title="Delete this message"
+                            className="absolute top-1 -right-7 opacity-0 group-hover:opacity-100 p-1 text-gray-600 hover:text-red-500 hover:bg-red-500/10 rounded transition cursor-pointer"
+                          >
+                            <Trash size={11} />
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {/* Vertical Software Request Card */}
+                {selectedTicket.category === "Vertical Software Request" && selectedTicket.softwareRequestData && (
+                  <div className={`p-4 rounded-xl border mb-4 ${
+                    isLight ? "bg-sky-50/80 border-sky-200 text-slate-900" : "bg-brand-sky/10 border-brand-sky/30 text-white"
+                  }`}>
+                    <div className="flex items-center justify-between border-b pb-2 mb-3 border-sky-500/20">
+                      <div className="flex items-center gap-2">
+                        <Sparkles size={16} className="text-sky-500" />
+                        <span className="font-bold text-xs uppercase tracking-wide">POS Software Request Specification</span>
+                      </div>
+                      <span className="text-[10px] bg-sky-500/20 text-sky-500 font-bold px-2 py-0.5 rounded">CUSTOM BUILD</span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 text-xs">
+                      <div>
+                        <span className={`block mb-1 ${isLight ? "text-slate-500" : "text-gray-500"}`}>Requested By</span>
+                        <span className={`font-semibold ${isLight ? "text-slate-900" : "text-white"}`}>{selectedTicket.softwareRequestData.name}</span>
+                      </div>
+                      <div>
+                        <span className={`block mb-1 ${isLight ? "text-slate-500" : "text-gray-500"}`}>Nature of Business</span>
+                        <span className={`font-semibold ${isLight ? "text-slate-900" : "text-white"}`}>{selectedTicket.softwareRequestData.businessNature}</span>
+                      </div>
+                      <div className="col-span-2">
+                        <span className={`block mb-1 ${isLight ? "text-slate-500" : "text-gray-500"}`}>Additional Features Required</span>
+                        <span className={`font-semibold ${isLight ? "text-slate-900" : "text-white"}`}>{selectedTicket.softwareRequestData.features}</span>
+                      </div>
+                    </div>
+                    {selectedTicket.status !== "Resolved" && (
+                      <div className="mt-4 border-t border-sky-500/20 pt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div className="space-y-1">
+                          <label className={`text-[10px] font-bold uppercase block ${isLight ? "text-slate-600" : "text-gray-400"}`}>Assign POS Vertical Module</label>
+                          <select
+                            value={provisionVertical}
+                            onChange={(e) => setProvisionVertical(e.target.value)}
+                            className={`border text-xs p-2 rounded focus:border-sky-500 focus:outline-none ${
+                              isLight ? "bg-white border-slate-300 text-slate-900" : "bg-black border-brand-dark-border text-white"
+                            }`}
+                          >
+                            <option value="Restaurant">Restaurant / F&B POS</option>
+                            <option value="Retail">Retail Store POS</option>
+                            <option value="Pharmacy">Pharmacy / Medical POS</option>
+                            <option value="Bookstore">Bookstore POS</option>
+                          </select>
+                        </div>
+                        <button
+                          onClick={() => {
+                            const name = selectedTicket.softwareRequestData?.name || "Client";
+                            const username = name.split(" ")[0].toLowerCase() + "@mtcore.xyz";
+                            const password = "Pass@" + Math.floor(1000 + Math.random() * 9000);
+                            
+                            const newTenantId = registerTenant({
+                              businessName: `${name}'s ${provisionVertical}`,
+                              ownerName: name,
+                              email: username,
+                              phone: "+00 0000 0000",
+                              businessType: provisionVertical,
+                              plan: "Professional",
+                              billingCycle: "monthly",
+                              defaultCurrency: "PKR",
+                              credentialPresets: [
+                                { id: `CRED-${Math.floor(1000 + Math.random() * 9000)}`, label: "Super Admin", email: username, pass: password, role: "Owner" }
+                              ]
+                            });
+
+                            const replyMessage = `Your ${provisionVertical} POS is ready! Here are your credentials:\n\nLogin URL: /login\nWorkspace ID: ${newTenantId}\nUsername: ${username}\nPassword: ${password}\n\nPlease keep these credentials safe. Welcome to MT Core — The core technology behind your business.`;
+                            replyToTicket(selectedTicket.id, replyMessage, "Admin");
+                            updateSupportTicket(selectedTicket.id, { status: "Resolved" });
+                          }}
+                          className="w-full sm:w-auto bg-sky-500 hover:bg-sky-400 text-white font-black text-xs px-6 py-2.5 rounded transition shadow-lg"
+                        >
+                          Approve &amp; Provision Credentials
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Reply box form */}
+                <form onSubmit={handleReplySubmit} className={`border p-3.5 rounded-xl space-y-3 ${
+                  isLight ? "bg-slate-50 border-slate-200" : "bg-black/60 border-brand-dark-border"
+                }`}>
+                  <textarea
+                    required
+                    rows={2}
+                    value={replyText}
+                    onChange={(e) => setReplyText(e.target.value)}
+                    placeholder="Type support reply or solution steps..."
+                    className={`w-full border p-2.5 rounded text-xs focus:outline-none focus:border-purple-500 resize-none ${
+                      isLight ? "bg-white border-slate-300 text-slate-900 placeholder-slate-400" : "bg-brand-dark-surface border-brand-dark-border/80 text-white placeholder-gray-500"
+                    }`}
+                  />
+                  <div className="flex justify-between items-center">
+                    <button
+                      type="button"
+                      onClick={() => updateSupportTicket(selectedTicket.id, { status: "Resolved" })}
+                      className="px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500 hover:text-white text-emerald-500 font-bold text-[10px] rounded transition flex items-center gap-1"
+                    >
+                      <CheckCircle size={12} />
+                      Quick Approve &amp; Resolve
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-5 py-2 bg-purple-600 hover:bg-purple-500 text-white font-black text-xs rounded-lg transition shadow-lg flex items-center gap-1.5"
+                    >
+                      <Send size={13} />
+                      Send Reply
+                    </button>
+                  </div>
+                </form>
+
               </div>
-            </div>
-          )}
+            ) : (
+              <div className={`border p-12 rounded-2xl h-full flex flex-col items-center justify-center text-center ${
+                isLight ? "bg-white border-slate-200 text-slate-500" : "bg-brand-dark-surface/20 border-brand-dark-border text-gray-500"
+              }`}>
+                <MessageSquare size={32} className="text-purple-500 mb-3" />
+                <h4 className={`font-bold text-sm ${isLight ? "text-slate-900" : "text-white"}`}>No Support Ticket Selected</h4>
+                <p className="text-xs max-w-xs mt-1">Select a ticket thread from the left panel to inspect message history and send replies.</p>
+              </div>
+            )}
+          </div>
         </div>
-
       </main>
     </div>
   );
-}

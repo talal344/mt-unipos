@@ -99,20 +99,24 @@ function StatCard({
   value,
   icon: Icon,
   color,
+  isLight = false
 }: {
   label: string;
   value: number;
   icon: React.ElementType;
   color: string;
+  isLight?: boolean;
 }) {
   return (
-    <div className="bg-brand-dark-surface/40 border border-brand-dark-border rounded-xl p-4 flex items-center gap-4">
+    <div className={`border rounded-xl p-4 flex items-center gap-4 ${
+      isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/40 border-brand-dark-border text-gray-100"
+    }`}>
       <div className={`p-2.5 rounded-lg ${color}`}>
         <Icon size={18} />
       </div>
       <div>
-        <div className="text-2xl font-black text-white">{value}</div>
-        <div className="text-[10px] text-gray-500 uppercase tracking-wide font-semibold">
+        <div className={`text-2xl font-black ${isLight ? "text-slate-900" : "text-white"}`}>{value}</div>
+        <div className={`text-[10px] uppercase tracking-wide font-semibold ${isLight ? "text-slate-500" : "text-gray-500"}`}>
           {label}
         </div>
       </div>
@@ -1544,31 +1548,36 @@ export default function AdminClientsPage() {
                 label="Total Requests"
                 value={demoStats.total}
                 icon={Users}
-                color="bg-sky-500/15 text-sky-400"
+                color="bg-sky-500/15 text-sky-500"
+                isLight={isLight}
               />
               <StatCard
                 label="Pending Review"
                 value={demoStats.pending}
                 icon={Clock}
-                color="bg-amber-500/15 text-amber-400"
+                color="bg-amber-500/15 text-amber-500"
+                isLight={isLight}
               />
               <StatCard
                 label="Approved"
                 value={demoStats.approved}
                 icon={CheckCircle2}
-                color="bg-emerald-500/15 text-emerald-400"
+                color="bg-emerald-500/15 text-emerald-500"
+                isLight={isLight}
               />
               <StatCard
                 label="Active Tenants"
                 value={demoStats.converted}
                 icon={Building2}
-                color="bg-purple-500/15 text-purple-400"
+                color="bg-purple-500/15 text-purple-500"
+                isLight={isLight}
               />
               <StatCard
                 label="Rejected"
                 value={demoStats.rejected}
                 icon={XCircle}
-                color="bg-red-500/15 text-red-400"
+                color="bg-red-500/15 text-red-500"
+                isLight={isLight}
               />
             </div>
 
@@ -1585,7 +1594,11 @@ export default function AdminClientsPage() {
                   placeholder="Search by name, business, or ticket #..."
                   value={demoSearch}
                   onChange={(e) => setDemoSearch(e.target.value)}
-                  className="w-full bg-brand-dark-surface/40 border border-brand-dark-border pl-9 pr-3 py-2.5 rounded-lg text-xs text-white focus:outline-none focus:border-sky-500 placeholder-gray-600"
+                  className={`w-full border pl-9 pr-3 py-2.5 rounded-lg text-xs focus:outline-none focus:border-sky-500 ${
+                    isLight 
+                      ? "bg-white border-slate-300 text-slate-900 placeholder-slate-400" 
+                      : "bg-brand-dark-surface/40 border-brand-dark-border text-white placeholder-gray-600"
+                  }`}
                 />
               </div>
               {/* Status Filter */}
@@ -1598,18 +1611,20 @@ export default function AdminClientsPage() {
                       className={`px-3 py-2 rounded-lg text-[10px] font-bold border transition ${
                         demoStatusFilter === s
                           ? s === "All"
-                            ? "bg-sky-600 border-sky-500 text-white"
+                            ? "bg-sky-600 border-sky-500 text-white shadow-xs"
                             : s === "Pending"
-                            ? "bg-amber-500/20 border-amber-500/50 text-amber-400"
+                            ? "bg-amber-500/20 border-amber-500/50 text-amber-500 font-bold"
                             : s === "Under Review"
-                            ? "bg-purple-500/20 border-purple-500/50 text-purple-400"
+                            ? "bg-purple-500/20 border-purple-500/50 text-purple-500 font-bold"
                             : s === "Reviewed"
-                            ? "bg-sky-500/20 border-sky-500/50 text-sky-400"
+                            ? "bg-sky-500/20 border-sky-500/50 text-sky-500 font-bold"
                             : s === "Approved"
-                            ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-400"
+                            ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-500 font-bold"
                             : s === "Converted"
-                            ? "bg-purple-500/20 border-purple-500/50 text-purple-300"
-                            : "bg-red-500/20 border-red-500/50 text-red-400"
+                            ? "bg-purple-500/20 border-purple-500/50 text-purple-500 font-bold"
+                            : "bg-red-500/20 border-red-500/50 text-red-500 font-bold"
+                          : isLight
+                          ? "bg-white border-slate-200 text-slate-600 hover:bg-slate-100"
                           : "bg-brand-dark-surface/30 border-brand-dark-border text-gray-500 hover:text-gray-300"
                       }`}
                     >
@@ -1621,11 +1636,15 @@ export default function AdminClientsPage() {
             </div>
 
             {/* Table */}
-            <div className="bg-brand-dark-surface/30 border border-brand-dark-border rounded-2xl overflow-hidden">
+            <div className={`border rounded-2xl overflow-hidden ${
+              isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/30 border-brand-dark-border text-gray-100"
+            }`}>
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
-                    <tr className="border-b border-brand-dark-border text-gray-500 font-mono">
+                    <tr className={`border-b font-mono ${
+                      isLight ? "bg-slate-50 border-slate-200 text-slate-700" : "bg-black/60 border-brand-dark-border text-gray-500"
+                    }`}>
                       <th className="p-4 font-semibold">Ticket #</th>
                       <th className="p-4 font-semibold">Name</th>
                       <th className="p-4 font-semibold">Business</th>
