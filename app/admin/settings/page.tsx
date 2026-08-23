@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import AdminSidebar from "@/components/admin-sidebar";
+import { useGlobalContext } from "@/context/global-context";
 import { 
   Settings, 
   Database, 
