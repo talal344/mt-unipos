@@ -606,6 +606,7 @@ export default function ClientDashboardPage() {
         return a + s.total;
       }, 0);
       let cost = 0;
+      let cardBankOnline = 0;
       daySales.forEach(s => {
         const isReturn = s.status === "Returned" || s.status === "Refunded";
         if ((s as any).status === "Dues_Recovery") return;
@@ -615,11 +616,19 @@ export default function ClientDashboardPage() {
           if (isReturn) cost -= c;
           else cost += c;
         });
+        if (!isReturn) {
+          if (s.splitPayments) {
+            cardBankOnline += (s.splitPayments["Card"] || 0) + (s.splitPayments["Bank Transfer"] || 0) + (s.splitPayments["EasyPaisa"] || 0) + (s.splitPayments["JazzCash"] || 0);
+          } else if (["Card", "Bank Transfer", "EasyPaisa", "JazzCash"].includes(s.paymentMethod)) {
+            cardBankOnline += s.total;
+          }
+        }
       });
       data.push({
         name: d.toLocaleDateString("en-US", { weekday: "short" }),
         Revenue: revenue,
-        Profit: revenue - cost
+        Profit: Math.max(0, revenue - cost),
+        "Card/Bank/Online": cardBankOnline
       });
     }
     return data;
@@ -773,8 +782,9 @@ export default function ClientDashboardPage() {
                     itemStyle={{ fontWeight: 'bold' }}
                   />
                   <Legend iconType="circle" wrapperStyle={{ fontSize: '10px' }} />
-                  <Line type="monotone" dataKey="Revenue" stroke="#0ea5e9" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
-                  <Line type="monotone" dataKey="Profit" stroke="#10b981" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
+                  <Line type="monotone" name="Revenue" dataKey="Revenue" stroke="#0ea5e9" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
+                  <Line type="monotone" name="Profit" dataKey="Profit" stroke="#10b981" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
+                  <Line type="monotone" name="Card/Bank/Online" dataKey="Card/Bank/Online" stroke="#a855f7" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -1271,8 +1281,9 @@ export default function ClientDashboardPage() {
                     itemStyle={{ fontWeight: 'bold' }}
                   />
                   <Legend iconType="circle" wrapperStyle={{ fontSize: '10px' }} />
-                  <Line type="monotone" dataKey="Revenue" stroke="#0ea5e9" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
-                  <Line type="monotone" dataKey="Profit" stroke="#10b981" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
+                  <Line type="monotone" name="Revenue" dataKey="Revenue" stroke="#0ea5e9" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
+                  <Line type="monotone" name="Profit" dataKey="Profit" stroke="#10b981" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
+                  <Line type="monotone" name="Card/Bank/Online" dataKey="Card/Bank/Online" stroke="#a855f7" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
                 </LineChart>
               </ResponsiveContainer>
             </div>

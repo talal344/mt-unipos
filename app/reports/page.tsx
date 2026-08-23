@@ -7,7 +7,7 @@ import {
   FileDown, Calendar, TrendingUp, TrendingDown, BarChart3,
   ShoppingCart, DollarSign, CreditCard, Download, Package,
   Users, ArrowUpRight, AlertTriangle, CheckCircle2, UserCheck, ShieldAlert,
-  Image, Printer, FileSpreadsheet, X
+  Image, Printer, FileSpreadsheet, X, Landmark, Smartphone, Wallet, FileText, Zap
 } from "lucide-react";
 import * as XLSX from "xlsx";
 
@@ -300,6 +300,64 @@ export default function ReportsPage() {
       }
     });
     return Object.entries(map).sort((a, b) => b[1] - a[1]);
+  }, [filteredSales]);
+
+  // ── Detailed Multi-Channel Breakdown (Cash, Card, Bank, EasyPaisa, JazzCash, Wallet, On Credit, Dues Recovered) ──
+  const channelBreakdown = useMemo(() => {
+    let cash = 0, cashTxns = 0;
+    let card = 0, cardTxns = 0;
+    let bank = 0, bankTxns = 0;
+    let easyPaisa = 0, easyPaisaTxns = 0;
+    let jazzCash = 0, jazzCashTxns = 0;
+    let wallet = 0, walletTxns = 0;
+    let credit = 0, creditTxns = 0;
+    let duesRecovered = 0, duesRecoveredTxns = 0;
+
+    filteredSales.forEach(s => {
+      const isReturn = s.status === "Returned" || s.status === "Refunded";
+      if (isReturn) return;
+      if ((s as any).status === "Dues_Recovery") {
+        duesRecovered += s.total;
+        duesRecoveredTxns++;
+        return;
+      }
+
+      if (s.splitPayments) {
+        const sp = s.splitPayments;
+        if (sp["Cash"] > 0) { cash += sp["Cash"]; cashTxns++; }
+        if (sp["Card"] > 0) { card += sp["Card"]; cardTxns++; }
+        if (sp["Bank Transfer"] > 0) { bank += sp["Bank Transfer"]; bankTxns++; }
+        if (sp["EasyPaisa"] > 0) { easyPaisa += sp["EasyPaisa"]; easyPaisaTxns++; }
+        if (sp["JazzCash"] > 0) { jazzCash += sp["JazzCash"]; jazzCashTxns++; }
+        if ((sp["Store Wallet Credit"] || sp["Store Wallet"]) > 0) { wallet += (sp["Store Wallet Credit"] || sp["Store Wallet"] || 0); walletTxns++; }
+        if (sp["On Credit"] > 0) { credit += sp["On Credit"]; creditTxns++; }
+      } else {
+        const m = s.paymentMethod;
+        if (m === "Cash") { cash += s.total; cashTxns++; }
+        else if (m === "Card") { card += s.total; cardTxns++; }
+        else if (m === "Bank Transfer") { bank += s.total; bankTxns++; }
+        else if (m === "EasyPaisa") { easyPaisa += s.total; easyPaisaTxns++; }
+        else if (m === "JazzCash") { jazzCash += s.total; jazzCashTxns++; }
+        else if (m === "EasyPaisa / JazzCash") { easyPaisa += s.total / 2; jazzCash += s.total / 2; easyPaisaTxns++; jazzCashTxns++; }
+        else if (m === "Store Wallet Credit" || m === "Store Wallet") { wallet += s.total; walletTxns++; }
+        else if (m === "On Credit") { credit += s.total; creditTxns++; }
+        else { cash += s.total; cashTxns++; }
+      }
+    });
+
+    const totalChannelSales = cash + card + bank + easyPaisa + jazzCash + wallet + credit;
+
+    return {
+      cash: { amount: cash, count: cashTxns },
+      card: { amount: card, count: cardTxns },
+      bank: { amount: bank, count: bankTxns },
+      easyPaisa: { amount: easyPaisa, count: easyPaisaTxns },
+      jazzCash: { amount: jazzCash, count: jazzCashTxns },
+      wallet: { amount: wallet, count: walletTxns },
+      credit: { amount: credit, count: creditTxns },
+      duesRecovered: { amount: duesRecovered, count: duesRecoveredTxns },
+      totalChannelSales
+    };
   }, [filteredSales]);
 
   // ── Customer dues leaderboard ──────────────────────────────────────────
@@ -959,6 +1017,195 @@ export default function ReportsPage() {
                     <div className={`text-[9px] uppercase tracking-wide mt-1 font-bold ${isLight ? "text-slate-500" : "text-gray-500"}`}>{s.label}</div>
                   </div>
                 ))}
+              </div>
+
+              {/* ── Payment Channels & Dues Real-Time Breakdown ── */}
+              <div className={`border rounded-2xl p-5 space-y-4 page-break-avoid ${
+                isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/40 border-brand-dark-border text-gray-100"
+              }`}>
+                <div className={`flex flex-col sm:flex-row sm:items-center justify-between border-b pb-3 gap-2 ${isLight ? "border-slate-200" : "border-brand-dark-border"}`}>
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-600">
+                      <Wallet size={16} />
+                    </div>
+                    <div>
+                      <h3 className={`text-xs font-black uppercase tracking-wider ${isLight ? "text-slate-900" : "text-white"}`}>
+                        Payment Methods &amp; Channels Breakdown
+                      </h3>
+                      <p className={`text-[9px] ${isLight ? "text-slate-500" : "text-gray-400"}`}>
+                        Cash, Card, Bank, Online, Wallets &amp; Credit Dues for selected timeframe
+                      </p>
+                    </div>
+                  </div>
+                  <div className={`text-[10px] font-mono font-bold px-2.5 py-1 rounded-lg border flex items-center gap-1.5 self-start sm:self-auto ${
+                    isLight ? "bg-slate-50 border-slate-200 text-slate-700" : "bg-black/60 border-brand-dark-border text-gray-300"
+                  }`}>
+                    <span>Total Channel Volume:</span>
+                    <span className="text-sky-600 font-black">{currencySymbol} {channelBreakdown.totalChannelSales.toLocaleString()}</span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-3 text-xs font-mono">
+                  {/* Cash Sales */}
+                  <div className={`border rounded-xl p-3.5 space-y-1.5 transition hover:shadow-xs ${
+                    isLight ? "bg-emerald-50/70 border-emerald-300" : "bg-emerald-950/20 border-emerald-500/30"
+                  }`}>
+                    <div className="flex items-center justify-between">
+                      <span className={`text-[9px] uppercase font-bold tracking-wider flex items-center gap-1 ${isLight ? "text-emerald-800" : "text-emerald-400"}`}>
+                        <DollarSign size={11} /> Cash Sales
+                      </span>
+                      <span className={`text-[8px] font-bold px-1.5 py-0.2 rounded ${isLight ? "bg-emerald-200 text-emerald-900" : "bg-emerald-500/20 text-emerald-400"}`}>
+                        {channelBreakdown.cash.count} txns
+                      </span>
+                    </div>
+                    <div className={`text-base font-black ${isLight ? "text-emerald-950" : "text-emerald-300"}`}>
+                      {currencySymbol} {channelBreakdown.cash.amount.toLocaleString()}
+                    </div>
+                    <div className={`text-[8px] ${isLight ? "text-emerald-700" : "text-emerald-400/80"}`}>
+                      {channelBreakdown.totalChannelSales > 0 ? ((channelBreakdown.cash.amount / channelBreakdown.totalChannelSales) * 100).toFixed(1) : 0}% of channel mix
+                    </div>
+                  </div>
+
+                  {/* Card Sales */}
+                  <div className={`border rounded-xl p-3.5 space-y-1.5 transition hover:shadow-xs ${
+                    isLight ? "bg-sky-50/70 border-sky-300" : "bg-sky-950/20 border-sky-500/30"
+                  }`}>
+                    <div className="flex items-center justify-between">
+                      <span className={`text-[9px] uppercase font-bold tracking-wider flex items-center gap-1 ${isLight ? "text-sky-800" : "text-sky-400"}`}>
+                        <CreditCard size={11} /> Card Payments
+                      </span>
+                      <span className={`text-[8px] font-bold px-1.5 py-0.2 rounded ${isLight ? "bg-sky-200 text-sky-900" : "bg-sky-500/20 text-sky-400"}`}>
+                        {channelBreakdown.card.count} txns
+                      </span>
+                    </div>
+                    <div className={`text-base font-black ${isLight ? "text-sky-950" : "text-sky-300"}`}>
+                      {currencySymbol} {channelBreakdown.card.amount.toLocaleString()}
+                    </div>
+                    <div className={`text-[8px] ${isLight ? "text-sky-700" : "text-sky-400/80"}`}>
+                      POS Terminal / Visa / MC
+                    </div>
+                  </div>
+
+                  {/* Bank Transfer */}
+                  <div className={`border rounded-xl p-3.5 space-y-1.5 transition hover:shadow-xs ${
+                    isLight ? "bg-purple-50/70 border-purple-300" : "bg-purple-950/20 border-purple-500/30"
+                  }`}>
+                    <div className="flex items-center justify-between">
+                      <span className={`text-[9px] uppercase font-bold tracking-wider flex items-center gap-1 ${isLight ? "text-purple-800" : "text-purple-400"}`}>
+                        <Landmark size={11} /> Bank Transfer
+                      </span>
+                      <span className={`text-[8px] font-bold px-1.5 py-0.2 rounded ${isLight ? "bg-purple-200 text-purple-900" : "bg-purple-500/20 text-purple-400"}`}>
+                        {channelBreakdown.bank.count} txns
+                      </span>
+                    </div>
+                    <div className={`text-base font-black ${isLight ? "text-purple-950" : "text-purple-300"}`}>
+                      {currencySymbol} {channelBreakdown.bank.amount.toLocaleString()}
+                    </div>
+                    <div className={`text-[8px] ${isLight ? "text-purple-700" : "text-purple-400/80"}`}>
+                      IBFT / Raast / Wire
+                    </div>
+                  </div>
+
+                  {/* EasyPaisa */}
+                  <div className={`border rounded-xl p-3.5 space-y-1.5 transition hover:shadow-xs ${
+                    isLight ? "bg-emerald-50/70 border-emerald-300" : "bg-emerald-950/20 border-emerald-500/30"
+                  }`}>
+                    <div className="flex items-center justify-between">
+                      <span className={`text-[9px] uppercase font-bold tracking-wider flex items-center gap-1 ${isLight ? "text-emerald-800" : "text-emerald-400"}`}>
+                        <Smartphone size={11} /> EasyPaisa
+                      </span>
+                      <span className={`text-[8px] font-bold px-1.5 py-0.2 rounded ${isLight ? "bg-emerald-200 text-emerald-900" : "bg-emerald-500/20 text-emerald-400"}`}>
+                        {channelBreakdown.easyPaisa.count} txns
+                      </span>
+                    </div>
+                    <div className={`text-base font-black ${isLight ? "text-emerald-950" : "text-emerald-300"}`}>
+                      {currencySymbol} {channelBreakdown.easyPaisa.amount.toLocaleString()}
+                    </div>
+                    <div className={`text-[8px] ${isLight ? "text-emerald-700" : "text-emerald-400/80"}`}>
+                      Mobile QR / App Inflow
+                    </div>
+                  </div>
+
+                  {/* JazzCash */}
+                  <div className={`border rounded-xl p-3.5 space-y-1.5 transition hover:shadow-xs ${
+                    isLight ? "bg-orange-50/70 border-orange-300" : "bg-orange-950/20 border-orange-500/30"
+                  }`}>
+                    <div className="flex items-center justify-between">
+                      <span className={`text-[9px] uppercase font-bold tracking-wider flex items-center gap-1 ${isLight ? "text-orange-800" : "text-orange-400"}`}>
+                        <Smartphone size={11} /> JazzCash
+                      </span>
+                      <span className={`text-[8px] font-bold px-1.5 py-0.2 rounded ${isLight ? "bg-orange-200 text-orange-900" : "bg-orange-500/20 text-orange-400"}`}>
+                        {channelBreakdown.jazzCash.count} txns
+                      </span>
+                    </div>
+                    <div className={`text-base font-black ${isLight ? "text-orange-950" : "text-orange-300"}`}>
+                      {currencySymbol} {channelBreakdown.jazzCash.amount.toLocaleString()}
+                    </div>
+                    <div className={`text-[8px] ${isLight ? "text-orange-700" : "text-orange-400/80"}`}>
+                      Mobile QR / App Inflow
+                    </div>
+                  </div>
+
+                  {/* Store Wallet */}
+                  <div className={`border rounded-xl p-3.5 space-y-1.5 transition hover:shadow-xs ${
+                    isLight ? "bg-teal-50/70 border-teal-300" : "bg-teal-950/20 border-teal-500/30"
+                  }`}>
+                    <div className="flex items-center justify-between">
+                      <span className={`text-[9px] uppercase font-bold tracking-wider flex items-center gap-1 ${isLight ? "text-teal-800" : "text-teal-400"}`}>
+                        <Wallet size={11} /> Store Wallet
+                      </span>
+                      <span className={`text-[8px] font-bold px-1.5 py-0.2 rounded ${isLight ? "bg-teal-200 text-teal-900" : "bg-teal-500/20 text-teal-400"}`}>
+                        {channelBreakdown.wallet.count} txns
+                      </span>
+                    </div>
+                    <div className={`text-base font-black ${isLight ? "text-teal-950" : "text-teal-300"}`}>
+                      {currencySymbol} {channelBreakdown.wallet.amount.toLocaleString()}
+                    </div>
+                    <div className={`text-[8px] ${isLight ? "text-teal-700" : "text-teal-400/80"}`}>
+                      Loyalty / Prepaid Balance
+                    </div>
+                  </div>
+
+                  {/* On Credit (Udhaar Sales) */}
+                  <div className={`border rounded-xl p-3.5 space-y-1.5 transition hover:shadow-xs ${
+                    isLight ? "bg-red-50/70 border-red-300" : "bg-red-950/20 border-red-500/30"
+                  }`}>
+                    <div className="flex items-center justify-between">
+                      <span className={`text-[9px] uppercase font-bold tracking-wider flex items-center gap-1 ${isLight ? "text-red-800" : "text-red-400"}`}>
+                        <FileText size={11} /> On Credit (Udhaar)
+                      </span>
+                      <span className={`text-[8px] font-bold px-1.5 py-0.2 rounded ${isLight ? "bg-red-200 text-red-900" : "bg-red-500/20 text-red-400"}`}>
+                        {channelBreakdown.credit.count} txns
+                      </span>
+                    </div>
+                    <div className={`text-base font-black ${isLight ? "text-red-950" : "text-red-400"}`}>
+                      {currencySymbol} {channelBreakdown.credit.amount.toLocaleString()}
+                    </div>
+                    <div className={`text-[8px] ${isLight ? "text-red-700" : "text-red-400/80"}`}>
+                      Receivables Outstanding
+                    </div>
+                  </div>
+
+                  {/* Credit Dues Recovered */}
+                  <div className={`border rounded-xl p-3.5 space-y-1.5 transition hover:shadow-xs ${
+                    isLight ? "bg-indigo-50/70 border-indigo-300" : "bg-indigo-950/20 border-indigo-500/30"
+                  }`}>
+                    <div className="flex items-center justify-between">
+                      <span className={`text-[9px] uppercase font-bold tracking-wider flex items-center gap-1 ${isLight ? "text-indigo-800" : "text-indigo-400"}`}>
+                        <Zap size={11} /> Dues Recovered
+                      </span>
+                      <span className={`text-[8px] font-bold px-1.5 py-0.2 rounded ${isLight ? "bg-indigo-200 text-indigo-900" : "bg-indigo-500/20 text-indigo-400"}`}>
+                        {channelBreakdown.duesRecovered.count} txns
+                      </span>
+                    </div>
+                    <div className={`text-base font-black ${isLight ? "text-indigo-950" : "text-indigo-400"}`}>
+                      +{currencySymbol} {channelBreakdown.duesRecovered.amount.toLocaleString()}
+                    </div>
+                    <div className={`text-[8px] ${isLight ? "text-indigo-700" : "text-indigo-400/80"}`}>
+                      Old Credit Cleared
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Cash Flow Audit */}

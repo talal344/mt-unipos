@@ -65,25 +65,54 @@ export default function InventoryPage() {
   const totalStockValue = products.reduce((acc, p) => acc + (p.costPrice * p.stock), 0);
   const totalStockLines = products.length;
 
+  const lowStockCount = products.filter(p => p.stock <= p.minStock).length;
+  const expiredOrNearExpiryCount = products.filter(p => {
+    if (!p.expiryDate) return false;
+    const exp = new Date(p.expiryDate).getTime();
+    const now = Date.now();
+    const thirtyDays = 30 * 24 * 60 * 60 * 1000;
+    return exp - now <= thirtyDays;
+  }).length;
+  const totalWarnings = lowStockCount + expiredOrNearExpiryCount;
+
   return (
     <div className={`flex h-screen overflow-hidden font-sans ${isLight ? "bg-slate-100 text-slate-900" : "bg-black text-gray-100"}`}>
       <ClientSidebar />
 
       <main className="flex-grow p-6 sm:p-8 space-y-6 overflow-y-auto h-screen">
         
-        {/* Top Header */}
-        <div className={`flex justify-between items-center border-b pb-4 ${
+        {/* Top Header & Sharded Sync status */}
+        <div className={`flex flex-col sm:flex-row sm:items-center justify-between border-b pb-4 gap-4 ${
           isLight ? "border-slate-200" : "border-brand-dark-border/60"
         }`}>
           <div>
-            <h1 className={`text-xl font-black tracking-tight ${isLight ? "text-slate-900" : "text-white"}`}>Inventory Central Ledger</h1>
-            <p className={`text-[10px] ${isLight ? "text-slate-500" : "text-gray-500"}`}>Real-time stock reconciliations, warehouse adjustments, and sharded transfers.</p>
+            <h1 className={`text-xl font-black tracking-tight flex items-center gap-2 ${isLight ? "text-slate-900" : "text-white"}`}>
+              <span>Central Stock Ledger</span>
+              <span className="bg-brand-sky/20 text-brand-sky text-[9px] px-2 py-0.5 rounded font-mono font-bold">LIVE SHARD</span>
+            </h1>
+            <p className={`text-[10px] font-mono ${isLight ? "text-slate-500" : "text-gray-500"}`}>Active Node: <span className={isLight ? "text-slate-900 font-bold" : "text-white"}>{currentBranch}</span> · Tracking FIFO/LIFO Ledger batches</p>
           </div>
-          <span className={`text-[10px] font-mono border px-3 py-1 rounded ${
-            isLight ? "bg-white border-slate-300 text-slate-700 shadow-xs" : "bg-brand-dark-surface border-brand-dark-border text-gray-500"
-          }`}>
-            Active: {currentBranch}
+          <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full flex items-center gap-1.5 self-start sm:self-auto">
+            <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-ping" />
+            Shard Connected &amp; Synced
           </span>
+        </div>
+
+        {/* Global Inventory Tabs */}
+        <div className="flex gap-2">
+          {["Master", "Transfers", "AI Forecasting"].map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab as any)}
+              className={`px-4 py-2 rounded-xl text-xs font-bold font-mono transition ${
+                activeTab === tab
+                  ? isLight ? "bg-sky-600 text-white shadow-xs" : "bg-brand-sky text-black"
+                  : isLight ? "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50" : "bg-brand-dark-surface border border-brand-dark-border text-gray-400 hover:text-white"
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
         </div>
 
         {successMsg && (
@@ -92,27 +121,6 @@ export default function InventoryPage() {
             <span>{successMsg}</span>
           </div>
         )}
-
-        {/* Tabs */}
-        <div className={`flex gap-4 border-b mb-6 ${isLight ? "border-slate-200" : "border-brand-dark-border"}`}>
-          {["Master", "Transfers", "AI Forecasting"].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab as any)}
-              className={`pb-2 text-xs font-bold uppercase tracking-wider transition ${
-                activeTab === tab 
-                  ? isLight
-                    ? "border-b-2 border-sky-600 text-sky-600"
-                    : "border-b-2 border-brand-sky text-brand-sky"
-                  : isLight
-                  ? "text-slate-500 hover:text-slate-900"
-                  : "text-gray-500 hover:text-gray-300"
-              }`}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
 
         {activeTab === "Master" && (
           <>
@@ -143,10 +151,19 @@ export default function InventoryPage() {
             isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/50 border-brand-dark-border text-gray-100"
           }`}>
             <div className="space-y-1">
-              <span className={`text-[9px] uppercase tracking-wide font-bold ${isLight ? "text-slate-500" : "text-gray-500"}`}>System Expiries Active</span>
-              <div className={`text-lg font-black ${isLight ? "text-slate-900" : "text-white"}`}>4 Active warnings</div>
+              <span className={`text-[9px] uppercase tracking-wide font-bold ${isLight ? "text-slate-500" : "text-gray-500"}`}>System Expiries &amp; Alerts</span>
+              <div className={`text-lg font-black ${
+                totalWarnings > 0 
+                  ? "text-amber-500" 
+                  : isLight ? "text-emerald-700" : "text-emerald-400"
+              }`}>
+                {totalWarnings > 0 ? `${totalWarnings} Active warning${totalWarnings > 1 ? 's' : ''}` : "0 Warnings (Healthy ✓)"}
+              </div>
+              <div className={`text-[9px] font-mono ${isLight ? "text-slate-500" : "text-gray-500"}`}>
+                {lowStockCount} low stock · {expiredOrNearExpiryCount} near expiry
+              </div>
             </div>
-            <AlertTriangle size={24} className="text-amber-500 opacity-80" />
+            <AlertTriangle size={24} className={totalWarnings > 0 ? "text-amber-500 opacity-80" : "text-emerald-500 opacity-80"} />
           </div>
 
         </div>

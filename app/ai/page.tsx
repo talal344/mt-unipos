@@ -20,30 +20,86 @@ const TIER_CFG = [
 const getTier = (pts: number) => [...TIER_CFG].reverse().find(t => pts >= t.minPts) || TIER_CFG[0];
 
 // ─── SVG Bar Chart ────────────────────────────────────────────────────────────
-function SvgBarChart({ data }: { data: { label: string; value: number }[] }) {
+function SvgBarChart({ data, currencySymbol = "PKR", isLight = false }: { data: { label: string; value: number }[]; currencySymbol?: string; isLight?: boolean }) {
   const max = Math.max(...data.map(d => d.value), 1);
-  const W = 480, H = 150, BAR_W = Math.floor(W / data.length) - 8, PAD = 28;
+  const W = 480, H = 160, BAR_W = Math.floor(W / data.length) - 12, PAD_BOTTOM = 30, PAD_TOP = 25;
   return (
-    <svg viewBox={`0 0 ${W} ${H + PAD}`} className="w-full h-auto">
+    <svg viewBox={`0 0 ${W} ${H + PAD_BOTTOM + PAD_TOP}`} className="w-full h-auto">
       <defs>
         <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.9" />
-          <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.35" />
+          <stop offset="0%" stopColor="#0284c7" stopOpacity="0.95" />
+          <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.45" />
+        </linearGradient>
+        <linearGradient id="barGradHighlight" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#10b981" stopOpacity="0.95" />
+          <stop offset="100%" stopColor="#34d399" stopOpacity="0.5" />
         </linearGradient>
       </defs>
       {data.map((d, i) => {
-        const barH = (d.value / max) * H;
+        const barH = d.value > 0 ? Math.max((d.value / max) * H, 8) : 4;
         const x = i * (W / data.length) + (W / data.length - BAR_W) / 2;
-        const y = H - barH;
+        const y = PAD_TOP + H - barH;
+        const isMaxDay = d.value === max && d.value > 0;
         return (
           <g key={d.label}>
-            <rect x={x} y={y} width={BAR_W} height={barH} rx={4} fill="url(#barGrad)" />
-            {d.value > 0 && (
-              <text x={x + BAR_W / 2} y={y - 4} textAnchor="middle" fill="#38bdf8" fontSize="9" fontFamily="monospace" fontWeight="bold">
-                {d.value >= 1000 ? `${(d.value / 1000).toFixed(1)}k` : d.value.toFixed(0)}
+            {/* Background bar track */}
+            <rect
+              x={x}
+              y={PAD_TOP}
+              width={BAR_W}
+              height={H}
+              rx={6}
+              fill={isLight ? "#f1f5f9" : "#1e293b"}
+              opacity={0.5}
+            />
+            {/* Value bar */}
+            <rect
+              x={x}
+              y={y}
+              width={BAR_W}
+              height={barH}
+              rx={6}
+              fill={isMaxDay ? "url(#barGradHighlight)" : "url(#barGrad)"}
+            />
+            {/* Revenue text label above bar */}
+            <text
+              x={x + BAR_W / 2}
+              y={y - 6}
+              textAnchor="middle"
+              fill={d.value > 0 ? (isLight ? "#0f172a" : "#38bdf8") : (isLight ? "#94a3b8" : "#64748b")}
+              fontSize="9"
+              fontFamily="monospace"
+              fontWeight="900"
+            >
+              {d.value > 0 
+                ? (d.value >= 1000 ? `${(d.value / 1000).toFixed(1)}k` : d.value.toLocaleString()) 
+                : "0"}
+            </text>
+            {/* Full PKR Amount if space permits inside high bar */}
+            {barH > 35 && (
+              <text
+                x={x + BAR_W / 2}
+                y={y + 16}
+                textAnchor="middle"
+                fill="#ffffff"
+                fontSize="8"
+                fontFamily="sans-serif"
+                fontWeight="bold"
+                opacity={0.9}
+              >
+                {currencySymbol}
               </text>
             )}
-            <text x={x + BAR_W / 2} y={H + PAD - 6} textAnchor="middle" fill="#6b7280" fontSize="9" fontFamily="sans-serif">
+            {/* Day name label */}
+            <text
+              x={x + BAR_W / 2}
+              y={PAD_TOP + H + 20}
+              textAnchor="middle"
+              fill={isMaxDay ? (isLight ? "#059669" : "#34d399") : (isLight ? "#475569" : "#94a3b8")}
+              fontSize="10"
+              fontFamily="sans-serif"
+              fontWeight={isMaxDay ? "bold" : "600"}
+            >
               {d.label}
             </text>
           </g>
@@ -204,14 +260,14 @@ export default function AiPage() {
             <div className="space-y-2">
               {[
                 { period: "Next 7 Days", amount: forecast.next7, color: "text-sky-600" },
-                { period: "Next 30 Days", amount: "text-purple-600" },
+                { period: "Next 30 Days", amount: forecast.next30, color: "text-purple-600" },
               ].map(f => (
                 <div key={f.period} className={`border rounded-lg p-3 ${
                   isLight ? "bg-slate-50 border-slate-200 text-slate-900" : "bg-black/60 border-brand-dark-border text-gray-100"
                 }`}>
                   <div className={`text-[9px] uppercase font-bold mb-0.5 ${isLight ? "text-slate-500" : "text-gray-500"}`}>{f.period}</div>
                   <div className={`text-base font-black font-mono ${f.color}`}>
-                    {currencySymbol} {f.amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                    {currencySymbol} {Number(f.amount || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
                   </div>
                   <div className="flex items-center gap-1 text-[9px] text-emerald-600 font-bold mt-1">
                     <ArrowUp size={9} /> Based on 7-day trend
@@ -233,7 +289,7 @@ export default function AiPage() {
                 No sales data yet. Make some sales to see analytics!
               </div>
             ) : (
-              <SvgBarChart data={salesByDay} />
+              <SvgBarChart data={salesByDay} currencySymbol={currencySymbol} isLight={isLight} />
             )}
           </div>
         </div>

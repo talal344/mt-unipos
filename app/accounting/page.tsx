@@ -189,15 +189,19 @@ export default function AccountingPage() {
       <main className="flex-grow p-6 sm:p-8 space-y-6 overflow-y-auto h-screen">
         
         {/* Top Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-brand-dark-border/60 pb-4 gap-4">
+        <div className={`flex flex-col md:flex-row md:items-center justify-between border-b pb-4 gap-4 ${
+          isLight ? "border-slate-200" : "border-brand-dark-border/60"
+        }`}>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-xl font-black tracking-tight text-white">Double-Entry Financial Books</h1>
-              <span className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[9px] font-mono font-bold px-2 py-0.5 rounded flex items-center gap-1">
+              <h1 className={`text-xl font-black tracking-tight ${isLight ? "text-slate-900" : "text-white"}`}>Double-Entry Financial Books</h1>
+              <span className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded flex items-center gap-1 border ${
+                isLight ? "bg-emerald-50 text-emerald-700 border-emerald-300" : "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+              }`}>
                 <Zap size={10} className="animate-pulse" /> 100% Auto-Calculated
               </span>
             </div>
-            <p className="text-[10px] text-gray-500 mt-0.5">
+            <p className={`text-[10px] mt-0.5 ${isLight ? "text-slate-500 font-medium" : "text-gray-500"}`}>
               Live general ledgers, automated GAAP Profit &amp; Loss statements, and optional double-entry journal vouchers.
             </p>
           </div>
