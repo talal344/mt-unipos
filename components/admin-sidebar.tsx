@@ -76,7 +76,6 @@ export default function AdminSidebar() {
   };
 
   return (
-  return (
     <aside className={`relative w-64 h-screen border-r flex flex-col shrink-0 font-sans print:hidden transition-colors duration-200 ${
       isLight ? "bg-white border-slate-200 text-slate-900 shadow-xs" : "bg-brand-dark-surface border-purple-500/10 text-gray-100"
     }`}>
