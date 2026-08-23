@@ -460,11 +460,11 @@ export default function CustomersPage() {
             {/* Header */}
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-xl font-black text-white flex items-center gap-2">
-                  <Users size={20} className="text-brand-sky" />
+                <h1 className={`text-xl font-black flex items-center gap-2 ${isLight ? "text-slate-900" : "text-white"}`}>
+                  <Users size={20} className="text-sky-500" />
                   Customer Directory
                 </h1>
-                <p className="text-[10px] text-gray-500 mt-0.5">
+                <p className={`text-[10px] mt-0.5 ${isLight ? "text-slate-500" : "text-gray-500"}`}>
                   {totalCustomers} registered loyalty members
                 </p>
               </div>
@@ -472,14 +472,14 @@ export default function CustomersPage() {
                 <button
                   type="button"
                   onClick={() => setShowCreditReportModal(true)}
-                  className="flex items-center gap-1.5 bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 text-red-400 font-bold text-xs px-3.5 py-2.5 rounded-lg transition"
+                  className="flex items-center gap-1.5 bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 text-red-600 font-bold text-xs px-3.5 py-2.5 rounded-lg transition"
                 >
                   <CreditCard size={13} /> Credit Report
                 </button>
                 <button
                   type="button"
                   onClick={openAdd}
-                  className="flex items-center gap-1.5 bg-brand-sky hover:bg-brand-sky-light text-black font-black text-xs px-4 py-2.5 rounded-lg shadow-lg transition"
+                  className="flex items-center gap-1.5 bg-sky-600 hover:bg-sky-500 text-white font-black text-xs px-4 py-2.5 rounded-lg shadow-lg transition"
                 >
                   <Plus size={14} /> Add Customer
                 </button>
@@ -489,15 +489,17 @@ export default function CustomersPage() {
             {/* Stats Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               {[
-                { icon: Users, label: "Total Customers", val: totalCustomers, color: "text-brand-sky" },
-                { icon: TrendingUp, label: "Total Revenue", val: `${currencySymbol} ${Math.round(totalRevenue).toLocaleString()}`, color: "text-emerald-400" },
-                { icon: Star, label: "Loyalty Points Issued", val: totalLoyaltyPts.toLocaleString(), color: "text-yellow-400" },
-                { icon: BadgeCheck, label: "Active This Month", val: activeThisMonth, color: "text-purple-400" },
+                { icon: Users, label: "Total Customers", val: totalCustomers, color: "text-sky-500" },
+                { icon: TrendingUp, label: "Total Revenue", val: `${currencySymbol} ${Math.round(totalRevenue).toLocaleString()}`, color: "text-emerald-500" },
+                { icon: Star, label: "Loyalty Points Issued", val: totalLoyaltyPts.toLocaleString(), color: "text-amber-500" },
+                { icon: BadgeCheck, label: "Active This Month", val: activeThisMonth, color: "text-purple-500" },
               ].map(stat => (
-                <div key={stat.label} className="bg-brand-dark-surface/40 border border-brand-dark-border rounded-xl p-4">
+                <div key={stat.label} className={`border rounded-xl p-4 ${
+                  isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/40 border-brand-dark-border text-gray-100"
+                }`}>
                   <stat.icon size={16} className={stat.color} />
                   <div className={`text-lg font-black font-mono mt-1 ${stat.color}`}>{stat.val}</div>
-                  <div className="text-[9px] text-gray-500 uppercase tracking-wide">{stat.label}</div>
+                  <div className={`text-[9px] uppercase tracking-wide font-bold ${isLight ? "text-slate-500" : "text-gray-500"}`}>{stat.label}</div>
                 </div>
               ))}
             </div>
@@ -505,19 +507,23 @@ export default function CustomersPage() {
             {/* Search + Sort */}
             <div className="flex gap-2">
               <div className="relative flex-grow">
-                <Search className="absolute left-3 top-2.5 text-gray-500" size={14} />
+                <Search className={`absolute left-3 top-2.5 ${isLight ? "text-slate-400" : "text-gray-500"}`} size={14} />
                 <input
                   type="text"
                   placeholder="Search by name, mobile, email or CNIC..."
                   value={search}
                   onChange={e => setSearch(e.target.value)}
-                  className="w-full bg-brand-dark-surface border border-brand-dark-border pl-9 pr-4 py-2 rounded-lg text-xs text-white focus:outline-none focus:border-brand-sky"
+                  className={`w-full pl-9 pr-4 py-2 rounded-lg text-xs font-bold border focus:outline-none ${
+                    isLight ? "bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-sky-500 shadow-xs" : "bg-brand-dark-surface border-brand-dark-border text-white focus:border-brand-sky"
+                  }`}
                 />
               </div>
               <select
                 value={sortBy}
                 onChange={e => setSortBy(e.target.value as any)}
-                className="bg-brand-dark-surface border border-brand-dark-border rounded-lg text-[10px] text-gray-300 px-3 py-2 focus:outline-none focus:border-brand-sky"
+                className={`border rounded-lg text-[10px] font-bold px-3 py-2 focus:outline-none ${
+                  isLight ? "bg-white border-slate-300 text-slate-900 focus:border-sky-500 shadow-xs" : "bg-brand-dark-surface border-brand-dark-border text-gray-300 focus:border-brand-sky"
+                }`}
               >
                 <option value="name">Sort: Name</option>
                 <option value="points">Sort: Top Points</option>
@@ -529,9 +535,9 @@ export default function CustomersPage() {
             {/* Customer Cards */}
             <div className="space-y-2">
               {filtered.length === 0 ? (
-                <div className="text-center py-20 text-gray-600">
+                <div className={`text-center py-20 ${isLight ? "text-slate-400" : "text-gray-600"}`}>
                   <Users size={36} className="mx-auto mb-3 opacity-30" />
-                  <p className="text-xs">No customers found. Add your first customer above.</p>
+                  <p className="text-xs font-bold">No customers found. Add your first customer above.</p>
                 </div>
               ) : filtered.map(c => {
                 const tier = getLoyaltyTier(c.loyaltyPoints);
@@ -542,8 +548,12 @@ export default function CustomersPage() {
                     onClick={() => { setSelectedId(c.id); setDrawerTab("overview"); }}
                     className={`group flex items-center gap-4 p-4 rounded-xl border cursor-pointer transition-all ${
                       isActive
-                        ? "bg-brand-sky/10 border-brand-sky/40"
-                        : "bg-brand-dark-surface/30 border-brand-dark-border hover:border-brand-sky/30 hover:bg-brand-dark-surface/60"
+                        ? isLight
+                          ? "bg-sky-50 border-sky-400 shadow-xs"
+                          : "bg-brand-sky/10 border-brand-sky/40"
+                        : isLight
+                        ? "bg-white border-slate-200 hover:border-sky-300 hover:bg-slate-50 shadow-xs text-slate-900"
+                        : "bg-brand-dark-surface/30 border-brand-dark-border hover:border-brand-sky/30 hover:bg-brand-dark-surface/60 text-gray-100"
                     }`}
                   >
                     {/* Avatar */}

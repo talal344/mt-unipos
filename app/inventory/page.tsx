@@ -72,31 +72,41 @@ export default function InventoryPage() {
       <main className="flex-grow p-6 sm:p-8 space-y-6 overflow-y-auto max-h-screen">
         
         {/* Top Header */}
-        <div className="flex justify-between items-center border-b border-brand-dark-border/60 pb-4">
+        <div className={`flex justify-between items-center border-b pb-4 ${
+          isLight ? "border-slate-200" : "border-brand-dark-border/60"
+        }`}>
           <div>
-            <h1 className="text-xl font-black tracking-tight text-white">Inventory Central Ledger</h1>
-            <p className="text-[10px] text-gray-500">Real-time stock reconciliations, warehouse adjustments, and sharded transfers.</p>
+            <h1 className={`text-xl font-black tracking-tight ${isLight ? "text-slate-900" : "text-white"}`}>Inventory Central Ledger</h1>
+            <p className={`text-[10px] ${isLight ? "text-slate-500" : "text-gray-500"}`}>Real-time stock reconciliations, warehouse adjustments, and sharded transfers.</p>
           </div>
-          <span className="text-[10px] font-mono text-gray-500 bg-brand-dark-surface border border-brand-dark-border px-3 py-1 rounded">
+          <span className={`text-[10px] font-mono border px-3 py-1 rounded ${
+            isLight ? "bg-white border-slate-300 text-slate-700 shadow-xs" : "bg-brand-dark-surface border-brand-dark-border text-gray-500"
+          }`}>
             Active: {currentBranch}
           </span>
         </div>
 
         {successMsg && (
-          <div className="bg-emerald-500/10 border border-emerald-500 p-3 rounded-lg text-xs flex items-center gap-2 text-emerald-400 font-bold animate-fade-in-up">
+          <div className="bg-emerald-500/10 border border-emerald-500 p-3 rounded-lg text-xs flex items-center gap-2 text-emerald-600 font-bold animate-fade-in-up">
             <ShieldCheck size={16} />
             <span>{successMsg}</span>
           </div>
         )}
 
         {/* Tabs */}
-        <div className="flex gap-4 border-b border-brand-dark-border mb-6">
+        <div className={`flex gap-4 border-b mb-6 ${isLight ? "border-slate-200" : "border-brand-dark-border"}`}>
           {["Master", "Transfers", "AI Forecasting"].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab as any)}
               className={`pb-2 text-xs font-bold uppercase tracking-wider transition ${
-                activeTab === tab ? "border-b-2 border-brand-sky text-brand-sky" : "text-gray-500 hover:text-gray-300"
+                activeTab === tab 
+                  ? isLight
+                    ? "border-b-2 border-sky-600 text-sky-600"
+                    : "border-b-2 border-brand-sky text-brand-sky"
+                  : isLight
+                  ? "text-slate-500 hover:text-slate-900"
+                  : "text-gray-500 hover:text-gray-300"
               }`}
             >
               {tab}
@@ -109,26 +119,32 @@ export default function InventoryPage() {
             {/* Inventory Analytics Tiles */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           
-          <div className="bg-brand-dark-surface/50 border border-brand-dark-border p-4 rounded-xl flex items-center justify-between">
+          <div className={`border p-4 rounded-xl flex items-center justify-between ${
+            isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/50 border-brand-dark-border text-gray-100"
+          }`}>
             <div className="space-y-1">
-              <span className="text-[9px] uppercase tracking-wide font-bold text-gray-500">Inventory Valuation</span>
-              <div className="text-lg font-black text-white">{currencySymbol} {totalStockValue.toLocaleString()}</div>
+              <span className={`text-[9px] uppercase tracking-wide font-bold ${isLight ? "text-slate-500" : "text-gray-500"}`}>Inventory Valuation</span>
+              <div className={`text-lg font-black ${isLight ? "text-slate-900" : "text-white"}`}>{currencySymbol} {totalStockValue.toLocaleString()}</div>
             </div>
-            <Database size={24} className="text-brand-sky opacity-80" />
+            <Database size={24} className="text-sky-500 opacity-80" />
           </div>
 
-          <div className="bg-brand-dark-surface/50 border border-brand-dark-border p-4 rounded-xl flex items-center justify-between">
+          <div className={`border p-4 rounded-xl flex items-center justify-between ${
+            isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/50 border-brand-dark-border text-gray-100"
+          }`}>
             <div className="space-y-1">
-              <span className="text-[9px] uppercase tracking-wide font-bold text-gray-500">Stock SKU Count</span>
-              <div className="text-lg font-black text-white">{totalStockLines} Lines</div>
+              <span className={`text-[9px] uppercase tracking-wide font-bold ${isLight ? "text-slate-500" : "text-gray-500"}`}>Stock SKU Count</span>
+              <div className={`text-lg font-black ${isLight ? "text-slate-900" : "text-white"}`}>{totalStockLines} Lines</div>
             </div>
             <Layers size={24} className="text-purple-500 opacity-80" />
           </div>
 
-          <div className="bg-brand-dark-surface/50 border border-brand-dark-border p-4 rounded-xl flex items-center justify-between">
+          <div className={`border p-4 rounded-xl flex items-center justify-between ${
+            isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/50 border-brand-dark-border text-gray-100"
+          }`}>
             <div className="space-y-1">
-              <span className="text-[9px] uppercase tracking-wide font-bold text-gray-500">System Expiries Active</span>
-              <div className="text-lg font-black text-white">4 Active warnings</div>
+              <span className={`text-[9px] uppercase tracking-wide font-bold ${isLight ? "text-slate-500" : "text-gray-500"}`}>System Expiries Active</span>
+              <div className={`text-lg font-black ${isLight ? "text-slate-900" : "text-white"}`}>4 Active warnings</div>
             </div>
             <AlertTriangle size={24} className="text-amber-500 opacity-80" />
           </div>
@@ -136,11 +152,15 @@ export default function InventoryPage() {
         </div>
 
         {/* Master Inventory grid */}
-        <div className="bg-brand-dark-surface/30 border border-brand-dark-border rounded-2xl overflow-hidden">
+        <div className={`border rounded-2xl overflow-hidden ${
+          isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/30 border-brand-dark-border text-gray-100"
+        }`}>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="border-b border-brand-dark-border text-gray-500 font-mono">
+                <tr className={`border-b font-mono text-[10px] uppercase font-bold tracking-wider ${
+                  isLight ? "bg-slate-100 text-slate-700 border-slate-200" : "border-brand-dark-border text-gray-500 bg-black/60"
+                }`}>
                   <th className="p-4 font-semibold">SKU / Barcode</th>
                   <th className="p-4 font-semibold">Product Name</th>
                   <th className="p-4 font-semibold">Current Stock</th>
@@ -149,7 +169,9 @@ export default function InventoryPage() {
                   <th className="p-4 font-semibold text-center">Settings</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-brand-dark-border/40 font-mono text-[11px]">
+              <tbody className={`divide-y font-mono text-[11px] ${
+                isLight ? "divide-slate-200 text-slate-900" : "divide-brand-dark-border/40 text-gray-200"
+              }`}>
                 {products.map(prod => {
                   const valTotal = prod.costPrice * prod.stock;
                   return (

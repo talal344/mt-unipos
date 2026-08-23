@@ -569,13 +569,17 @@ export default function ProductsPage() {
       <main className="flex-grow p-6 sm:p-8 space-y-6 overflow-y-auto max-h-screen">
 
         {/* ── Top Header ── */}
-        <div className="flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center border-b border-brand-dark-border/60 pb-4">
+        <div className={`flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center border-b pb-4 ${
+          isLight ? "border-slate-200" : "border-brand-dark-border/60"
+        }`}>
           <div>
-            <h1 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
-              <Package size={20} className="text-brand-sky" />
+            <h1 className={`text-xl font-black tracking-tight flex items-center gap-2 ${
+              isLight ? "text-slate-900" : "text-white"
+            }`}>
+              <Package size={20} className="text-sky-500" />
               Product Catalog
             </h1>
-            <p className="text-[10px] text-gray-500 mt-0.5">
+            <p className={`text-[10px] mt-0.5 ${isLight ? "text-slate-500" : "text-gray-500"}`}>
               {products.length} SKUs registered · Auto-generated EAN-13 barcodes · Bulk Excel import supported
             </p>
           </div>
@@ -585,7 +589,7 @@ export default function ProductsPage() {
             {/* Download Template */}
             <button
               onClick={handleDownloadTemplate}
-              className="flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500/20 text-emerald-400 hover:text-emerald-300 font-bold text-xs px-3.5 py-2.5 rounded-lg transition"
+              className="flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500/20 text-emerald-600 font-bold text-xs px-3.5 py-2.5 rounded-lg transition"
             >
               <Download size={13} />
               Excel Template
@@ -594,18 +598,17 @@ export default function ProductsPage() {
             {/* Bulk Upload */}
             <button
               onClick={() => { setShowBulkModal(true); setUploadStep("idle"); setParsedRows([]); }}
-              className="flex items-center gap-1.5 bg-purple-500/10 border border-purple-500/30 hover:bg-purple-500/20 text-purple-400 hover:text-purple-300 font-bold text-xs px-3.5 py-2.5 rounded-lg transition"
+              className="flex items-center gap-1.5 bg-purple-500/10 border border-purple-500/30 hover:bg-purple-500/20 text-purple-600 font-bold text-xs px-3.5 py-2.5 rounded-lg transition"
             >
               <Upload size={13} />
               Bulk Upload
             </button>
 
             {/* Print Labels */}
-            {/* Print Labels */}
             {selectedProductIds.size > 0 && (
               <button
                 onClick={() => setShowLabelSheet(true)}
-                className="flex items-center gap-1.5 bg-amber-500/15 border border-amber-500/30 hover:bg-amber-500/25 text-amber-400 font-bold text-xs px-3.5 py-2.5 rounded-lg transition"
+                className="flex items-center gap-1.5 bg-amber-500/15 border border-amber-500/30 hover:bg-amber-500/25 text-amber-600 font-bold text-xs px-3.5 py-2.5 rounded-lg transition"
               >
                 <Printer size={13} />
                 Print Labels ({selectedProductIds.size})
@@ -615,7 +618,7 @@ export default function ProductsPage() {
             {/* Add Single */}
             <button
               onClick={handleOpenAdd}
-              className="flex items-center gap-1.5 bg-brand-sky hover:bg-brand-sky-light text-black font-black text-xs px-4 py-2.5 rounded-lg shadow-lg transition"
+              className="flex items-center gap-1.5 bg-sky-600 hover:bg-sky-500 text-white font-black text-xs px-4 py-2.5 rounded-lg shadow-lg transition"
             >
               <Plus size={14} />
               Add Product
@@ -626,13 +629,15 @@ export default function ProductsPage() {
         {/* ── Filters ── */}
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-grow">
-            <Search className="absolute left-3 top-2.5 text-gray-500" size={14} />
+            <Search className={`absolute left-3 top-2.5 ${isLight ? "text-slate-400" : "text-gray-500"}`} size={14} />
             <input
               type="text"
               placeholder="Search by name, SKU, barcode, or category..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="w-full bg-brand-dark-surface border border-brand-dark-border pl-9 pr-4 py-2 rounded-lg text-xs text-white focus:outline-none focus:border-brand-sky"
+              className={`w-full pl-9 pr-4 py-2 rounded-lg text-xs font-bold border focus:outline-none ${
+                isLight ? "bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-sky-500 shadow-xs" : "bg-brand-dark-surface border-brand-dark-border text-white focus:border-brand-sky"
+              }`}
             />
           </div>
           <div className="flex gap-2 flex-wrap">
@@ -642,7 +647,11 @@ export default function ProductsPage() {
                 onClick={() => setFilterCat(cat)}
                 className={`px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-wide uppercase shrink-0 transition ${
                   filterCat === cat
-                    ? "bg-brand-sky text-black"
+                    ? isLight
+                      ? "bg-sky-600 text-white shadow-xs border border-sky-600"
+                      : "bg-brand-sky text-black"
+                    : isLight
+                    ? "bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 shadow-xs"
                     : "bg-brand-dark-surface border border-brand-dark-border text-gray-400 hover:text-white"
                 }`}
               >
@@ -655,24 +664,30 @@ export default function ProductsPage() {
         {/* ── Stats Row ── */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { label: "Total SKUs", val: products.length, color: "text-brand-sky" },
-            { label: "Low Stock Alerts", val: products.filter(p => p.stock <= p.minStock).length, color: "text-red-400" },
-            { label: "Categories", val: new Set(products.map(p => p.category)).size, color: "text-purple-400" },
-            { label: "Avg. Sale Price", val: `${currencySymbol} ${products.length ? Math.round(products.reduce((a, p) => a + p.salePrice, 0) / products.length).toLocaleString() : 0}`, color: "text-emerald-400" },
+            { label: "Total SKUs", val: products.length, color: "text-sky-500" },
+            { label: "Low Stock Alerts", val: products.filter(p => p.stock <= p.minStock).length, color: "text-red-500" },
+            { label: "Categories", val: new Set(products.map(p => p.category)).size, color: "text-purple-500" },
+            { label: "Avg. Sale Price", val: `${currencySymbol} ${products.length ? Math.round(products.reduce((a, p) => a + p.salePrice, 0) / products.length).toLocaleString() : 0}`, color: "text-emerald-500" },
           ].map(stat => (
-            <div key={stat.label} className="bg-brand-dark-surface/40 border border-brand-dark-border rounded-xl p-4 text-center">
+            <div key={stat.label} className={`border rounded-xl p-4 text-center ${
+              isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/40 border-brand-dark-border text-gray-100"
+            }`}>
               <div className={`text-lg font-black font-mono ${stat.color}`}>{stat.val}</div>
-              <div className="text-[10px] text-gray-500 uppercase tracking-wide mt-0.5">{stat.label}</div>
+              <div className={`text-[10px] uppercase tracking-wide mt-0.5 font-bold ${isLight ? "text-slate-500" : "text-gray-500"}`}>{stat.label}</div>
             </div>
           ))}
         </div>
 
         {/* ── Products Table ── */}
-        <div className="bg-brand-dark-surface/30 border border-brand-dark-border rounded-2xl overflow-hidden">
+        <div className={`border rounded-2xl overflow-hidden ${
+          isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/30 border-brand-dark-border text-gray-100"
+        }`}>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="border-b border-brand-dark-border text-gray-500 font-mono">
+                <tr className={`border-b font-mono text-[10px] uppercase font-bold tracking-wider ${
+                  isLight ? "bg-slate-100 text-slate-700 border-slate-200" : "border-brand-dark-border text-gray-500 bg-black/60"
+                }`}>
                   <th className="p-4 w-10">
                     <input
                       type="checkbox"
@@ -686,7 +701,7 @@ export default function ProductsPage() {
                           setSelectedProductIds(newSelection);
                         }
                       }}
-                      className="rounded border-gray-600 bg-brand-dark-surface text-brand-sky focus:ring-brand-sky focus:ring-opacity-50 cursor-pointer"
+                      className="rounded border-slate-300 bg-white text-sky-600 focus:ring-sky-500 cursor-pointer"
                     />
                   </th>
                   <th className="p-4 font-semibold">#</th>
@@ -699,7 +714,9 @@ export default function ProductsPage() {
                   <th className="p-4 font-semibold text-center">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-brand-dark-border/40 font-mono text-[11px]">
+              <tbody className={`divide-y font-mono text-[11px] ${
+                isLight ? "divide-slate-200 text-slate-900" : "divide-brand-dark-border/40 text-gray-200"
+              }`}>
                 {filtered.length === 0 ? (
                   <tr>
                     <td colSpan={9} className="p-12 text-center text-gray-600">

@@ -1248,17 +1248,108 @@ export default function ClientDashboardPage() {
           </div>
         )}
 
-        
-        
+        {/* -------------------- INTERACTIVE RECHARTS ANALYTICS -------------------- */}
+        <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Revenue & Profit Trends (Line Chart) */}
+          <div className={`lg:col-span-2 border p-5 rounded-2xl ${
+            isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/40 border-brand-dark-border text-gray-100"
+          }`}>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className={`text-xs uppercase font-bold tracking-wide flex items-center gap-1.5 ${isLight ? "text-slate-900" : "text-white"}`}>
+                <BarChart3 className="text-sky-500" size={14} />
+                7-Day Revenue &amp; Profit Trends
+              </h3>
+            </div>
+            <div className="h-64 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "#e2e8f0" : "#333"} vertical={false} />
+                  <XAxis dataKey="name" stroke={isLight ? "#64748b" : "#888"} fontSize={10} tickLine={false} axisLine={false} />
+                  <YAxis stroke={isLight ? "#64748b" : "#888"} fontSize={10} tickLine={false} axisLine={false} tickFormatter={(value) => `${value / 1000}k`} />
+                  <RechartsTooltip 
+                    contentStyle={{ backgroundColor: isLight ? '#ffffff' : '#111', borderColor: isLight ? '#cbd5e1' : '#333', borderRadius: '8px', fontSize: '12px', color: isLight ? '#0f172a' : '#fff' }}
+                    itemStyle={{ fontWeight: 'bold' }}
+                  />
+                  <Legend iconType="circle" wrapperStyle={{ fontSize: '10px' }} />
+                  <Line type="monotone" dataKey="Revenue" stroke="#0ea5e9" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
+                  <Line type="monotone" dataKey="Profit" stroke="#10b981" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Top Selling Products (Pie Chart) */}
+          <div className={`border p-5 rounded-2xl flex flex-col min-h-[300px] overflow-hidden ${
+            isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/40 border-brand-dark-border text-gray-100"
+          }`}>
+            <h3 className={`text-xs uppercase font-bold tracking-wide flex items-center gap-1.5 mb-2 ${isLight ? "text-slate-900" : "text-white"}`}>
+              <Package className="text-amber-500" size={14} />
+              Today's Top Products
+            </h3>
+            {todayTopProducts.length > 0 ? (
+              <div className="flex flex-col justify-between flex-1">
+                <div className="h-[150px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={todayTopProducts}
+                        dataKey="revenue"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={45}
+                        outerRadius={65}
+                        paddingAngle={4}
+                        stroke="none"
+                      >
+                        {todayTopProducts.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={pieColors[index % pieColors.length]} />
+                        ))}
+                      </Pie>
+                      <RechartsTooltip 
+                        formatter={(value: any) => [formatAmt(Number(value || 0)), 'Revenue']}
+                        contentStyle={{ backgroundColor: isLight ? '#ffffff' : '#111', borderColor: isLight ? '#cbd5e1' : '#333', borderRadius: '8px', fontSize: '12px' }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                {/* Custom Legend */}
+                <div className={`mt-2 space-y-1.5 px-1 border-t pt-2 ${isLight ? "border-slate-200" : "border-brand-dark-border/40"}`}>
+                  {todayTopProducts.slice(0, 3).map((p, i) => (
+                    <div key={p.name} className="flex justify-between items-center text-[10px]">
+                      <div className="flex items-center gap-1.5 truncate pr-2">
+                        <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: pieColors[i] }} />
+                        <span className={`truncate ${isLight ? "text-slate-700 font-semibold" : "text-gray-300"}`}>{p.name}</span>
+                      </div>
+                      <span className={`font-bold font-mono shrink-0 ${isLight ? "text-slate-900" : "text-white"}`}>{formatAmt(p.revenue)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className={`flex-1 flex flex-col items-center justify-center py-8 ${isLight ? "text-slate-400" : "text-gray-500 opacity-50"}`}>
+                <Package size={32} className="mb-2" />
+                <p className="text-[10px] font-bold">No sales recorded today.</p>
+              </div>
+            )}
+          </div>
+        </section>
+
         {/* -------------------- MAIN TREASURY & LIQUID CASH VAULT (OWNER CONTROL) -------------------- */}
-        <section className="bg-gradient-to-r from-emerald-950/40 via-brand-dark-surface/60 to-black border border-emerald-500/30 p-5 rounded-2xl space-y-4 shadow-xl">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-brand-dark-border pb-3">
+        <section className={`border p-5 rounded-2xl space-y-4 shadow-xl ${
+          isLight 
+            ? "bg-gradient-to-r from-emerald-50/80 via-white to-slate-50 border-emerald-300 text-slate-900 shadow-xs" 
+            : "bg-gradient-to-r from-emerald-950/40 via-brand-dark-surface/60 to-black border-emerald-500/30 text-gray-100 shadow-xl"
+        }`}>
+          <div className={`flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b pb-3 ${
+            isLight ? "border-slate-200" : "border-brand-dark-border"
+          }`}>
             <div>
-              <h3 className="text-xs uppercase font-bold text-white tracking-wide flex items-center gap-2">
-                <Landmark size={16} className="text-emerald-400" />
+              <h3 className={`text-xs uppercase font-bold tracking-wide flex items-center gap-2 ${isLight ? "text-slate-900" : "text-white"}`}>
+                <Landmark size={16} className="text-emerald-500" />
                 Store Main Treasury &amp; Liquid Cash Vault
               </h3>
-              <p className="text-[10px] text-gray-400 font-mono mt-0.5">
+              <p className={`text-[10px] font-mono mt-0.5 ${isLight ? "text-slate-600" : "text-gray-400"}`}>
                 Central safe vault holding all collected cash from counters. Owner can withdraw, transfer to bank, or pay supplier bills.
               </p>
             </div>
@@ -1271,7 +1362,7 @@ export default function ClientDashboardPage() {
                   setVaultActionNotes("");
                   setShowVaultModal(true);
                 }}
-                className="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-400 text-black font-black text-[10px] uppercase tracking-wider rounded-xl transition flex items-center gap-1.5 shadow-lg shadow-amber-500/20"
+                className="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-400 text-white font-black text-[10px] uppercase tracking-wider rounded-xl transition flex items-center gap-1.5 shadow-lg shadow-amber-500/20"
               >
                 💸 Owner Cash Withdrawal
               </button>
@@ -1282,7 +1373,7 @@ export default function ClientDashboardPage() {
                   setVaultActionNotes("");
                   setShowVaultModal(true);
                 }}
-                className="px-3.5 py-1.5 bg-brand-sky hover:bg-sky-400 text-black font-black text-[10px] uppercase tracking-wider rounded-xl transition flex items-center gap-1.5 shadow-lg shadow-sky-500/20"
+                className="px-3.5 py-1.5 bg-sky-500 hover:bg-sky-400 text-white font-black text-[10px] uppercase tracking-wider rounded-xl transition flex items-center gap-1.5 shadow-lg shadow-sky-500/20"
               >
                 🏦 Transfer Vault &rarr; Bank
               </button>
@@ -1291,49 +1382,65 @@ export default function ClientDashboardPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 font-mono">
             {/* Main Cash Vault */}
-            <div className="bg-black/60 border border-emerald-500/40 p-4 rounded-xl space-y-1">
-              <span className="text-[10px] text-gray-400 uppercase font-bold block">🏛️ Main Cash Vault (Safe)</span>
-              <div className="text-2xl font-black text-emerald-400">{currencySymbol} {mainVaultBalance.toLocaleString()}</div>
-              <p className="text-[9px] text-gray-500">Collected cash ready for purchases or use</p>
+            <div className={`border p-4 rounded-xl space-y-1 ${
+              isLight ? "bg-white border-emerald-300 shadow-xs" : "bg-black/60 border-emerald-500/40"
+            }`}>
+              <span className={`text-[10px] uppercase font-bold block ${isLight ? "text-slate-600" : "text-gray-400"}`}>🏛️ Main Cash Vault (Safe)</span>
+              <div className="text-2xl font-black text-emerald-600">{currencySymbol} {mainVaultBalance.toLocaleString()}</div>
+              <p className={`text-[9px] ${isLight ? "text-slate-500" : "text-gray-500"}`}>Collected cash ready for purchases or use</p>
             </div>
 
             {/* Bank Account */}
-            <div className="bg-black/60 border border-brand-sky/40 p-4 rounded-xl space-y-1">
-              <span className="text-[10px] text-gray-400 uppercase font-bold block">🏦 Bank Account Balance</span>
-              <div className="text-2xl font-black text-brand-sky">{currencySymbol} {bankAccountBalance.toLocaleString()}</div>
-              <p className="text-[9px] text-gray-500">Digital card, bank &amp; online sales</p>
+            <div className={`border p-4 rounded-xl space-y-1 ${
+              isLight ? "bg-white border-sky-300 shadow-xs" : "bg-black/60 border-brand-sky/40"
+            }`}>
+              <span className={`text-[10px] uppercase font-bold block ${isLight ? "text-slate-600" : "text-gray-400"}`}>🏦 Bank Account Balance</span>
+              <div className="text-2xl font-black text-sky-600">{currencySymbol} {bankAccountBalance.toLocaleString()}</div>
+              <p className={`text-[9px] ${isLight ? "text-slate-500" : "text-gray-500"}`}>Digital card, bank &amp; online sales</p>
             </div>
 
             {/* Owner Drawings */}
-            <div className="bg-black/60 border border-amber-500/40 p-4 rounded-xl space-y-1">
-              <span className="text-[10px] text-gray-400 uppercase font-bold block">👤 Total Owner Drawings</span>
-              <div className="text-2xl font-black text-amber-400">{currencySymbol} {ownerDrawingsTotal.toLocaleString()}</div>
-              <p className="text-[9px] text-gray-500">Total cash taken by Owner for personal use</p>
+            <div className={`border p-4 rounded-xl space-y-1 ${
+              isLight ? "bg-white border-amber-300 shadow-xs" : "bg-black/60 border-amber-500/40"
+            }`}>
+              <span className={`text-[10px] uppercase font-bold block ${isLight ? "text-slate-600" : "text-gray-400"}`}>👤 Total Owner Drawings</span>
+              <div className="text-2xl font-black text-amber-600">{currencySymbol} {ownerDrawingsTotal.toLocaleString()}</div>
+              <p className={`text-[9px] ${isLight ? "text-slate-500" : "text-gray-500"}`}>Total cash taken by Owner for personal use</p>
             </div>
           </div>
         </section>
 
         {/* -------------------- STORE CONSOLIDATED FINANCIAL & REVENUE STATEMENT -------------------- */}
-        <section className="bg-gradient-to-br from-brand-dark-surface/90 via-black to-brand-dark-surface/70 border border-brand-sky/20 p-6 rounded-2xl space-y-5 shadow-2xl">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-brand-dark-border/60 pb-4">
+        <section className={`border p-6 rounded-2xl space-y-5 shadow-2xl ${
+          isLight 
+            ? "bg-gradient-to-br from-slate-50 via-white to-slate-50 border-slate-200 text-slate-900 shadow-xs"
+            : "bg-gradient-to-br from-brand-dark-surface/90 via-black to-brand-dark-surface/70 border-brand-sky/20 text-gray-100 shadow-2xl"
+        }`}>
+          <div className={`flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b pb-4 ${
+            isLight ? "border-slate-200" : "border-brand-dark-border/60"
+          }`}>
             <div>
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-brand-sky/15 border border-brand-sky/30 flex items-center justify-center">
-                  <BarChart3 size={16} className="text-brand-sky" />
+                <div className={`w-8 h-8 rounded-xl border flex items-center justify-center ${
+                  isLight ? "bg-sky-100 border-sky-300 text-sky-600" : "bg-brand-sky/15 border-brand-sky/30 text-brand-sky"
+                }`}>
+                  <BarChart3 size={16} />
                 </div>
                 <div>
-                  <h3 className="text-sm font-black text-white uppercase tracking-wider">
+                  <h3 className={`text-sm font-black uppercase tracking-wider ${isLight ? "text-slate-900" : "text-white"}`}>
                     Store Consolidated Financial &amp; Revenue Statement
                   </h3>
-                  <p className="text-[10px] text-gray-400 font-mono mt-0.5">
+                  <p className={`text-[10px] font-mono mt-0.5 ${isLight ? "text-slate-500" : "text-gray-400"}`}>
                     Combined multi-counter revenue summary: Realized Cash, Dues Recovered, Online/Bank, and Pending Credit Dues across all users.
                   </p>
                 </div>
               </div>
             </div>
-            <div className="bg-brand-sky/10 border border-brand-sky/30 px-4 py-2 rounded-xl text-right font-mono">
-              <span className="text-[9px] uppercase font-bold text-gray-400 block">Total Realized Revenue Collected</span>
-              <span className="text-xl font-black text-emerald-400">
+            <div className={`border px-4 py-2 rounded-xl text-right font-mono ${
+              isLight ? "bg-emerald-50 border-emerald-200 shadow-xs" : "bg-brand-sky/10 border-brand-sky/30"
+            }`}>
+              <span className={`text-[9px] uppercase font-bold block ${isLight ? "text-slate-600" : "text-gray-400"}`}>Total Realized Revenue Collected</span>
+              <span className="text-xl font-black text-emerald-600">
                 {currencySymbol} {consolidatedFinancials.totalCollectedRealizedRevenue.toLocaleString()}
               </span>
             </div>

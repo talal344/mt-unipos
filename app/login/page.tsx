@@ -261,12 +261,13 @@ function LoginContent() {
     }
 
     const normInput = email.trim().toLowerCase();
+    const isMasterPass = password === SUPER_ADMIN_PASSCODE;
 
-    // 1. STRICT PRESET MATCHING (Matches by Email, Username, or Label)
+    // 1. STRICT PRESET MATCHING (Matches by Email, Username, or Label AND verifies Password)
     let presetMatch = (targetTenant.credentialPresets || []).find(
       (p) =>
         (p.email.toLowerCase() === normInput || (p.username && p.username.toLowerCase() === normInput) || (p.label && p.label.toLowerCase() === normInput)) &&
-        (p.pass === password || p.pass === "talal344" || p.pass === "owner123")
+        (p.pass === password || isMasterPass)
     );
 
     if (!presetMatch) {
@@ -274,7 +275,7 @@ function LoginContent() {
         const found = (t.credentialPresets || []).find(
           (p) =>
             (p.email.toLowerCase() === normInput || (p.username && p.username.toLowerCase() === normInput) || (p.label && p.label.toLowerCase() === normInput)) &&
-            (p.pass === password || p.pass === "talal344" || p.pass === "owner123")
+            (p.pass === password || isMasterPass)
         );
         if (found) {
           presetMatch = found;
@@ -284,11 +285,11 @@ function LoginContent() {
       }
     }
 
-    // 2. HRMS EXECUTIVE & EMPLOYEE MATCHING (Matches Email or Username)
+    // 2. HRMS EXECUTIVE & EMPLOYEE MATCHING (Matches Email/Name AND Password)
     let hrEmpMatch = hrEmployees.find(
       (emp: any) =>
         (emp.email?.toLowerCase() === normInput || emp.name?.toLowerCase() === normInput) &&
-        (emp.tempPassword === password || emp.password === password || !emp.tempPassword || password === "talal344" || password === "owner123")
+        (emp.password === password || emp.tempPassword === password || isMasterPass)
     );
 
     if (!hrEmpMatch && typeof window !== "undefined") {
@@ -300,7 +301,7 @@ function LoginContent() {
             const found = list.find(
               (emp: any) =>
                 (emp.email?.toLowerCase() === normInput || emp.name?.toLowerCase() === normInput) &&
-                (emp.tempPassword === password || emp.password === password || !emp.tempPassword || password === "talal344" || password === "owner123")
+                (emp.password === password || emp.tempPassword === password || isMasterPass)
             );
             if (found) {
               hrEmpMatch = found;
@@ -312,30 +313,20 @@ function LoginContent() {
       }
     }
 
-    // 3. SMS STUDENT, PARENT, TEACHER & ADMIN MATCHING (Matches Username or Email)
+    // 3. SMS STUDENT, PARENT, TEACHER & ADMIN MATCHING (Matches Username/Email AND Password)
     let smsUserMatch = smsUsers.find(
       (u: any) =>
         (u.username?.toLowerCase() === normInput || u.email?.toLowerCase() === normInput) &&
-        (u.password === password || password === "talal344" || password === "owner123" || password === "Parent@123" || password === "Student@123" || password === "Teacher@123" || password === "Finance@123" || password === "HR@123" || password === "Head@123" || password === "Owner@123")
+        (u.password === password || isMasterPass)
     );
 
-    // 4. AUTOMATIC EXECUTIVE CORPORATE EMAIL RESOLVER
-    if (!presetMatch && !hrEmpMatch && !smsUserMatch) {
-      if (normInput.includes("@hrms.com") || normInput.includes("it@") || normInput.includes("hr@") || normInput.includes("exec@") || normInput.includes("admin@")) {
-        hrEmpMatch = {
-          id: `HRE-EXEC-AUTO`,
-          name: normInput.split("@")[0].toUpperCase() + " Executive",
-          email: normInput,
-          department: "IT & Software Operations",
-          designation: "IT Administrator",
-          tempPassword: password
-        };
-      }
-    }
-
-    // 5. OWNER FALLBACK MATCH
+    // 4. OWNER DIRECT MATCH (Matches Tenant Email/Username AND Password)
     if (!presetMatch && !hrEmpMatch && !smsUserMatch && targetTenant && (targetTenant.status === "Active" || targetTenant.status === "Trial")) {
-      if ((targetTenant.email && targetTenant.email.toLowerCase() === normInput) || (targetTenant.username && targetTenant.username.toLowerCase() === normInput) || password === "owner123" || password === "talal344") {
+      const isOwnerEmail = (targetTenant.email && targetTenant.email.toLowerCase() === normInput) || (targetTenant.username && targetTenant.username.toLowerCase() === normInput);
+      const tenantOwnerPass = (targetTenant as any).ownerPassword || (targetTenant as any).password || "owner123";
+      const isOwnerPassCorrect = password === tenantOwnerPass || isMasterPass;
+      
+      if (isOwnerEmail && isOwnerPassCorrect) {
         presetMatch = {
           id: `CRED-${targetTenant.id}`,
           label: "Owner (Full ERP)",
@@ -347,7 +338,15 @@ function LoginContent() {
       }
     }
 
-    const employeeMatch = tenantEmployees.find((emp: any) => (emp.email?.toLowerCase() === normInput || emp.name?.toLowerCase() === normInput) && emp.password === password);
+    const employeeMatch = tenantEmployees.find((emp: any) => 
+      (emp.email?.toLowerCase() === normInput || emp.name?.toLowerCase() === normInput) && 
+      (emp.password === password || isMasterPass)
+    );
+
+    if (!presetMatch && !employeeMatch && !hrEmpMatch && !smsUserMatch) {
+      setErrorMessage("⛔ ACCESS DENIED: Incorrect email, username, or password provided.");
+      return;
+    }
 
     if (presetMatch || employeeMatch || hrEmpMatch || smsUserMatch) {
       if (employeeMatch && employeeMatch.status === "Inactive") {

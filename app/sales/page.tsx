@@ -483,11 +483,25 @@ export default function SalesPage() {
         {/* ── VIEW MODE TOGGLE ── */}
         <div className="flex items-center gap-2">
           <button onClick={() => setViewMode("table")}
-            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[10px] font-bold uppercase transition ${viewMode==="table" ? "bg-brand-sky text-black shadow-brand-sky/20 shadow-lg" : "bg-brand-dark-surface border border-brand-dark-border text-gray-400 hover:text-white"}`}>
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[10px] font-bold uppercase transition ${
+              viewMode === "table"
+                ? isLight
+                  ? "bg-sky-600 text-white shadow-xs border border-sky-600"
+                  : "bg-brand-sky text-black shadow-brand-sky/20 shadow-lg"
+                : isLight
+                ? "bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 shadow-xs"
+                : "bg-brand-dark-surface border border-brand-dark-border text-gray-400 hover:text-white"
+            }`}>
             <Receipt size={11} /> Sale Table
           </button>
           <button onClick={() => setViewMode("staff")}
-            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[10px] font-bold uppercase transition ${viewMode==="staff" ? "bg-purple-500 text-white shadow-purple-500/20 shadow-lg" : "bg-brand-dark-surface border border-brand-dark-border text-gray-400 hover:text-white"}`}>
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[10px] font-bold uppercase transition ${
+              viewMode === "staff"
+                ? "bg-purple-600 text-white shadow-purple-500/20 shadow-lg"
+                : isLight
+                ? "bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 shadow-xs"
+                : "bg-brand-dark-surface border border-brand-dark-border text-gray-400 hover:text-white"
+            }`}>
             <User size={11} /> By Staff
           </button>
         </div>
@@ -498,7 +512,11 @@ export default function SalesPage() {
             <button key={val} onClick={() => setPeriod(val)}
               className={`px-3.5 py-2 rounded-xl text-[10px] font-bold uppercase transition ${
                 period === val
-                  ? "bg-brand-sky text-black"
+                  ? isLight
+                    ? "bg-sky-600 text-white shadow-xs border border-sky-600"
+                    : "bg-brand-sky text-black"
+                  : isLight
+                  ? "bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 shadow-xs"
                   : "bg-brand-dark-surface border border-brand-dark-border text-gray-400 hover:text-white hover:border-brand-sky/40"
               }`}>{label}
             </button>
@@ -506,28 +524,34 @@ export default function SalesPage() {
 
           {period === "custom" && (
             <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1.5 bg-brand-dark-surface border border-brand-dark-border rounded-xl px-2.5 py-1.5">
-                <Calendar size={11} className="text-gray-500" />
+              <div className={`flex items-center gap-1.5 border rounded-xl px-2.5 py-1.5 ${
+                isLight ? "bg-white border-slate-300 text-slate-900 shadow-xs" : "bg-brand-dark-surface border-brand-dark-border text-white"
+              }`}>
+                <Calendar size={11} className={isLight ? "text-slate-400" : "text-gray-500"} />
                 <input type="date" value={customFrom} onChange={e => setCustomFrom(e.target.value)}
-                  className="bg-transparent text-[10px] text-white focus:outline-none" />
+                  className={`bg-transparent text-[10px] focus:outline-none ${isLight ? "text-slate-900" : "text-white"}`} />
               </div>
-              <span className="text-gray-600 text-[10px]">to</span>
-              <div className="flex items-center gap-1.5 bg-brand-dark-surface border border-brand-dark-border rounded-xl px-2.5 py-1.5">
-                <Calendar size={11} className="text-gray-500" />
+              <span className={`text-[10px] ${isLight ? "text-slate-500" : "text-gray-600"}`}>to</span>
+              <div className={`flex items-center gap-1.5 border rounded-xl px-2.5 py-1.5 ${
+                isLight ? "bg-white border-slate-300 text-slate-900 shadow-xs" : "bg-brand-dark-surface border-brand-dark-border text-white"
+              }`}>
+                <Calendar size={11} className={isLight ? "text-slate-400" : "text-gray-500"} />
                 <input type="date" value={customTo} onChange={e => setCustomTo(e.target.value)}
-                  className="bg-transparent text-[10px] text-white focus:outline-none" />
+                  className={`bg-transparent text-[10px] focus:outline-none ${isLight ? "text-slate-900" : "text-white"}`} />
               </div>
             </div>
           )}
         </div>
 
         {/* ── PAYMENT METHOD TOTALS PANEL ── */}
-        <div className="bg-brand-dark-surface/40 border border-brand-dark-border rounded-2xl p-4">
+        <div className={`border rounded-2xl p-4 ${
+          isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/40 border-brand-dark-border text-gray-100"
+        }`}>
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-[10px] font-black text-white uppercase tracking-widest flex items-center gap-1.5">
-              <BarChart3 size={11} className="text-brand-sky" /> Payment Method Breakdown
+            <h3 className={`text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 ${isLight ? "text-slate-900" : "text-white"}`}>
+              <BarChart3 size={11} className="text-sky-500" /> Payment Method Breakdown
             </h3>
-            <span className="text-[10px] font-black font-mono text-brand-sky">
+            <span className="text-[10px] font-black font-mono text-sky-500">
               Grand Total: {currencySymbol} {grandTotal.toLocaleString(undefined,{maximumFractionDigits:2})}
             </span>
           </div>
@@ -537,20 +561,24 @@ export default function SalesPage() {
               const pct  = grandTotal > 0 ? (val/grandTotal*100) : 0;
               const Icon = m.icon;
               return (
-                <div key={m.key} className={`rounded-xl border p-3 ${val > 0 ? m.bg : "bg-black/30 border-brand-dark-border/30"}`}>
+                <div key={m.key} className={`rounded-xl border p-3 ${
+                  val > 0 
+                    ? isLight ? "bg-slate-50 border-slate-200" : m.bg 
+                    : isLight ? "bg-slate-50/50 border-slate-200" : "bg-black/30 border-brand-dark-border/30"
+                }`}>
                   <div className="flex items-center gap-1 mb-2">
-                    <Icon size={10} className={val > 0 ? m.color : "text-gray-700"} />
-                    <span className={`text-[8px] font-black uppercase tracking-wider ${val > 0 ? m.color : "text-gray-700"}`}>{m.label}</span>
+                    <Icon size={10} className={val > 0 ? m.color : isLight ? "text-slate-400" : "text-gray-700"} />
+                    <span className={`text-[8px] font-black uppercase tracking-wider ${val > 0 ? (isLight ? "text-slate-900" : m.color) : isLight ? "text-slate-400" : "text-gray-700"}`}>{m.label}</span>
                   </div>
-                  <div className={`font-black font-mono text-[11px] ${val > 0 ? m.color : "text-gray-700"}`}>
+                  <div className={`font-black font-mono text-[11px] ${val > 0 ? (isLight ? "text-sky-600" : m.color) : isLight ? "text-slate-400" : "text-gray-700"}`}>
                     {val > 0 ? `${currencySymbol} ${val.toLocaleString(undefined,{maximumFractionDigits:0})}` : "—"}
                   </div>
                   {val > 0 && (
                     <div className="mt-1.5">
-                      <div className="w-full bg-black/40 rounded-full h-1">
-                        <div className={`h-1 rounded-full ${val > 0 ? m.color.replace("text-","bg-") : ""}`} style={{width:`${pct}%`}} />
+                      <div className={`w-full rounded-full h-1 ${isLight ? "bg-slate-200" : "bg-black/40"}`}>
+                        <div className={`h-1 rounded-full ${val > 0 ? (isLight ? "bg-sky-500" : m.color.replace("text-","bg-")) : ""}`} style={{width:`${pct}%`}} />
                       </div>
-                      <div className="text-[7px] text-gray-500 mt-0.5 font-mono">{pct.toFixed(1)}%</div>
+                      <div className={`text-[7px] mt-0.5 font-mono ${isLight ? "text-slate-500" : "text-gray-500"}`}>{pct.toFixed(1)}%</div>
                     </div>
                   )}
                 </div>
@@ -562,18 +590,20 @@ export default function SalesPage() {
         {/* ── SUMMARY STATS ── */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {[
-            { label: "Transactions",  value: filtered.length.toString(),            icon: ShoppingCart, color: "text-brand-sky"   },
-            { label: "Completed",     value: completedCount.toString(),              icon: Receipt,      color: "text-emerald-400" },
-            { label: "Total Revenue", value: `${currencySymbol} ${grandTotal.toLocaleString(undefined,{maximumFractionDigits:0})}`, icon: TrendingUp,   color: "text-yellow-400"  },
-            { label: "Customers",     value: uniqueCusts.toString(),                 icon: Users,        color: "text-purple-400"  },
+            { label: "Transactions",  value: filtered.length.toString(),            icon: ShoppingCart, color: "text-sky-500"   },
+            { label: "Completed",     value: completedCount.toString(),              icon: Receipt,      color: "text-emerald-500" },
+            { label: "Total Revenue", value: `${currencySymbol} ${grandTotal.toLocaleString(undefined,{maximumFractionDigits:0})}`, icon: TrendingUp,   color: "text-amber-500"  },
+            { label: "Customers",     value: uniqueCusts.toString(),                 icon: Users,        color: "text-purple-500"  },
           ].map(s => {
             const Icon = s.icon;
             return (
-              <div key={s.label} className="bg-brand-dark-surface/40 border border-brand-dark-border rounded-xl p-3.5 flex items-center gap-3">
+              <div key={s.label} className={`border rounded-xl p-3.5 flex items-center gap-3 ${
+                isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/40 border-brand-dark-border text-gray-100"
+              }`}>
                 <Icon size={15} className={s.color} />
                 <div>
                   <div className={`text-sm font-black font-mono ${s.color}`}>{s.value}</div>
-                  <div className="text-[8px] text-gray-500 uppercase font-bold tracking-wider">{s.label}</div>
+                  <div className={`text-[8px] uppercase font-bold tracking-wider ${isLight ? "text-slate-500" : "text-gray-500"}`}>{s.label}</div>
                 </div>
               </div>
             );
@@ -583,22 +613,28 @@ export default function SalesPage() {
         {/* ── SEARCH & FILTERS ── */}
         <div className="flex flex-wrap gap-2 items-center">
           <div className="relative max-w-xs flex-grow">
-            <Search className="absolute left-3 top-2.5 text-gray-500" size={12} />
+            <Search className={`absolute left-3 top-2.5 ${isLight ? "text-slate-400" : "text-gray-500"}`} size={12} />
             <input type="text" placeholder="Receipt #, customer, staff..."
               value={searchQ} onChange={e => setSearchQ(e.target.value)}
-              className="w-full bg-brand-dark-surface border border-brand-dark-border pl-9 pr-3 py-2 rounded-xl text-xs text-white focus:outline-none focus:border-brand-sky" />
+              className={`w-full pl-9 pr-3 py-2 rounded-xl text-xs font-bold border focus:outline-none ${
+                isLight ? "bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-sky-500 shadow-xs" : "bg-brand-dark-surface border-brand-dark-border text-white focus:border-brand-sky"
+              }`} />
           </div>
 
           {/* Staff filter */}
           <select value={staffF} onChange={e => setStaffF(e.target.value)}
-            className="bg-brand-dark-surface border border-brand-dark-border text-gray-300 text-[10px] rounded-xl px-3 py-2 focus:outline-none focus:border-brand-sky font-bold">
+            className={`border text-[10px] rounded-xl px-3 py-2 focus:outline-none font-bold ${
+              isLight ? "bg-white border-slate-300 text-slate-900 focus:border-sky-500 shadow-xs" : "bg-brand-dark-surface border-brand-dark-border text-gray-300 focus:border-brand-sky"
+            }`}>
             <option value="All">👤 All Staff</option>
             {allStaff.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
 
           {/* Payment method filter */}
           <select value={methodF} onChange={e => setMethodF(e.target.value)}
-            className="bg-brand-dark-surface border border-brand-dark-border text-gray-300 text-[10px] rounded-xl px-3 py-2 focus:outline-none focus:border-brand-sky">
+            className={`border text-[10px] rounded-xl px-3 py-2 focus:outline-none font-bold ${
+              isLight ? "bg-white border-slate-300 text-slate-900 focus:border-sky-500 shadow-xs" : "bg-brand-dark-surface border-brand-dark-border text-gray-300 focus:border-brand-sky"
+            }`}>
             <option value="All">💳 All Methods</option>
             {ALL_PAYMENT_METHODS.map(m => <option key={m.key} value={m.key}>{m.label}</option>)}
           </select>
@@ -608,12 +644,18 @@ export default function SalesPage() {
             {(["All","Completed","Returned","Refunded"] as StatusFilter[]).map(s => (
               <button key={s} onClick={() => setStatusF(s)}
                 className={`px-2.5 py-1.5 rounded-lg text-[9px] font-bold uppercase transition ${
-                  statusF === s ? "bg-brand-sky text-black" : "bg-brand-dark-surface border border-brand-dark-border text-gray-400 hover:text-white"
+                  statusF === s 
+                    ? isLight
+                      ? "bg-sky-600 text-white shadow-xs border border-sky-600"
+                      : "bg-brand-sky text-black" 
+                    : isLight
+                    ? "bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 shadow-xs"
+                    : "bg-brand-dark-surface border border-brand-dark-border text-gray-400 hover:text-white"
                 }`}>{s}</button>
             ))}
           </div>
 
-          <span className="text-[10px] text-gray-600 font-mono ml-auto">{filtered.length} results</span>
+          <span className={`text-[10px] font-mono ml-auto ${isLight ? "text-slate-500" : "text-gray-600"}`}>{filtered.length} results</span>
         </div>
 
         {/* ══════════════════════════════════════════════════════════════════
@@ -622,7 +664,7 @@ export default function SalesPage() {
         {viewMode === "staff" && (
           <div className="space-y-4">
             {staffGroups.length === 0 ? (
-              <div className="text-center py-16 text-gray-600 text-xs">
+              <div className={`text-center py-16 text-xs ${isLight ? "text-slate-500" : "text-gray-600"}`}>
                 <div className="text-4xl mb-3">👤</div>
                 <div className="font-bold">No staff sales found for this period.</div>
               </div>
@@ -644,11 +686,15 @@ export default function SalesPage() {
             TABLE VIEW
         ══════════════════════════════════════════════════════════════════ */}
         {viewMode === "table" && (
-          <div className="bg-brand-dark-surface/30 border border-brand-dark-border rounded-2xl overflow-hidden">
+          <div className={`border rounded-2xl overflow-hidden ${
+            isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/30 border-brand-dark-border"
+          }`}>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="border-b border-brand-dark-border text-[9px] text-gray-500 uppercase font-bold tracking-wider">
+                  <tr className={`border-b text-[9px] uppercase font-bold tracking-wider ${
+                    isLight ? "bg-slate-100 text-slate-700 border-slate-200" : "border-brand-dark-border text-gray-500 bg-black/60"
+                  }`}>
                     <th className="px-4 py-3">Receipt #</th>
                     <th className="px-4 py-3">Date &amp; Time</th>
                     <th className="px-4 py-3">Staff</th>
@@ -660,50 +706,52 @@ export default function SalesPage() {
                     <th className="px-4 py-3 text-center">Slip</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-brand-dark-border/20">
+                <tbody className={`divide-y ${isLight ? "divide-slate-200" : "divide-brand-dark-border/20"}`}>
                   {filtered.length === 0 ? (
                     <tr>
                       <td colSpan={9} className="px-4 py-16 text-center">
                         <div className="text-3xl mb-3">🧾</div>
-                        <div className="text-gray-500 text-xs font-bold">No sales found.</div>
-                        <div className="text-gray-600 text-[10px] mt-1">Try adjusting the date range, staff or payment filters.</div>
+                        <div className={`text-xs font-bold ${isLight ? "text-slate-700" : "text-gray-500"}`}>No sales found.</div>
+                        <div className={`text-[10px] mt-1 ${isLight ? "text-slate-400" : "text-gray-600"}`}>Try adjusting the date range, staff or payment filters.</div>
                       </td>
                     </tr>
                   ) : filtered.map(sale => (
-                    <tr key={sale.id} className="hover:bg-brand-dark-surface/60 transition group">
-                      <td className="px-4 py-3 font-black font-mono text-purple-400 text-[11px] whitespace-nowrap">{sale.receiptNumber}</td>
+                    <tr key={sale.id} className={`transition group ${isLight ? "hover:bg-slate-50 text-slate-900" : "hover:bg-brand-dark-surface/60 text-gray-100"}`}>
+                      <td className="px-4 py-3 font-black font-mono text-purple-600 text-[11px] whitespace-nowrap">{sale.receiptNumber}</td>
                       <td className="px-4 py-3 whitespace-nowrap">
-                        <div className="text-[10px] text-white font-mono">{fmtDate(sale.date)}</div>
-                        <div className="text-[8px] text-gray-500">{new Date(sale.date).toLocaleTimeString("en-PK",{hour:"2-digit",minute:"2-digit"})}</div>
+                        <div className={`text-[10px] font-mono ${isLight ? "text-slate-900 font-bold" : "text-white"}`}>{fmtDate(sale.date)}</div>
+                        <div className={`text-[8px] ${isLight ? "text-slate-500" : "text-gray-500"}`}>{new Date(sale.date).toLocaleTimeString("en-PK",{hour:"2-digit",minute:"2-digit"})}</div>
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1.5">
-                          <div className="w-5 h-5 rounded-full bg-brand-sky/20 border border-brand-sky/30 flex items-center justify-center shrink-0">
-                            <User size={9} className="text-brand-sky" />
+                          <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 ${
+                            isLight ? "bg-sky-100 border-sky-300" : "bg-brand-sky/20 border-brand-sky/30"
+                          }`}>
+                            <User size={9} className={isLight ? "text-sky-600" : "text-brand-sky"} />
                           </div>
-                          <span className="text-[10px] font-bold text-gray-300">{sale.cashierName || "—"}</span>
+                          <span className={`text-[10px] font-bold ${isLight ? "text-slate-800" : "text-gray-300"}`}>{sale.cashierName || "—"}</span>
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <div className="font-bold text-white text-[11px]">{sale.customerName}</div>
+                        <div className={`font-bold text-[11px] ${isLight ? "text-slate-900" : "text-white"}`}>{sale.customerName}</div>
                       </td>
                       <td className="px-4 py-3 max-w-[160px]">
-                        <div className="text-[10px] text-gray-300 truncate">
+                        <div className={`text-[10px] truncate ${isLight ? "text-slate-700" : "text-gray-300"}`}>
                           {sale.items.slice(0,2).map((i:any) => i.productName).join(", ")}
-                          {sale.items.length > 2 && <span className="text-gray-500"> +{sale.items.length-2} more</span>}
+                          {sale.items.length > 2 && <span className={isLight ? "text-slate-400" : "text-gray-500"}> +{sale.items.length-2} more</span>}
                         </div>
-                        <div className="text-[8px] text-gray-600">{sale.items.length} item{sale.items.length!==1?"s":""}</div>
+                        <div className={`text-[8px] ${isLight ? "text-slate-400" : "text-gray-600"}`}>{sale.items.length} item{sale.items.length!==1?"s":""}</div>
                       </td>
-                      <td className="px-4 py-3 font-black font-mono text-brand-sky text-[11px] whitespace-nowrap">
+                      <td className="px-4 py-3 font-black font-mono text-sky-600 text-[11px] whitespace-nowrap">
                         {currencySymbol} {sale.total.toFixed(2)}
                       </td>
                       <td className="px-4 py-3">
-                        <span className={`px-2 py-0.5 rounded-md text-[9px] font-bold border ${METHOD_COLORS[sale.paymentMethod] || "text-gray-400 bg-brand-dark-border/50 border-brand-dark-border"}`}>
+                        <span className={`px-2 py-0.5 rounded-md text-[9px] font-bold border ${METHOD_COLORS[sale.paymentMethod] || (isLight ? "text-slate-700 bg-slate-100 border-slate-200" : "text-gray-400 bg-brand-dark-border/50 border-brand-dark-border")}`}>
                           {sale.paymentMethod}
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <span className={`px-2 py-0.5 rounded-md text-[9px] font-bold border ${STATUS_COLORS[sale.status] || "text-gray-400 bg-brand-dark-border/50 border-brand-dark-border"}`}>
+                        <span className={`px-2 py-0.5 rounded-md text-[9px] font-bold border ${STATUS_COLORS[sale.status] || (isLight ? "text-slate-700 bg-slate-100 border-slate-200" : "text-gray-400 bg-brand-dark-border/50 border-brand-dark-border")}`}>
                           {sale.status}
                         </span>
                       </td>
