@@ -947,53 +947,61 @@ export default function ReportsPage() {
               {/* Margin + Tax strip */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {[
-                  { label: "Gross Margin", val: `${grossMargin.toFixed(1)}%`, color: "text-emerald-400" },
-                  { label: "Tax Collected", val: `${currencySymbol} ${totalTax.toLocaleString(undefined,{maximumFractionDigits:0})}`, color: "text-red-400" },
-                  { label: "Discounts Given", val: `${currencySymbol} ${totalDiscount.toLocaleString(undefined,{maximumFractionDigits:0})}`, color: "text-amber-400" },
-                  { label: "Avg Sale Value", val: `${currencySymbol} ${filteredSales.length ? Math.round(totalRevenue / filteredSales.length).toLocaleString() : 0}`, color: "text-brand-sky" },
+                  { label: "Gross Margin", val: `${grossMargin.toFixed(1)}%`, color: "text-emerald-600" },
+                  { label: "Tax Collected", val: `${currencySymbol} ${totalTax.toLocaleString(undefined,{maximumFractionDigits:0})}`, color: "text-red-500" },
+                  { label: "Discounts Given", val: `${currencySymbol} ${totalDiscount.toLocaleString(undefined,{maximumFractionDigits:0})}`, color: "text-amber-600" },
+                  { label: "Avg Sale Value", val: `${currencySymbol} ${filteredSales.length ? Math.round(totalRevenue / filteredSales.length).toLocaleString() : 0}`, color: "text-sky-600" },
                 ].map(s => (
-                  <div key={s.label} className="bg-brand-dark-surface/40 border border-brand-dark-border rounded-xl p-3 text-center page-break-avoid">
+                  <div key={s.label} className={`border rounded-xl p-3 text-center page-break-avoid ${
+                    isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/40 border-brand-dark-border text-gray-100"
+                  }`}>
                     <div className={`text-base font-black font-mono ${s.color}`}>{s.val}</div>
-                    <div className="text-[9px] text-gray-500 uppercase tracking-wide mt-1">{s.label}</div>
+                    <div className={`text-[9px] uppercase tracking-wide mt-1 font-bold ${isLight ? "text-slate-500" : "text-gray-500"}`}>{s.label}</div>
                   </div>
                 ))}
               </div>
 
               {/* Cash Flow Audit */}
-              <div className="bg-brand-dark-surface/40 border border-brand-sky/20 rounded-2xl p-5 space-y-4 page-break-avoid">
-                <div className="flex justify-between items-center border-b border-brand-dark-border pb-3">
-                  <h3 className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-2">
-                    <DollarSign size={14} className="text-emerald-400" />
+              <div className={`border rounded-2xl p-5 space-y-4 page-break-avoid ${
+                isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/40 border-brand-sky/20 text-gray-100"
+              }`}>
+                <div className={`flex justify-between items-center border-b pb-3 ${isLight ? "border-slate-200" : "border-brand-dark-border"}`}>
+                  <h3 className={`text-xs font-black uppercase tracking-wider flex items-center gap-2 ${isLight ? "text-slate-900" : "text-white"}`}>
+                    <DollarSign size={14} className="text-emerald-500" />
                     Daily Cash Flow Audit
                   </h3>
-                  <span className="text-[10px] font-mono font-bold text-gray-400 uppercase">
-                    Net Cash In Hand: <span className="text-emerald-400 font-black">{currencySymbol} {netCashInHand.toLocaleString()}</span>
+                  <span className={`text-[10px] font-mono font-bold uppercase ${isLight ? "text-slate-600" : "text-gray-400"}`}>
+                    Net Cash In Hand: <span className="text-emerald-600 font-black">{currencySymbol} {netCashInHand.toLocaleString()}</span>
                   </span>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-mono">
                   {/* Inflows */}
-                  <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3.5 space-y-2">
-                    <div className="text-[10px] font-black uppercase text-emerald-400 tracking-wider flex items-center justify-between">
+                  <div className={`border rounded-xl p-3.5 space-y-2 ${
+                    isLight ? "bg-emerald-50 border-emerald-200 text-slate-900" : "bg-emerald-500/10 border-emerald-500/20 text-gray-100"
+                  }`}>
+                    <div className="text-[10px] font-black uppercase text-emerald-600 tracking-wider flex items-center justify-between">
                       <span>📥 Total Cash Inflow</span>
                       <span>{currencySymbol} {totalInflow.toLocaleString()}</span>
                     </div>
-                    <div className="space-y-1 text-[11px] pt-1 border-t border-emerald-500/20 text-gray-300">
+                    <div className={`space-y-1 text-[11px] pt-1 border-t ${isLight ? "border-emerald-200 text-slate-700" : "border-emerald-500/20 text-gray-300"}`}>
                       <div className="flex justify-between"><span>Direct Cash Sales:</span><span className="font-bold">{currencySymbol} {cashSalesInflow.toLocaleString()}</span></div>
-                      <div className="flex justify-between"><span>Credit Dues Recovery Payments:</span><span className="font-bold text-emerald-400">+{currencySymbol} {duesRecoveredInflow.toLocaleString()}</span></div>
+                      <div className="flex justify-between"><span>Credit Dues Recovery Payments:</span><span className="font-bold text-emerald-600">+{currencySymbol} {duesRecoveredInflow.toLocaleString()}</span></div>
                       <div className="flex justify-between"><span>Card & Online Receipts:</span><span className="font-bold">{currencySymbol} {cardBankInflow.toLocaleString()}</span></div>
                     </div>
                   </div>
 
                   {/* Outflows */}
-                  <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3.5 space-y-2">
-                    <div className="text-[10px] font-black uppercase text-red-400 tracking-wider flex items-center justify-between">
+                  <div className={`border rounded-xl p-3.5 space-y-2 ${
+                    isLight ? "bg-red-50 border-red-200 text-slate-900" : "bg-red-500/10 border-red-500/20 text-gray-100"
+                  }`}>
+                    <div className="text-[10px] font-black uppercase text-red-600 tracking-wider flex items-center justify-between">
                       <span>📤 Total Outflow & Expenses</span>
                       <span>{currencySymbol} {totalOutflow.toLocaleString()}</span>
                     </div>
-                    <div className="space-y-1 text-[11px] pt-1 border-t border-red-500/20 text-gray-300">
-                      <div className="flex justify-between"><span>Cash Sales Returns / Refunds:</span><span className="font-bold text-red-400">-{currencySymbol} {cashReturnsOutflow.toLocaleString()}</span></div>
-                      <div className="flex justify-between"><span>Operating Expenses:</span><span className="font-bold text-red-400">-{currencySymbol} {totalExpAmt.toLocaleString()}</span></div>
+                    <div className={`space-y-1 text-[11px] pt-1 border-t ${isLight ? "border-red-200 text-slate-700" : "border-red-500/20 text-gray-300"}`}>
+                      <div className="flex justify-between"><span>Cash Sales Returns / Refunds:</span><span className="font-bold text-red-600">-{currencySymbol} {cashReturnsOutflow.toLocaleString()}</span></div>
+                      <div className="flex justify-between"><span>Operating Expenses:</span><span className="font-bold text-red-600">-{currencySymbol} {totalExpAmt.toLocaleString()}</span></div>
                     </div>
                   </div>
                 </div>
@@ -1003,26 +1011,30 @@ export default function ReportsPage() {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
                 {/* Daily Revenue Bar Chart */}
-                <div className="lg:col-span-2 bg-brand-dark-surface/30 border border-brand-dark-border rounded-2xl p-5 page-break-avoid">
-                  <h3 className="text-xs font-black text-white uppercase tracking-wider mb-4 flex items-center gap-2">
-                    <BarChart3 size={13} className="text-brand-sky" /> Daily Revenue
+                <div className={`lg:col-span-2 border rounded-2xl p-5 page-break-avoid ${
+                  isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/30 border-brand-dark-border text-gray-100"
+                }`}>
+                  <h3 className={`text-xs font-black uppercase tracking-wider mb-4 flex items-center gap-2 ${isLight ? "text-slate-900" : "text-white"}`}>
+                    <BarChart3 size={13} className="text-sky-500" /> Daily Revenue
                   </h3>
                   <div className="no-print">
                     {dailyRevenue.length > 0 ? (
-                      <BarChart data={dailyRevenue} color="#38bdf8" height={100} />
+                      <BarChart data={dailyRevenue} color={isLight ? "#0284c7" : "#38bdf8"} height={100} />
                     ) : (
-                      <div className="h-24 flex items-center justify-center text-gray-600 text-xs">No sales in this period</div>
+                      <div className={`h-24 flex items-center justify-center text-xs ${isLight ? "text-slate-400" : "text-gray-600"}`}>No sales in this period</div>
                     )}
                   </div>
                 </div>
 
                 {/* Payment method breakdown */}
-                <div className="bg-brand-dark-surface/30 border border-brand-dark-border rounded-2xl p-5 page-break-avoid">
-                  <h3 className="text-xs font-black text-white uppercase tracking-wider mb-4 flex items-center gap-2">
-                    <CreditCard size={13} className="text-purple-400" /> Payment Mix
+                <div className={`border rounded-2xl p-5 page-break-avoid ${
+                  isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/30 border-brand-dark-border text-gray-100"
+                }`}>
+                  <h3 className={`text-xs font-black uppercase tracking-wider mb-4 flex items-center gap-2 ${isLight ? "text-slate-900" : "text-white"}`}>
+                    <CreditCard size={13} className="text-purple-500" /> Payment Mix
                   </h3>
                   {paymentBreakdown.length === 0
-                    ? <div className="text-center py-8 text-gray-600 text-xs">No data</div>
+                    ? <div className={`text-center py-8 text-xs ${isLight ? "text-slate-400" : "text-gray-600"}`}>No data</div>
                     : (
                     <div className="space-y-2.5">
                       {paymentBreakdown.map(([method, amount]) => {
@@ -1030,10 +1042,10 @@ export default function ReportsPage() {
                         return (
                           <div key={method}>
                             <div className="flex justify-between text-[10px] mb-1">
-                              <span className="font-bold text-gray-300" style={{ color: pmColors[method] || "#9ca3af" }}>{method}</span>
-                              <span className="font-mono text-gray-300">{pct.toFixed(0)}%</span>
+                              <span className="font-bold" style={{ color: pmColors[method] || (isLight ? "#475569" : "#9ca3af") }}>{method}</span>
+                              <span className={`font-mono ${isLight ? "text-slate-600" : "text-gray-300"}`}>{pct.toFixed(0)}%</span>
                             </div>
-                            <div className="h-1.5 bg-brand-dark-border rounded-full overflow-hidden">
+                            <div className={`h-1.5 rounded-full overflow-hidden ${isLight ? "bg-slate-200" : "bg-brand-dark-border"}`}>
                               <div className="h-full rounded-full transition-all duration-500"
                                 style={{ width: `${pct}%`, backgroundColor: pmColors[method] || "#9ca3af" }} />
                             </div>
@@ -1049,28 +1061,30 @@ export default function ReportsPage() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
                 {/* Top selling products */}
-                <div className="bg-brand-dark-surface/30 border border-brand-dark-border rounded-2xl p-5 page-break-avoid">
-                  <h3 className="text-xs font-black text-white uppercase tracking-wider mb-4 flex items-center gap-2">
-                    <Package size={13} className="text-amber-400" /> Top Selling Products
+                <div className={`border rounded-2xl p-5 page-break-avoid ${
+                  isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/30 border-brand-dark-border text-gray-100"
+                }`}>
+                  <h3 className={`text-xs font-black uppercase tracking-wider mb-4 flex items-center gap-2 ${isLight ? "text-slate-900" : "text-white"}`}>
+                    <Package size={13} className="text-amber-500" /> Top Selling Products
                   </h3>
                   {topProducts.length === 0
-                    ? <div className="text-center py-8 text-gray-600 text-xs">No sales data</div>
+                    ? <div className={`text-center py-8 text-xs ${isLight ? "text-slate-400" : "text-gray-600"}`}>No sales data</div>
                     : (
                     <div className="space-y-2">
                       {topProducts.map((p, i) => {
                         const pct = topProducts[0].revenue > 0 ? (p.revenue / topProducts[0].revenue) * 100 : 0;
                         return (
                           <div key={i} className="flex items-center gap-3">
-                            <span className="text-[9px] font-black font-mono text-gray-500 w-4 shrink-0">#{i + 1}</span>
+                            <span className={`text-[9px] font-black font-mono w-4 shrink-0 ${isLight ? "text-slate-400" : "text-gray-500"}`}>#{i + 1}</span>
                             <div className="flex-grow min-w-0">
-                              <div className="text-[10px] font-bold text-white truncate">{p.name}</div>
-                              <div className="h-1 bg-brand-dark-border rounded-full mt-1">
-                                <div className="h-full bg-amber-400 rounded-full" style={{ width: `${pct}%` }} />
+                              <div className={`text-[10px] font-bold truncate ${isLight ? "text-slate-900" : "text-white"}`}>{p.name}</div>
+                              <div className={`h-1 rounded-full mt-1 ${isLight ? "bg-slate-200" : "bg-brand-dark-border"}`}>
+                                <div className="h-full bg-amber-500 rounded-full" style={{ width: `${pct}%` }} />
                               </div>
                             </div>
                             <div className="text-right shrink-0">
-                              <div className="text-[10px] font-black font-mono text-brand-sky">{currencySymbol} {Math.round(p.revenue).toLocaleString()}</div>
-                              <div className="text-[8px] text-gray-600">{p.qty} sold</div>
+                              <div className="text-[10px] font-black font-mono text-sky-600">{currencySymbol} {Math.round(p.revenue).toLocaleString()}</div>
+                              <div className={`text-[8px] ${isLight ? "text-slate-400" : "text-gray-600"}`}>{p.qty} sold</div>
                             </div>
                           </div>
                         );
@@ -1080,25 +1094,27 @@ export default function ReportsPage() {
                 </div>
 
                 {/* Customer dues */}
-                <div className="bg-brand-dark-surface/30 border border-brand-dark-border rounded-2xl p-5 page-break-avoid">
-                  <h3 className="text-xs font-black text-white uppercase tracking-wider mb-4 flex items-center gap-2">
-                    <AlertTriangle size={13} className="text-red-400" /> Customer Overdue Dues
+                <div className={`border rounded-2xl p-5 page-break-avoid ${
+                  isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/30 border-brand-dark-border text-gray-100"
+                }`}>
+                  <h3 className={`text-xs font-black uppercase tracking-wider mb-4 flex items-center gap-2 ${isLight ? "text-slate-900" : "text-white"}`}>
+                    <AlertTriangle size={13} className="text-red-500" /> Customer Overdue Dues
                   </h3>
                   {overdueCustomers.length === 0
-                    ? <div className="text-center py-8 text-gray-600 text-xs">No outstanding dues 🎉</div>
+                    ? <div className={`text-center py-8 text-xs ${isLight ? "text-slate-400" : "text-gray-600"}`}>No outstanding dues 🎉</div>
                     : (
                     <div className="space-y-2">
                       {overdueCustomers.map(c => (
-                        <div key={c.id} className="flex items-center justify-between py-2 border-b border-brand-dark-border/30 last:border-0">
+                        <div key={c.id} className={`flex items-center justify-between py-2 border-b last:border-0 ${isLight ? "border-slate-200" : "border-brand-dark-border/30"}`}>
                           <div>
-                            <div className="text-[11px] font-bold text-white">{c.name}</div>
-                            <div className="text-[9px] text-gray-500 font-mono">{c.mobile}</div>
+                            <div className={`text-[11px] font-bold ${isLight ? "text-slate-900" : "text-white"}`}>{c.name}</div>
+                            <div className={`text-[9px] font-mono ${isLight ? "text-slate-500" : "text-gray-500"}`}>{c.mobile}</div>
                           </div>
                           <div className="text-right">
-                            <div className="text-[11px] font-black text-red-400 font-mono">
+                            <div className="text-[11px] font-black text-red-500 font-mono">
                               {currencySymbol} {c.creditBalance.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                             </div>
-                            <div className="text-[8px] text-gray-600">overdue</div>
+                            <div className={`text-[8px] ${isLight ? "text-slate-400" : "text-gray-600"}`}>overdue</div>
                           </div>
                         </div>
                       ))}
@@ -1116,41 +1132,51 @@ export default function ReportsPage() {
             <div className="space-y-6">
               {/* Executive P/L Headline Cards */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-5 space-y-2">
-                  <div className="text-[10px] font-black uppercase text-emerald-400 tracking-wider">Net Operating Revenue</div>
-                  <div className="text-2xl font-black font-mono text-white">
+                <div className={`border rounded-2xl p-5 space-y-2 ${
+                  isLight ? "bg-emerald-50 border-emerald-200 text-slate-900" : "bg-emerald-500/10 border-emerald-500/30 text-gray-100"
+                }`}>
+                  <div className="text-[10px] font-black uppercase text-emerald-600 tracking-wider">Net Operating Revenue</div>
+                  <div className={`text-2xl font-black font-mono ${isLight ? "text-slate-900" : "text-white"}`}>
                     {currencySymbol} {plSummary.netOperatingIncome.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                   </div>
-                  <div className="text-[9px] text-gray-400">Completed Sales + Recoveries - Returns</div>
+                  <div className={`text-[9px] ${isLight ? "text-slate-500" : "text-gray-400"}`}>Completed Sales + Recoveries - Returns</div>
                 </div>
 
-                <div className="bg-brand-sky/10 border border-brand-sky/30 rounded-2xl p-5 space-y-2">
-                  <div className="text-[10px] font-black uppercase text-brand-sky tracking-wider">Gross Operating Profit</div>
-                  <div className="text-2xl font-black font-mono text-brand-sky">
+                <div className={`border rounded-2xl p-5 space-y-2 ${
+                  isLight ? "bg-sky-50 border-sky-200 text-slate-900" : "bg-brand-sky/10 border-brand-sky/30 text-gray-100"
+                }`}>
+                  <div className="text-[10px] font-black uppercase text-sky-600 tracking-wider">Gross Operating Profit</div>
+                  <div className="text-2xl font-black font-mono text-sky-600">
                     {currencySymbol} {plSummary.grossProfit.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                   </div>
-                  <div className="text-[9px] text-gray-400">Margin: {plSummary.grossMargin.toFixed(1)}% (Net Income - COGS)</div>
+                  <div className={`text-[9px] ${isLight ? "text-slate-500" : "text-gray-400"}`}>Margin: {plSummary.grossMargin.toFixed(1)}% (Net Income - COGS)</div>
                 </div>
 
-                <div className={`border rounded-2xl p-5 space-y-2 ${plSummary.netExecutiveProfit >= 0 ? "bg-purple-500/10 border-purple-500/30 text-purple-400" : "bg-red-500/10 border-red-500/30 text-red-400"}`}>
+                <div className={`border rounded-2xl p-5 space-y-2 ${
+                  plSummary.netExecutiveProfit >= 0
+                    ? isLight ? "bg-purple-50 border-purple-200 text-purple-700" : "bg-purple-500/10 border-purple-500/30 text-purple-400"
+                    : isLight ? "bg-red-50 border-red-200 text-red-700" : "bg-red-500/10 border-red-500/30 text-red-400"
+                }`}>
                   <div className="text-[10px] font-black uppercase tracking-wider">Net Executive Profit</div>
-                  <div className="text-2xl font-black font-mono text-white">
+                  <div className={`text-2xl font-black font-mono ${isLight ? "text-slate-900" : "text-white"}`}>
                     {currencySymbol} {plSummary.netExecutiveProfit.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                   </div>
-                  <div className="text-[9px] text-gray-300">Bottom-line Profit after Operating Expenses</div>
+                  <div className={`text-[9px] ${isLight ? "text-slate-500" : "text-gray-300"}`}>Bottom-line Profit after Operating Expenses</div>
                 </div>
               </div>
 
               {/* Detailed P/L Ledger Statement Table */}
-              <div className="bg-brand-dark-surface/40 border border-brand-dark-border rounded-2xl p-6 space-y-6 page-break-avoid">
-                <div className="flex justify-between items-center border-b border-brand-dark-border/60 pb-4">
+              <div className={`border rounded-2xl p-6 space-y-6 page-break-avoid ${
+                isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/40 border-brand-dark-border text-gray-100"
+              }`}>
+                <div className={`flex justify-between items-center border-b pb-4 ${isLight ? "border-slate-200" : "border-brand-dark-border/60"}`}>
                   <div>
-                    <h3 className="text-base font-black text-white uppercase tracking-tight flex items-center gap-2">
-                      <TrendingUp size={18} className="text-brand-sky" /> Profit & Loss Statement (P/L Ledger)
+                    <h3 className={`text-base font-black uppercase tracking-tight flex items-center gap-2 ${isLight ? "text-slate-900" : "text-white"}`}>
+                      <TrendingUp size={18} className="text-sky-500" /> Profit & Loss Statement (P/L Ledger)
                     </h3>
-                    <p className="text-[10px] text-gray-400 mt-1">Branch: {currentBranch} · Period: {PERIOD_LABELS[period]}</p>
+                    <p className={`text-[10px] mt-1 ${isLight ? "text-slate-500" : "text-gray-400"}`}>Branch: {currentBranch} · Period: {PERIOD_LABELS[period]}</p>
                   </div>
-                  <div className="text-right text-[10px] font-mono text-gray-500">
+                  <div className={`text-right text-[10px] font-mono ${isLight ? "text-slate-500" : "text-gray-500"}`}>
                     Auto Generated Report<br />
                     MT Core Financial Engine — The core technology behind your business.
                   </div>
@@ -1159,93 +1185,97 @@ export default function ReportsPage() {
                 <div className="space-y-6 text-xs font-mono">
                   {/* 1. Revenue & Sales Income */}
                   <div className="space-y-2">
-                    <div className="text-xs font-black uppercase text-emerald-400 border-b border-emerald-500/30 pb-1.5 flex justify-between">
+                    <div className="text-xs font-black uppercase text-emerald-600 border-b border-emerald-500/30 pb-1.5 flex justify-between">
                       <span>1. OPERATING REVENUE & INCOME</span>
                       <span>AMOUNT ({currencySymbol})</span>
                     </div>
-                    <div className="flex justify-between py-1 text-gray-300">
+                    <div className={`flex justify-between py-1 ${isLight ? "text-slate-700" : "text-gray-300"}`}>
                       <span>Completed Gross Sales Revenue</span>
                       <span className="font-bold">+{currencySymbol} {plSummary.completedRevenue.toLocaleString()}</span>
                     </div>
-                    <div className="flex justify-between py-1 text-emerald-400">
+                    <div className="flex justify-between py-1 text-emerald-600">
                       <span>Dues Recoveries Received (+)</span>
                       <span className="font-bold">+{currencySymbol} {plSummary.duesRecoveredTotal.toLocaleString()}</span>
                     </div>
-                    <div className="flex justify-between py-1 text-red-400">
+                    <div className="flex justify-between py-1 text-red-500">
                       <span>Sales Returns & Refunds (-)</span>
                       <span className="font-bold">-{currencySymbol} {plSummary.returnsTotal.toLocaleString()}</span>
                     </div>
-                    <div className="flex justify-between py-2 border-t border-brand-dark-border font-black text-white text-xs">
+                    <div className={`flex justify-between py-2 border-t font-black text-xs ${isLight ? "border-slate-200 text-slate-900" : "border-brand-dark-border text-white"}`}>
                       <span>TOTAL NET OPERATING REVENUE</span>
-                      <span className="text-emerald-400">{currencySymbol} {plSummary.netOperatingIncome.toLocaleString()}</span>
+                      <span className="text-emerald-600">{currencySymbol} {plSummary.netOperatingIncome.toLocaleString()}</span>
                     </div>
                   </div>
 
                   {/* 2. Cost of Sales */}
                   <div className="space-y-2">
-                    <div className="text-xs font-black uppercase text-brand-sky border-b border-brand-sky/30 pb-1.5 flex justify-between">
+                    <div className="text-xs font-black uppercase text-sky-600 border-b border-sky-500/30 pb-1.5 flex justify-between">
                       <span>2. COST OF SALES (COGS)</span>
                       <span>AMOUNT ({currencySymbol})</span>
                     </div>
-                    <div className="flex justify-between py-1 text-gray-300">
+                    <div className={`flex justify-between py-1 ${isLight ? "text-slate-700" : "text-gray-300"}`}>
                       <span>Cost of Inventory Sold (COGS) (-)</span>
-                      <span className="font-bold text-red-400">-{currencySymbol} {plSummary.cogsTotal.toLocaleString()}</span>
+                      <span className="font-bold text-red-500">-{currencySymbol} {plSummary.cogsTotal.toLocaleString()}</span>
                     </div>
-                    <div className="flex justify-between py-2 border-t border-brand-dark-border font-black text-white text-xs">
+                    <div className={`flex justify-between py-2 border-t font-black text-xs ${isLight ? "border-slate-200 text-slate-900" : "border-brand-dark-border text-white"}`}>
                       <span>GROSS OPERATING PROFIT (Margin: {plSummary.grossMargin.toFixed(1)}%)</span>
-                      <span className="text-brand-sky">{currencySymbol} {plSummary.grossProfit.toLocaleString()}</span>
+                      <span className="text-sky-600">{currencySymbol} {plSummary.grossProfit.toLocaleString()}</span>
                     </div>
                   </div>
 
                   {/* 3. Operating Expenses */}
                   <div className="space-y-2">
-                    <div className="text-xs font-black uppercase text-red-400 border-b border-red-500/30 pb-1.5 flex justify-between">
+                    <div className="text-xs font-black uppercase text-red-500 border-b border-red-500/30 pb-1.5 flex justify-between">
                       <span>3. OPERATING EXPENSES (OPEX)</span>
                       <span>AMOUNT ({currencySymbol})</span>
                     </div>
                     {expCats.length === 0 ? (
-                      <div className="py-2 text-gray-500 text-[10px]">No expenses recorded in this period</div>
+                      <div className={`py-2 text-[10px] ${isLight ? "text-slate-400" : "text-gray-500"}`}>No expenses recorded in this period</div>
                     ) : (
                       expCats.map(([cat, amt]) => (
-                        <div key={cat} className="flex justify-between py-1 text-gray-300">
+                        <div key={cat} className={`flex justify-between py-1 ${isLight ? "text-slate-700" : "text-gray-300"}`}>
                           <span>{cat}</span>
-                          <span className="font-bold text-red-400">-{currencySymbol} {amt.toLocaleString()}</span>
+                          <span className="font-bold text-red-500">-{currencySymbol} {amt.toLocaleString()}</span>
                         </div>
                       ))
                     )}
-                    <div className="flex justify-between py-2 border-t border-brand-dark-border font-black text-white text-xs">
+                    <div className={`flex justify-between py-2 border-t font-black text-xs ${isLight ? "border-slate-200 text-slate-900" : "border-brand-dark-border text-white"}`}>
                       <span>TOTAL OPERATING EXPENSES</span>
-                      <span className="text-red-400">-{currencySymbol} {plSummary.totalExpenses.toLocaleString()}</span>
+                      <span className="text-red-500">-{currencySymbol} {plSummary.totalExpenses.toLocaleString()}</span>
                     </div>
                   </div>
 
                   {/* 4. Credit & Receivables Ledger */}
-                  <div className="space-y-2 bg-black/40 p-4 rounded-xl border border-brand-dark-border">
-                    <div className="text-xs font-black uppercase text-amber-400 border-b border-amber-500/30 pb-1.5 flex justify-between">
+                  <div className={`space-y-2 p-4 rounded-xl border ${
+                    isLight ? "bg-slate-50 border-slate-200 text-slate-900" : "bg-black/40 border-brand-dark-border text-gray-100"
+                  }`}>
+                    <div className="text-xs font-black uppercase text-amber-600 border-b border-amber-500/30 pb-1.5 flex justify-between">
                       <span>4. CREDIT & RECEIVABLES LEDGER POSITION</span>
                       <span>STATUS</span>
                     </div>
-                    <div className="flex justify-between py-1 text-gray-300">
+                    <div className={`flex justify-between py-1 ${isLight ? "text-slate-700" : "text-gray-300"}`}>
                       <span>On-Credit Sales Issued in Period</span>
-                      <span className="font-bold text-amber-400">{currencySymbol} {plSummary.creditSalesIssuedTotal.toLocaleString()}</span>
+                      <span className="font-bold text-amber-600">{currencySymbol} {plSummary.creditSalesIssuedTotal.toLocaleString()}</span>
                     </div>
-                    <div className="flex justify-between py-1 text-gray-300">
+                    <div className={`flex justify-between py-1 ${isLight ? "text-slate-700" : "text-gray-300"}`}>
                       <span>Total Accounts Receivable (Outstanding Customer Dues)</span>
-                      <span className="font-bold text-red-400">{currencySymbol} {plSummary.totalOutstandingDues.toLocaleString()}</span>
+                      <span className="font-bold text-red-500">{currencySymbol} {plSummary.totalOutstandingDues.toLocaleString()}</span>
                     </div>
-                    <div className="flex justify-between py-1 text-gray-300">
+                    <div className={`flex justify-between py-1 ${isLight ? "text-slate-700" : "text-gray-300"}`}>
                       <span>Customer Store Wallet Balances Held</span>
-                      <span className="font-bold text-brand-sky">{currencySymbol} {plSummary.totalWalletBalances.toLocaleString()}</span>
+                      <span className="font-bold text-sky-600">{currencySymbol} {plSummary.totalWalletBalances.toLocaleString()}</span>
                     </div>
                   </div>
 
                   {/* 5. Bottom Line Executive Profit */}
-                  <div className="p-5 rounded-2xl bg-gradient-to-r from-purple-900/30 via-black to-emerald-900/30 border border-purple-500/40 flex flex-col sm:flex-row justify-between items-center gap-3">
+                  <div className={`p-5 rounded-2xl border flex flex-col sm:flex-row justify-between items-center gap-3 ${
+                    isLight ? "bg-emerald-50 border-emerald-300 text-slate-900" : "bg-gradient-to-r from-purple-900/30 via-black to-emerald-900/30 border-purple-500/40 text-gray-100"
+                  }`}>
                     <div>
-                      <div className="text-xs font-black uppercase tracking-wider text-gray-300">NET EXECUTIVE BOTTOM-LINE PROFIT / (LOSS)</div>
-                      <div className="text-[10px] text-gray-500 mt-0.5">Calculated as: Gross Operating Profit - Total Operating Expenses</div>
+                      <div className={`text-xs font-black uppercase tracking-wider ${isLight ? "text-slate-900" : "text-gray-300"}`}>NET EXECUTIVE BOTTOM-LINE PROFIT OR LOSS</div>
+                      <div className={`text-[10px] mt-0.5 ${isLight ? "text-slate-500" : "text-gray-500"}`}>Calculated as: Gross Operating Profit - Total Operating Expenses</div>
                     </div>
-                    <div className="text-2xl font-black font-mono text-emerald-400">
+                    <div className="text-2xl font-black font-mono text-emerald-600">
                       {currencySymbol} {plSummary.netExecutiveProfit.toLocaleString()}
                     </div>
                   </div>

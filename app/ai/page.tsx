@@ -222,12 +222,14 @@ export default function AiPage() {
           </div>
 
           {/* Day of Week Chart */}
-          <div className="lg:col-span-2 bg-brand-dark-surface/40 border border-brand-dark-border rounded-xl p-4">
-            <h3 className="text-[10px] uppercase font-black text-white tracking-widest mb-4 flex items-center gap-1.5">
-              <BarChart3 size={11} className="text-brand-sky" /> Revenue by Day of Week
+          <div className={`lg:col-span-2 border rounded-xl p-4 ${
+            isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/40 border-brand-dark-border text-gray-100"
+          }`}>
+            <h3 className={`text-[10px] uppercase font-black tracking-widest mb-4 flex items-center gap-1.5 ${isLight ? "text-slate-900" : "text-white"}`}>
+              <BarChart3 size={11} className="text-sky-500" /> Revenue by Day of Week
             </h3>
             {sales.length === 0 ? (
-              <div className="flex items-center justify-center h-32 text-gray-600 text-[10px]">
+              <div className={`flex items-center justify-center h-32 text-[10px] ${isLight ? "text-slate-400" : "text-gray-600"}`}>
                 No sales data yet. Make some sales to see analytics!
               </div>
             ) : (
@@ -240,27 +242,29 @@ export default function AiPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
           {/* Top 10 Products */}
-          <div className="bg-brand-dark-surface/40 border border-brand-dark-border rounded-xl overflow-hidden">
-            <div className="px-4 py-3 border-b border-brand-dark-border flex items-center gap-2">
-              <Award size={13} className="text-yellow-400" />
-              <h3 className="text-[10px] uppercase font-black text-white tracking-widest">Top Products by Units Sold</h3>
+          <div className={`border rounded-xl overflow-hidden ${
+            isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/40 border-brand-dark-border text-gray-100"
+          }`}>
+            <div className={`px-4 py-3 border-b flex items-center gap-2 ${isLight ? "border-slate-200" : "border-brand-dark-border"}`}>
+              <Award size={13} className="text-amber-500" />
+              <h3 className={`text-[10px] uppercase font-black tracking-widest ${isLight ? "text-slate-900" : "text-white"}`}>Top Products by Units Sold</h3>
             </div>
             {productSales.length === 0 ? (
-              <div className="p-6 text-center text-gray-600 text-[10px]">No product sales recorded yet.</div>
+              <div className={`p-6 text-center text-[10px] ${isLight ? "text-slate-400" : "text-gray-600"}`}>No product sales recorded yet.</div>
             ) : (
-              <div className="divide-y divide-brand-dark-border/30">
+              <div className={`divide-y ${isLight ? "divide-slate-200" : "divide-brand-dark-border/30"}`}>
                 {productSales.map((p, i) => (
-                  <div key={p.productId} className="flex items-center gap-3 px-4 py-2.5 hover:bg-brand-dark-border/20 transition">
-                    <span className={`text-sm font-black w-5 text-right shrink-0 ${i < 3 ? RANK_COLORS[i] : "text-gray-600"}`}>
+                  <div key={p.productId} className={`flex items-center gap-3 px-4 py-2.5 transition ${isLight ? "hover:bg-slate-50" : "hover:bg-brand-dark-border/20"}`}>
+                    <span className={`text-sm font-black w-5 text-right shrink-0 ${i < 3 ? RANK_COLORS[i] : isLight ? "text-slate-400" : "text-gray-600"}`}>
                       {i + 1}
                     </span>
                     <div className="flex-grow min-w-0">
-                      <div className="text-[11px] font-bold text-white truncate">{p.name}</div>
-                      <div className="text-[9px] text-gray-500 font-mono">{currencySymbol} {p.revenue.toLocaleString(undefined,{maximumFractionDigits:0})} revenue</div>
+                      <div className={`text-[11px] font-bold truncate ${isLight ? "text-slate-900" : "text-white"}`}>{p.name}</div>
+                      <div className={`text-[9px] font-mono ${isLight ? "text-slate-500" : "text-gray-500"}`}>{currencySymbol} {p.revenue.toLocaleString(undefined,{maximumFractionDigits:0})} revenue</div>
                     </div>
                     <div className="shrink-0 text-right">
-                      <div className="text-[11px] font-black text-brand-sky font-mono">{p.units}</div>
-                      <div className="text-[9px] text-gray-600">units</div>
+                      <div className="text-[11px] font-black text-sky-600 font-mono">{p.units}</div>
+                      <div className={`text-[9px] ${isLight ? "text-slate-400" : "text-gray-600"}`}>units</div>
                     </div>
                   </div>
                 ))}
@@ -269,27 +273,29 @@ export default function AiPage() {
           </div>
 
           {/* Slow Movers */}
-          <div className="bg-brand-dark-surface/40 border border-brand-dark-border rounded-xl overflow-hidden">
-            <div className="px-4 py-3 border-b border-brand-dark-border flex items-center gap-2">
-              <TrendingDown size={13} className="text-amber-400" />
-              <h3 className="text-[10px] uppercase font-black text-white tracking-widest">Slow Movers — High Stock Low Sales</h3>
+          <div className={`border rounded-xl overflow-hidden ${
+            isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/40 border-brand-dark-border text-gray-100"
+          }`}>
+            <div className={`px-4 py-3 border-b flex items-center gap-2 ${isLight ? "border-slate-200" : "border-brand-dark-border"}`}>
+              <TrendingDown size={13} className="text-amber-500" />
+              <h3 className={`text-[10px] uppercase font-black tracking-widest ${isLight ? "text-slate-900" : "text-white"}`}>Slow Movers — High Stock Low Sales</h3>
             </div>
             {slowMovers.length === 0 ? (
-              <div className="p-6 text-center text-gray-600 text-[10px]">No slow moving products detected.</div>
+              <div className={`p-6 text-center text-[10px] ${isLight ? "text-slate-400" : "text-gray-600"}`}>No slow moving products detected.</div>
             ) : (
-              <div className="divide-y divide-brand-dark-border/30">
+              <div className={`divide-y ${isLight ? "divide-slate-200" : "divide-brand-dark-border/30"}`}>
                 {slowMovers.map(p => (
-                  <div key={p.id} className="flex items-center gap-3 px-4 py-2.5 hover:bg-brand-dark-border/20 transition">
+                  <div key={p.id} className={`flex items-center gap-3 px-4 py-2.5 transition ${isLight ? "hover:bg-slate-50" : "hover:bg-brand-dark-border/20"}`}>
                     <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
-                      <Package size={12} className="text-amber-400" />
+                      <Package size={12} className="text-amber-500" />
                     </div>
                     <div className="flex-grow min-w-0">
-                      <div className="text-[11px] font-bold text-white truncate">{p.name}</div>
-                      <div className="text-[9px] text-gray-500 font-mono">{p.sku}</div>
+                      <div className={`text-[11px] font-bold truncate ${isLight ? "text-slate-900" : "text-white"}`}>{p.name}</div>
+                      <div className={`text-[9px] font-mono ${isLight ? "text-slate-500" : "text-gray-500"}`}>{p.sku}</div>
                     </div>
                     <div className="shrink-0 text-right space-y-0.5">
-                      <div className="text-[10px] font-black text-amber-400 font-mono">{p.stock} in stock</div>
-                      <div className="text-[9px] text-gray-600 font-mono">{(p as any).unitsSold} sold</div>
+                      <div className="text-[10px] font-black text-amber-600 font-mono">{p.stock} in stock</div>
+                      <div className={`text-[9px] font-mono ${isLight ? "text-slate-400" : "text-gray-600"}`}>{(p as any).unitsSold} sold</div>
                     </div>
                   </div>
                 ))}
@@ -299,18 +305,22 @@ export default function AiPage() {
         </div>
 
         {/* ── CUSTOMER CLV TABLE ── */}
-        <div className="bg-brand-dark-surface/40 border border-brand-dark-border rounded-xl overflow-hidden">
-          <div className="px-4 py-3 border-b border-brand-dark-border flex items-center gap-2">
-            <Users size={13} className="text-purple-400" />
-            <h3 className="text-[10px] uppercase font-black text-white tracking-widest">Customer Lifetime Value — Top Spenders</h3>
+        <div className={`border rounded-xl overflow-hidden ${
+          isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/40 border-brand-dark-border text-gray-100"
+        }`}>
+          <div className={`px-4 py-3 border-b flex items-center gap-2 ${isLight ? "border-slate-200" : "border-brand-dark-border"}`}>
+            <Users size={13} className="text-purple-500" />
+            <h3 className={`text-[10px] uppercase font-black tracking-widest ${isLight ? "text-slate-900" : "text-white"}`}>Customer Lifetime Value — Top Spenders</h3>
           </div>
           {customerCLV.length === 0 ? (
-            <div className="p-6 text-center text-gray-600 text-[10px]">No customer data yet.</div>
+            <div className={`p-6 text-center text-[10px] ${isLight ? "text-slate-400" : "text-gray-600"}`}>No customer data yet.</div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="border-b border-brand-dark-border text-[9px] text-gray-500 uppercase font-bold tracking-wider">
+                  <tr className={`border-b text-[9px] uppercase font-bold tracking-wider ${
+                    isLight ? "bg-slate-100 text-slate-700 border-slate-200" : "border-brand-dark-border text-gray-500"
+                  }`}>
                     <th className="text-left px-4 py-2.5">Customer</th>
                     <th className="text-right px-4 py-2.5">Total Spent</th>
                     <th className="text-right px-4 py-2.5">Visits</th>
@@ -318,20 +328,20 @@ export default function AiPage() {
                     <th className="text-center px-4 py-2.5">Tier</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-brand-dark-border/20">
+                <tbody className={`divide-y ${isLight ? "divide-slate-200" : "divide-brand-dark-border/20"}`}>
                   {customerCLV.map((c, i) => {
                     const tier = getTier(c.loyaltyPoints);
                     return (
-                      <tr key={i} className="hover:bg-brand-dark-border/20 transition">
+                      <tr key={i} className={`transition ${isLight ? "hover:bg-slate-50 text-slate-900" : "hover:bg-brand-dark-border/20 text-gray-100"}`}>
                         <td className="px-4 py-2.5">
-                          <div className="font-bold text-white text-[11px]">{c.name}</div>
-                          <div className="text-[9px] text-gray-500 font-mono">{c.mobile}</div>
+                          <div className={`font-bold text-[11px] ${isLight ? "text-slate-900" : "text-white"}`}>{c.name}</div>
+                          <div className={`text-[9px] font-mono ${isLight ? "text-slate-500" : "text-gray-500"}`}>{c.mobile}</div>
                         </td>
-                        <td className="px-4 py-2.5 text-right font-black font-mono text-brand-sky text-[11px]">
+                        <td className="px-4 py-2.5 text-right font-black font-mono text-sky-600 text-[11px]">
                           {currencySymbol} {c.spent.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                         </td>
-                        <td className="px-4 py-2.5 text-right font-bold font-mono text-gray-300 text-[11px]">{c.visits}</td>
-                        <td className="px-4 py-2.5 text-right font-bold font-mono text-yellow-400 text-[11px]">{c.loyaltyPoints.toLocaleString()}</td>
+                        <td className={`px-4 py-2.5 text-right font-bold font-mono text-[11px] ${isLight ? "text-slate-700" : "text-gray-300"}`}>{c.visits}</td>
+                        <td className="px-4 py-2.5 text-right font-bold font-mono text-amber-600 text-[11px]">{c.loyaltyPoints.toLocaleString()}</td>
                         <td className="px-4 py-2.5 text-center">
                           <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded border ${tier.bg} ${tier.color}`}>
                             {tier.label}
@@ -347,46 +357,48 @@ export default function AiPage() {
         </div>
 
         {/* ── REORDER RECOMMENDATIONS ── */}
-        <div className="bg-brand-dark-surface/40 border border-brand-dark-border rounded-xl overflow-hidden">
-          <div className="px-4 py-3 border-b border-brand-dark-border flex items-center justify-between">
+        <div className={`border rounded-xl overflow-hidden ${
+          isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/40 border-brand-dark-border text-gray-100"
+        }`}>
+          <div className={`px-4 py-3 border-b flex items-center justify-between ${isLight ? "border-slate-200" : "border-brand-dark-border"}`}>
             <div className="flex items-center gap-2">
-              <AlertTriangle size={13} className="text-red-400" />
-              <h3 className="text-[10px] uppercase font-black text-white tracking-widest">Reorder Recommendations</h3>
+              <AlertTriangle size={13} className="text-red-500" />
+              <h3 className={`text-[10px] uppercase font-black tracking-widest ${isLight ? "text-slate-900" : "text-white"}`}>Reorder Recommendations</h3>
               {reorderList.length > 0 && (
                 <span className="bg-red-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full">{reorderList.length}</span>
               )}
             </div>
-            <a href="/inventory" className="text-[9px] text-brand-sky font-black hover:underline flex items-center gap-1">
+            <a href="/inventory" className="text-[9px] text-sky-600 font-black hover:underline flex items-center gap-1">
               Go to Inventory <ChevronRight size={9} />
             </a>
           </div>
           {reorderList.length === 0 ? (
             <div className="p-6 text-center">
               <div className="text-2xl mb-2">✅</div>
-              <div className="text-[10px] text-gray-500 font-bold">All stock levels healthy!</div>
-              <div className="text-[9px] text-gray-600 mt-0.5">No products are below minimum stock threshold.</div>
+              <div className={`text-[10px] font-bold ${isLight ? "text-slate-700" : "text-gray-500"}`}>All stock levels healthy!</div>
+              <div className={`text-[9px] mt-0.5 ${isLight ? "text-slate-400" : "text-gray-600"}`}>No products are below minimum stock threshold.</div>
             </div>
           ) : (
-            <div className="divide-y divide-brand-dark-border/20">
+            <div className={`divide-y ${isLight ? "divide-slate-200" : "divide-brand-dark-border/20"}`}>
               {reorderList.map(p => {
                 const pct = Math.min(100, Math.round((p.stock / Math.max(p.minStock, 1)) * 100));
                 const danger = pct === 0 ? "bg-red-500" : pct < 50 ? "bg-amber-500" : "bg-yellow-400";
                 return (
-                  <div key={p.id} className="px-4 py-3 flex items-center gap-4 hover:bg-brand-dark-border/20 transition">
+                  <div key={p.id} className={`px-4 py-3 flex items-center gap-4 transition ${isLight ? "hover:bg-slate-50" : "hover:bg-brand-dark-border/20"}`}>
                     <div className="w-8 h-8 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center shrink-0">
-                      <ShoppingBag size={12} className="text-red-400" />
+                      <ShoppingBag size={12} className="text-red-500" />
                     </div>
                     <div className="flex-grow min-w-0">
-                      <div className="text-[11px] font-bold text-white truncate">{p.name}</div>
-                      <div className="text-[9px] text-gray-500 font-mono">{p.sku}</div>
-                      <div className="mt-1.5 w-full bg-brand-dark-border rounded-full h-1.5">
+                      <div className={`text-[11px] font-bold truncate ${isLight ? "text-slate-900" : "text-white"}`}>{p.name}</div>
+                      <div className={`text-[9px] font-mono ${isLight ? "text-slate-500" : "text-gray-500"}`}>{p.sku}</div>
+                      <div className={`mt-1.5 w-full rounded-full h-1.5 ${isLight ? "bg-slate-200" : "bg-brand-dark-border"}`}>
                         <div className={`${danger} h-1.5 rounded-full transition-all`} style={{ width: `${pct}%` }} />
                       </div>
-                      <div className="text-[8px] text-gray-600 mt-0.5">{p.stock} / {p.minStock} min</div>
+                      <div className={`text-[8px] mt-0.5 ${isLight ? "text-slate-400" : "text-gray-600"}`}>{p.stock} / {p.minStock} min</div>
                     </div>
                     <div className="shrink-0 text-right">
-                      <div className="text-[10px] font-black text-red-400 font-mono">{p.stock} left</div>
-                      <div className="text-[8px] text-gray-600">min: {p.minStock}</div>
+                      <div className="text-[10px] font-black text-red-500 font-mono">{p.stock} left</div>
+                      <div className={`text-[8px] ${isLight ? "text-slate-400" : "text-gray-600"}`}>min: {p.minStock}</div>
                     </div>
                   </div>
                 );

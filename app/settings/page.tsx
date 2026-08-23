@@ -429,67 +429,79 @@ export default function SettingsPage() {
 
                 <div className="grid grid-cols-2 gap-4 text-xs">
                   <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Registered Business Name *</label>
+                    <label className={`block text-[10px] uppercase font-bold mb-1 ${isLight ? "text-slate-600" : "text-gray-400"}`}>Registered Business Name *</label>
                     <input
                       type="text" required
                       value={form.businessName}
                       onChange={e => setForm({ ...form, businessName: e.target.value })}
-                      className="w-full bg-black border border-brand-dark-border p-2.5 rounded-lg text-white font-semibold"
+                      className={`w-full p-2.5 rounded-lg border font-semibold ${
+                        isLight ? "bg-white border-slate-300 text-slate-900 focus:border-sky-500" : "bg-black border-brand-dark-border text-white focus:border-brand-sky"
+                      }`}
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Business Owner Name *</label>
+                    <label className={`block text-[10px] uppercase font-bold mb-1 ${isLight ? "text-slate-600" : "text-gray-400"}`}>Business Owner Name *</label>
                     <input
                       type="text" required
                       value={form.ownerName}
                       onChange={e => setForm({ ...form, ownerName: e.target.value })}
-                      className="w-full bg-black border border-brand-dark-border p-2.5 rounded-lg text-white"
+                      className={`w-full p-2.5 rounded-lg border font-semibold ${
+                        isLight ? "bg-white border-slate-300 text-slate-900 focus:border-sky-500" : "bg-black border-brand-dark-border text-white focus:border-brand-sky"
+                      }`}
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 text-xs">
                   <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Official Mobile Contact *</label>
+                    <label className={`block text-[10px] uppercase font-bold mb-1 ${isLight ? "text-slate-600" : "text-gray-400"}`}>Official Mobile Contact *</label>
                     <input
                       type="text" required
                       value={form.phone}
                       onChange={e => setForm({ ...form, phone: e.target.value })}
-                      className="w-full bg-black border border-brand-dark-border p-2.5 rounded-lg text-white font-mono"
+                      className={`w-full p-2.5 rounded-lg border font-mono ${
+                        isLight ? "bg-white border-slate-300 text-slate-900 focus:border-sky-500" : "bg-black border-brand-dark-border text-white focus:border-brand-sky"
+                      }`}
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Business Email Address *</label>
+                    <label className={`block text-[10px] uppercase font-bold mb-1 ${isLight ? "text-slate-600" : "text-gray-400"}`}>Business Email Address *</label>
                     <input
                       type="email" required
                       value={form.email}
                       onChange={e => setForm({ ...form, email: e.target.value })}
-                      className="w-full bg-black border border-brand-dark-border p-2.5 rounded-lg text-white"
+                      className={`w-full p-2.5 rounded-lg border font-semibold ${
+                        isLight ? "bg-white border-slate-300 text-slate-900 focus:border-sky-500" : "bg-black border-brand-dark-border text-white focus:border-brand-sky"
+                      }`}
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 text-xs">
                   <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">State Tax Registration Number (NTN / GST)</label>
+                    <label className={`block text-[10px] uppercase font-bold mb-1 ${isLight ? "text-slate-600" : "text-gray-400"}`}>State Tax Registration Number (NTN / GST)</label>
                     <input
                       type="text"
                       placeholder="e.g. GST-1234567-8"
                       value={form.taxNumber}
                       onChange={e => setForm({ ...form, taxNumber: e.target.value })}
-                      className="w-full bg-black border border-brand-dark-border p-2.5 rounded-lg text-white font-mono"
+                      className={`w-full p-2.5 rounded-lg border font-mono ${
+                        isLight ? "bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-sky-500" : "bg-black border-brand-dark-border text-white focus:border-brand-sky"
+                      }`}
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Corporate Brand Logo URL</label>
+                    <label className={`block text-[10px] uppercase font-bold mb-1 ${isLight ? "text-slate-600" : "text-gray-400"}`}>Corporate Brand Logo URL</label>
                     <div className="relative">
-                      <Image size={13} className="absolute left-3 top-3.5 text-gray-500" />
+                      <Image size={13} className={`absolute left-3 top-3.5 ${isLight ? "text-slate-400" : "text-gray-500"}`} />
                       <input
                         type="text"
                         placeholder="https://yourstore.com/logo.png"
                         value={form.logoUrl}
                         onChange={e => setForm({ ...form, logoUrl: e.target.value })}
-                        className="w-full bg-black border border-brand-dark-border pl-9 p-2.5 rounded-lg text-white"
+                        className={`w-full pl-9 p-2.5 rounded-lg border ${
+                          isLight ? "bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-sky-500" : "bg-black border-brand-dark-border text-white focus:border-brand-sky"
+                        }`}
                       />
                     </div>
                   </div>
@@ -497,21 +509,25 @@ export default function SettingsPage() {
 
                 <div className="grid grid-cols-3 gap-4 text-xs">
                   <div className="col-span-2">
-                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Street Address</label>
+                    <label className={`block text-[10px] uppercase font-bold mb-1 ${isLight ? "text-slate-600" : "text-gray-400"}`}>Street Address</label>
                     <input
                       type="text"
                       value={form.address}
                       onChange={e => setForm({ ...form, address: e.target.value })}
-                      className="w-full bg-black border border-brand-dark-border p-2.5 rounded-lg text-white"
+                      className={`w-full p-2.5 rounded-lg border ${
+                        isLight ? "bg-white border-slate-300 text-slate-900 focus:border-sky-500" : "bg-black border-brand-dark-border text-white focus:border-brand-sky"
+                      }`}
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">City / State</label>
+                    <label className={`block text-[10px] uppercase font-bold mb-1 ${isLight ? "text-slate-600" : "text-gray-400"}`}>City / State</label>
                     <input
                       type="text"
                       value={form.city}
                       onChange={e => setForm({ ...form, city: e.target.value })}
-                      className="w-full bg-black border border-brand-dark-border p-2.5 rounded-lg text-white"
+                      className={`w-full p-2.5 rounded-lg border ${
+                        isLight ? "bg-white border-slate-300 text-slate-900 focus:border-sky-500" : "bg-black border-brand-dark-border text-white focus:border-brand-sky"
+                      }`}
                     />
                   </div>
                 </div>
@@ -520,28 +536,36 @@ export default function SettingsPage() {
 
             {/* POS & TAXATION TAB */}
             {activeTab === "pos" && (
-              <div className="bg-brand-dark-surface/20 border border-brand-dark-border rounded-2xl p-6 space-y-5 animate-fade-in-up">
-                <h3 className="text-xs font-black text-white uppercase tracking-wider border-b border-brand-dark-border/40 pb-2 flex items-center gap-2">
-                  <Sliders size={14} className="text-brand-sky" />
+              <div className={`border rounded-2xl p-6 space-y-5 animate-fade-in-up ${
+                isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/20 border-brand-dark-border text-gray-100"
+              }`}>
+                <h3 className={`text-xs font-black uppercase tracking-wider border-b pb-2 flex items-center gap-2 ${
+                  isLight ? "text-slate-900 border-slate-200" : "text-white border-brand-dark-border/40"
+                }`}>
+                  <Sliders size={14} className="text-sky-500" />
                   POS Checkout &amp; Billing Rules
                 </h3>
 
                 <div className="grid grid-cols-3 gap-4 text-xs">
                   <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Default Sales Tax Rate (%)</label>
+                    <label className={`block text-[10px] uppercase font-bold mb-1 ${isLight ? "text-slate-600" : "text-gray-400"}`}>Default Sales Tax Rate (%)</label>
                     <input
                       type="number" min="0" max="100"
                       value={form.defaultTaxRate}
                       onChange={e => setForm({ ...form, defaultTaxRate: e.target.value })}
-                      className="w-full bg-black border border-brand-dark-border p-2.5 rounded-lg text-white font-mono font-bold"
+                      className={`w-full p-2.5 rounded-lg border font-mono font-bold ${
+                        isLight ? "bg-white border-slate-300 text-slate-900 focus:border-sky-500" : "bg-black border-brand-dark-border text-white focus:border-brand-sky"
+                      }`}
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Base Currency Symbol</label>
+                    <label className={`block text-[10px] uppercase font-bold mb-1 ${isLight ? "text-slate-600" : "text-gray-400"}`}>Base Currency Symbol</label>
                     <select
                       value={form.defaultCurrency}
                       onChange={e => setForm({ ...form, defaultCurrency: e.target.value })}
-                      className="w-full bg-black border border-brand-dark-border p-2.5 rounded-lg text-white font-bold"
+                      className={`w-full p-2.5 rounded-lg border font-bold ${
+                        isLight ? "bg-white border-slate-300 text-slate-900 focus:border-sky-500" : "bg-black border-brand-dark-border text-white focus:border-brand-sky"
+                      }`}
                     >
                       <option value="PKR">PKR (Rs.)</option>
                       <option value="USD">USD ($)</option>
@@ -550,30 +574,34 @@ export default function SettingsPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Low Stock Alert Threshold</label>
+                    <label className={`block text-[10px] uppercase font-bold mb-1 ${isLight ? "text-slate-600" : "text-gray-400"}`}>Low Stock Alert Threshold</label>
                     <input
                       type="number" min="0"
                       value={form.lowStockAlert}
                       onChange={e => setForm({ ...form, lowStockAlert: e.target.value })}
-                      className="w-full bg-black border border-brand-dark-border p-2.5 rounded-lg text-white font-mono font-bold"
+                      className={`w-full p-2.5 rounded-lg border font-mono font-bold ${
+                        isLight ? "bg-white border-slate-300 text-slate-900 focus:border-sky-500" : "bg-black border-brand-dark-border text-white focus:border-brand-sky"
+                      }`}
                     />
                   </div>
                 </div>
 
-                <div className="bg-brand-dark-surface/40 p-4 border border-brand-dark-border/80 rounded-xl space-y-3">
+                <div className={`p-4 border rounded-xl space-y-3 ${
+                  isLight ? "bg-slate-50 border-slate-200 text-slate-900" : "bg-brand-dark-surface/40 border-brand-dark-border/80 text-gray-100"
+                }`}>
                   <div className="flex justify-between items-center">
                     <div>
-                      <h4 className="text-xs font-bold text-white uppercase">Enable Credit Sales (On Credit)</h4>
-                      <p className="text-[9px] text-gray-500">Allow customers to buy goods on due account (Accounts Receivable balance)</p>
+                      <h4 className={`text-xs font-bold uppercase ${isLight ? "text-slate-900" : "text-white"}`}>Enable Credit Sales (On Credit)</h4>
+                      <p className={`text-[9px] ${isLight ? "text-slate-500" : "text-gray-500"}`}>Allow customers to buy goods on due account (Accounts Receivable balance)</p>
                     </div>
                     <button
                       type="button"
                       onClick={() => setForm({ ...form, allowCreditSales: !form.allowCreditSales })}
                       className={`w-12 h-6 rounded-full p-1 transition-all ${
-                        form.allowCreditSales ? "bg-brand-sky" : "bg-brand-dark-border"
+                        form.allowCreditSales ? "bg-sky-600" : isLight ? "bg-slate-300" : "bg-brand-dark-border"
                       }`}
                     >
-                      <div className={`h-4 w-4 bg-black rounded-full transition-all ${
+                      <div className={`h-4 w-4 bg-white rounded-full transition-all ${
                         form.allowCreditSales ? "translate-x-6" : "translate-x-0"
                       }`} />
                     </button>
@@ -581,23 +609,27 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="space-y-3 text-xs">
-                  <h4 className="text-[10px] uppercase font-bold text-gray-400">Thermal Receipt Thermal Header / Footer Customizer</h4>
+                  <h4 className={`text-[10px] uppercase font-bold ${isLight ? "text-slate-600" : "text-gray-400"}`}>Thermal Receipt Header / Footer Customizer</h4>
                   <div>
-                    <label className="block text-[9px] text-gray-500 mb-1">Receipt Top Header Text</label>
+                    <label className={`block text-[9px] mb-1 ${isLight ? "text-slate-500" : "text-gray-500"}`}>Receipt Top Header Text</label>
                     <input
                       type="text"
                       value={form.receiptHeader}
                       onChange={e => setForm({ ...form, receiptHeader: e.target.value })}
-                      className="w-full bg-black border border-brand-dark-border p-2.5 rounded-lg text-white"
+                      className={`w-full p-2.5 rounded-lg border ${
+                        isLight ? "bg-white border-slate-300 text-slate-900 focus:border-sky-500" : "bg-black border-brand-dark-border text-white focus:border-brand-sky"
+                      }`}
                     />
                   </div>
                   <div>
-                    <label className="block text-[9px] text-gray-500 mb-1">Receipt Bottom Footer Message</label>
+                    <label className={`block text-[9px] mb-1 ${isLight ? "text-slate-500" : "text-gray-500"}`}>Receipt Bottom Footer Message</label>
                     <textarea
                       rows={2}
                       value={form.receiptFooter}
                       onChange={e => setForm({ ...form, receiptFooter: e.target.value })}
-                      className="w-full bg-black border border-brand-dark-border p-2.5 rounded-lg text-white text-[11px] resize-none focus:outline-none"
+                      className={`w-full p-2.5 rounded-lg border text-[11px] resize-none focus:outline-none ${
+                        isLight ? "bg-white border-slate-300 text-slate-900 focus:border-sky-500" : "bg-black border-brand-dark-border text-white focus:border-brand-sky"
+                      }`}
                     />
                   </div>
                 </div>
@@ -606,14 +638,20 @@ export default function SettingsPage() {
 
             {/* LOYALTY PROGRAMS TAB */}
             {activeTab === "loyalty" && (
-              <div className="bg-brand-dark-surface/20 border border-brand-dark-border rounded-2xl p-6 space-y-5 animate-fade-in-up">
-                <h3 className="text-xs font-black text-white uppercase tracking-wider border-b border-brand-dark-border/40 pb-2 flex items-center gap-2">
-                  <Award size={14} className="text-brand-sky" />
+              <div className={`border rounded-2xl p-6 space-y-5 animate-fade-in-up ${
+                isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/20 border-brand-dark-border text-gray-100"
+              }`}>
+                <h3 className={`text-xs font-black uppercase tracking-wider border-b pb-2 flex items-center gap-2 ${
+                  isLight ? "text-slate-900 border-slate-200" : "text-white border-brand-dark-border/40"
+                }`}>
+                  <Award size={14} className="text-sky-500" />
                   CRM Loyalty Rewards Calculator
                 </h3>
 
-                <div className="bg-yellow-500/10 border border-yellow-500/20 p-3.5 rounded-xl text-[10px] text-gray-400 flex gap-2">
-                  <AlertTriangle className="text-yellow-400 shrink-0 mt-0.5" size={13} />
+                <div className={`p-3.5 rounded-xl text-[10px] flex gap-2 border ${
+                  isLight ? "bg-amber-50 border-amber-200 text-amber-900" : "bg-yellow-500/10 border-yellow-500/20 text-gray-400"
+                }`}>
+                  <AlertTriangle className="text-amber-500 shrink-0 mt-0.5" size={13} />
                   <span>
                     Loyalty points program triggers automatically during sales checkouts inside the POS cashier terminal. Adjust parameters below to recalculate member points.
                   </span>
@@ -621,51 +659,59 @@ export default function SettingsPage() {
 
                 <div className="grid grid-cols-3 gap-4 text-xs font-mono">
                   <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1 font-sans">Points Per Amount ({currencySymbol})</label>
+                    <label className={`block text-[10px] uppercase font-bold mb-1 font-sans ${isLight ? "text-slate-600" : "text-gray-400"}`}>Points Per Amount ({currencySymbol})</label>
                     <div className="relative">
-                      <DollarSign size={12} className="absolute left-3 top-3 text-gray-500" />
+                      <DollarSign size={12} className={`absolute left-3 top-3 ${isLight ? "text-slate-400" : "text-gray-500"}`} />
                       <input
                         type="number" min="1"
                         value={form.loyaltyPointsPerAmount}
                         onChange={e => setForm({ ...form, loyaltyPointsPerAmount: e.target.value })}
-                        className="w-full bg-black border border-brand-dark-border pl-8 p-2.5 rounded-lg text-white font-bold"
+                        className={`w-full pl-8 p-2.5 rounded-lg border font-bold ${
+                          isLight ? "bg-white border-slate-300 text-slate-900 focus:border-sky-500" : "bg-black border-brand-dark-border text-white focus:border-brand-sky"
+                        }`}
                       />
                     </div>
-                    <span className="text-[8px] text-gray-500 mt-1 block font-sans">Customer gets 1 point per this PKR amount.</span>
+                    <span className={`text-[8px] mt-1 block font-sans ${isLight ? "text-slate-500" : "text-gray-500"}`}>Customer gets 1 point per this PKR amount.</span>
                   </div>
 
                   <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1 font-sans">Redeem Threshold (pts)</label>
+                    <label className={`block text-[10px] uppercase font-bold mb-1 font-sans ${isLight ? "text-slate-600" : "text-gray-400"}`}>Redeem Threshold (pts)</label>
                     <input
                       type="number" min="1"
                       value={form.loyaltyRedeemThreshold}
                       onChange={e => setForm({ ...form, loyaltyRedeemThreshold: e.target.value })}
-                      className="w-full bg-black border border-brand-dark-border p-2.5 rounded-lg text-white font-bold"
+                      className={`w-full p-2.5 rounded-lg border font-bold ${
+                        isLight ? "bg-white border-slate-300 text-slate-900 focus:border-sky-500" : "bg-black border-brand-dark-border text-white focus:border-brand-sky"
+                      }`}
                     />
-                    <span className="text-[8px] text-gray-500 mt-1 block font-sans">Minimum points needed to qualify for discount voucher.</span>
+                    <span className={`text-[8px] mt-1 block font-sans ${isLight ? "text-slate-500" : "text-gray-500"}`}>Minimum points needed to qualify for discount voucher.</span>
                   </div>
 
                   <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1 font-sans">Discount Value ({currencySymbol})</label>
+                    <label className={`block text-[10px] uppercase font-bold mb-1 font-sans ${isLight ? "text-slate-600" : "text-gray-400"}`}>Discount Value ({currencySymbol})</label>
                     <input
                       type="number" min="1"
                       value={form.loyaltyRedeemValue}
                       onChange={e => setForm({ ...form, loyaltyRedeemValue: e.target.value })}
-                      className="w-full bg-black border border-brand-dark-border p-2.5 rounded-lg text-white font-bold"
+                      className={`w-full p-2.5 rounded-lg border font-bold ${
+                        isLight ? "bg-white border-slate-300 text-slate-900 focus:border-sky-500" : "bg-black border-brand-dark-border text-white focus:border-brand-sky"
+                      }`}
                     />
-                    <span className="text-[8px] text-gray-500 mt-1 block font-sans">Discount voucher value rewarded per threshold redeem.</span>
+                    <span className={`text-[8px] mt-1 block font-sans ${isLight ? "text-slate-500" : "text-gray-500"}`}>Discount voucher value rewarded per threshold redeem.</span>
                   </div>
                 </div>
 
-                <div className="border-t border-brand-dark-border/40 pt-4">
-                  <h4 className="text-[10px] uppercase font-bold text-gray-400 mb-2">Simulated Reward Program Formula</h4>
-                  <div className="bg-black/60 border border-brand-dark-border p-4 rounded-xl font-mono text-[10px] leading-relaxed space-y-1">
-                    <div>1. Purchase Bill of <span className="text-brand-sky font-bold">PKR 5,000</span> will earn:</div>
-                    <div className="text-yellow-400 font-bold ml-4">
+                <div className={`border-t pt-4 ${isLight ? "border-slate-200" : "border-brand-dark-border/40"}`}>
+                  <h4 className={`text-[10px] uppercase font-bold mb-2 ${isLight ? "text-slate-600" : "text-gray-400"}`}>Simulated Reward Program Formula</h4>
+                  <div className={`border p-4 rounded-xl font-mono text-[10px] leading-relaxed space-y-1 ${
+                    isLight ? "bg-slate-50 border-slate-200 text-slate-900" : "bg-black/60 border-brand-dark-border text-gray-100"
+                  }`}>
+                    <div>1. Purchase Bill of <span className="text-sky-600 font-bold">PKR 5,000</span> will earn:</div>
+                    <div className="text-amber-600 font-bold ml-4">
                       = 5,000 / {form.loyaltyPointsPerAmount || "50"} = {Math.round(5000 / (parseInt(form.loyaltyPointsPerAmount) || 50))} points.
                     </div>
-                    <div className="mt-2">2. When member balance crosses <span className="text-yellow-400 font-bold">{form.loyaltyRedeemThreshold || "1000"} pts</span>:</div>
-                    <div className="text-emerald-400 font-bold ml-4">
+                    <div className="mt-2">2. When member balance crosses <span className="text-amber-600 font-bold">{form.loyaltyRedeemThreshold || "1000"} pts</span>:</div>
+                    <div className="text-emerald-600 font-bold ml-4">
                       = Customer receives flat discount of <span className="underline">PKR {form.loyaltyRedeemValue || "100"}</span> on next POS ticket.
                     </div>
                   </div>
@@ -675,35 +721,43 @@ export default function SettingsPage() {
 
             {/* SYSTEM MAINTENANCE TAB */}
             {activeTab === "system" && (
-              <div className="bg-brand-dark-surface/20 border border-brand-dark-border rounded-2xl p-6 space-y-5 animate-fade-in-up">
-                <h3 className="text-xs font-black text-white uppercase tracking-wider border-b border-brand-dark-border/40 pb-2 flex items-center gap-2">
-                  <ShieldAlert size={14} className="text-red-400" />
+              <div className={`border rounded-2xl p-6 space-y-5 animate-fade-in-up ${
+                isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/20 border-brand-dark-border text-gray-100"
+              }`}>
+                <h3 className={`text-xs font-black uppercase tracking-wider border-b pb-2 flex items-center gap-2 ${
+                  isLight ? "text-slate-900 border-slate-200" : "text-white border-brand-dark-border/40"
+                }`}>
+                  <ShieldAlert size={14} className="text-red-500" />
                   System Database Maintenance
                 </h3>
 
-                <div className="flex flex-col justify-between p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl space-y-3">
+                <div className={`flex flex-col justify-between p-4 border rounded-xl space-y-3 ${
+                  isLight ? "bg-emerald-50 border-emerald-200 text-slate-900" : "bg-emerald-500/10 border-emerald-500/30 text-gray-100"
+                }`}>
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="text-xs font-black text-white flex items-center gap-1.5">
-                        <Folder size={14} className="text-emerald-400" /> Auto-Save Receipts &amp; Reports Storage Folder
+                      <h4 className={`text-xs font-black flex items-center gap-1.5 ${isLight ? "text-slate-900" : "text-white"}`}>
+                        <Folder size={14} className="text-emerald-600" /> Auto-Save Receipts &amp; Reports Storage Folder
                       </h4>
-                      <p className="text-[10px] text-gray-400 mt-1">
-                        Select a folder on your PC (e.g. Documents). MT Core will automatically create subfolders (<span className="font-mono text-emerald-400 font-bold">Sale Receipts</span>, <span className="font-mono text-emerald-400 font-bold">Reports</span>, etc.) and save files directly into it!
+                      <p className={`text-[10px] mt-1 ${isLight ? "text-slate-600" : "text-gray-400"}`}>
+                        Select a folder on your PC (e.g. Documents). MT Core will automatically create subfolders (<span className="font-mono text-emerald-600 font-bold">Sale Receipts</span>, <span className="font-mono text-emerald-600 font-bold">Reports</span>, etc.) and save files directly into it!
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between bg-black/40 border border-brand-dark-border p-3 rounded-lg text-xs font-mono">
+                  <div className={`flex items-center justify-between p-3 rounded-lg text-xs font-mono border ${
+                    isLight ? "bg-white border-slate-300 text-slate-900" : "bg-black/40 border-brand-dark-border text-gray-100"
+                  }`}>
                     <div>
-                      <span className="text-gray-500 text-[10px] block">Current Storage Folder:</span>
-                      <span className="text-emerald-400 font-bold">
+                      <span className={`text-[10px] block ${isLight ? "text-slate-500" : "text-gray-500"}`}>Current Storage Folder:</span>
+                      <span className="text-emerald-600 font-bold">
                         {selectedFolderName ? `📁 ${selectedFolderName} (Subfolders created)` : "⚠️ Default System Folder (Click button to select custom folder)"}
                       </span>
                     </div>
                     <button
                       type="button"
                       onClick={handleSelectFolder}
-                      className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-black text-[11px] uppercase rounded-lg shadow transition shrink-0 flex items-center gap-1.5"
+                      className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[11px] uppercase rounded-lg shadow transition shrink-0 flex items-center gap-1.5"
                     >
                       <Folder size={13} /> {selectedFolderName ? "Change Folder" : "Select Storage Folder"}
                     </button>
@@ -711,13 +765,17 @@ export default function SettingsPage() {
                 </div>
 
                 {/* EVERYTHING BACKUP & RESTORE SECTION */}
-                <div className="bg-brand-dark-surface/40 border border-brand-sky/30 rounded-xl p-5 space-y-4 shadow-xl">
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-brand-dark-border/60 pb-3">
+                <div className={`border rounded-xl p-5 space-y-4 ${
+                  isLight ? "bg-sky-50 border-sky-200 text-slate-900" : "bg-brand-dark-surface/40 border-brand-sky/30 text-gray-100 shadow-xl"
+                }`}>
+                  <div className={`flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b pb-3 ${
+                    isLight ? "border-sky-200" : "border-brand-dark-border/60"
+                  }`}>
                     <div>
-                      <h4 className="text-xs font-black text-white flex items-center gap-2">
-                        <Database size={16} className="text-brand-sky" /> Full System Database Backup &amp; Restore (Everything Backup)
+                      <h4 className={`text-xs font-black flex items-center gap-2 ${isLight ? "text-slate-900" : "text-white"}`}>
+                        <Database size={16} className="text-sky-600" /> Full System Database Backup &amp; Restore (Everything Backup)
                       </h4>
-                      <p className="text-[10px] text-gray-400 mt-1">
+                      <p className={`text-[10px] mt-1 ${isLight ? "text-slate-600" : "text-gray-400"}`}>
                         Export a 100% complete JSON backup containing all products, inventory, sales transactions, customer ledgers, double-entry accounting, expenses, staff, and business settings.
                       </p>
                     </div>
@@ -725,27 +783,31 @@ export default function SettingsPage() {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {/* Export Card */}
-                    <div className="bg-black/50 border border-brand-dark-border/80 p-4 rounded-xl space-y-3">
+                    <div className={`border p-4 rounded-xl space-y-3 ${
+                      isLight ? "bg-white border-slate-200 shadow-xs" : "bg-black/50 border-brand-dark-border/80"
+                    }`}>
                       <div>
-                        <span className="text-xs font-bold text-emerald-400 block">📥 Export Everything Backup</span>
-                        <p className="text-[10px] text-gray-400 mt-1">Download a single-file complete system backup JSON to your computer or USB drive for safety.</p>
+                        <span className="text-xs font-bold text-emerald-600 block">📥 Export Everything Backup</span>
+                        <p className={`text-[10px] mt-1 ${isLight ? "text-slate-500" : "text-gray-400"}`}>Download a single-file complete system backup JSON to your computer or USB drive for safety.</p>
                       </div>
                       <button
                         type="button"
                         onClick={handleBackup}
-                        className="w-full flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xs py-2.5 rounded-lg transition uppercase tracking-wider shadow-lg shadow-emerald-500/20"
+                        className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs py-2.5 rounded-lg transition uppercase tracking-wider shadow-lg"
                       >
                         <Download size={14} /> Export Complete Backup (.json)
                       </button>
                     </div>
 
                     {/* Import / Restore Card */}
-                    <div className="bg-black/50 border border-brand-dark-border/80 p-4 rounded-xl space-y-3">
+                    <div className={`border p-4 rounded-xl space-y-3 ${
+                      isLight ? "bg-white border-slate-200 shadow-xs" : "bg-black/50 border-brand-dark-border/80"
+                    }`}>
                       <div>
-                        <span className="text-xs font-bold text-brand-sky block">📤 Import &amp; Restore Backup</span>
-                        <p className="text-[10px] text-gray-400 mt-1">Select a previously exported `.json` backup file from your computer to restore all store records.</p>
+                        <span className="text-xs font-bold text-sky-600 block">📤 Import &amp; Restore Backup</span>
+                        <p className={`text-[10px] mt-1 ${isLight ? "text-slate-500" : "text-gray-400"}`}>Select a previously exported `.json` backup file from your computer to restore all store records.</p>
                       </div>
-                      <label className="w-full flex items-center justify-center gap-2 bg-brand-sky hover:bg-brand-sky-light text-black font-black text-xs py-2.5 rounded-lg transition uppercase tracking-wider shadow-lg shadow-sky-500/20 cursor-pointer">
+                      <label className="w-full flex items-center justify-center gap-2 bg-sky-600 hover:bg-sky-500 text-white font-black text-xs py-2.5 rounded-lg transition uppercase tracking-wider shadow-lg cursor-pointer">
                         <Upload size={14} /> Select Backup File to Restore
                         <input type="file" accept=".json" onChange={handleRestore} className="hidden" />
                       </label>
@@ -753,35 +815,41 @@ export default function SettingsPage() {
                   </div>
                 </div>
 
-                <div className="bg-red-500/10 border border-red-500/30 p-5 rounded-xl text-xs space-y-3 mt-4">
-                  <div className="flex items-center justify-between border-b border-red-500/20 pb-2">
-                    <p className="font-black text-red-400 flex items-center gap-1.5 uppercase tracking-wider text-xs">
-                      <AlertTriangle className="text-red-400" size={15} /> DANGER ZONE — STORE DATABASE RESET
+                <div className={`p-5 rounded-xl text-xs space-y-3 mt-4 border ${
+                  isLight ? "bg-red-50 border-red-200 text-slate-900" : "bg-red-500/10 border-red-500/30 text-gray-100"
+                }`}>
+                  <div className={`flex items-center justify-between border-b pb-2 ${isLight ? "border-red-200" : "border-red-500/20"}`}>
+                    <p className="font-black text-red-600 flex items-center gap-1.5 uppercase tracking-wider text-xs">
+                      <AlertTriangle className="text-red-500" size={15} /> DANGER ZONE — STORE DATABASE RESET
                     </p>
-                    <span className="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded font-mono font-bold flex items-center gap-1">
+                    <span className="text-[10px] text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded font-mono font-bold flex items-center gap-1">
                       <Check size={11} /> STORE ISOLATED
                     </span>
                   </div>
-                  <p className="text-[11px] text-gray-300 leading-relaxed">
+                  <p className={`text-[11px] leading-relaxed ${isLight ? "text-slate-700" : "text-gray-300"}`}>
                     Executing a store reset will <strong>PERMANENTLY ERASE ALL TRANSACTION RECORDS FOR THIS STORE ONLY</strong> (products, sales history, customer ledgers, staff records, supplier dues, expenses, shift logs).
                   </p>
 
-                  <div className="p-3 bg-black/60 border border-brand-dark-border/80 rounded-xl space-y-1 text-[11px]">
-                    <span className="text-emerald-400 font-bold block flex items-center gap-1">
+                  <div className={`p-3 rounded-xl space-y-1 text-[11px] border ${
+                    isLight ? "bg-white border-slate-200" : "bg-black/60 border-brand-dark-border/80"
+                  }`}>
+                    <span className="text-emerald-600 font-bold block flex items-center gap-1">
                       <Check size={13} /> Strict Multi-Tenant Safeguards Active:
                     </span>
-                    <ul className="text-gray-400 space-y-0.5 pl-4 list-disc text-[10px]">
+                    <ul className={`space-y-0.5 pl-4 list-disc text-[10px] ${isLight ? "text-slate-600" : "text-gray-400"}`}>
                       <li>Only THIS store's data ({form.businessName || "Active Store"}) will be cleared. Other shops/branches remain 100% untouched.</li>
                       <li>Store Owner login credentials (email &amp; password) are <strong>PRESERVED &amp; NOT DELETED</strong>.</li>
                     </ul>
                   </div>
 
-                  <div className="flex items-center justify-between p-3.5 bg-black/60 border border-red-500/30 rounded-xl mt-2">
+                  <div className={`flex items-center justify-between p-3.5 rounded-xl mt-2 border ${
+                    isLight ? "bg-white border-red-200" : "bg-black/60 border-red-500/30"
+                  }`}>
                     <div>
-                      <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
-                        <Trash2 size={14} className="text-red-400" /> Wipe This Store's Database
+                      <h4 className={`text-xs font-bold flex items-center gap-1.5 ${isLight ? "text-slate-900" : "text-white"}`}>
+                        <Trash2 size={14} className="text-red-500" /> Wipe This Store's Database
                       </h4>
-                      <p className="text-[10px] text-gray-400 mt-0.5">Flush products, sales, customers, staff &amp; ledgers for {form.businessName || "this store"}.</p>
+                      <p className={`text-[10px] mt-0.5 ${isLight ? "text-slate-500" : "text-gray-400"}`}>Flush products, sales, customers, staff &amp; ledgers for {form.businessName || "this store"}.</p>
                     </div>
                     <button
                       type="button"
