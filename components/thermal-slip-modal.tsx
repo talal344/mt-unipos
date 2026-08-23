@@ -158,8 +158,7 @@ function buildSlipHTML(
 
   <!-- Header -->
   <div style="text-align:center;margin-bottom:8px">
-    <img src="/rectangle dark.png" style="height:48px;max-width:170px;object-fit:contain;margin:0 auto 4px auto;display:block" alt="MT Core" />
-    <div style="font-size:7px;color:#888;margin-bottom:4px">The core technology behind your business.</div>
+    <img src="/rectangle dark.png" style="height:48px;max-width:170px;object-fit:contain;margin:0 auto 4px auto;display:block" alt="Logo" />
     <div style="font-size:13px;font-weight:900;letter-spacing:1px;margin-top:4px;text-transform:uppercase">${businessName}</div>
     ${city ? `<div style="font-size:9px">${city}</div>` : ""}
     ${phone ? `<div style="font-size:9px">Ph: ${phone}</div>` : ""}
@@ -246,11 +245,7 @@ function buildSlipHTML(
     <div style="font-size:9px;font-weight:700;letter-spacing:1px;margin-top:2px">${sale.receiptNumber}</div>
   </div>
 
-  <!-- Footer -->
-  <div style="text-align:center;font-size:8px;color:#555;margin-top:8px;border-top:1px dashed #aaa;padding-top:5px">
-    Powered By: MT Core | The core technology behind your business.<br/>
-    Developed By: MT Softwares
-  </div>
+
 
   <script>
     try {

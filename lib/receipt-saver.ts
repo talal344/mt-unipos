@@ -123,9 +123,7 @@ export async function autoSaveReceiptToDisk(
     container.innerHTML = `
       <!-- Header -->
       <div style="text-align:center;margin-bottom:8px">
-        <div style="font-size:16px;font-weight:900;letter-spacing:0.5px">⚡ MT Core</div>
-        <div style="font-size:8px;color:#666">The core technology behind your business.</div>
-        <div style="font-size:8px;color:#666;margin-bottom:2px">Smart POS for Smart Business</div>
+        <img src="/rectangle dark.png" style="height:48px;max-width:170px;object-fit:contain;margin:0 auto 4px auto;display:block" alt="Logo" />
         <div style="font-size:14px;font-weight:900;letter-spacing:0.5px;margin-top:4px;text-transform:uppercase">${businessName}</div>
         ${city ? `<div style="font-size:9px">${city}</div>` : ""}
         ${phone ? `<div style="font-size:9px">Ph: ${phone}</div>` : ""}
@@ -212,11 +210,7 @@ export async function autoSaveReceiptToDisk(
         <div style="font-size:9px;font-weight:700;letter-spacing:1px;margin-top:2px">${sale.receiptNumber}</div>
       </div>
 
-      <!-- Footer -->
-      <div style="text-align:center;font-size:8px;color:#555;margin-top:8px;border-top:1px dashed #aaa;padding-top:5px">
-        Powered By: MT Core | The core technology behind your business.<br/>
-        Developed By: MT Softwares
-      </div>
+
     `;
 
     document.body.appendChild(container);
