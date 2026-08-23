@@ -1055,17 +1055,21 @@ export default function PosPage() {
 
         {/* ── SHIFT STATUS BAR ── */}
         {shiftOpen && (
-          <div className="lg:col-span-12 flex items-center justify-between bg-brand-dark-surface/80 border border-brand-dark-border rounded-xl px-4 py-2 shrink-0">
+          <div className={`lg:col-span-12 flex items-center justify-between border rounded-xl px-4 py-2 shrink-0 ${
+            isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/80 border-brand-dark-border text-gray-100"
+          }`}>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-1 rounded-lg">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-[10px] font-black text-emerald-400 uppercase">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[10px] font-black text-emerald-600 uppercase">
                   {posCounters.find(c => c.status === "Active" && isUserAssignedToCounter(c, currentUser))?.name || selectedCounter} · SHIFT ACTIVE
                 </span>
               </div>
-              <div className="hidden sm:flex items-center gap-1.5 bg-brand-dark-surface border border-brand-dark-border px-2.5 py-1 rounded-lg text-[10px] font-mono">
-                <span className="text-gray-400 font-bold">DRAWER CASH:</span>
-                <span className="text-emerald-400 font-black">
+              <div className={`hidden sm:flex items-center gap-1.5 border px-2.5 py-1 rounded-lg text-[10px] font-mono ${
+                isLight ? "bg-slate-100 border-slate-300 text-slate-900" : "bg-brand-dark-surface border-brand-dark-border text-gray-100"
+              }`}>
+                <span className={`font-bold ${isLight ? "text-slate-600" : "text-gray-400"}`}>DRAWER CASH:</span>
+                <span className="text-emerald-600 font-black">
                   {currencySymbol} {(() => {
                     const activeCounter = posCounters.find(c => c.status === "Active" && isUserAssignedToCounter(c, currentUser));
                     if (!activeCounter) {
@@ -1096,17 +1100,17 @@ export default function PosPage() {
               </div>
               {isOffline && (
                 <div className="flex items-center gap-1.5 bg-red-500/20 px-2 py-1 rounded">
-                  <WifiOff size={10} className="text-red-400 animate-pulse" />
-                  <span className="text-[10px] font-black text-red-400 uppercase">Offline Mode (Syncing Paused)</span>
+                  <WifiOff size={10} className="text-red-500 animate-pulse" />
+                  <span className="text-[10px] font-black text-red-500 uppercase">Offline Mode (Syncing Paused)</span>
                 </div>
               )}
-              <div className="flex items-center gap-1 text-[10px] text-gray-400 font-mono">
-                <Clock size={10} className="text-gray-500" />
+              <div className={`flex items-center gap-1 text-[10px] font-mono ${isLight ? "text-slate-500" : "text-gray-400"}`}>
+                <Clock size={10} className={isLight ? "text-slate-400" : "text-gray-500"} />
                 Started: {new Date(shiftStartTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </div>
-              <div className="hidden sm:flex items-center gap-1 text-[10px] text-gray-400 font-mono">
-                <ShoppingCart size={10} className="text-gray-500" />
-                Sales: <span className="text-white font-black ml-0.5">{shiftSales.length}</span>
+              <div className={`hidden sm:flex items-center gap-1 text-[10px] font-mono ${isLight ? "text-slate-500" : "text-gray-400"}`}>
+                <ShoppingCart size={10} className={isLight ? "text-slate-400" : "text-gray-500"} />
+                Sales: <span className={`font-black ml-0.5 ${isLight ? "text-slate-900" : "text-white"}`}>{shiftSales.length}</span>
               </div>
               <button 
                 onClick={() => setShowHeldCartsPanel(true)}

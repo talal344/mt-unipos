@@ -74,10 +74,12 @@ export default function HelpSupportPage() {
       <main className="flex-grow p-6 sm:p-8 space-y-6 overflow-y-auto max-h-screen grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Left Column: Tickets History List */}
-        <div className="lg:col-span-1 bg-brand-dark-surface/50 border border-brand-dark-border p-4 rounded-2xl flex flex-col max-h-[85vh]">
+        <div className={`lg:col-span-1 border p-4 rounded-2xl flex flex-col max-h-[85vh] ${
+          isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/50 border-brand-dark-border text-gray-100"
+        }`}>
           
-          <div className="flex justify-between items-center mb-4 border-b border-brand-dark-border/40 pb-3">
-            <h2 className="text-sm font-black text-white uppercase tracking-wider">Help Desk</h2>
+          <div className={`flex justify-between items-center mb-4 border-b pb-3 ${isLight ? "border-slate-200" : "border-brand-dark-border/40"}`}>
+            <h2 className={`text-sm font-black uppercase tracking-wider ${isLight ? "text-slate-900" : "text-white"}`}>Help Desk</h2>
             <button
               onClick={() => {
                 setShowCreateForm(!showCreateForm);

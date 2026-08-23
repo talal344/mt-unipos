@@ -75,41 +75,53 @@ export default function CrmPage() {
     <div className={`flex min-h-screen font-sans ${isLight ? "bg-slate-100 text-slate-900" : "bg-black text-gray-100"}`}>
       <ClientSidebar />
 
-      <main className="flex-grow p-6 sm:p-8 space-y-6 overflow-y-auto max-h-screen grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <main className="flex-grow p-6 sm:p-8 space-y-6 overflow-y-auto max-h-screen">
         
-        {/* Left Columns: Customer & Supplier directories (8 columns) */}
-        <div className="lg:col-span-8 space-y-6">
-          
-          {/* Header & Sub-tabs */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-brand-dark-border/60 pb-4 gap-4">
-            <div>
-              <h1 className="text-xl font-black tracking-tight text-white">CRM &amp; Settlements Desk</h1>
-              <p className="text-[10px] text-gray-500">Track client loyalty accounts, adjust accounts receivable, pay supplier debts, and sync financial sheets.</p>
-            </div>
-
-            {/* Sub Tabs Swapper */}
-            <div className="bg-brand-dark-surface border border-brand-dark-border p-1 rounded-lg flex gap-1 text-[10px]">
-              <button
-                onClick={() => setActiveSubTab("customers")}
-                className={`px-3 py-1.5 rounded font-bold uppercase transition ${
-                  activeSubTab === "customers" ? "bg-brand-sky text-black font-black" : "text-gray-400 hover:text-white"
-                }`}
-              >
-                Customer Accounts
-              </button>
-              <button
-                onClick={() => setActiveSubTab("suppliers")}
-                className={`px-3 py-1.5 rounded font-bold uppercase transition ${
-                  activeSubTab === "suppliers" ? "bg-brand-sky text-black font-black" : "text-gray-400 hover:text-white"
-                }`}
-              >
-                Supplier Accounts
-              </button>
-            </div>
+        {/* Top Header */}
+        <div className={`flex justify-between items-center border-b pb-4 ${isLight ? "border-slate-200" : "border-brand-dark-border/60"}`}>
+          <div>
+            <h1 className={`text-xl font-black tracking-tight flex items-center gap-2 ${isLight ? "text-slate-900" : "text-white"}`}>
+              <Users className="text-sky-500" size={20} />
+              CRM &amp; Settlements Desk
+            </h1>
+            <p className={`text-[10px] ${isLight ? "text-slate-500" : "text-gray-500"}`}>Track client loyalty accounts, adjust accounts receivable, pay supplier debts, and sync financial sheets.</p>
           </div>
 
+          {/* Sub Tabs Swapper */}
+          <div className={`border p-1 rounded-lg flex gap-1 text-[10px] ${
+            isLight ? "bg-slate-200 border-slate-300" : "bg-brand-dark-surface border-brand-dark-border"
+          }`}>
+            <button
+              onClick={() => setActiveSubTab("customers")}
+              className={`px-3 py-1.5 rounded font-bold uppercase transition ${
+                activeSubTab === "customers"
+                  ? isLight ? "bg-sky-600 text-white font-black shadow-xs" : "bg-brand-sky text-black font-black"
+                  : isLight ? "text-slate-600 hover:text-slate-900" : "text-gray-400 hover:text-white"
+              }`}
+            >
+              Customer Accounts
+            </button>
+            <button
+              onClick={() => setActiveSubTab("suppliers")}
+              className={`px-3 py-1.5 rounded font-bold uppercase transition ${
+                activeSubTab === "suppliers"
+                  ? isLight ? "bg-sky-600 text-white font-black shadow-xs" : "bg-brand-sky text-black font-black"
+                  : isLight ? "text-slate-600 hover:text-slate-900" : "text-gray-400 hover:text-white"
+              }`}
+            >
+              Supplier Accounts
+            </button>
+          </div>
+        </div>
+
+        {/* 2-Column layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+          {/* Left Column: Accounts table (8 columns) */}
+          <div className="lg:col-span-8 space-y-4">
+
           {successMsg && (
-            <div className="bg-emerald-500/10 border border-emerald-500 p-3 rounded-lg text-xs flex items-center gap-2 text-emerald-400 font-bold animate-fade-in-up">
+            <div className="bg-emerald-500/10 border border-emerald-500 p-3 rounded-lg text-xs flex items-center gap-2 text-emerald-600 font-bold animate-fade-in-up">
               <ShieldCheck size={16} />
               <span>{successMsg}</span>
             </div>
@@ -117,11 +129,15 @@ export default function CrmPage() {
 
           {/* Tab A: Customers Loyalty & Recoveries */}
           {activeSubTab === "customers" && (
-            <div className="bg-brand-dark-surface/30 border border-brand-dark-border rounded-2xl overflow-hidden animate-fade-in-up">
+            <div className={`border rounded-2xl overflow-hidden animate-fade-in-up ${
+              isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/30 border-brand-dark-border text-gray-100"
+            }`}>
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
-                    <tr className="border-b border-brand-dark-border text-gray-500 font-mono">
+                    <tr className={`border-b font-mono ${
+                      isLight ? "bg-slate-100 text-slate-700 border-slate-200" : "border-brand-dark-border text-gray-500 bg-black/60"
+                    }`}>
                       <th className="p-4 font-semibold">Customer ID</th>
                       <th className="p-4 font-semibold">Contact Info</th>
                       <th className="p-4 font-semibold text-right">Credit Dues</th>
@@ -130,26 +146,28 @@ export default function CrmPage() {
                       <th className="p-4 font-semibold text-center">Settlements</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-brand-dark-border/40 font-mono text-[11px]">
+                  <tbody className={`divide-y font-mono text-[11px] ${isLight ? "divide-slate-200" : "divide-brand-dark-border/40"}`}>
                     {customers.map(c => (
-                      <tr key={c.id} className="hover:bg-brand-dark-surface/60 transition">
-                        <td className="p-4 text-brand-sky font-bold">{c.id}</td>
+                      <tr key={c.id} className={`transition ${isLight ? "hover:bg-slate-50 text-slate-900" : "hover:bg-brand-dark-surface/60 text-gray-100"}`}>
+                        <td className="p-4 text-sky-600 font-bold">{c.id}</td>
                         <td className="p-4">
-                          <div className="text-white font-bold font-sans">{c.name}</div>
-                          <div className="text-[9px] text-gray-500">{c.mobile} • {c.email}</div>
+                          <div className={`font-bold font-sans ${isLight ? "text-slate-900" : "text-white"}`}>{c.name}</div>
+                          <div className={`text-[9px] ${isLight ? "text-slate-500" : "text-gray-500"}`}>{c.mobile} • {c.email}</div>
                         </td>
                         <td className="p-4 text-right">
-                          <span className={`font-bold ${c.creditBalance > 0 ? "text-amber-400 font-bold" : "text-gray-400"}`}>
+                          <span className={`font-bold ${c.creditBalance > 0 ? "text-amber-600 font-bold" : isLight ? "text-slate-400" : "text-gray-400"}`}>
                             {currencySymbol} {c.creditBalance.toLocaleString()}
                           </span>
                         </td>
                         <td className="p-4 text-right">
-                          <span className={`font-bold ${(c.walletBalance || 0) > 0 ? "text-emerald-400 font-bold" : "text-gray-400"}`}>
+                          <span className={`font-bold ${(c.walletBalance || 0) > 0 ? "text-emerald-600 font-bold" : isLight ? "text-slate-400" : "text-gray-400"}`}>
                             {currencySymbol} {(c.walletBalance || 0).toLocaleString()}
                           </span>
                         </td>
                         <td className="p-4 text-right">
-                          <span className="bg-brand-sky/10 border border-brand-sky/20 text-brand-sky font-bold px-2.5 py-0.5 rounded-full text-[10px]">
+                          <span className={`border font-bold px-2.5 py-0.5 rounded-full text-[10px] ${
+                            isLight ? "bg-sky-50 border-sky-200 text-sky-700" : "bg-brand-sky/10 border-brand-sky/20 text-brand-sky"
+                          }`}>
                             {c.loyaltyPoints} points
                           </span>
                         </td>
@@ -166,7 +184,7 @@ export default function CrmPage() {
                                     setTimeout(() => setSuccessMsg(""), 3500);
                                   }
                                 }}
-                                className="px-2 py-1 bg-emerald-500 hover:bg-emerald-400 text-black font-black text-[9px] uppercase rounded transition"
+                                className="px-2 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[9px] uppercase rounded transition shadow-xs"
                                 title="Pay Dues via Wallet Balance"
                               >
                                 ⚡ Pay via Wallet
@@ -175,12 +193,12 @@ export default function CrmPage() {
                             {c.creditBalance > 0 ? (
                               <button
                                 onClick={() => setRecoveryCustomer(c)}
-                                className="px-2.5 py-1 bg-red-500 hover:bg-red-400 text-white font-black text-[10px] rounded transition"
+                                className="px-2.5 py-1 bg-red-600 hover:bg-red-500 text-white font-black text-[10px] rounded transition shadow-xs"
                               >
                                 Settle Dues
                               </button>
                             ) : (
-                              <span className="text-[10px] text-gray-500 italic font-sans">Clear</span>
+                              <span className={`text-[10px] italic font-sans ${isLight ? "text-slate-400" : "text-gray-500"}`}>Clear</span>
                             )}
                           </div>
                         </td>
@@ -194,27 +212,31 @@ export default function CrmPage() {
 
           {/* Tab B: Suppliers Debts Settlement */}
           {activeSubTab === "suppliers" && (
-            <div className="bg-brand-dark-surface/30 border border-brand-dark-border rounded-2xl overflow-hidden animate-fade-in-up">
+            <div className={`border rounded-2xl overflow-hidden animate-fade-in-up ${
+              isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/30 border-brand-dark-border text-gray-100"
+            }`}>
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
-                    <tr className="border-b border-brand-dark-border text-gray-500 font-mono">
+                    <tr className={`border-b font-mono ${
+                      isLight ? "bg-slate-100 text-slate-700 border-slate-200" : "border-brand-dark-border text-gray-500 bg-black/60"
+                    }`}>
                       <th className="p-4 font-semibold">Supplier ID</th>
                       <th className="p-4 font-semibold">Distributor Info</th>
                       <th className="p-4 font-semibold text-right">Accounts Payable Due</th>
                       <th className="p-4 font-semibold text-center">Debt Payout</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-brand-dark-border/40 font-mono text-[11px]">
+                  <tbody className={`divide-y font-mono text-[11px] ${isLight ? "divide-slate-200" : "divide-brand-dark-border/40"}`}>
                     {suppliers.map(s => (
-                      <tr key={s.id} className="hover:bg-brand-dark-surface/60 transition">
-                        <td className="p-4 text-purple-400 font-bold">{s.id}</td>
+                      <tr key={s.id} className={`transition ${isLight ? "hover:bg-slate-50 text-slate-900" : "hover:bg-brand-dark-surface/60 text-gray-100"}`}>
+                        <td className="p-4 text-purple-600 font-bold">{s.id}</td>
                         <td className="p-4">
-                          <div className="text-white font-bold font-sans">{s.name}</div>
-                          <div className="text-[9px] text-gray-500 font-sans">{s.company} • {s.mobile}</div>
+                          <div className={`font-bold font-sans ${isLight ? "text-slate-900" : "text-white"}`}>{s.name}</div>
+                          <div className={`text-[9px] font-sans ${isLight ? "text-slate-500" : "text-gray-500"}`}>{s.company} • {s.mobile}</div>
                         </td>
                         <td className="p-4 text-right">
-                          <span className={`font-bold ${s.dueAmount > 0 ? "text-red-400 font-bold" : "text-gray-400"}`}>
+                          <span className={`font-bold ${s.dueAmount > 0 ? "text-red-500 font-bold" : isLight ? "text-slate-400" : "text-gray-400"}`}>
                             {currencySymbol} {s.dueAmount.toLocaleString()}
                           </span>
                         </td>
@@ -222,12 +244,12 @@ export default function CrmPage() {
                           {s.dueAmount > 0 ? (
                             <button
                               onClick={() => setPayoutSupplier(s)}
-                              className="px-2.5 py-1 bg-purple-600 hover:bg-purple-500 text-white font-black text-[10px] rounded transition shadow"
+                              className="px-2.5 py-1 bg-purple-600 hover:bg-purple-500 text-white font-black text-[10px] rounded transition shadow-xs"
                             >
                               Settle AP Debt
                             </button>
                           ) : (
-                            <span className="text-[10px] text-gray-500 italic font-sans">Clear</span>
+                            <span className={`text-[10px] italic font-sans ${isLight ? "text-slate-400" : "text-gray-500"}`}>Clear</span>
                           )}
                         </td>
                       </tr>
@@ -241,15 +263,19 @@ export default function CrmPage() {
         </div>
 
         {/* Right Column: Bulk campaign sender (4 columns) */}
-        <div className="lg:col-span-4 bg-brand-dark-surface/50 border border-brand-dark-border p-5 rounded-2xl h-fit">
-          <h2 className="text-xs font-black text-white uppercase tracking-wider mb-4 border-b border-brand-dark-border/40 pb-2 flex items-center gap-1.5">
-            <MessageSquare className="text-brand-sky" size={14} />
+        <div className={`border p-5 rounded-2xl h-fit ${
+          isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/50 border-brand-dark-border text-gray-100"
+        }`}>
+          <h2 className={`text-xs font-black uppercase tracking-wider mb-4 border-b pb-2 flex items-center gap-1.5 ${
+            isLight ? "text-slate-900 border-slate-200" : "text-white border-brand-dark-border/40"
+          }`}>
+            <MessageSquare className="text-sky-500" size={14} />
             Bulk Campaign Console
           </h2>
 
           <form onSubmit={handleLaunchCampaign} className="space-y-4 text-xs">
             <div>
-              <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1.5">Marketing Channel</label>
+              <label className={`block text-[10px] uppercase font-bold mb-1.5 ${isLight ? "text-slate-600" : "text-gray-400"}`}>Marketing Channel</label>
               <div className="grid grid-cols-2 gap-2">
                 {["SMS", "Email"].map(ch => (
                   <button
@@ -258,8 +284,8 @@ export default function CrmPage() {
                     onClick={() => setChannel(ch as any)}
                     className={`p-2 rounded border text-center font-bold transition ${
                       channel === ch
-                        ? "bg-brand-sky text-black font-black"
-                        : "bg-black/60 border-brand-dark-border/80 text-gray-500 hover:text-white"
+                        ? isLight ? "bg-sky-600 text-white font-black shadow-xs" : "bg-brand-sky text-black font-black"
+                        : isLight ? "bg-slate-100 border-slate-300 text-slate-700 hover:bg-slate-200" : "bg-black/60 border-brand-dark-border/80 text-gray-500 hover:text-white"
                     }`}
                   >
                     {ch === "SMS" ? "Bulk SMS" : "Bulk Email"}
@@ -270,20 +296,22 @@ export default function CrmPage() {
 
             {channel === "Email" && (
               <div>
-                <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Campaign Subject</label>
+                <label className={`block text-[10px] uppercase font-bold mb-1 ${isLight ? "text-slate-600" : "text-gray-400"}`}>Campaign Subject</label>
                 <input
                   type="text"
                   required
                   placeholder="e.g. Al-Fatah Weekend Sale - 25% Off"
                   value={campaignSubject}
                   onChange={(e) => setCampaignSubject(e.target.value)}
-                  className="w-full bg-black border border-brand-dark-border p-2.5 rounded text-white"
+                  className={`w-full p-2.5 rounded text-xs font-bold border focus:outline-none ${
+                    isLight ? "bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-sky-500 shadow-xs" : "bg-black border-brand-dark-border text-white focus:border-brand-sky"
+                  }`}
                 />
               </div>
             )}
 
             <div>
-              <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Broadcast Message Body</label>
+              <label className={`block text-[10px] uppercase font-bold mb-1 ${isLight ? "text-slate-600" : "text-gray-400"}`}>Broadcast Message Body</label>
               <textarea
                 required
                 rows={4}
@@ -294,7 +322,9 @@ export default function CrmPage() {
                 }
                 value={campaignBody}
                 onChange={(e) => setCampaignBody(e.target.value)}
-                className="w-full bg-black border border-brand-dark-border p-2 rounded text-white focus:outline-none resize-none"
+                className={`w-full p-2.5 rounded text-xs font-bold border focus:outline-none resize-none ${
+                  isLight ? "bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-sky-500 shadow-xs" : "bg-black border-brand-dark-border text-white focus:border-brand-sky"
+                }`}
               />
             </div>
 
@@ -307,6 +337,7 @@ export default function CrmPage() {
             </button>
           </form>
 
+        </div>
         </div>
 
       </main>

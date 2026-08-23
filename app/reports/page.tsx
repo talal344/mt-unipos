@@ -821,23 +821,29 @@ export default function ReportsPage() {
       <main className="flex-grow p-6 sm:p-8 space-y-6 overflow-y-auto max-h-screen">
 
         {/* ── Header ── */}
-        <div className="flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center border-b border-brand-dark-border/60 pb-4">
+        <div className={`flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center border-b pb-4 ${
+          isLight ? "border-slate-200" : "border-brand-dark-border/60"
+        }`}>
           <div>
-            <h1 className="text-xl font-black text-white flex items-center gap-2">
-              <BarChart3 size={20} className="text-brand-sky" /> Analytics & Reports
+            <h1 className={`text-xl font-black flex items-center gap-2 ${isLight ? "text-slate-900" : "text-white"}`}>
+              <BarChart3 size={20} className="text-sky-500" /> Analytics & Reports
             </h1>
-            <p className="text-[10px] text-gray-500 mt-0.5">
+            <p className={`text-[10px] mt-0.5 ${isLight ? "text-slate-500" : "text-gray-500"}`}>
               {PERIOD_LABELS[period]} · {filteredSales.length} transactions · {currentBranch}
             </p>
           </div>
           <div className="flex items-center gap-3 flex-wrap">
             {/* Period selector */}
             <div className="flex flex-wrap items-center gap-2">
-              <div className="bg-brand-dark-surface border border-brand-dark-border p-1 rounded-lg flex gap-1 text-[10px]">
+              <div className={`border p-1 rounded-lg flex gap-1 text-[10px] ${
+                isLight ? "bg-slate-200 border-slate-300 text-slate-900" : "bg-brand-dark-surface border-brand-dark-border"
+              }`}>
                 {(["today", "week", "month", "quarter", "custom"] as const).map(p => (
                   <button key={p} onClick={() => setPeriod(p)}
                     className={`px-3 py-1.5 rounded font-bold uppercase tracking-wide transition ${
-                      period === p ? "bg-brand-sky text-black font-black" : "text-gray-400 hover:text-white"
+                      period === p
+                        ? isLight ? "bg-sky-600 text-white font-black shadow-xs" : "bg-brand-sky text-black font-black"
+                        : isLight ? "text-slate-600 hover:text-slate-900" : "text-gray-400 hover:text-white"
                     }`}>
                     {PERIOD_LABELS[p]}
                   </button>
@@ -846,21 +852,25 @@ export default function ReportsPage() {
 
               {/* Custom Date Range Inputs */}
               {period === "custom" && (
-                <div className="flex items-center gap-1.5 bg-brand-dark-surface border border-brand-dark-border p-1 rounded-lg text-xs font-mono">
+                <div className={`flex items-center gap-1.5 border p-1 rounded-lg text-xs font-mono ${
+                  isLight ? "bg-white border-slate-300 text-slate-900" : "bg-brand-dark-surface border-brand-dark-border"
+                }`}>
                   <input 
                     type="date" 
                     value={customFromDate} 
                     onChange={e => setCustomFromDate(e.target.value)}
-                    className="bg-black text-white px-2 py-1 rounded border border-brand-dark-border focus:outline-none focus:border-brand-sky text-[10px]"
-                    style={{ colorScheme: "dark" }}
+                    className={`px-2 py-1 rounded border text-[10px] font-bold ${
+                      isLight ? "bg-white border-slate-300 text-slate-900" : "bg-black text-white border-brand-dark-border"
+                    }`}
                   />
-                  <span className="text-gray-500 text-[10px]">to</span>
+                  <span className={`text-[10px] ${isLight ? "text-slate-500" : "text-gray-500"}`}>to</span>
                   <input 
                     type="date" 
                     value={customToDate} 
                     onChange={e => setCustomToDate(e.target.value)}
-                    className="bg-black text-white px-2 py-1 rounded border border-brand-dark-border focus:outline-none focus:border-brand-sky text-[10px]"
-                    style={{ colorScheme: "dark" }}
+                    className={`px-2 py-1 rounded border text-[10px] font-bold ${
+                      isLight ? "bg-white border-slate-300 text-slate-900" : "bg-black text-white border-brand-dark-border"
+                    }`}
                   />
                 </div>
               )}
@@ -869,15 +879,15 @@ export default function ReportsPage() {
             {/* Exports button group */}
             <div className="flex items-center gap-1.5">
               <button onClick={handleExcelExport}
-                className="flex items-center gap-1 bg-emerald-500 hover:bg-emerald-400 text-black font-black text-[11px] px-3.5 py-2.5 rounded-lg shadow-lg transition">
+                className="flex items-center gap-1 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[11px] px-3.5 py-2.5 rounded-lg shadow-lg transition">
                 <FileSpreadsheet size={13} /> Excel
               </button>
               <button onClick={handleImageExport}
-                className="flex items-center gap-1 bg-blue-500 hover:bg-blue-400 text-white font-black text-[11px] px-3.5 py-2.5 rounded-lg shadow-lg transition">
+                className="flex items-center gap-1 bg-blue-600 hover:bg-blue-500 text-white font-black text-[11px] px-3.5 py-2.5 rounded-lg shadow-lg transition">
                 <Image size={13} /> JPG
               </button>
               <button onClick={handlePdfExport}
-                className="flex items-center gap-1 bg-purple-500 hover:bg-purple-400 text-white font-black text-[11px] px-3.5 py-2.5 rounded-lg shadow-lg transition">
+                className="flex items-center gap-1 bg-purple-600 hover:bg-purple-500 text-white font-black text-[11px] px-3.5 py-2.5 rounded-lg shadow-lg transition">
                 <Printer size={13} /> PDF (A4)
               </button>
             </div>
@@ -885,13 +895,15 @@ export default function ReportsPage() {
         </div>
 
         {/* ── Tabs ── */}
-        <div className="flex gap-1 border-b border-brand-dark-border/40 overflow-x-auto whitespace-nowrap scrollbar-none pb-0.5">
+        <div className={`flex gap-1 border-b overflow-x-auto whitespace-nowrap scrollbar-none pb-0.5 ${
+          isLight ? "border-slate-200" : "border-brand-dark-border/40"
+        }`}>
           {(["overview", "pl", "sales", "inventory", "expenses", "employees", "customers", "suppliers", "payroll"] as const).map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)}
               className={`px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider transition border-b-2 -mb-px shrink-0 ${
                 activeTab === tab
-                  ? "border-brand-sky text-brand-sky"
-                  : "border-transparent text-gray-500 hover:text-gray-300"
+                  ? isLight ? "border-sky-600 text-sky-600 font-black" : "border-brand-sky text-brand-sky"
+                  : isLight ? "border-transparent text-slate-500 hover:text-slate-800" : "border-transparent text-gray-500 hover:text-gray-300"
               }`}>
               {tab === "overview" ? "Overview" : tab === "pl" ? "📈 P/L Statement" : tab === "sales" ? "Sales" : tab === "inventory" ? "Inventory" : tab === "expenses" ? "Expenses" : tab === "employees" ? "Employees" : tab === "customers" ? "Customers" : tab === "suppliers" ? "Suppliers" : "Payroll"}
             </button>
@@ -899,7 +911,9 @@ export default function ReportsPage() {
         </div>
 
         {/* ── Active Tab Container (Ref for exports) ── */}
-        <div ref={reportContainerRef} className="space-y-6 bg-black p-1 rounded-2xl">
+        <div ref={reportContainerRef} className={`space-y-6 p-1 rounded-2xl ${
+          isLight ? "bg-slate-100 text-slate-900" : "bg-black text-gray-100"
+        }`}>
 
           {/* ══════════════════════════════════════════════════════════════════
               OVERVIEW TAB

@@ -189,17 +189,21 @@ export default function StaffPage() {
       <main className="flex-grow flex flex-col overflow-hidden max-h-screen">
         
         {/* Top Header & Tabs */}
-        <div className="p-6 border-b border-brand-dark-border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shrink-0">
+        <div className={`p-6 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shrink-0 ${isLight ? "border-slate-200" : "border-brand-dark-border"}`}>
           <div>
-            <h1 className="text-xl font-black text-white flex items-center gap-2">
-              <Shield size={20} className="text-brand-sky" /> Human Resources
+            <h1 className={`text-xl font-black flex items-center gap-2 ${isLight ? "text-slate-900" : "text-white"}`}>
+              <Shield size={20} className="text-sky-500" /> Human Resources
             </h1>
-            <p className="text-[10px] text-gray-500 mt-0.5">Staff profiles, attendance tracking, and payroll.</p>
+            <p className={`text-[10px] mt-0.5 ${isLight ? "text-slate-500" : "text-gray-500"}`}>Staff profiles, attendance tracking, and payroll.</p>
           </div>
           <div className="flex gap-2">
             {["Profiles", "Attendance", "Payroll"].map(t => (
               <button key={t} onClick={() => setActiveTab(t as any)}
-                className={`px-4 py-2 text-xs font-bold uppercase rounded-lg transition ${activeTab === t ? "bg-brand-sky text-black" : "bg-brand-dark-surface border border-brand-dark-border text-gray-400 hover:text-white"}`}>
+                className={`px-4 py-2 text-xs font-bold uppercase rounded-lg transition ${
+                  activeTab === t
+                    ? isLight ? "bg-sky-600 text-white shadow-xs" : "bg-brand-sky text-black"
+                    : isLight ? "bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 shadow-xs" : "bg-brand-dark-surface border border-brand-dark-border text-gray-400 hover:text-white"
+                }`}>
                 {t}
               </button>
             ))}
@@ -210,16 +214,16 @@ export default function StaffPage() {
         {activeTab === "Profiles" && (
           <>
         {/* LEFT: Staff List */}
-        <section className={`flex flex-col border-r border-brand-dark-border transition-all duration-300 ${selectedId ? "w-0 lg:w-[420px] overflow-hidden" : "flex-grow"}`}>
+        <section className={`flex flex-col border-r transition-all duration-300 ${isLight ? "border-slate-200" : "border-brand-dark-border"} ${selectedId ? "w-0 lg:w-[420px] overflow-hidden" : "flex-grow"}`}>
           <div className="flex-grow overflow-y-auto p-6 space-y-5">
 
             {/* Header */}
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-black text-white">Staff Roster</h2>
-                <p className="text-[10px] text-gray-500">{totalStaff} team members</p>
+                <h2 className={`text-lg font-black ${isLight ? "text-slate-900" : "text-white"}`}>Staff Roster</h2>
+                <p className={`text-[10px] ${isLight ? "text-slate-500" : "text-gray-500"}`}>{totalStaff} team members</p>
               </div>
-              <button onClick={openAdd} className="flex items-center gap-1.5 bg-brand-sky hover:bg-brand-sky-light text-black font-black text-xs px-4 py-2.5 rounded-lg shadow-lg transition">
+              <button onClick={openAdd} className="flex items-center gap-1.5 bg-sky-600 hover:bg-sky-500 text-white font-black text-xs px-4 py-2.5 rounded-lg shadow-lg transition">
                 <Plus size={14} /> Add Staff
               </button>
             </div>
@@ -227,15 +231,17 @@ export default function StaffPage() {
             {/* Stats */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               {[
-                { label: "Total Staff", val: totalStaff, color: "text-brand-sky", icon: Users },
-                { label: "Active", val: activeStaff, color: "text-emerald-400", icon: UserCheck },
-                { label: "Cashiers", val: byCashiers, color: "text-purple-400", icon: Briefcase },
-                { label: "Salary Bill", val: `${currencySymbol} ${totalSalaryBill.toLocaleString()}`, color: "text-amber-400", icon: DollarSign },
+                { label: "Total Staff", val: totalStaff, color: "text-sky-500", icon: Users },
+                { label: "Active", val: activeStaff, color: "text-emerald-500", icon: UserCheck },
+                { label: "Cashiers", val: byCashiers, color: "text-purple-500", icon: Briefcase },
+                { label: "Salary Bill", val: `${currencySymbol} ${totalSalaryBill.toLocaleString()}`, color: "text-amber-500", icon: DollarSign },
               ].map(s => (
-                <div key={s.label} className="bg-brand-dark-surface/40 border border-brand-dark-border rounded-xl p-4">
+                <div key={s.label} className={`border rounded-xl p-4 ${
+                  isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/40 border-brand-dark-border text-gray-100"
+                }`}>
                   <s.icon size={15} className={s.color} />
                   <div className={`text-lg font-black font-mono mt-1 ${s.color}`}>{s.val}</div>
-                  <div className="text-[9px] text-gray-500 uppercase tracking-wide">{s.label}</div>
+                  <div className={`text-[9px] uppercase tracking-wide font-bold ${isLight ? "text-slate-500" : "text-gray-500"}`}>{s.label}</div>
                 </div>
               ))}
             </div>
@@ -243,13 +249,17 @@ export default function StaffPage() {
             {/* Search + Filter */}
             <div className="flex gap-2">
               <div className="relative flex-grow">
-                <Search className="absolute left-3 top-2.5 text-gray-500" size={14} />
+                <Search className={`absolute left-3 top-2.5 ${isLight ? "text-slate-400" : "text-gray-500"}`} size={14} />
                 <input type="text" placeholder="Search by name, email, phone..." value={search}
                   onChange={e => setSearch(e.target.value)}
-                  className="w-full bg-brand-dark-surface border border-brand-dark-border pl-9 pr-4 py-2 rounded-lg text-xs text-white focus:outline-none focus:border-brand-sky" />
+                  className={`w-full pl-9 pr-4 py-2 rounded-lg text-xs font-bold border focus:outline-none ${
+                    isLight ? "bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-sky-500 shadow-xs" : "bg-brand-dark-surface border-brand-dark-border text-white focus:border-brand-sky"
+                  }`} />
               </div>
               <select value={roleFilter} onChange={e => setRoleFilter(e.target.value)}
-                className="bg-brand-dark-surface border border-brand-dark-border rounded-lg text-[10px] text-gray-300 px-3 py-2 focus:outline-none focus:border-brand-sky">
+                className={`border rounded-lg text-[10px] font-bold px-3 py-2 focus:outline-none ${
+                  isLight ? "bg-white border-slate-300 text-slate-900 focus:border-sky-500 shadow-xs" : "bg-brand-dark-surface border-brand-dark-border text-gray-300 focus:border-brand-sky"
+                }`}>
                 <option value="All">All Roles</option>
                 {ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
               </select>

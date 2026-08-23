@@ -132,17 +132,17 @@ export default function AiPage() {
       <main className="flex-grow p-5 space-y-5 overflow-y-auto max-h-screen">
 
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-brand-dark-border/60 pb-4">
+        <div className={`flex items-center justify-between border-b pb-4 ${isLight ? "border-slate-200" : "border-brand-dark-border/60"}`}>
           <div>
-            <h1 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
-              <Brain className="text-brand-sky animate-pulse" size={22} />
+            <h1 className={`text-xl font-black tracking-tight flex items-center gap-2 ${isLight ? "text-slate-900" : "text-white"}`}>
+              <Brain className="text-sky-500 animate-pulse" size={22} />
               AI Analytics Engine
             </h1>
-            <p className="text-[10px] text-gray-500 mt-0.5">
+            <p className={`text-[10px] mt-0.5 ${isLight ? "text-slate-500" : "text-gray-500"}`}>
               Real-time intelligence from your store data · {sales.length} transactions analysed
             </p>
           </div>
-          <div className="flex items-center gap-1.5 text-[9px] text-emerald-400 font-black uppercase bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-lg">
+          <div className="flex items-center gap-1.5 text-[9px] text-emerald-600 font-black uppercase bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-lg shadow-xs">
             <RefreshCw size={9} /> Live Data
           </div>
         </div>
@@ -153,39 +153,41 @@ export default function AiPage() {
             {
               label: "Total Revenue",
               value: `${currencySymbol} ${totalRevenue.toLocaleString(undefined, { maximumFractionDigits: 0 })}`,
-              icon: TrendingUp, color: "text-brand-sky", bg: "bg-brand-sky/10 border-brand-sky/20",
+              icon: TrendingUp, color: isLight ? "text-sky-600" : "text-brand-sky", bg: isLight ? "bg-sky-50 border-sky-200" : "bg-brand-sky/10 border-brand-sky/20",
               sub: `from ${sales.length} sales`,
             },
             {
               label: "Best Day of Week",
               value: DAY_NAMES[bestDayIdx],
-              icon: Zap, color: "text-yellow-400", bg: "bg-yellow-400/10 border-yellow-400/20",
+              icon: Zap, color: "text-amber-600", bg: isLight ? "bg-amber-50 border-amber-200" : "bg-yellow-400/10 border-yellow-400/20",
               sub: `${currencySymbol} ${salesByDay[bestDayIdx].value.toLocaleString(undefined, {maximumFractionDigits:0})} revenue`,
             },
             {
               label: "Reorder Alerts",
               value: reorderList.length.toString(),
-              icon: AlertTriangle, color: "text-red-400", bg: "bg-red-500/10 border-red-500/20",
+              icon: AlertTriangle, color: "text-red-600", bg: isLight ? "bg-red-50 border-red-200" : "bg-red-500/10 border-red-500/20",
               sub: reorderList.length > 0 ? "Products below min stock" : "All stock healthy",
             },
             {
               label: "7-Day Avg Daily",
               value: `${currencySymbol} ${forecast.avgDaily.toLocaleString(undefined, { maximumFractionDigits: 0 })}`,
-              icon: Target, color: "text-purple-400", bg: "bg-purple-500/10 border-purple-500/20",
+              icon: Target, color: "text-purple-600", bg: isLight ? "bg-purple-50 border-purple-200" : "bg-purple-500/10 border-purple-500/20",
               sub: "revenue per day",
             },
           ].map(card => {
             const Icon = card.icon;
             return (
-              <div key={card.label} className="bg-brand-dark-surface/50 border border-brand-dark-border hover:border-brand-sky/30 transition rounded-xl p-4">
+              <div key={card.label} className={`border transition rounded-xl p-4 ${
+                isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/50 border-brand-dark-border text-gray-100 hover:border-brand-sky/30"
+              }`}>
                 <div className="flex items-start justify-between mb-3">
                   <div className={`w-8 h-8 rounded-lg border ${card.bg} flex items-center justify-center`}>
                     <Icon size={14} className={card.color} />
                   </div>
                 </div>
                 <div className={`text-base font-black font-mono ${card.color}`}>{card.value}</div>
-                <div className="text-[9px] text-gray-500 uppercase tracking-wider font-bold mt-0.5">{card.label}</div>
-                <div className="text-[9px] text-gray-600 mt-1">{card.sub}</div>
+                <div className={`text-[9px] uppercase tracking-wider font-bold mt-0.5 ${isLight ? "text-slate-500" : "text-gray-500"}`}>{card.label}</div>
+                <div className={`text-[9px] mt-1 ${isLight ? "text-slate-400" : "text-gray-600"}`}>{card.sub}</div>
               </div>
             );
           })}
@@ -193,21 +195,25 @@ export default function AiPage() {
 
         {/* ── REVENUE FORECAST ── */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div className="lg:col-span-1 bg-brand-dark-surface/40 border border-brand-dark-border rounded-xl p-4 space-y-3">
-            <h3 className="text-[10px] uppercase font-black text-white tracking-widest flex items-center gap-1.5">
-              <TrendingUp size={11} className="text-brand-sky" /> Revenue Forecast
+          <div className={`border rounded-xl p-4 space-y-3 ${
+            isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/40 border-brand-dark-border text-gray-100"
+          }`}>
+            <h3 className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-1.5 ${isLight ? "text-slate-900" : "text-white"}`}>
+              <TrendingUp size={11} className="text-sky-500" /> Revenue Forecast
             </h3>
             <div className="space-y-2">
               {[
-                { period: "Next 7 Days", amount: forecast.next7, color: "text-brand-sky" },
-                { period: "Next 30 Days", amount: forecast.next30, color: "text-purple-400" },
+                { period: "Next 7 Days", amount: forecast.next7, color: "text-sky-600" },
+                { period: "Next 30 Days", amount: "text-purple-600" },
               ].map(f => (
-                <div key={f.period} className="bg-black/60 border border-brand-dark-border rounded-lg p-3">
-                  <div className="text-[9px] text-gray-500 uppercase font-bold mb-0.5">{f.period}</div>
+                <div key={f.period} className={`border rounded-lg p-3 ${
+                  isLight ? "bg-slate-50 border-slate-200 text-slate-900" : "bg-black/60 border-brand-dark-border text-gray-100"
+                }`}>
+                  <div className={`text-[9px] uppercase font-bold mb-0.5 ${isLight ? "text-slate-500" : "text-gray-500"}`}>{f.period}</div>
                   <div className={`text-base font-black font-mono ${f.color}`}>
                     {currencySymbol} {f.amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                   </div>
-                  <div className="flex items-center gap-1 text-[9px] text-emerald-400 mt-1">
+                  <div className="flex items-center gap-1 text-[9px] text-emerald-600 font-bold mt-1">
                     <ArrowUp size={9} /> Based on 7-day trend
                   </div>
                 </div>

@@ -371,13 +371,13 @@ export default function SettingsPage() {
       <main className="flex-grow p-6 sm:p-8 space-y-6 overflow-y-auto max-h-screen">
         
         {/* Header section */}
-        <div className="flex justify-between items-center border-b border-brand-dark-border/60 pb-4">
+        <div className={`flex justify-between items-center border-b pb-4 ${isLight ? "border-slate-200" : "border-brand-dark-border/60"}`}>
           <div>
-            <h1 className="text-xl font-black text-white flex items-center gap-2">
-              <Settings size={22} className="text-brand-sky" />
+            <h1 className={`text-xl font-black flex items-center gap-2 ${isLight ? "text-slate-900" : "text-white"}`}>
+              <Settings size={22} className="text-sky-500" />
               Settings Panel
             </h1>
-            <p className="text-[10px] text-gray-500 mt-0.5">
+            <p className={`text-[10px] mt-0.5 ${isLight ? "text-slate-500" : "text-gray-500"}`}>
               Configure your MT Core business environment (The core technology behind your business), tax rates, receipt thermal configurations, and loyalty programs.
             </p>
           </div>
@@ -387,7 +387,9 @@ export default function SettingsPage() {
         <form onSubmit={handleSave} className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           
           {/* Tabs Sidebar navigation (3 columns) */}
-          <div className="lg:col-span-3 bg-brand-dark-surface/40 border border-brand-dark-border rounded-2xl p-4 space-y-1">
+          <div className={`lg:col-span-3 border rounded-2xl p-4 space-y-1 ${
+            isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/40 border-brand-dark-border text-gray-100"
+          }`}>
             {[
               { id: "general", label: "General Business", icon: Building },
               { id: "pos", label: "POS & Taxation", icon: Sliders },
@@ -400,8 +402,8 @@ export default function SettingsPage() {
                 onClick={() => setActiveTab(t.id as any)}
                 className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left text-xs font-bold transition ${
                   activeTab === t.id
-                    ? "bg-brand-sky text-black font-black"
-                    : "text-gray-400 hover:bg-brand-dark-surface hover:text-white"
+                    ? isLight ? "bg-sky-600 text-white font-black shadow-xs" : "bg-brand-sky text-black font-black"
+                    : isLight ? "text-slate-600 hover:bg-slate-100 hover:text-slate-900" : "text-gray-400 hover:bg-brand-dark-surface hover:text-white"
                 }`}
               >
                 <t.icon size={14} />
@@ -415,9 +417,13 @@ export default function SettingsPage() {
             
             {/* GENERAL BUSINESS TAB */}
             {activeTab === "general" && (
-              <div className="bg-brand-dark-surface/20 border border-brand-dark-border rounded-2xl p-6 space-y-5 animate-fade-in-up">
-                <h3 className="text-xs font-black text-white uppercase tracking-wider border-b border-brand-dark-border/40 pb-2 flex items-center gap-2">
-                  <Building size={14} className="text-brand-sky" />
+              <div className={`border rounded-2xl p-6 space-y-5 animate-fade-in-up ${
+                isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/20 border-brand-dark-border text-gray-100"
+              }`}>
+                <h3 className={`text-xs font-black uppercase tracking-wider border-b pb-2 flex items-center gap-2 ${
+                  isLight ? "text-slate-900 border-slate-200" : "text-white border-brand-dark-border/40"
+                }`}>
+                  <Building size={14} className="text-sky-500" />
                   General Business Identity
                 </h3>
 
