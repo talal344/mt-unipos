@@ -703,87 +703,6 @@ function LoginContent() {
               </div>
             )}
 
-            {/* ── 1-CLICK INSTANT DEMO ACCESS CARDS (POS • HRMS • SMS) ── */}
-            <div className={`p-3.5 rounded-2xl border space-y-2.5 ${
-              isLight
-                ? "bg-gradient-to-b from-sky-50/70 to-indigo-50/40 border-sky-200"
-                : "bg-gradient-to-b from-[#0e1626] to-[#080d14] border-sky-500/30"
-            }`}>
-              <div className={`flex items-center justify-between text-[11px] font-black ${
-                isLight ? "text-sky-700" : "text-sky-400"
-              }`}>
-                <div className="flex items-center gap-1.5">
-                  <Zap size={14} className="text-amber-500 fill-amber-500 animate-pulse" />
-                  <span>1-CLICK INSTANT DEMO LOGIN</span>
-                </div>
-                <span className={`text-[9px] font-mono px-2 py-0.5 rounded-md border ${
-                  isLight ? "bg-sky-100 border-sky-200 text-sky-800" : "bg-sky-500/10 text-sky-300 border-sky-500/20"
-                }`}>
-                  FAST ACCESS
-                </span>
-              </div>
-
-              <div className="grid grid-cols-3 gap-2">
-                {/* POS DEMO */}
-                <button
-                  type="button"
-                  onClick={() => handleDemoLogin("POS")}
-                  className={`p-2.5 rounded-xl border transition flex flex-col items-center justify-center gap-1 group shadow-xs hover:scale-[1.02] cursor-pointer ${
-                    isLight
-                      ? "bg-white border-sky-200 text-sky-800 hover:bg-sky-500 hover:text-white"
-                      : "bg-sky-500/10 hover:bg-sky-600 border-sky-500/30 text-sky-300 hover:text-white"
-                  }`}
-                  title="Instant 1-Click Login to POS & Retail System"
-                >
-                  <Laptop size={16} className={`transition ${isLight ? "text-sky-600 group-hover:text-white" : "text-sky-400 group-hover:text-white"}`} />
-                  <span className="text-[11px] font-black leading-none">POS ERP</span>
-                  <span className={`text-[8px] uppercase font-mono ${isLight ? "text-slate-500 group-hover:text-sky-100" : "text-gray-400 group-hover:text-sky-100"}`}>Retail &amp; Store</span>
-                </button>
-
-                {/* HRMS DEMO */}
-                <button
-                  type="button"
-                  onClick={() => handleDemoLogin("HRMS")}
-                  className={`p-2.5 rounded-xl border transition flex flex-col items-center justify-center gap-1 group shadow-xs hover:scale-[1.02] cursor-pointer ${
-                    isLight
-                      ? "bg-white border-emerald-200 text-emerald-800 hover:bg-emerald-500 hover:text-white"
-                      : "bg-emerald-500/10 hover:bg-emerald-600 border-emerald-500/30 text-emerald-300 hover:text-white"
-                  }`}
-                  title="Instant 1-Click Login to HRMS & Payroll Suite"
-                >
-                  <Users size={16} className={`transition ${isLight ? "text-emerald-600 group-hover:text-white" : "text-emerald-400 group-hover:text-white"}`} />
-                  <span className="text-[11px] font-black leading-none">HRMS</span>
-                  <span className={`text-[8px] uppercase font-mono ${isLight ? "text-slate-500 group-hover:text-emerald-100" : "text-gray-400 group-hover:text-emerald-100"}`}>Staff &amp; Payroll</span>
-                </button>
-
-                {/* SMS DEMO */}
-                <button
-                  type="button"
-                  onClick={() => handleDemoLogin("SMS")}
-                  className={`p-2.5 rounded-xl border transition flex flex-col items-center justify-center gap-1 group shadow-xs hover:scale-[1.02] cursor-pointer ${
-                    isLight
-                      ? "bg-white border-purple-200 text-purple-800 hover:bg-purple-500 hover:text-white"
-                      : "bg-purple-500/10 hover:bg-purple-600 border-purple-500/30 text-purple-300 hover:text-white"
-                  }`}
-                  title="Instant 1-Click Login to School Management ERP"
-                >
-                  <GraduationCap size={16} className={`transition ${isLight ? "text-purple-600 group-hover:text-white" : "text-purple-400 group-hover:text-white"}`} />
-                  <span className="text-[11px] font-black leading-none">School SMS</span>
-                  <span className={`text-[8px] uppercase font-mono ${isLight ? "text-slate-500 group-hover:text-purple-100" : "text-gray-400 group-hover:text-purple-100"}`}>Academic ERP</span>
-                </button>
-              </div>
-            </div>
-
-            <div className="relative flex items-center justify-center py-1">
-              <div className={`border-t w-full ${isLight ? "border-slate-200" : "border-gray-800"}`} />
-              <span className={`px-3 text-[9px] font-bold uppercase tracking-wider shrink-0 ${
-                isLight ? "bg-white text-slate-400" : "bg-brand-dark-surface text-gray-500"
-              }`}>
-                OR SIGN IN WITH CREDENTIALS
-              </span>
-              <div className={`border-t w-full ${isLight ? "border-slate-200" : "border-gray-800"}`} />
-            </div>
-
             {/* ── LOGIN FORM ── */}
             <form onSubmit={handleCredentialsSubmit} className="space-y-4 text-xs">
               <div>
@@ -815,47 +734,6 @@ function LoginContent() {
                       : `bg-black text-white ${tenantGlowClass}`
                   }`} 
                 />
-
-                {/* Quick Workspace Presets Chips */}
-                <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                  <span className={`text-[9px] font-bold uppercase ${isLight ? "text-slate-400" : "text-gray-500"}`}>Quick Pick:</span>
-                  <button
-                    type="button"
-                    onClick={() => { setInputTenantId("AFS-1234"); setEmail("owner@alfatah.com"); setPassword("owner123"); }}
-                    className={`text-[9px] font-mono px-2 py-0.5 rounded-md border transition cursor-pointer ${
-                      isLight
-                        ? "bg-slate-100 hover:bg-sky-50 border-slate-200 hover:border-sky-300 text-slate-700"
-                        : "bg-white/5 hover:bg-sky-500/20 border-white/10 hover:border-sky-500/40 text-gray-300 hover:text-white"
-                    }`}
-                    title="Al-Fatah Supermarket (POS)"
-                  >
-                    🛒 AFS-1234
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setInputTenantId("CORP-101"); setEmail("director@corporate.com"); setPassword("talal344"); }}
-                    className={`text-[9px] font-mono px-2 py-0.5 rounded-md border transition cursor-pointer ${
-                      isLight
-                        ? "bg-slate-100 hover:bg-emerald-50 border-slate-200 hover:border-emerald-300 text-slate-700"
-                        : "bg-white/5 hover:bg-emerald-500/20 border-white/10 hover:border-emerald-500/40 text-gray-300 hover:text-white"
-                    }`}
-                    title="Corporate Headquarters (HRMS)"
-                  >
-                    🏢 CORP-101
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setInputTenantId("SMS-2026"); setEmail("principal@mtcoreschool.edu.pk"); setPassword("talal344"); }}
-                    className={`text-[9px] font-mono px-2 py-0.5 rounded-md border transition cursor-pointer ${
-                      isLight
-                        ? "bg-slate-100 hover:bg-purple-50 border-slate-200 hover:border-purple-300 text-slate-700"
-                        : "bg-white/5 hover:bg-purple-500/20 border-white/10 hover:border-purple-500/40 text-gray-300 hover:text-white"
-                    }`}
-                    title="Model School & College (SMS)"
-                  >
-                    🎓 SMS-2026
-                  </button>
-                </div>
               </div>
 
               <div>
