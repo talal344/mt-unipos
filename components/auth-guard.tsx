@@ -48,8 +48,9 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     }
 
     // Line of Business Isolation: HRMS vs POS vs SMS
-    const isHRMSUser = currentUser.assignedSoftware === "HRMS" || (currentUser.businessName && currentUser.businessName.includes("HRMS"));
-    const isSMSUser = currentUser.assignedSoftware === "SMS" || (currentUser.businessName && currentUser.businessName.includes("SMS"));
+    const currentSoftware = (currentUser as any).assignedSoftware;
+    const isHRMSUser = currentSoftware === "HRMS" || (currentUser.businessName && currentUser.businessName.includes("HRMS"));
+    const isSMSUser = currentSoftware === "SMS" || (currentUser.businessName && currentUser.businessName.includes("SMS"));
     const assignedSoftware = isSMSUser ? "SMS" : isHRMSUser ? "HRMS" : "POS";
 
     if (assignedSoftware === "HRMS") {
