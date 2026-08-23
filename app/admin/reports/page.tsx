@@ -22,7 +22,8 @@ import {
 } from "lucide-react";
 
 export default function AdminReportsPage() {
-  const { tenants, saasInvoices, demoRequests, supportTickets } = useGlobalContext();
+  const { tenants, saasInvoices, demoRequests, supportTickets, theme } = useGlobalContext();
+  const isLight = theme === "light";
 
   // Helper to query dynamic stats from localStorage per tenant
   const getTenantDynamicStats = (tenantId: string) => {
@@ -185,7 +186,7 @@ export default function AdminReportsPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-black text-gray-100 font-sans">
+    <div className={`flex min-h-screen font-sans ${isLight ? "bg-slate-100 text-slate-900" : "bg-black text-gray-100"}`}>
       <AdminSidebar />
 
       {/* Workspace */}

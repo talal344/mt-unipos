@@ -18,14 +18,17 @@ import {
   Bell, 
   X, 
   Mail, 
-  UserPlus 
+  UserPlus,
+  Sun,
+  Moon
 } from "lucide-react";
 import MTCoreLogo from "@/components/mt-logo";
 
 export default function AdminSidebar() {
   const router = useRouter();
   const pathname = usePathname();
-  const { logout, currentUser, demoRequests, supportTickets } = useGlobalContext();
+  const { logout, currentUser, demoRequests, supportTickets, theme, toggleTheme } = useGlobalContext();
+  const isLight = theme === "light";
 
   const [showNotifications, setShowNotifications] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
@@ -268,6 +271,25 @@ export default function AdminSidebar() {
 
       {/* Footer */}
       <div className="p-4 border-t border-brand-dark-border space-y-2 shrink-0">
+        <button
+          type="button"
+          onClick={toggleTheme}
+          className={`w-full flex items-center justify-between px-3 py-2 border rounded-lg transition text-xs font-bold cursor-pointer ${
+            isLight
+              ? "bg-purple-50 border-purple-200 text-purple-800 hover:bg-purple-100"
+              : "bg-purple-500/10 border-purple-500/30 text-purple-300 hover:bg-purple-500/20"
+          }`}
+          title={isLight ? "Switch to Dark/Black Mode" : "Switch to Light Mode"}
+        >
+          <div className="flex items-center gap-2">
+            {isLight ? <Moon size={14} className="text-indigo-600" /> : <Sun size={14} className="text-amber-400" />}
+            <span>{isLight ? "Light Mode" : "Dark Mode"}</span>
+          </div>
+          <span className="text-[9px] uppercase tracking-wider font-mono px-1.5 py-0.5 rounded bg-purple-500/20 border border-purple-500/30 text-purple-300">
+            {isLight ? "LIGHT" : "DARK"}
+          </span>
+        </button>
+
         <Link
           href="/"
           className="flex items-center gap-2 px-3 py-2 text-gray-500 hover:text-white transition text-xs font-semibold"

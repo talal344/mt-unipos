@@ -106,7 +106,8 @@ const INITIAL_EMAIL_LOGS: EmailLogEntry[] = [
 ];
 
 export default function AdminEmailsPage() {
-  const { tenants, saasInvoices } = useGlobalContext();
+  const { tenants, saasInvoices, theme } = useGlobalContext();
+  const isLight = theme === "light";
 
   const [logs, setLogs] = useState<EmailLogEntry[]>(() => {
     if (typeof window !== "undefined") {
@@ -427,7 +428,7 @@ export default function AdminEmailsPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-black text-gray-100 font-sans">
+    <div className={`flex min-h-screen font-sans ${isLight ? "bg-slate-100 text-slate-900" : "bg-black text-gray-100"}`}>
       <AdminSidebar />
 
       <main className="flex-grow p-6 sm:p-8 space-y-6 overflow-y-auto max-h-screen">

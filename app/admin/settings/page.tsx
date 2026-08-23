@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 
 export default function AdminSettingsPage() {
+  const { theme } = useGlobalContext();
+  const isLight = theme === "light";
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [showApiKeys, setShowApiKeys] = useState(false);
 
@@ -95,7 +97,7 @@ export default function AdminSettingsPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-black text-gray-100 font-sans">
+    <div className={`flex min-h-screen font-sans ${isLight ? "bg-slate-100 text-slate-900" : "bg-black text-gray-100"}`}>
       <AdminSidebar />
 
       {/* Main Settings Panel */}

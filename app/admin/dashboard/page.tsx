@@ -20,7 +20,8 @@ import {
 } from "lucide-react";
 
 export default function AdminDashboardPage() {
-  const { tenants, saasInvoices, demoRequests } = useGlobalContext();
+  const { tenants, saasInvoices, demoRequests, theme } = useGlobalContext();
+  const isLight = theme === "light";
   const [chartView, setChartView] = useState<"monthly" | "annual">("monthly");
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -48,17 +49,14 @@ export default function AdminDashboardPage() {
       "Super Markets": 0,
       "Pharmacy Stores": 0,
       "Restaurants / Cafes": 0,
-      "Electronics Stores": 0,
-      "Clothing Stores": 0,
+      "Corporate / HRMS": 0
     };
     tenants.forEach(t => {
-      // normalize category string
-      let cat = "Super Markets";
-      if (t.businessType?.includes("Pharmacy")) cat = "Pharmacy Stores";
-      else if (t.businessType?.includes("Rest") || t.businessType?.includes("Cafe")) cat = "Restaurants / Cafes";
-      else if (t.businessType?.includes("Elect")) cat = "Electronics Stores";
-      else if (t.businessType?.includes("Cloth") || t.businessType?.includes("Wear")) cat = "Clothing Stores";
-      counts[cat] = (counts[cat] || 0) + 1;
+      if (t.businessType && counts[t.businessType] !== undefined) {
+        counts[t.businessType]++;
+      } else {
+        counts["Super Markets"]++;
+      }
     });
     return counts;
   }, [tenants]);
@@ -106,7 +104,7 @@ export default function AdminDashboardPage() {
   }, [chartView, tenants]);
 
   return (
-    <div className="flex min-h-screen bg-black text-gray-100 font-sans">
+    <div className={`flex min-h-screen font-sans ${isLight ? "bg-slate-100 text-slate-900" : "bg-black text-gray-100"}`}>
       <AdminSidebar />
 
       {/* Main Content Area */}

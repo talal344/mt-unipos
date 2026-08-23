@@ -397,7 +397,8 @@ function buildA4ExecutiveInvoiceHTML(invoice: any, tenant: any): string {
 }
 
 export default function AdminInvoicesPage() {
-  const { saasInvoices, tenants, addSaasInvoice, updateSaasInvoiceStatus, deleteSaasInvoice, updateSaasInvoice, updateTenantStatus } = useGlobalContext();
+  const { saasInvoices, tenants, addSaasInvoice, updateSaasInvoiceStatus, deleteSaasInvoice, updateSaasInvoice, updateTenantStatus, theme } = useGlobalContext();
+  const isLight = theme === "light";
   const [successMsg, setSuccessMsg] = useState("");
   const invoiceSlipRef = React.useRef<HTMLDivElement>(null);
   const [activeInvoice, setActiveInvoice] = useState<any>(null); // For digital view modal
@@ -847,7 +848,7 @@ export default function AdminInvoicesPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-black text-gray-100 font-sans">
+    <div className={`flex min-h-screen font-sans ${isLight ? "bg-slate-100 text-slate-900" : "bg-black text-gray-100"}`}>
       <AdminSidebar />
 
       <main className="flex-grow p-6 sm:p-8 space-y-6 overflow-y-auto max-h-screen">

@@ -888,6 +888,7 @@ type ActiveTab = "demo" | "tenants";
 
 export default function AdminClientsPage() {
   const {
+    theme,
     demoRequests,
     updateDemoStatus,
     approveDemoRequest,
@@ -1465,8 +1466,10 @@ export default function AdminClientsPage() {
 
   // ─────────────────────────────────────────────────────────────────────────
 
+  const isLight = theme === "light";
+
   return (
-    <div className="flex min-h-screen bg-black text-gray-100 font-sans">
+    <div className={`flex min-h-screen font-sans ${isLight ? "bg-slate-100 text-slate-900" : "bg-black text-gray-100"}`}>
       <AdminSidebar />
 
       <main className="flex-grow p-6 sm:p-8 space-y-6 overflow-y-auto max-h-screen">
