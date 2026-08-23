@@ -6,7 +6,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useGlobalContext } from "@/context/global-context";
 import {
   Laptop, LayoutDashboard, ShoppingCart, Database, DollarSign, Utensils,
-  Heart, Users, Users2, MessageCircle, FileDown, Brain, ExternalLink,
+  Heart, Users, Users2, MessageCircle, FileDown, Brain, ExternalLink, Menu,
   LogOut, ShieldAlert, ShoppingBag, Receipt, Sliders, Bell, X, Package, CreditCard, Monitor, Settings, Landmark, Sun, Moon
 } from "lucide-react";
 import MTCoreLogo from "@/components/mt-logo";
@@ -76,10 +76,38 @@ export default function ClientSidebar() {
   const activeLinks = allLinks.filter(l => l.roles.includes(userRole) && l.verticals.includes(vertical));
   const handleLogout = () => { logout(); router.push("/login"); };
 
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Auto-close mobile menu on route change
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [pathname]);
+
   return (
-    <aside className={`relative w-64 h-screen sticky top-0 border-r flex flex-col shrink-0 font-sans print:hidden transition-colors duration-200 ${
-      isLight ? "bg-white border-slate-200 text-slate-900 shadow-xs" : "bg-brand-dark-surface border-brand-dark-border text-gray-100"
-    }`}>
+    <>
+      {/* Mobile Hamburger Button */}
+      <button 
+        onClick={() => setIsMobileMenuOpen(true)}
+        className={`md:hidden fixed bottom-6 right-6 z-40 p-3.5 rounded-full shadow-2xl ${isLight ? "bg-sky-600 text-white" : "bg-brand-sky text-black"} transition-transform hover:scale-105 active:scale-95`}
+      >
+        <Menu size={24} />
+      </button>
+
+      {/* Mobile Backdrop */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 z-[998] md:hidden backdrop-blur-sm transition-opacity"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside className={`
+        fixed inset-y-0 left-0 z-[999] transform transition-transform duration-300 md:relative md:translate-x-0
+        ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"}
+        w-64 h-screen md:sticky md:top-0 border-r flex flex-col shrink-0 font-sans print:hidden transition-colors ${
+        isLight ? "bg-white border-slate-200 text-slate-900 shadow-xs" : "bg-brand-dark-surface border-brand-dark-border text-gray-100"
+      }`}>
 
       {/* ═══════════════════════════════════════════════════════════════
           NOTIFICATION PANEL — anchored to aside full-width below header
@@ -298,5 +326,6 @@ export default function ClientSidebar() {
         </button>
       </div>
     </aside>
+    </>
   );
 }
