@@ -175,13 +175,13 @@ export default function InventoryPage() {
                 {products.map(prod => {
                   const valTotal = prod.costPrice * prod.stock;
                   return (
-                    <tr key={prod.id} className="hover:bg-brand-dark-surface/60 transition">
+                    <tr key={prod.id} className={`${isLight ? "hover:bg-slate-50" : "hover:bg-brand-dark-surface/60"} transition`}>
                       <td className="p-4">
-                        <div className="text-white font-bold">{prod.sku}</div>
-                        <div className="text-[9px] text-gray-500">{prod.barcode}</div>
+                        <div className={`${isLight ? "text-slate-900" : "text-white"} font-bold`}>{prod.sku}</div>
+                        <div className={`text-[9px] ${isLight ? "text-slate-500" : "text-gray-500"}`}>{prod.barcode}</div>
                       </td>
                       <td className="p-4">
-                        <div className="text-white font-bold font-sans">{prod.name}</div>
+                        <div className={`${isLight ? "text-slate-900" : "text-white"} font-bold font-sans`}>{prod.name}</div>
                         <div className="text-[9px] text-brand-sky font-sans">{prod.category} • {prod.unit}</div>
                       </td>
                       <td className="p-4">
@@ -189,8 +189,8 @@ export default function InventoryPage() {
                           {prod.stock} units
                         </span>
                       </td>
-                      <td className="p-4 text-white font-bold">{currencySymbol} {valTotal.toLocaleString()}</td>
-                      <td className="p-4 text-gray-400">{currencySymbol} {prod.wholesalePrice || prod.salePrice * 0.9}</td>
+                      <td className={`p-4 ${isLight ? "text-slate-900" : "text-white"} font-bold`}>{currencySymbol} {valTotal.toLocaleString()}</td>
+                      <td className={`p-4 ${isLight ? "text-slate-500" : "text-gray-400"}`}>{currencySymbol} {prod.wholesalePrice || prod.salePrice * 0.9}</td>
                       <td className="p-4">
                         <div className="flex gap-2 justify-center">
                           <button
@@ -221,10 +221,10 @@ export default function InventoryPage() {
         )}
 
         {activeTab === "Transfers" && (
-          <div className="bg-brand-dark-surface/30 border border-brand-dark-border rounded-2xl overflow-hidden">
+          <div className={`${isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/30 border-brand-dark-border"} border rounded-2xl overflow-hidden`}>
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="border-b border-brand-dark-border text-gray-500 font-mono">
+                <tr className={`border-b font-mono ${isLight ? "border-slate-200 text-slate-600" : "border-brand-dark-border text-gray-500"}`}>
                   <th className="p-4 font-semibold">Transfer ID</th>
                   <th className="p-4 font-semibold">Date</th>
                   <th className="p-4 font-semibold">Route</th>
@@ -233,20 +233,20 @@ export default function InventoryPage() {
                   <th className="p-4 font-semibold text-center">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-brand-dark-border/40 font-mono text-[11px]">
+              <tbody className={`divide-y font-mono text-[11px] ${isLight ? "divide-slate-200" : "divide-brand-dark-border/40"}`}>
                 {stockTransfers.length === 0 ? (
                   <tr><td colSpan={6} className="p-8 text-center text-gray-500">No stock transfers found.</td></tr>
                 ) : stockTransfers.map(t => (
-                  <tr key={t.id} className="hover:bg-brand-dark-surface/60 transition">
-                    <td className="p-4 text-white font-bold">{t.id}</td>
-                    <td className="p-4 text-gray-400">{t.date}</td>
+                  <tr key={t.id} className={`${isLight ? "hover:bg-slate-50" : "hover:bg-brand-dark-surface/60"} transition`}>
+                    <td className={`p-4 ${isLight ? "text-slate-900" : "text-white"} font-bold`}>{t.id}</td>
+                    <td className={`p-4 ${isLight ? "text-slate-500" : "text-gray-400"}`}>{t.date}</td>
                     <td className="p-4">
-                      <div className="text-[10px] text-gray-400">From: <span className="text-white">{t.fromBranch}</span></div>
-                      <div className="text-[10px] text-brand-sky">To: <span className="text-white">{t.toBranch}</span></div>
+                      <div className={`text-[10px] ${isLight ? "text-slate-500" : "text-gray-400"}`}>From: <span className={isLight ? "text-slate-900 font-bold" : "text-white"}>{t.fromBranch}</span></div>
+                      <div className="text-[10px] text-brand-sky">To: <span className={isLight ? "text-slate-900 font-bold" : "text-white"}>{t.toBranch}</span></div>
                     </td>
                     <td className="p-4">
                       {t.items.map((i, idx) => (
-                        <div key={idx} className="text-gray-300">{i.qty}x {i.productName}</div>
+                        <div key={idx} className={isLight ? "text-slate-700" : "text-gray-300"}>{i.qty}x {i.productName}</div>
                       ))}
                     </td>
                     <td className="p-4">
@@ -278,20 +278,20 @@ export default function InventoryPage() {
         )}
 
         {activeTab === "AI Forecasting" && (
-          <div className="bg-brand-dark-surface/30 border border-brand-dark-border rounded-2xl overflow-hidden p-6">
-            <div className="flex items-center gap-3 mb-6 border-b border-brand-dark-border pb-4">
+          <div className={`${isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/30 border-brand-dark-border"} border rounded-2xl overflow-hidden p-6`}>
+            <div className={`flex items-center gap-3 mb-6 border-b pb-4 ${isLight ? "border-slate-200" : "border-brand-dark-border"}`}>
               <div className="w-12 h-12 bg-indigo-500/20 rounded-xl flex items-center justify-center">
                 <Brain size={24} className="text-indigo-400" />
               </div>
               <div>
-                <h3 className="text-white font-black text-lg">AI Stock Depletion Forecasting</h3>
-                <p className="text-gray-500 text-xs">Velocity-based prediction engine using historical sales ledger.</p>
+                <h3 className={`${isLight ? "text-slate-900" : "text-white"} font-black text-lg`}>AI Stock Depletion Forecasting</h3>
+                <p className={`${isLight ? "text-slate-500" : "text-gray-500"} text-xs`}>Velocity-based prediction engine using historical sales ledger.</p>
               </div>
             </div>
             
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="border-b border-brand-dark-border text-gray-500 font-mono">
+                <tr className={`border-b font-mono ${isLight ? "border-slate-200 text-slate-600" : "border-brand-dark-border text-gray-500"}`}>
                   <th className="p-4 font-semibold">Product Name</th>
                   <th className="p-4 font-semibold">Current Stock</th>
                   <th className="p-4 font-semibold">30-Day Velocity (Sales/Day)</th>
@@ -299,7 +299,7 @@ export default function InventoryPage() {
                   <th className="p-4 font-semibold text-center">Action Suggestion</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-brand-dark-border/40 font-mono text-[11px]">
+              <tbody className={`divide-y font-mono text-[11px] ${isLight ? "divide-slate-200" : "divide-brand-dark-border/40"}`}>
                 {products.map(prod => {
                   // Basic Velocity Calculation (Mock AI)
                   // We simulate velocity based on a mix of real sales data and AI-fuzz for demo.
@@ -313,10 +313,10 @@ export default function InventoryPage() {
                   const isWarning = daysLeft > 7 && daysLeft <= 14;
 
                   return (
-                    <tr key={prod.id} className="hover:bg-brand-dark-surface/60 transition">
-                      <td className="p-4 text-white font-bold font-sans">{prod.name}</td>
-                      <td className="p-4 text-white">{prod.stock}</td>
-                      <td className="p-4 text-gray-400">{velocity.toFixed(2)} units/day</td>
+                    <tr key={prod.id} className={`${isLight ? "hover:bg-slate-50" : "hover:bg-brand-dark-surface/60"} transition`}>
+                      <td className={`p-4 ${isLight ? "text-slate-900" : "text-white"} font-bold font-sans`}>{prod.name}</td>
+                      <td className={`p-4 ${isLight ? "text-slate-900" : "text-white"}`}>{prod.stock}</td>
+                      <td className={`p-4 ${isLight ? "text-slate-500" : "text-gray-400"}`}>{velocity.toFixed(2)} units/day</td>
                       <td className="p-4">
                         <span className={`px-2 py-1 rounded font-bold ${isCritical ? 'bg-red-500/20 text-red-400' : isWarning ? 'bg-amber-500/20 text-amber-400' : 'bg-emerald-500/20 text-emerald-400'}`}>
                           {oosDate.toISOString().split("T")[0]} ({daysLeft} days)
@@ -338,39 +338,39 @@ export default function InventoryPage() {
         {/* Adjust Stock Modal */}
         {activeAdjustProduct && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4">
-            <div className="bg-brand-dark-surface border border-brand-sky/30 p-6 rounded-2xl w-full max-w-sm shadow-2xl animate-fade-in-up">
-              <div className="flex justify-between items-center border-b border-brand-dark-border pb-3 mb-4 text-xs">
-                <h3 className="font-black text-white">Direct Stock Adjust</h3>
-                <button onClick={() => setActiveAdjustProduct(null)} className="text-gray-400 hover:text-white">Cancel</button>
+            <div className={`${isLight ? "bg-white border-slate-200 shadow-xl" : "bg-brand-dark-surface border-brand-sky/30"} border p-6 rounded-2xl w-full max-w-sm shadow-2xl animate-fade-in-up`}>
+              <div className={`flex justify-between items-center border-b pb-3 mb-4 text-xs ${isLight ? "border-slate-200" : "border-brand-dark-border"}`}>
+                <h3 className={`font-black ${isLight ? "text-slate-900" : "text-white"}`}>Direct Stock Adjust</h3>
+                <button onClick={() => setActiveAdjustProduct(null)} className={`${isLight ? "text-slate-500 hover:text-slate-900" : "text-gray-400 hover:text-white"}`}>Cancel</button>
               </div>
 
               <form onSubmit={handleAdjustSubmit} className="space-y-4 text-xs">
                 <div>
-                  <h4 className="text-white font-bold">{activeAdjustProduct.name}</h4>
-                  <p className="text-[9px] text-gray-500">Current active ledger stock: {activeAdjustProduct.stock}</p>
+                  <h4 className={`font-bold ${isLight ? "text-slate-900" : "text-white"}`}>{activeAdjustProduct.name}</h4>
+                  <p className={`text-[9px] ${isLight ? "text-slate-500" : "text-gray-500"}`}>Current active ledger stock: {activeAdjustProduct.stock}</p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Adjustment Type</label>
+                    <label className={`block text-[10px] uppercase font-bold mb-1 ${isLight ? "text-slate-600" : "text-gray-400"}`}>Adjustment Type</label>
                     <select
                       value={adjustType}
                       onChange={(e) => setAdjustType(e.target.value as any)}
-                      className="w-full bg-black border border-brand-dark-border p-2.5 rounded text-white"
+                      className={`w-full border p-2.5 rounded ${isLight ? "bg-slate-50 border-slate-300 text-slate-900" : "bg-black border-brand-dark-border text-white"}`}
                     >
                       <option>Add</option>
                       <option>Subtract</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Adjust Quantity</label>
+                    <label className={`block text-[10px] uppercase font-bold mb-1 ${isLight ? "text-slate-600" : "text-gray-400"}`}>Adjust Quantity</label>
                     <input
                       type="number"
                       required
                       placeholder="e.g. 10"
                       value={adjustQty}
                       onChange={(e) => setAdjustQty(e.target.value)}
-                      className="w-full bg-black border border-brand-dark-border p-2.5 rounded text-white font-mono"
+                      className={`w-full border p-2.5 rounded font-mono ${isLight ? "bg-slate-50 border-slate-300 text-slate-900" : "bg-black border-brand-dark-border text-white"}`}
                     />
                   </div>
                 </div>
@@ -389,39 +389,39 @@ export default function InventoryPage() {
         {/* Transfer Stock Modal */}
         {activeTransferProduct && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4">
-            <div className="bg-brand-dark-surface border border-purple-500/30 p-6 rounded-2xl w-full max-w-sm shadow-2xl animate-fade-in-up">
-              <div className="flex justify-between items-center border-b border-brand-dark-border pb-3 mb-4 text-xs">
-                <h3 className="font-black text-white">Disburse Branch Stock</h3>
-                <button onClick={() => setActiveTransferProduct(null)} className="text-gray-400 hover:text-white">Cancel</button>
+            <div className={`${isLight ? "bg-white border-slate-200 shadow-xl" : "bg-brand-dark-surface border-purple-500/30"} border p-6 rounded-2xl w-full max-w-sm shadow-2xl animate-fade-in-up`}>
+              <div className={`flex justify-between items-center border-b pb-3 mb-4 text-xs ${isLight ? "border-slate-200" : "border-brand-dark-border"}`}>
+                <h3 className={`font-black ${isLight ? "text-slate-900" : "text-white"}`}>Disburse Branch Stock</h3>
+                <button onClick={() => setActiveTransferProduct(null)} className={`${isLight ? "text-slate-500 hover:text-slate-900" : "text-gray-400 hover:text-white"}`}>Cancel</button>
               </div>
 
               <form onSubmit={handleTransferSubmit} className="space-y-4 text-xs">
                 <div>
-                  <h4 className="text-white font-bold">{activeTransferProduct.name}</h4>
-                  <p className="text-[9px] text-gray-500">Available at {currentBranch}: {activeTransferProduct.stock}</p>
+                  <h4 className={`font-bold ${isLight ? "text-slate-900" : "text-white"}`}>{activeTransferProduct.name}</h4>
+                  <p className={`text-[9px] ${isLight ? "text-slate-500" : "text-gray-500"}`}>Available at {currentBranch}: {activeTransferProduct.stock}</p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Target Branch Shard</label>
+                    <label className={`block text-[10px] uppercase font-bold mb-1 ${isLight ? "text-slate-600" : "text-gray-400"}`}>Target Branch Shard</label>
                     <select
                       value={targetBranch}
                       onChange={(e) => setTargetBranch(e.target.value)}
-                      className="w-full bg-black border border-brand-dark-border p-2.5 rounded text-white"
+                      className={`w-full border p-2.5 rounded ${isLight ? "bg-slate-50 border-slate-300 text-slate-900" : "bg-black border-brand-dark-border text-white"}`}
                     >
                       <option>DHA Phase 6</option>
                       <option>Johar Town</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Disburse Qty</label>
+                    <label className={`block text-[10px] uppercase font-bold mb-1 ${isLight ? "text-slate-600" : "text-gray-400"}`}>Disburse Qty</label>
                     <input
                       type="number"
                       required
                       placeholder="e.g. 5"
                       value={transferQty}
                       onChange={(e) => setTransferQty(e.target.value)}
-                      className="w-full bg-black border border-brand-dark-border p-2.5 rounded text-white font-mono"
+                      className={`w-full border p-2.5 rounded font-mono ${isLight ? "bg-slate-50 border-slate-300 text-slate-900" : "bg-black border-brand-dark-border text-white"}`}
                     />
                   </div>
                 </div>

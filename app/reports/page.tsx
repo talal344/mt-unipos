@@ -1290,11 +1290,11 @@ export default function ReportsPage() {
           {activeTab === "sales" && (
             <div className="space-y-4">
               {/* Sales Filter Bar */}
-              <div className="bg-brand-dark-surface/40 border border-brand-dark-border p-4 rounded-2xl flex flex-col lg:flex-row gap-3 justify-between items-start lg:items-center no-print">
+              <div className={`${isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/40 border-brand-dark-border"} border p-4 rounded-2xl flex flex-col lg:flex-row gap-3 justify-between items-start lg:items-center no-print`}>
                 <div className="flex flex-wrap items-center gap-3">
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Filter By:</span>
-                    <div className="bg-black border border-brand-dark-border p-1 rounded-lg flex gap-1 text-[10px]">
+                    <span className={`text-[10px] font-bold uppercase tracking-wider ${isLight ? "text-slate-600" : "text-gray-400"}`}>Filter By:</span>
+                    <div className={`${isLight ? "bg-slate-100 border-slate-200" : "bg-black border-brand-dark-border"} border p-1 rounded-lg flex gap-1 text-[10px]`}>
                       <button 
                         onClick={() => setSalesFilterType("all")}
                         className={`px-3 py-1 rounded font-bold uppercase ${salesFilterType === "all" ? "bg-brand-sky text-black font-black" : "text-gray-400 hover:text-white"}`}
@@ -1318,8 +1318,8 @@ export default function ReportsPage() {
 
                   {/* Format Toggle */}
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Format:</span>
-                    <div className="bg-black border border-brand-dark-border p-1 rounded-lg flex gap-1 text-[10px]">
+                    <span className={`text-[10px] font-bold uppercase tracking-wider ${isLight ? "text-slate-600" : "text-gray-400"}`}>Format:</span>
+                    <div className={`${isLight ? "bg-slate-100 border-slate-200" : "bg-black border-brand-dark-border"} border p-1 rounded-lg flex gap-1 text-[10px]`}>
                       <button 
                         onClick={() => setSalesDetailLevel("itemized")}
                         className={`px-3 py-1 rounded font-bold uppercase ${salesDetailLevel === "itemized" ? "bg-purple-500 text-white font-black" : "text-gray-400 hover:text-white"}`}
@@ -1340,11 +1340,11 @@ export default function ReportsPage() {
                 <div className="flex items-center gap-2 w-full lg:w-auto">
                   {salesFilterType === "customer" && (
                     <div className="flex items-center gap-2 w-full sm:w-auto">
-                      <label className="text-[10px] text-gray-400 font-bold uppercase">Customer:</label>
+                      <label className={`text-[10px] font-bold uppercase ${isLight ? "text-slate-600" : "text-gray-400"}`}>Customer:</label>
                       <select 
                         value={selectedCustomerFilter}
                         onChange={e => setSelectedCustomerFilter(e.target.value)}
-                        className="bg-black border border-brand-sky/40 text-white text-xs p-2 rounded-lg font-mono focus:outline-none w-full sm:w-auto"
+                        className={`${isLight ? "bg-white border-sky-300 text-slate-900" : "bg-black border-brand-sky/40 text-white"} border text-xs p-2 rounded-lg font-mono focus:outline-none w-full sm:w-auto`}
                       >
                         <option value="ALL">All Customers</option>
                         {customers.map(c => (
@@ -1356,11 +1356,11 @@ export default function ReportsPage() {
 
                   {salesFilterType === "staff" && (
                     <div className="flex items-center gap-2 w-full sm:w-auto">
-                      <label className="text-[10px] text-gray-400 font-bold uppercase">Staff / Cashier:</label>
+                      <label className={`text-[10px] font-bold uppercase ${isLight ? "text-slate-600" : "text-gray-400"}`}>Staff / Cashier:</label>
                       <select 
                         value={selectedStaffFilter}
                         onChange={e => setSelectedStaffFilter(e.target.value)}
-                        className="bg-black border border-brand-sky/40 text-white text-xs p-2 rounded-lg font-mono focus:outline-none w-full sm:w-auto"
+                        className={`${isLight ? "bg-white border-sky-300 text-slate-900" : "bg-black border-brand-sky/40 text-white"} border text-xs p-2 rounded-lg font-mono focus:outline-none w-full sm:w-auto`}
                       >
                         <option value="ALL">All Staff</option>
                         {employees.map(emp => (
@@ -1373,19 +1373,19 @@ export default function ReportsPage() {
               </div>
 
               {/* Transactions Title Header */}
-              <div className="bg-brand-dark-surface/40 border border-brand-dark-border p-4 rounded-2xl flex justify-between items-center">
+              <div className={`${isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/40 border-brand-dark-border"} border p-4 rounded-2xl flex justify-between items-center`}>
                 <div>
-                  <h3 className="text-xs font-black text-white uppercase tracking-wider">
+                  <h3 className={`text-xs font-black uppercase tracking-wider ${isLight ? "text-slate-900" : "text-white"}`}>
                     {salesFilterType === "customer" && selectedCustomerFilter !== "ALL" 
                       ? `Customer Purchase History: ${selectedCustomerFilter}` 
                       : salesFilterType === "staff" && selectedStaffFilter !== "ALL" 
                       ? `Staff Sales & Returns Log: ${selectedStaffFilter}` 
                       : "Sales Transactions History"}
                   </h3>
-                  <p className="text-[9px] text-gray-500 mt-0.5">{filteredSales.length} transactions in {PERIOD_LABELS[period]}</p>
+                  <p className={`text-[9px] mt-0.5 ${isLight ? "text-slate-500" : "text-gray-500"}`}>{filteredSales.length} transactions in {PERIOD_LABELS[period]}</p>
                 </div>
                 <div className="font-mono text-xs text-right">
-                  <span className="text-gray-400">Total Value: </span>
+                  <span className={`${isLight ? "text-slate-500" : "text-gray-400"}`}>Total Value: </span>
                   <span className="text-emerald-400 font-black">{currencySymbol} {totalRevenue.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
                 </div>
               </div>
@@ -1394,21 +1394,21 @@ export default function ReportsPage() {
               {salesDetailLevel === "itemized" ? (
                 <div className="space-y-4">
                   {filteredSales.length === 0 ? (
-                    <div className="bg-brand-dark-surface/30 border border-brand-dark-border rounded-2xl p-12 text-center text-gray-600 font-mono text-xs">
+                    <div className={`${isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/30 border-brand-dark-border"} border rounded-2xl p-12 text-center text-gray-600 font-mono text-xs`}>
                       No transactions match your selected filter
                     </div>
                   ) : (
                     filteredSales.map(s => (
-                      <div key={s.id} className="bg-brand-dark-surface/40 border border-brand-dark-border rounded-2xl p-4 space-y-3 page-break-avoid">
+                      <div key={s.id} className={`${isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/40 border-brand-dark-border"} border rounded-2xl p-4 space-y-3 page-break-avoid`}>
                         {/* Transaction Header Info */}
-                        <div className="flex flex-wrap justify-between items-center border-b border-brand-dark-border/60 pb-3 text-xs font-mono gap-2">
+                        <div className={`flex flex-wrap justify-between items-center border-b pb-3 text-xs font-mono gap-2 ${isLight ? "border-slate-200" : "border-brand-dark-border/60"}`}>
                           <div className="flex items-center gap-3">
                             <span className="text-brand-sky font-bold text-sm">{s.receiptNumber}</span>
-                            <span className="text-gray-400 text-[11px]">{new Date(s.date).toLocaleString("en-PK", { dateStyle: "medium", timeStyle: "short" })}</span>
+                            <span className={`text-[11px] ${isLight ? "text-slate-500" : "text-gray-400"}`}>{new Date(s.date).toLocaleString("en-PK", { dateStyle: "medium", timeStyle: "short" })}</span>
                           </div>
                           <div className="flex flex-wrap items-center gap-3 text-[11px]">
-                            <span className="text-gray-300"><span className="text-gray-500 uppercase">Customer:</span> <strong className="text-white">{s.customerName}</strong></span>
-                            <span className="text-gray-300"><span className="text-gray-500 uppercase">Cashier:</span> <strong className="text-white">{s.cashierName}</strong></span>
+                            <span className={`${isLight ? "text-slate-600" : "text-gray-300"}`}><span className={`uppercase ${isLight ? "text-slate-400" : "text-gray-500"}`}>Customer:</span> <strong className={`${isLight ? "text-slate-900" : "text-white"}`}>{s.customerName}</strong></span>
+                            <span className={`${isLight ? "text-slate-600" : "text-gray-300"}`}><span className={`uppercase ${isLight ? "text-slate-400" : "text-gray-500"}`}>Cashier:</span> <strong className={`${isLight ? "text-slate-900" : "text-white"}`}>{s.cashierName}</strong></span>
                             <span className="px-2 py-0.5 rounded font-bold text-[10px]" style={{ color: pmColors[s.paymentMethod] || "#9ca3af", backgroundColor: (pmColors[s.paymentMethod] || "#9ca3af") + "20" }}>
                               {s.paymentMethod}
                             </span>
@@ -1424,19 +1424,19 @@ export default function ReportsPage() {
                         <div className="w-full">
                           <table className="w-full text-left text-xs font-mono border-collapse">
                             <thead>
-                              <tr className="text-gray-500 text-[10px] uppercase border-b border-brand-dark-border/40">
+                              <tr className={`text-[10px] uppercase border-b ${isLight ? "text-slate-500 border-slate-200" : "text-gray-500 border-brand-dark-border/40"}`}>
                                 <th className="pb-2">Product Item</th>
                                 <th className="pb-2 text-center">Qty Purchased / Returned</th>
                                 <th className="pb-2 text-right">Unit Sale Price</th>
                                 <th className="pb-2 text-right">Total Line Amount</th>
                               </tr>
                             </thead>
-                            <tbody className="divide-y divide-brand-dark-border/20 text-[11px]">
+                            <tbody className={`divide-y text-[11px] ${isLight ? "divide-slate-100" : "divide-brand-dark-border/20"}`}>
                               {(s.items || []).map((item, idx) => (
-                                <tr key={idx} className="hover:bg-black/20">
-                                  <td className="py-2 text-white font-sans font-bold">{item.productName}</td>
-                                  <td className="py-2 text-center font-bold text-gray-300">{item.qty} units</td>
-                                  <td className="py-2 text-right text-gray-400">{currencySymbol} {(item.price || 0).toLocaleString()}</td>
+                                <tr key={idx} className={`${isLight ? "hover:bg-slate-50" : "hover:bg-black/20"}`}>
+                                  <td className={`py-2 font-sans font-bold ${isLight ? "text-slate-900" : "text-white"}`}>{item.productName}</td>
+                                  <td className={`py-2 text-center font-bold ${isLight ? "text-slate-700" : "text-gray-300"}`}>{item.qty} units</td>
+                                  <td className={`py-2 text-right ${isLight ? "text-slate-500" : "text-gray-400"}`}>{currencySymbol} {(item.price || 0).toLocaleString()}</td>
                                   <td className="py-2 text-right font-bold text-emerald-400">{currencySymbol} {((item.qty || 1) * (item.price || 0)).toLocaleString()}</td>
                                 </tr>
                               ))}
@@ -1445,13 +1445,13 @@ export default function ReportsPage() {
                         </div>
 
                         {/* Transaction Footer Summary */}
-                        <div className="flex justify-between items-center pt-2 border-t border-brand-dark-border/40 text-[11px] font-mono text-gray-400">
+                        <div className={`flex justify-between items-center pt-2 border-t text-[11px] font-mono ${isLight ? "border-slate-200 text-slate-500" : "border-brand-dark-border/40 text-gray-400"}`}>
                           <div className="flex gap-4 text-[10px]">
                             <span>Subtotal: {currencySymbol} {s.subtotal.toFixed(0)}</span>
                             <span>Tax: <strong className="text-red-400">{currencySymbol} {s.tax.toFixed(0)}</strong></span>
                             <span>Discount: <strong className="text-amber-400">{currencySymbol} {s.discount.toFixed(0)}</strong></span>
                           </div>
-                          <div className="text-xs font-black text-white">
+                          <div className={`text-xs font-black ${isLight ? "text-slate-900" : "text-white"}`}>
                             Receipt Net Total: <span className="text-brand-sky font-mono text-sm">{currencySymbol} {s.total.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
                           </div>
                         </div>
@@ -1461,11 +1461,11 @@ export default function ReportsPage() {
                 </div>
               ) : (
                 /* ── SUMMARY TABLE VIEW ── */
-                <div className="bg-brand-dark-surface/30 border border-brand-dark-border rounded-2xl overflow-hidden page-break-avoid">
+                <div className={`${isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/30 border-brand-dark-border"} border rounded-2xl overflow-hidden page-break-avoid`}>
                   <div className="w-full">
                     <table className="w-full text-left text-xs border-collapse">
-                      <thead className="sticky top-0 bg-[#0d0d0d]">
-                        <tr className="border-b border-brand-dark-border text-gray-500 font-mono">
+                      <thead className={`sticky top-0 ${isLight ? "bg-slate-100" : "bg-[#0d0d0d]"}`}>
+                        <tr className={`border-b font-mono ${isLight ? "border-slate-200 text-slate-700" : "border-brand-dark-border text-gray-500"}`}>
                           <th className="p-3 font-semibold">Receipt #</th>
                           <th className="p-3 font-semibold">Date & Time</th>
                           <th className="p-3 font-semibold">Customer</th>
@@ -1477,29 +1477,29 @@ export default function ReportsPage() {
                           <th className="p-3 font-semibold text-center">Status</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-brand-dark-border/30 font-mono text-[11px]">
+                      <tbody className={`divide-y ${isLight ? "divide-slate-200" : "divide-brand-dark-border/30"} font-mono text-[11px]`}>
                         {filteredSales.length === 0 ? (
                           <tr><td colSpan={9} className="p-12 text-center text-gray-600">No transactions match your selected filter</td></tr>
                         ) : filteredSales.map(s => (
-                          <tr key={s.id} className="hover:bg-brand-dark-surface/40 transition">
+                          <tr key={s.id} className={`transition ${isLight ? "hover:bg-slate-50 text-slate-900" : "hover:bg-brand-dark-surface/40 text-gray-100"}`}>
                             <td className="p-3 text-brand-sky font-bold">{s.receiptNumber}</td>
-                            <td className="p-3 text-gray-400">{new Date(s.date).toLocaleString("en-PK", { dateStyle: "short", timeStyle: "short" })}</td>
-                            <td className="p-3 text-white font-sans">{s.customerName}</td>
-                            <td className="p-3 text-gray-400 font-sans">{s.cashierName}</td>
+                            <td className={`p-3 ${isLight ? "text-slate-600" : "text-gray-400"}`}>{new Date(s.date).toLocaleString("en-PK", { dateStyle: "short", timeStyle: "short" })}</td>
+                            <td className={`p-3 font-sans ${isLight ? "text-slate-900" : "text-white"}`}>{s.customerName}</td>
+                            <td className={`p-3 font-sans ${isLight ? "text-slate-600" : "text-gray-400"}`}>{s.cashierName}</td>
                             <td className="p-3">
                               <span className="px-1.5 py-0.5 rounded text-[9px] font-bold"
                                 style={{ color: pmColors[s.paymentMethod] || "#9ca3af", backgroundColor: (pmColors[s.paymentMethod] || "#9ca3af") + "20" }}>
                                 {s.paymentMethod}
                               </span>
                             </td>
-                            <td className="p-3 text-right text-red-400">{currencySymbol} {s.tax.toFixed(0)}</td>
-                            <td className="p-3 text-right text-amber-400">{currencySymbol} {s.discount.toFixed(0)}</td>
-                            <td className="p-3 text-right text-white font-black">{currencySymbol} {s.total.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
+                            <td className="p-3 text-right text-red-500">{currencySymbol} {s.tax.toFixed(0)}</td>
+                            <td className="p-3 text-right text-amber-500">{currencySymbol} {s.discount.toFixed(0)}</td>
+                            <td className={`p-3 text-right font-black ${isLight ? "text-slate-900" : "text-white"}`}>{currencySymbol} {s.total.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
                             <td className="p-3 text-center">
                               <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
-                                s.status === "Completed" ? "bg-emerald-500/15 text-emerald-400"
-                                : s.status === "Returned" ? "bg-amber-500/15 text-amber-400"
-                                : "bg-red-500/15 text-red-400"
+                                s.status === "Completed" ? "bg-emerald-500/15 text-emerald-500"
+                                : s.status === "Returned" ? "bg-amber-500/15 text-amber-500"
+                                : "bg-red-500/15 text-red-500"
                               }`}>{s.status}</span>
                             </td>
                           </tr>
@@ -1520,42 +1520,42 @@ export default function ReportsPage() {
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {[
                   { label: "Total SKUs", val: products.length, color: "text-brand-sky" },
-                  { label: "Stock Value", val: `${currencySymbol} ${products.reduce((a, p) => a + p.costPrice * p.stock, 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, color: "text-emerald-400" },
-                  { label: "Low Stock Items", val: products.filter(p => p.stock <= p.minStock).length, color: "text-red-400" },
+                  { label: "Stock Value", val: `${currencySymbol} ${products.reduce((a, p) => a + p.costPrice * p.stock, 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, color: "text-emerald-500" },
+                  { label: "Low Stock Items", val: products.filter(p => p.stock <= p.minStock).length, color: "text-amber-500" },
                   { label: "Out of Stock", val: products.filter(p => p.stock === 0).length, color: "text-red-500" },
                 ].map(s => (
-                  <div key={s.label} className="bg-brand-dark-surface/40 border border-brand-dark-border rounded-xl p-3 text-center page-break-avoid">
+                  <div key={s.label} className={`${isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/40 border-brand-dark-border"} border rounded-xl p-3 text-center page-break-avoid`}>
                     <div className={`text-base font-black font-mono ${s.color}`}>{s.val}</div>
-                    <div className="text-[9px] text-gray-500 uppercase tracking-wide mt-1">{s.label}</div>
+                    <div className={`text-[9px] ${isLight ? "text-slate-500" : "text-gray-500"} uppercase tracking-wide mt-1`}>{s.label}</div>
                   </div>
                 ))}
               </div>
-              <div className="bg-brand-dark-surface/30 border border-brand-dark-border rounded-2xl overflow-hidden page-break-avoid">
+              <div className={`${isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/30 border-brand-dark-border"} border rounded-2xl overflow-hidden page-break-avoid`}>
                 <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
                   <table className="w-full text-left text-xs border-collapse">
-                    <thead className="sticky top-0 bg-[#0d0d0d]">
-                      <tr className="border-b border-brand-dark-border text-gray-500 font-mono">
+                    <thead className={`sticky top-0 ${isLight ? "bg-slate-100" : "bg-[#0d0d0d]"}`}>
+                      <tr className={`border-b font-mono ${isLight ? "border-slate-200 text-slate-700" : "border-brand-dark-border text-gray-500"}`}>
                         <th className="p-3">SKU</th><th className="p-3">Product</th>
                         <th className="p-3">Category</th><th className="p-3 text-right">Cost</th>
                         <th className="p-3 text-right">Stock</th><th className="p-3 text-right">Value</th>
                         <th className="p-3 text-center">Status</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-brand-dark-border/30 font-mono text-[11px]">
+                    <tbody className={`divide-y ${isLight ? "divide-slate-200" : "divide-brand-dark-border/30"} font-mono text-[11px]`}>
                       {products.map(p => (
-                        <tr key={p.id} className="hover:bg-brand-dark-surface/40 transition">
+                        <tr key={p.id} className={`transition ${isLight ? "hover:bg-slate-50 text-slate-900" : "hover:bg-brand-dark-surface/40 text-gray-100"}`}>
                           <td className="p-3 text-purple-400 font-bold">{p.sku}</td>
-                          <td className="p-3 text-white font-sans font-bold">{p.name}</td>
-                          <td className="p-3 text-gray-400">{p.category}</td>
+                          <td className={`p-3 font-sans font-bold ${isLight ? "text-slate-900" : "text-white"}`}>{p.name}</td>
+                          <td className={`p-3 ${isLight ? "text-slate-600" : "text-gray-400"}`}>{p.category}</td>
                           <td className="p-3 text-right">{currencySymbol} {p.costPrice.toLocaleString()}</td>
                           <td className="p-3 text-right text-brand-sky">{p.stock} {p.unit}</td>
-                          <td className="p-3 text-right text-white font-bold">{currencySymbol} {(p.costPrice * p.stock).toLocaleString()}</td>
+                          <td className={`p-3 text-right font-bold ${isLight ? "text-slate-900" : "text-white"}`}>{currencySymbol} {(p.costPrice * p.stock).toLocaleString()}</td>
                           <td className="p-3 text-center">
                             {p.stock === 0
                               ? <span className="text-[9px] bg-red-500/15 text-red-500 px-1.5 py-0.5 rounded font-bold">Out</span>
                               : p.stock <= p.minStock
-                              ? <span className="text-[9px] bg-amber-500/15 text-amber-400 px-1.5 py-0.5 rounded font-bold">Low</span>
-                              : <span className="text-[9px] bg-emerald-500/15 text-emerald-400 px-1.5 py-0.5 rounded font-bold">OK</span>
+                              ? <span className="text-[9px] bg-amber-500/15 text-amber-500 px-1.5 py-0.5 rounded font-bold">Low</span>
+                              : <span className="text-[9px] bg-emerald-500/15 text-emerald-500 px-1.5 py-0.5 rounded font-bold">OK</span>
                             }
                           </td>
                         </tr>
@@ -1574,8 +1574,8 @@ export default function ReportsPage() {
             <div className="space-y-4">
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 {/* Expense breakdown bar chart */}
-                <div className="lg:col-span-2 bg-brand-dark-surface/30 border border-brand-dark-border rounded-2xl p-5 page-break-avoid">
-                  <h3 className="text-xs font-black text-white uppercase tracking-wider mb-4">Expense by Category</h3>
+                <div className={`lg:col-span-2 border rounded-2xl p-5 page-break-avoid ${isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/30 border-brand-dark-border"}`}>
+                  <h3 className={`text-xs font-black uppercase tracking-wider mb-4 ${isLight ? "text-slate-900" : "text-white"}`}>Expense by Category</h3>
                   <div className="no-print">
                     {expCats.length > 0
                       ? <BarChart data={expCats.map(([l, v]) => ({ label: l.slice(0, 8), value: v }))} color="#f87171" height={100} />
@@ -1583,43 +1583,43 @@ export default function ReportsPage() {
                     }
                   </div>
                 </div>
-                <div className="bg-brand-dark-surface/30 border border-brand-dark-border rounded-2xl p-5 space-y-3 page-break-avoid">
-                  <h3 className="text-xs font-black text-white uppercase tracking-wider">Category Totals</h3>
+                <div className={`border rounded-2xl p-5 space-y-3 page-break-avoid ${isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/30 border-brand-dark-border"}`}>
+                  <h3 className={`text-xs font-black uppercase tracking-wider ${isLight ? "text-slate-900" : "text-white"}`}>Category Totals</h3>
                   {expCats.length === 0
                     ? <div className="text-center py-6 text-gray-600 text-xs">No data</div>
                     : expCats.map(([cat, amt]) => (
                     <div key={cat} className="flex justify-between text-[11px]">
-                      <span className="text-gray-400 font-sans">{cat}</span>
-                      <span className="text-red-400 font-black font-mono">{currencySymbol} {amt.toLocaleString()}</span>
+                      <span className={`font-sans ${isLight ? "text-slate-600" : "text-gray-400"}`}>{cat}</span>
+                      <span className="text-red-500 font-black font-mono">{currencySymbol} {amt.toLocaleString()}</span>
                     </div>
                   ))}
-                  <div className="border-t border-brand-dark-border/40 pt-2 flex justify-between font-black text-xs">
-                    <span className="text-white">Total</span>
-                    <span className="text-red-400 font-mono">{currencySymbol} {totalExpAmt.toLocaleString()}</span>
+                  <div className={`border-t ${isLight ? "border-slate-200" : "border-brand-dark-border/40"} pt-2 flex justify-between font-black text-xs`}>
+                    <span className={`${isLight ? "text-slate-900" : "text-white"}`}>Total</span>
+                    <span className="text-red-500 font-mono">{currencySymbol} {totalExpAmt.toLocaleString()}</span>
                   </div>
                 </div>
               </div>
-              <div className="bg-brand-dark-surface/30 border border-brand-dark-border rounded-2xl overflow-hidden page-break-avoid">
+              <div className={`${isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/30 border-brand-dark-border"} border rounded-2xl overflow-hidden page-break-avoid`}>
                 <div className="overflow-x-auto max-h-96 overflow-y-auto">
                   <table className="w-full text-left text-xs border-collapse">
-                    <thead className="sticky top-0 bg-[#0d0d0d]">
-                      <tr className="border-b border-brand-dark-border text-gray-500 font-mono">
+                    <thead className={`sticky top-0 ${isLight ? "bg-slate-100" : "bg-[#0d0d0d]"}`}>
+                      <tr className={`border-b font-mono ${isLight ? "border-slate-200 text-slate-700" : "border-brand-dark-border text-gray-500"}`}>
                         <th className="p-3">Voucher ID</th><th className="p-3">Date</th>
                         <th className="p-3">Category</th><th className="p-3">Description</th>
                         <th className="p-3">Payment</th><th className="p-3 text-right">Amount</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-brand-dark-border/30 font-mono text-[11px]">
+                    <tbody className={`divide-y ${isLight ? "divide-slate-200" : "divide-brand-dark-border/30"} font-mono text-[11px]`}>
                       {filteredExpenses.length === 0
                         ? <tr><td colSpan={6} className="p-12 text-center text-gray-600">No expenses this period</td></tr>
                         : filteredExpenses.map(e => (
-                        <tr key={e.id} className="hover:bg-brand-dark-surface/40 transition">
-                          <td className="p-3 text-red-400 font-bold">{e.id}</td>
-                          <td className="p-3 text-gray-400">{e.date}</td>
-                          <td className="p-3 text-white font-sans font-bold">{e.category}</td>
-                          <td className="p-3 text-gray-500 font-sans">{e.description}</td>
-                          <td className="p-3 text-gray-400">{e.paymentMethod}</td>
-                          <td className="p-3 text-right text-white font-bold">{currencySymbol} {e.amount.toLocaleString()}</td>
+                        <tr key={e.id} className={`transition ${isLight ? "hover:bg-slate-50 text-slate-900" : "hover:bg-brand-dark-surface/40 text-gray-100"}`}>
+                          <td className="p-3 text-red-500 font-bold">{e.id}</td>
+                          <td className={`p-3 ${isLight ? "text-slate-600" : "text-gray-400"}`}>{e.date}</td>
+                          <td className={`p-3 font-sans font-bold ${isLight ? "text-slate-900" : "text-white"}`}>{e.category}</td>
+                          <td className={`p-3 font-sans ${isLight ? "text-slate-500" : "text-gray-500"}`}>{e.description}</td>
+                          <td className={`p-3 ${isLight ? "text-slate-600" : "text-gray-400"}`}>{e.paymentMethod}</td>
+                          <td className={`p-3 text-right font-bold ${isLight ? "text-slate-900" : "text-white"}`}>{currencySymbol} {e.amount.toLocaleString()}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -1638,19 +1638,19 @@ export default function ReportsPage() {
                 {[
                   { label: "Active Staff Roster", val: employees.filter(e => e.status === "Active").length, color: "text-brand-sky" },
                   { label: "Roster Total Sales", val: filteredSales.length + " invoices", color: "text-purple-400" },
-                  { label: "Top Performer", val: topSalesperson, color: "text-emerald-400" },
+                  { label: "Top Performer", val: topSalesperson, color: "text-emerald-500" },
                 ].map(s => (
-                  <div key={s.label} className="bg-brand-dark-surface/40 border border-brand-dark-border rounded-xl p-4 text-center page-break-avoid">
+                  <div key={s.label} className={`${isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/40 border-brand-dark-border"} border rounded-xl p-4 text-center page-break-avoid`}>
                     <div className={`text-sm font-black font-mono truncate ${s.color}`}>{s.val}</div>
-                    <div className="text-[9px] text-gray-500 uppercase tracking-wide mt-1">{s.label}</div>
+                    <div className={`text-[9px] ${isLight ? "text-slate-500" : "text-gray-500"} uppercase tracking-wide mt-1`}>{s.label}</div>
                   </div>
                 ))}
               </div>
-              <div className="bg-brand-dark-surface/30 border border-brand-dark-border rounded-2xl overflow-hidden page-break-avoid">
+              <div className={`${isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/30 border-brand-dark-border"} border rounded-2xl overflow-hidden page-break-avoid`}>
                 <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
                   <table className="w-full text-left text-xs border-collapse">
-                    <thead className="sticky top-0 bg-[#0d0d0d]">
-                      <tr className="border-b border-brand-dark-border text-gray-500 font-mono">
+                    <thead className={`sticky top-0 ${isLight ? "bg-slate-100" : "bg-[#0d0d0d]"}`}>
+                      <tr className={`border-b font-mono ${isLight ? "border-slate-200 text-slate-700" : "border-brand-dark-border text-gray-500"}`}>
                         <th className="p-3 font-semibold">Staff ID</th>
                         <th className="p-3 font-semibold">Name & Role</th>
                         <th className="p-3 font-semibold">Contact Mobile</th>
@@ -1659,20 +1659,20 @@ export default function ReportsPage() {
                         <th className="p-3 font-semibold text-center">Status</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-brand-dark-border/30 font-mono text-[11px]">
+                    <tbody className={`divide-y ${isLight ? "divide-slate-200" : "divide-brand-dark-border/30"} font-mono text-[11px]`}>
                       {employeeStats.map(emp => (
-                        <tr key={emp.id} className="hover:bg-brand-dark-surface/40 transition">
+                        <tr key={emp.id} className={`transition ${isLight ? "hover:bg-slate-50 text-slate-900" : "hover:bg-brand-dark-surface/40 text-gray-100"}`}>
                           <td className="p-3 text-brand-sky font-bold">{emp.id}</td>
                           <td className="p-3">
-                            <div className="text-white font-bold font-sans">{emp.name}</div>
-                            <div className="text-[9px] text-gray-500 font-sans">{emp.role}</div>
+                            <div className={`font-bold font-sans ${isLight ? "text-slate-900" : "text-white"}`}>{emp.name}</div>
+                            <div className={`text-[9px] ${isLight ? "text-slate-500" : "text-gray-500"} font-sans`}>{emp.role}</div>
                           </td>
-                          <td className="p-3 text-gray-300 font-sans">{emp.phone}</td>
+                          <td className={`p-3 font-sans ${isLight ? "text-slate-600" : "text-gray-300"}`}>{emp.phone}</td>
                           <td className="p-3 text-right text-purple-400 font-bold">{emp.salesCount} invoices</td>
-                          <td className="p-3 text-right text-emerald-400 font-black">{currencySymbol} {emp.revenue.toLocaleString()}</td>
+                          <td className="p-3 text-right text-emerald-500 font-black">{currencySymbol} {emp.revenue.toLocaleString()}</td>
                           <td className="p-3 text-center">
                             <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
-                              emp.status === "Active" ? "bg-emerald-500/15 text-emerald-400" : "bg-red-500/15 text-red-400"
+                              emp.status === "Active" ? "bg-emerald-500/15 text-emerald-500" : "bg-red-500/15 text-red-500"
                             }`}>{emp.status}</span>
                           </td>
                         </tr>
@@ -1692,20 +1692,20 @@ export default function ReportsPage() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {[
                   { label: "Total Customers", val: customers.length, color: "text-brand-sky" },
-                  { label: "Total Outstanding Credit", val: `${currencySymbol} ${customers.reduce((a, c) => a + c.creditBalance, 0).toLocaleString()}`, color: "text-red-400" },
-                  { label: "Total Loyalty points", val: `${customers.reduce((a, c) => a + c.loyaltyPoints, 0).toLocaleString()} pts`, color: "text-amber-400" },
+                  { label: "Total Outstanding Credit", val: `${currencySymbol} ${customers.reduce((a, c) => a + c.creditBalance, 0).toLocaleString()}`, color: "text-red-500" },
+                  { label: "Total Loyalty points", val: `${customers.reduce((a, c) => a + c.loyaltyPoints, 0).toLocaleString()} pts`, color: "text-amber-500" },
                 ].map(s => (
-                  <div key={s.label} className="bg-brand-dark-surface/40 border border-brand-dark-border rounded-xl p-4 text-center page-break-avoid">
+                  <div key={s.label} className={`${isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/40 border-brand-dark-border"} border rounded-xl p-4 text-center page-break-avoid`}>
                     <div className={`text-base font-black font-mono ${s.color}`}>{s.val}</div>
-                    <div className="text-[9px] text-gray-500 uppercase tracking-wide mt-1">{s.label}</div>
+                    <div className={`text-[9px] ${isLight ? "text-slate-500" : "text-gray-500"} uppercase tracking-wide mt-1`}>{s.label}</div>
                   </div>
                 ))}
               </div>
-              <div className="bg-brand-dark-surface/30 border border-brand-dark-border rounded-2xl overflow-hidden page-break-avoid">
+              <div className={`${isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/30 border-brand-dark-border"} border rounded-2xl overflow-hidden page-break-avoid`}>
                 <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
                   <table className="w-full text-left text-xs border-collapse">
-                    <thead className="sticky top-0 bg-[#0d0d0d]">
-                      <tr className="border-b border-brand-dark-border text-gray-500 font-mono">
+                    <thead className={`sticky top-0 ${isLight ? "bg-slate-100" : "bg-[#0d0d0d]"}`}>
+                      <tr className={`border-b font-mono ${isLight ? "border-slate-200 text-slate-700" : "border-brand-dark-border text-gray-500"}`}>
                         <th className="p-3 font-semibold">Customer ID</th>
                         <th className="p-3 font-semibold">Name & Mobile</th>
                         <th className="p-3 font-semibold text-right">Purchases Count</th>
@@ -1714,18 +1714,18 @@ export default function ReportsPage() {
                         <th className="p-3 font-semibold text-right">Loyalty Balance</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-brand-dark-border/30 font-mono text-[11px]">
+                    <tbody className={`divide-y ${isLight ? "divide-slate-200" : "divide-brand-dark-border/30"} font-mono text-[11px]`}>
                       {customerStats.map(cust => (
-                        <tr key={cust.id} className="hover:bg-brand-dark-surface/40 transition">
+                        <tr key={cust.id} className={`transition ${isLight ? "hover:bg-slate-50 text-slate-900" : "hover:bg-brand-dark-surface/40 text-gray-100"}`}>
                           <td className="p-3 text-brand-sky font-bold">{cust.id}</td>
                           <td className="p-3">
-                            <div className="text-white font-bold font-sans">{cust.name}</div>
+                            <div className={`font-bold font-sans ${isLight ? "text-slate-900" : "text-white"}`}>{cust.name}</div>
                             <div className="text-[9px] text-gray-500 font-mono">{cust.mobile}</div>
                           </td>
                           <td className="p-3 text-right text-purple-400 font-bold">{cust.buyCount} orders</td>
-                          <td className="p-3 text-right text-emerald-400 font-black">{currencySymbol} {cust.totalSpent.toLocaleString()}</td>
-                          <td className="p-3 text-right text-red-400 font-bold">{currencySymbol} {cust.creditBalance.toLocaleString()}</td>
-                          <td className="p-3 text-right text-amber-400 font-bold">{cust.loyaltyPoints} pts</td>
+                          <td className="p-3 text-right text-emerald-500 font-black">{currencySymbol} {cust.totalSpent.toLocaleString()}</td>
+                          <td className="p-3 text-right text-red-500 font-bold">{currencySymbol} {cust.creditBalance.toLocaleString()}</td>
+                          <td className="p-3 text-right text-amber-500 font-bold">{cust.loyaltyPoints} pts</td>
                         </tr>
                       ))}
                     </tbody>
@@ -1743,20 +1743,20 @@ export default function ReportsPage() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {[
                   { label: "Authorized Suppliers", val: suppliers.length, color: "text-brand-sky" },
-                  { label: "Accounts Payable Due", val: `${currencySymbol} ${suppliers.reduce((a, s) => a + s.dueAmount, 0).toLocaleString()}`, color: "text-red-400" },
+                  { label: "Accounts Payable Due", val: `${currencySymbol} ${suppliers.reduce((a, s) => a + s.dueAmount, 0).toLocaleString()}`, color: "text-red-500" },
                   { label: "Purchase Orders Filed", val: `${purchaseOrders.length} bills`, color: "text-purple-400" },
                 ].map(s => (
-                  <div key={s.label} className="bg-brand-dark-surface/40 border border-brand-dark-border rounded-xl p-4 text-center page-break-avoid">
+                  <div key={s.label} className={`${isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/40 border-brand-dark-border"} border rounded-xl p-4 text-center page-break-avoid`}>
                     <div className={`text-base font-black font-mono ${s.color}`}>{s.val}</div>
-                    <div className="text-[9px] text-gray-500 uppercase tracking-wide mt-1">{s.label}</div>
+                    <div className={`text-[9px] ${isLight ? "text-slate-500" : "text-gray-500"} uppercase tracking-wide mt-1`}>{s.label}</div>
                   </div>
                 ))}
               </div>
-              <div className="bg-brand-dark-surface/30 border border-brand-dark-border rounded-2xl overflow-hidden page-break-avoid">
+              <div className={`${isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/30 border-brand-dark-border"} border rounded-2xl overflow-hidden page-break-avoid`}>
                 <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
                   <table className="w-full text-left text-xs border-collapse">
-                    <thead className="sticky top-0 bg-[#0d0d0d]">
-                      <tr className="border-b border-brand-dark-border text-gray-500 font-mono">
+                    <thead className={`sticky top-0 ${isLight ? "bg-slate-100" : "bg-[#0d0d0d]"}`}>
+                      <tr className={`border-b font-mono ${isLight ? "border-slate-200 text-slate-700" : "border-brand-dark-border text-gray-500"}`}>
                         <th className="p-3 font-semibold">Supplier ID</th>
                         <th className="p-3 font-semibold">Company & Agent</th>
                         <th className="p-3 font-semibold">Contact Info</th>
@@ -1765,21 +1765,21 @@ export default function ReportsPage() {
                         <th className="p-3 font-semibold text-right">Accounts Payable</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-brand-dark-border/30 font-mono text-[11px]">
+                    <tbody className={`divide-y ${isLight ? "divide-slate-200" : "divide-brand-dark-border/30"} font-mono text-[11px]`}>
                       {supplierStats.map(sup => (
-                        <tr key={sup.id} className="hover:bg-brand-dark-surface/40 transition">
+                        <tr key={sup.id} className={`transition ${isLight ? "hover:bg-slate-50 text-slate-900" : "hover:bg-brand-dark-surface/40 text-gray-100"}`}>
                           <td className="p-3 text-brand-sky font-bold">{sup.id}</td>
                           <td className="p-3">
-                            <div className="text-white font-bold font-sans">{sup.company}</div>
-                            <div className="text-[9px] text-gray-400 font-sans">{sup.name}</div>
+                            <div className={`font-bold font-sans ${isLight ? "text-slate-900" : "text-white"}`}>{sup.company}</div>
+                            <div className={`text-[9px] ${isLight ? "text-slate-500" : "text-gray-400"} font-sans`}>{sup.name}</div>
                           </td>
                           <td className="p-3 font-sans">
-                            <div className="text-gray-300">{sup.mobile}</div>
+                            <div className={`${isLight ? "text-slate-700" : "text-gray-300"}`}>{sup.mobile}</div>
                             <div className="text-[9px] text-gray-500 font-mono">{sup.email}</div>
                           </td>
                           <td className="p-3 text-right text-purple-400 font-bold">{sup.poCount} bills</td>
-                          <td className="p-3 text-right text-emerald-400 font-black">{currencySymbol} {sup.totalPOValue.toLocaleString()}</td>
-                          <td className="p-3 text-right text-red-400 font-bold">{currencySymbol} {sup.dueAmount.toLocaleString()}</td>
+                          <td className="p-3 text-right text-emerald-500 font-black">{currencySymbol} {sup.totalPOValue.toLocaleString()}</td>
+                          <td className="p-3 text-right text-red-500 font-bold">{currencySymbol} {sup.dueAmount.toLocaleString()}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -1797,20 +1797,20 @@ export default function ReportsPage() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {[
                   { label: "Active Team Roster", val: employees.length + " employees", color: "text-brand-sky" },
-                  { label: "Base Monthly Salary Bill", val: `${currencySymbol} ${employees.reduce((a, e) => a + (e.salary || 0), 0).toLocaleString()}`, color: "text-emerald-400" },
+                  { label: "Base Monthly Salary Bill", val: `${currencySymbol} ${employees.reduce((a, e) => a + (e.salary || 0), 0).toLocaleString()}`, color: "text-emerald-500" },
                   { label: "Avg Attendance Rate", val: `${payrollStats.length > 0 ? (payrollStats.reduce((a, p) => a + p.attendanceRate, 0) / payrollStats.length).toFixed(0) : 100}%`, color: "text-purple-400" },
                 ].map(s => (
-                  <div key={s.label} className="bg-brand-dark-surface/40 border border-brand-dark-border rounded-xl p-4 text-center page-break-avoid">
+                  <div key={s.label} className={`${isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/40 border-brand-dark-border"} border rounded-xl p-4 text-center page-break-avoid`}>
                     <div className={`text-base font-black font-mono ${s.color}`}>{s.val}</div>
-                    <div className="text-[9px] text-gray-500 uppercase tracking-wide mt-1">{s.label}</div>
+                    <div className={`text-[9px] ${isLight ? "text-slate-500" : "text-gray-500"} uppercase tracking-wide mt-1`}>{s.label}</div>
                   </div>
                 ))}
               </div>
-              <div className="bg-brand-dark-surface/30 border border-brand-dark-border rounded-2xl overflow-hidden page-break-avoid">
+              <div className={`${isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/30 border-brand-dark-border"} border rounded-2xl overflow-hidden page-break-avoid`}>
                 <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
                   <table className="w-full text-left text-xs border-collapse">
-                    <thead className="sticky top-0 bg-[#0d0d0d]">
-                      <tr className="border-b border-brand-dark-border text-gray-500 font-mono">
+                    <thead className={`sticky top-0 ${isLight ? "bg-slate-100" : "bg-[#0d0d0d]"}`}>
+                      <tr className={`border-b font-mono ${isLight ? "border-slate-200 text-slate-700" : "border-brand-dark-border text-gray-500"}`}>
                         <th className="p-3 font-semibold">Staff ID</th>
                         <th className="p-3 font-semibold">Employee Details</th>
                         <th className="p-3 font-semibold text-right">Base Salary</th>
@@ -1818,23 +1818,23 @@ export default function ReportsPage() {
                         <th className="p-3 font-semibold text-right">Attendance Rate</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-brand-dark-border/30 font-mono text-[11px]">
+                    <tbody className={`divide-y ${isLight ? "divide-slate-200" : "divide-brand-dark-border/30"} font-mono text-[11px]`}>
                       {payrollStats.map(emp => (
-                        <tr key={emp.id} className="hover:bg-brand-dark-surface/40 transition">
+                        <tr key={emp.id} className={`transition ${isLight ? "hover:bg-slate-50 text-slate-900" : "hover:bg-brand-dark-surface/40 text-gray-100"}`}>
                           <td className="p-3 text-brand-sky font-bold">{emp.id}</td>
                           <td className="p-3">
-                            <div className="text-white font-bold font-sans">{emp.name}</div>
-                            <div className="text-[9px] text-gray-500 font-sans">{emp.role}</div>
+                            <div className={`font-bold font-sans ${isLight ? "text-slate-900" : "text-white"}`}>{emp.name}</div>
+                            <div className={`text-[9px] ${isLight ? "text-slate-500" : "text-gray-500"} font-sans`}>{emp.role}</div>
                           </td>
-                          <td className="p-3 text-right text-emerald-400 font-bold">{currencySymbol} {emp.salary.toLocaleString()}</td>
+                          <td className="p-3 text-right text-emerald-500 font-bold">{currencySymbol} {emp.salary.toLocaleString()}</td>
                           <td className="p-3 text-center">
-                            <span className="text-emerald-400 font-bold">{emp.presents}P</span> /{" "}
-                            <span className="text-amber-400 font-bold">{emp.lates}L</span> /{" "}
-                            <span className="text-red-400 font-bold">{emp.absents}A</span> /{" "}
+                            <span className="text-emerald-500 font-bold">{emp.presents}P</span> /{" "}
+                            <span className="text-amber-500 font-bold">{emp.lates}L</span> /{" "}
+                            <span className="text-red-500 font-bold">{emp.absents}A</span> /{" "}
                             <span className="text-purple-400 font-bold">{emp.leaves}Lv</span>
                           </td>
                           <td className="p-3 text-right font-bold">
-                            <span className={emp.attendanceRate >= 90 ? "text-emerald-400" : emp.attendanceRate >= 75 ? "text-amber-400" : "text-red-400"}>
+                            <span className={emp.attendanceRate >= 90 ? "text-emerald-500" : emp.attendanceRate >= 75 ? "text-amber-500" : "text-red-500"}>
                               {emp.attendanceRate.toFixed(0)}%
                             </span>
                           </td>

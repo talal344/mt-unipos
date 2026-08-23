@@ -755,9 +755,9 @@ export default function ClientDashboardPage() {
         {/* -------------------- INTERACTIVE RECHARTS ANALYTICS -------------------- */}
         <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Revenue & Profit Trends (Line Chart) */}
-          <div className="lg:col-span-2 bg-brand-dark-surface/40 border border-brand-dark-border p-5 rounded-2xl">
+          <div className={`lg:col-span-2 border p-5 rounded-2xl ${isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/40 border-brand-dark-border"}`}>
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xs uppercase font-bold text-white tracking-wide flex items-center gap-1.5">
+              <h3 className={`text-xs uppercase font-bold tracking-wide flex items-center gap-1.5 ${isLight ? "text-slate-900" : "text-white"}`}>
                 <BarChart3 className="text-brand-sky" size={14} />
                 7-Day Revenue & Profit Trends
               </h3>
@@ -781,8 +781,8 @@ export default function ClientDashboardPage() {
           </div>
 
           {/* Top Selling Products (Pie Chart) */}
-          <div className="bg-brand-dark-surface/40 border border-brand-dark-border p-5 rounded-2xl flex flex-col min-h-[300px] overflow-hidden">
-            <h3 className="text-xs uppercase font-bold text-white tracking-wide flex items-center gap-1.5 mb-2">
+          <div className={`border p-5 rounded-2xl flex flex-col min-h-[300px] overflow-hidden ${isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/40 border-brand-dark-border"}`}>
+            <h3 className={`text-xs uppercase font-bold tracking-wide flex items-center gap-1.5 mb-2 ${isLight ? "text-slate-900" : "text-white"}`}>
               <Package className="text-amber-400" size={14} />
               Today's Top Products
             </h3>
@@ -819,9 +819,9 @@ export default function ClientDashboardPage() {
                     <div key={p.name} className="flex justify-between items-center text-[10px]">
                       <div className="flex items-center gap-1.5 truncate pr-2">
                         <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: pieColors[i] }} />
-                        <span className="text-gray-300 truncate">{p.name}</span>
+                        <span className={`truncate ${isLight ? "text-slate-600" : "text-gray-300"}`}>{p.name}</span>
                       </div>
-                      <span className="font-bold text-white font-mono shrink-0">{formatAmt(p.revenue)}</span>
+                      <span className={`font-bold font-mono shrink-0 ${isLight ? "text-slate-900" : "text-white"}`}>{formatAmt(p.revenue)}</span>
                     </div>
                   ))}
                 </div>
@@ -843,39 +843,39 @@ export default function ClientDashboardPage() {
             
             {/* F&B Metric Tiles */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-brand-dark-surface/50 border border-brand-dark-border p-4 rounded-xl space-y-2">
+              <div className={`border p-4 rounded-xl space-y-2 ${isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/50 border-brand-dark-border"}`}>
                 <div className="flex justify-between items-center text-gray-500">
                   <span className="text-[10px] uppercase font-bold tracking-wider">Open Kitchen Tickets</span>
                   <Clock size={16} className="text-amber-400" />
                 </div>
-                <div className="text-xl font-black text-white">{openKdsCount} tickets</div>
+                <div className={`text-xl font-black ${isLight ? "text-slate-900" : "text-white"}`}>{openKdsCount} tickets</div>
                 <p className="text-[9px] text-amber-500/80">Pending cooking inside KDS</p>
               </div>
 
-              <div className="bg-brand-dark-surface/50 border border-brand-dark-border p-4 rounded-xl space-y-2">
+              <div className={`border p-4 rounded-xl space-y-2 ${isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/50 border-brand-dark-border"}`}>
                 <div className="flex justify-between items-center text-gray-500">
                   <span className="text-[10px] uppercase font-bold tracking-wider">Occupied Dining Tables</span>
                   <Utensils size={16} className="text-brand-sky" />
                 </div>
-                <div className="text-xl font-black text-white">{occupiedTablesCount} Tables</div>
+                <div className={`text-xl font-black ${isLight ? "text-slate-900" : "text-white"}`}>{occupiedTablesCount} Tables</div>
                 <p className="text-[9px] text-gray-500">{freeTablesCount} tables free right now</p>
               </div>
 
-              <div className="bg-brand-dark-surface/50 border border-brand-dark-border p-4 rounded-xl space-y-2">
+              <div className={`border p-4 rounded-xl space-y-2 ${isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/50 border-brand-dark-border"}`}>
                 <div className="flex justify-between items-center text-gray-500">
                   <span className="text-[10px] uppercase font-bold tracking-wider">Active Waiters</span>
                   <UserCheck size={16} className="text-emerald-400" />
                 </div>
-                <div className="text-xl font-black text-white">{activeWaiters} staff</div>
+                <div className={`text-xl font-black ${isLight ? "text-slate-900" : "text-white"}`}>{activeWaiters} staff</div>
                 <p className="text-[9px] text-emerald-400">Serving active orders</p>
               </div>
 
-              <div className="bg-brand-dark-surface/50 border border-brand-dark-border p-4 rounded-xl space-y-2">
+              <div className={`border p-4 rounded-xl space-y-2 ${isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/50 border-brand-dark-border"}`}>
                 <div className="flex justify-between items-center text-gray-500">
                   <span className="text-[10px] uppercase font-bold tracking-wider">Sales Today</span>
                   <DollarSign size={16} className="text-emerald-400" />
                 </div>
-                <div className="text-xl font-black text-white">{formatAmt(totalRevenue)}</div>
+                <div className={`text-xl font-black ${isLight ? "text-slate-900" : "text-white"}`}>{formatAmt(totalRevenue)}</div>
                 <p className="text-[9px] text-gray-500">{totalSalesCount} food checkouts completed</p>
               </div>
             </div>
@@ -884,9 +884,9 @@ export default function ClientDashboardPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               
               {/* Left: Interactive Tables visual overview */}
-              <div className="lg:col-span-2 bg-brand-dark-surface/30 border border-brand-dark-border p-5 rounded-2xl space-y-4">
+              <div className={`lg:col-span-2 border p-5 rounded-2xl space-y-4 ${isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/30 border-brand-dark-border"}`}>
                 <div className="flex justify-between items-center border-b border-brand-dark-border pb-2">
-                  <h3 className="text-xs uppercase font-bold text-white tracking-wide">Dining Room Seating Overview</h3>
+                  <h3 className={`text-xs uppercase font-bold tracking-wide ${isLight ? "text-slate-900" : "text-white"}`}>Dining Room Seating Overview</h3>
                   <Link href="/restaurant" className="text-[9px] text-brand-sky font-bold hover:underline">Manage Tables Map &rarr;</Link>
                 </div>
                 
@@ -911,18 +911,18 @@ export default function ClientDashboardPage() {
               </div>
 
               {/* Right: KDS Dispatch Panel */}
-              <div className="bg-brand-dark-surface/30 border border-brand-dark-border p-5 rounded-2xl flex flex-col justify-between max-h-[300px]">
+              <div className={`border p-5 rounded-2xl flex flex-col justify-between max-h-[300px] ${isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/30 border-brand-dark-border"}`}>
                 <div>
-                  <h3 className="text-xs uppercase font-bold text-white tracking-wide border-b border-brand-dark-border pb-2 flex items-center gap-1.5">
+                  <h3 className={`text-xs uppercase font-bold tracking-wide border-b border-brand-dark-border pb-2 flex items-center gap-1.5 ${isLight ? "text-slate-900" : "text-white"}`}>
                     <Clock className="text-amber-500 animate-spin" size={14} />
                     Pending Kitchen Chef Queue
                   </h3>
                   
                   <div className="space-y-2 overflow-y-auto max-h-[170px] pt-3 text-[10px]">
                     {kitchenTickets.filter(t => t.status !== "Ready").map(t => (
-                      <div key={t.id} className="bg-black/40 border border-brand-dark-border p-2 rounded flex justify-between items-center font-mono">
+                      <div key={t.id} className={`border p-2 rounded flex justify-between items-center font-mono ${isLight ? "bg-slate-50 border-slate-200 text-slate-700" : "bg-black/40 border-brand-dark-border"}`}>
                         <div>
-                          <div className="font-bold text-white">{t.tableNumber}</div>
+                          <div className={`font-bold ${isLight ? "text-slate-900" : "text-white"}`}>{t.tableNumber}</div>
                           <div className="text-gray-500">{t.items.map(i => `${i.name} x${i.qty}`).join(", ")}</div>
                         </div>
                         <span className="text-[8px] px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/30 text-amber-400 uppercase font-black tracking-wider">
@@ -941,9 +941,9 @@ export default function ClientDashboardPage() {
               </div>
 
               {/* Bottom: Waiter Performance Leaderboard */}
-              <div className="lg:col-span-3 bg-brand-dark-surface/30 border border-brand-dark-border p-5 rounded-2xl flex flex-col">
+              <div className={`lg:col-span-3 border p-5 rounded-2xl flex flex-col ${isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/30 border-brand-dark-border"}`}>
                 <div className="flex justify-between items-center border-b border-brand-dark-border pb-2 mb-4">
-                  <h3 className="text-xs uppercase font-bold text-white tracking-wide flex items-center gap-1.5">
+                  <h3 className={`text-xs uppercase font-bold tracking-wide flex items-center gap-1.5 ${isLight ? "text-slate-900" : "text-white"}`}>
                     <Star className="text-amber-400" size={14} />
                     Top Waiters Performance
                   </h3>
@@ -958,7 +958,7 @@ export default function ClientDashboardPage() {
                       const maxRevenue = topWaiters[0]?.revenue || 1;
                       const pct = Math.round((waiter.revenue / maxRevenue) * 100);
                       return (
-                        <div key={waiter.name} className="relative bg-black/40 border border-brand-dark-border/60 p-4 rounded-xl flex flex-col justify-between overflow-hidden group hover:border-brand-sky/30 transition">
+                        <div key={waiter.name} className={`relative border p-4 rounded-xl flex flex-col justify-between overflow-hidden group hover:border-brand-sky/30 transition ${isLight ? "bg-slate-50 border-slate-200 text-slate-700" : "bg-black/40 border-brand-dark-border/60"}`}>
                           {/* Rank Badge */}
                           <div className={`absolute top-0 right-0 w-8 h-8 flex items-center justify-center rounded-bl-xl text-[10px] font-black ${
                             idx === 0 ? 'bg-amber-500/20 text-amber-400' :
@@ -970,7 +970,7 @@ export default function ClientDashboardPage() {
                           </div>
 
                           <div className="mb-4 pr-6">
-                            <h4 className="text-white font-bold text-sm truncate" title={waiter.name}>{waiter.name}</h4>
+                            <h4 className={`font-bold text-sm truncate ${isLight ? "text-slate-900" : "text-white"}`} title={waiter.name}>{waiter.name}</h4>
                             <p className="text-[10px] text-gray-500 mt-0.5">{waiter.checkouts} orders</p>
                           </div>
 
@@ -983,7 +983,7 @@ export default function ClientDashboardPage() {
                             </div>
                             
                             {/* Progress bar */}
-                            <div className="w-full h-1.5 bg-black rounded-full overflow-hidden border border-brand-dark-border/40">
+                            <div className={`w-full h-1.5 rounded-full overflow-hidden border border-brand-dark-border/40 ${isLight ? "bg-slate-200" : "bg-black"}`}>
                               <div 
                                 className={`h-full rounded-full transition-all duration-1000 ${idx === 0 ? 'bg-amber-400' : 'bg-brand-sky'}`} 
                                 style={{ width: `${pct}%` }} 
@@ -1008,39 +1008,39 @@ export default function ClientDashboardPage() {
             
             {/* Pharmacy Metric Tiles */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-brand-dark-surface/50 border border-brand-dark-border p-4 rounded-xl space-y-2">
+              <div className={`border p-4 rounded-xl space-y-2 ${isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/50 border-brand-dark-border"}`}>
                 <div className="flex justify-between items-center text-gray-500">
                   <span className="text-[10px] uppercase font-bold tracking-wider">Expiring Drugs (90 Days)</span>
                   <Heart size={16} className="text-red-400" />
                 </div>
-                <div className="text-xl font-black text-white">{expiringDrugs90Days.length} items</div>
+                <div className={`text-xl font-black ${isLight ? "text-slate-900" : "text-white"}`}>{expiringDrugs90Days.length} items</div>
                 <p className="text-[9px] text-red-400 font-bold uppercase tracking-wider">FEFO Actions Required</p>
               </div>
 
-              <div className="bg-brand-dark-surface/50 border border-brand-dark-border p-4 rounded-xl space-y-2">
+              <div className={`border p-4 rounded-xl space-y-2 ${isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/50 border-brand-dark-border"}`}>
                 <div className="flex justify-between items-center text-gray-500">
                   <span className="text-[10px] uppercase font-bold tracking-wider">Out Of Stock Warning</span>
                   <AlertTriangle size={16} className="text-amber-500" />
                 </div>
-                <div className="text-xl font-black text-white">{pharmacyLowStock.length} items</div>
+                <div className={`text-xl font-black ${isLight ? "text-slate-900" : "text-white"}`}>{pharmacyLowStock.length} items</div>
                 <p className="text-[9px] text-gray-500">Critical pharmaceutical stockouts</p>
               </div>
 
-              <div className="bg-brand-dark-surface/50 border border-brand-dark-border p-4 rounded-xl space-y-2">
+              <div className={`border p-4 rounded-xl space-y-2 ${isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/50 border-brand-dark-border"}`}>
                 <div className="flex justify-between items-center text-gray-500">
                   <span className="text-[10px] uppercase font-bold tracking-wider">Cold Chain Inventory</span>
                   <Thermometer size={16} className="text-brand-sky animate-pulse" />
                 </div>
-                <div className="text-xl font-black text-white">4.2 °C</div>
+                <div className={`text-xl font-black ${isLight ? "text-slate-900" : "text-white"}`}>4.2 °C</div>
                 <p className="text-[9px] text-emerald-400 font-bold">Fridge Shard Compliant</p>
               </div>
 
-              <div className="bg-brand-dark-surface/50 border border-brand-dark-border p-4 rounded-xl space-y-2">
+              <div className={`border p-4 rounded-xl space-y-2 ${isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/50 border-brand-dark-border"}`}>
                 <div className="flex justify-between items-center text-gray-500">
                   <span className="text-[10px] uppercase font-bold tracking-wider">Total Sales Today</span>
                   <DollarSign size={16} className="text-emerald-400" />
                 </div>
-                <div className="text-xl font-black text-white">{currencySymbol} {totalRevenue.toLocaleString()}</div>
+                <div className={`text-xl font-black ${isLight ? "text-slate-900" : "text-white"}`}>{currencySymbol} {totalRevenue.toLocaleString()}</div>
                 <p className="text-[9px] text-gray-500">{totalSalesCount} prescriptions billed</p>
               </div>
             </div>
@@ -1048,9 +1048,9 @@ export default function ClientDashboardPage() {
             {/* Pharmacy visual expiries list */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               
-              <div className="lg:col-span-2 bg-brand-dark-surface/30 border border-brand-dark-border p-5 rounded-2xl space-y-4">
+              <div className={`lg:col-span-2 border p-5 rounded-2xl space-y-4 ${isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/30 border-brand-dark-border"}`}>
                 <div className="flex justify-between items-center border-b border-brand-dark-border pb-2">
-                  <h3 className="text-xs uppercase font-bold text-white tracking-wide">Critical Batch Expiries Ledger (FEFO)</h3>
+                  <h3 className={`text-xs uppercase font-bold tracking-wide ${isLight ? "text-slate-900" : "text-white"}`}>Critical Batch Expiries Ledger (FEFO)</h3>
                   <Link href="/pharmacy" className="text-[9px] text-brand-sky font-bold hover:underline">Full Drug Registry &rarr;</Link>
                 </div>
                 
@@ -1069,11 +1069,11 @@ export default function ClientDashboardPage() {
                       {pharmacyProducts.filter(p => p.expiryDate).map(prod => {
                         const isExpiring = expiringDrugs90Days.some(e => e.id === prod.id);
                         return (
-                          <tr key={prod.id} className="hover:bg-brand-dark-surface/60 transition">
-                            <td className="py-2 text-white font-bold font-sans">{prod.name}</td>
+                          <tr key={prod.id} className={`transition ${isLight ? "hover:bg-slate-50" : "hover:bg-brand-dark-surface/60"}`}>
+                            <td className={`py-2 font-bold font-sans ${isLight ? "text-slate-900" : "text-white"}`}>{prod.name}</td>
                             <td className="py-2 text-purple-400">{prod.batchNumber || "N/A"}</td>
                             <td className="py-2 text-gray-400">{prod.expiryDate}</td>
-                            <td className="py-2 text-right font-bold text-white">{prod.stock} {prod.unit}</td>
+                            <td className={`py-2 text-right font-bold ${isLight ? "text-slate-900" : "text-white"}`}>{prod.stock} {prod.unit}</td>
                             <td className="py-2 text-center">
                               <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${
                                 isExpiring ? "bg-red-500/10 border border-red-500/30 text-red-400 animate-pulse" :
@@ -1091,18 +1091,18 @@ export default function ClientDashboardPage() {
               </div>
 
               {/* Right: Low Stock Pharmacy items */}
-              <div className="bg-brand-dark-surface/30 border border-brand-dark-border p-5 rounded-2xl flex flex-col justify-between max-h-[300px]">
+              <div className={`border p-5 rounded-2xl flex flex-col justify-between max-h-[300px] ${isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/30 border-brand-dark-border"}`}>
                 <div>
-                  <h3 className="text-xs uppercase font-bold text-white tracking-wide border-b border-brand-dark-border pb-2 flex items-center gap-1.5">
+                  <h3 className={`text-xs uppercase font-bold tracking-wide border-b border-brand-dark-border pb-2 flex items-center gap-1.5 ${isLight ? "text-slate-900" : "text-white"}`}>
                     <AlertTriangle className="text-amber-500" size={14} />
                     Critical Drug Stockouts
                   </h3>
                   
                   <div className="space-y-2 overflow-y-auto max-h-[170px] pt-3 text-[10px]">
                     {pharmacyLowStock.map(prod => (
-                      <div key={prod.id} className="bg-black/40 border border-brand-dark-border p-2 rounded flex justify-between items-center font-mono">
+                      <div key={prod.id} className={`border p-2 rounded flex justify-between items-center font-mono ${isLight ? "bg-slate-50 border-slate-200 text-slate-700" : "bg-black/40 border-brand-dark-border"}`}>
                         <div>
-                          <div className="font-bold text-white font-sans">{prod.name}</div>
+                          <div className={`font-bold font-sans ${isLight ? "text-slate-900" : "text-white"}`}>{prod.name}</div>
                           <div className="text-gray-500 text-[8px]">SKU: {prod.sku}</div>
                         </div>
                         <div className="text-right">
@@ -1129,39 +1129,39 @@ export default function ClientDashboardPage() {
             
             {/* Bookstore Metric Tiles */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-brand-dark-surface/50 border border-brand-dark-border p-4 rounded-xl space-y-2">
+              <div className={`border p-4 rounded-xl space-y-2 ${isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/50 border-brand-dark-border"}`}>
                 <div className="flex justify-between items-center text-gray-500">
                   <span className="text-[10px] uppercase font-bold tracking-wider">Total Genres Cataloged</span>
                   <BookOpen size={16} className="text-purple-400" />
                 </div>
-                <div className="text-xl font-black text-white">{totalGenres} Genres</div>
+                <div className={`text-xl font-black ${isLight ? "text-slate-900" : "text-white"}`}>{totalGenres} Genres</div>
                 <p className="text-[9px] text-gray-500">Academic &amp; fiction indices</p>
               </div>
 
-              <div className="bg-brand-dark-surface/50 border border-brand-dark-border p-4 rounded-xl space-y-2">
+              <div className={`border p-4 rounded-xl space-y-2 ${isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/50 border-brand-dark-border"}`}>
                 <div className="flex justify-between items-center text-gray-500">
                   <span className="text-[10px] uppercase font-bold tracking-wider">Active Reading Club</span>
                   <User size={16} className="text-brand-sky" />
                 </div>
-                <div className="text-xl font-black text-white">{readingClubMembers.length} Members</div>
+                <div className={`text-xl font-black ${isLight ? "text-slate-900" : "text-white"}`}>{readingClubMembers.length} Members</div>
                 <p className="text-[9px] text-brand-sky font-bold">Loyalty profiles registered</p>
               </div>
 
-              <div className="bg-brand-dark-surface/50 border border-brand-dark-border p-4 rounded-xl space-y-2">
+              <div className={`border p-4 rounded-xl space-y-2 ${isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/50 border-brand-dark-border"}`}>
                 <div className="flex justify-between items-center text-gray-500">
                   <span className="text-[10px] uppercase font-bold tracking-wider">Books Catalog Size</span>
                   <Database size={16} className="text-amber-500" />
                 </div>
-                <div className="text-xl font-black text-white">{bookProducts.length} Volumes</div>
+                <div className={`text-xl font-black ${isLight ? "text-slate-900" : "text-white"}`}>{bookProducts.length} Volumes</div>
                 <p className="text-[9px] text-gray-500">Sharded author titles</p>
               </div>
 
-              <div className="bg-brand-dark-surface/50 border border-brand-dark-border p-4 rounded-xl space-y-2">
+              <div className={`border p-4 rounded-xl space-y-2 ${isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/50 border-brand-dark-border"}`}>
                 <div className="flex justify-between items-center text-gray-500">
                   <span className="text-[10px] uppercase font-bold tracking-wider">Books Billed Today</span>
                   <DollarSign size={16} className="text-emerald-400" />
                 </div>
-                <div className="text-xl font-black text-white">{currencySymbol} {totalRevenue.toLocaleString()}</div>
+                <div className={`text-xl font-black ${isLight ? "text-slate-900" : "text-white"}`}>{currencySymbol} {totalRevenue.toLocaleString()}</div>
                 <p className="text-[9px] text-gray-500">{totalSalesCount} books transactions completed</p>
               </div>
             </div>
@@ -1170,16 +1170,16 @@ export default function ClientDashboardPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               
               {/* Left: Reading Club Members Ledger */}
-              <div className="lg:col-span-2 bg-brand-dark-surface/30 border border-brand-dark-border p-5 rounded-2xl space-y-4">
-                <div className="flex justify-between items-center border-b border-brand-dark-border pb-2">
-                  <h3 className="text-xs uppercase font-bold text-white tracking-wide">Reading Club Member Rankings (Loyalties)</h3>
+              <div className={`lg:col-span-2 border p-5 rounded-2xl space-y-4 ${isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/30 border-brand-dark-border"}`}>
+                <div className={`flex justify-between items-center border-b ${isLight ? "border-slate-200" : "border-brand-dark-border"} pb-2`}>
+                  <h3 className={`text-xs uppercase font-bold tracking-wide ${isLight ? "text-slate-900" : "text-white"}`}>Reading Club Member Rankings (Loyalties)</h3>
                   <Link href="/crm" className="text-[9px] text-brand-sky font-bold hover:underline">Manage CRM Reading Club &rarr;</Link>
                 </div>
                 
                 <div className="overflow-x-auto text-xs font-mono">
                   <table className="w-full text-left">
                     <thead>
-                      <tr className="border-b border-brand-dark-border text-gray-500 text-[10px]">
+                      <tr className={`border-b ${isLight ? "border-slate-200 text-slate-600" : "border-brand-dark-border text-gray-500"} text-[10px]`}>
                         <th className="pb-2 font-semibold">Reader Name</th>
                         <th className="pb-2 font-semibold">Contact Mobile</th>
                         <th className="pb-2 font-semibold text-center">Active Loyalty Points</th>
@@ -1187,23 +1187,23 @@ export default function ClientDashboardPage() {
                         <th className="pb-2 font-semibold text-center">Status</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-brand-dark-border/40 text-[11px]">
+                    <tbody className={`divide-y ${isLight ? "divide-slate-200" : "divide-brand-dark-border/40"} text-[11px]`}>
                       {customers.map(c => (
-                        <tr key={c.id} className="hover:bg-brand-dark-surface/60 transition">
-                          <td className="py-2 text-white font-bold font-sans flex items-center gap-1.5">
+                        <tr key={c.id} className={`transition ${isLight ? "hover:bg-slate-50 text-slate-900" : "hover:bg-brand-dark-surface/60 text-gray-100"}`}>
+                          <td className={`py-2 font-bold font-sans flex items-center gap-1.5 ${isLight ? "text-slate-900" : "text-white"}`}>
                             <User size={12} className="text-purple-400" />
                             {c.name}
                           </td>
-                          <td className="py-2 text-gray-400">{c.mobile}</td>
+                          <td className={`py-2 ${isLight ? "text-slate-600" : "text-gray-400"}`}>{c.mobile}</td>
                           <td className="py-2 text-center text-brand-sky font-bold flex items-center justify-center gap-0.5 mt-1">
                             <Star size={10} className="fill-brand-sky text-brand-sky" />
                             {c.loyaltyPoints} pts
                           </td>
-                          <td className="py-2 text-right font-bold text-white">{currencySymbol} {c.creditBalance.toLocaleString()}</td>
+                          <td className={`py-2 text-right font-bold ${isLight ? "text-slate-900" : "text-white"}`}>{currencySymbol} {c.creditBalance.toLocaleString()}</td>
                           <td className="py-2 text-center">
                             <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${
                               c.loyaltyPoints > 100 ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400" :
-                              "bg-brand-dark-border text-gray-400"
+                              isLight ? "bg-slate-100 text-slate-600" : "bg-brand-dark-border text-gray-400"
                             }`}>
                               {c.loyaltyPoints > 100 ? "Elite Reader" : "Standard"}
                             </span>
@@ -1216,9 +1216,9 @@ export default function ClientDashboardPage() {
               </div>
 
               {/* Right: Genre Distribution */}
-              <div className="bg-brand-dark-surface/30 border border-brand-dark-border p-5 rounded-2xl flex flex-col justify-between max-h-[300px]">
+              <div className={`border p-5 rounded-2xl flex flex-col justify-between max-h-[300px] ${isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/30 border-brand-dark-border"}`}>
                 <div>
-                  <h3 className="text-xs uppercase font-bold text-white tracking-wide border-b border-brand-dark-border pb-2 flex items-center gap-1.5">
+                  <h3 className={`text-xs uppercase font-bold tracking-wide border-b ${isLight ? "border-slate-200 text-slate-900" : "border-brand-dark-border text-white"} pb-2 flex items-center gap-1.5`}>
                     <Layers className="text-purple-400" size={14} />
                     Popular Genre Metrics
                   </h3>
@@ -1230,11 +1230,11 @@ export default function ClientDashboardPage() {
                       { name: "Biography & History", pct: 25, val: "5 volumes" }
                     ].map(genre => (
                       <div key={genre.name} className="space-y-1">
-                        <div className="flex justify-between text-gray-300 font-semibold text-[9px]">
+                        <div className={`flex justify-between font-semibold text-[9px] ${isLight ? "text-slate-700" : "text-gray-300"}`}>
                           <span>{genre.name}</span>
-                          <span className="font-mono text-white">{genre.val}</span>
+                          <span className={`font-mono ${isLight ? "text-slate-900" : "text-white"}`}>{genre.val}</span>
                         </div>
-                        <div className="w-full h-1 bg-black rounded-full overflow-hidden">
+                        <div className={`w-full h-1 ${isLight ? "bg-slate-200" : "bg-black"} rounded-full overflow-hidden`}>
                           <div className="h-full bg-purple-500" style={{ width: `${genre.pct}%` }} />
                         </div>
                       </div>

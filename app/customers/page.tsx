@@ -616,14 +616,14 @@ export default function CustomersPage() {
             RIGHT PANEL — Customer Detail Drawer
         ═══════════════════════════════════════════════════════════════ */}
         {selectedCustomer && (
-          <section className="flex-grow flex flex-col overflow-hidden bg-black/60">
+          <section className={`flex-grow flex flex-col overflow-hidden ${isLight ? "bg-slate-50" : "bg-black/60"}`}>
 
             {/* Drawer Header */}
-            <div className="shrink-0 border-b border-brand-dark-border p-5 flex items-start justify-between gap-4">
+            <div className={`shrink-0 border-b ${isLight ? "border-slate-200" : "border-brand-dark-border"} p-5 flex items-start justify-between gap-4`}>
               <div className="flex items-center gap-4">
                 <button
                   onClick={() => setSelectedId(null)}
-                  className="lg:hidden p-2 rounded-lg bg-brand-dark-border text-gray-400 hover:text-white"
+                  className={`lg:hidden p-2 rounded-lg ${isLight ? "bg-slate-100 text-slate-600 hover:text-slate-900" : "bg-brand-dark-border text-gray-400 hover:text-white"}`}
                 >
                   <ArrowLeft size={14} />
                 </button>
@@ -635,7 +635,7 @@ export default function CustomersPage() {
 
                 <div>
                   <div className="flex items-center gap-2">
-                    <h2 className="font-black text-white text-lg">{selectedCustomer.name}</h2>
+                    <h2 className={`font-black ${isLight ? "text-slate-900" : "text-white"} text-lg`}>{selectedCustomer.name}</h2>
                     {(() => {
                       const tier = getLoyaltyTier(selectedCustomer.loyaltyPoints);
                       return (
@@ -645,7 +645,7 @@ export default function CustomersPage() {
                       );
                     })()}
                   </div>
-                  <div className="flex items-center gap-4 text-[10px] text-gray-400 mt-1">
+                  <div className={`flex items-center gap-4 text-[10px] ${isLight ? "text-slate-500" : "text-gray-400"} mt-1`}>
                     <span className="flex items-center gap-1"><Phone size={10} />{selectedCustomer.mobile}</span>
                     {selectedCustomer.email && <span className="flex items-center gap-1"><Mail size={10} />{selectedCustomer.email}</span>}
                   </div>
@@ -679,19 +679,19 @@ export default function CustomersPage() {
                 )}
                 <button
                   onClick={() => openEdit(selectedCustomer)}
-                  className="flex items-center gap-1.5 px-3 py-2 bg-brand-dark-border hover:bg-brand-sky/20 text-gray-300 hover:text-brand-sky rounded-lg text-[10px] font-bold transition"
+                  className={`flex items-center gap-1.5 px-3 py-2 ${isLight ? "bg-slate-100 text-slate-600 hover:bg-brand-sky/10 hover:text-brand-sky" : "bg-brand-dark-border hover:bg-brand-sky/20 text-gray-300 hover:text-brand-sky"} rounded-lg text-[10px] font-bold transition`}
                 >
                   <Edit2 size={12} /> Edit
                 </button>
                 <button
                   onClick={() => setConfirmDeleteId(selectedCustomer.id)}
-                  className="flex items-center gap-1.5 px-3 py-2 bg-brand-dark-border hover:bg-red-500/20 text-gray-300 hover:text-red-400 rounded-lg text-[10px] font-bold transition"
+                  className={`flex items-center gap-1.5 px-3 py-2 ${isLight ? "bg-slate-100 text-slate-600 hover:bg-red-500/10 hover:text-red-500" : "bg-brand-dark-border hover:bg-red-500/20 text-gray-300 hover:text-red-400"} rounded-lg text-[10px] font-bold transition`}
                 >
                   <Trash2 size={12} /> Delete
                 </button>
                 <button
                   onClick={() => setSelectedId(null)}
-                  className="p-2 bg-brand-dark-border hover:bg-brand-dark-border/60 text-gray-400 hover:text-white rounded-lg transition hidden lg:block"
+                  className={`p-2 ${isLight ? "bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-800" : "bg-brand-dark-border hover:bg-brand-dark-border/60 text-gray-400 hover:text-white"} rounded-lg transition hidden lg:block`}
                 >
                   <X size={14} />
                 </button>
@@ -699,7 +699,7 @@ export default function CustomersPage() {
             </div>
 
             {/* Loyalty Points Bar */}
-            <div className="shrink-0 px-5 py-3 bg-brand-dark-surface/30 border-b border-brand-dark-border">
+            <div className={`shrink-0 px-5 py-3 ${isLight ? "bg-slate-100 border-slate-200" : "bg-brand-dark-surface/30 border-brand-dark-border"} border-b`}>
               <div className="flex items-center justify-between gap-6">
                 {[
                   { label: "Loyalty Points", val: `${selectedCustomer.loyaltyPoints.toLocaleString()} pts`, icon: Star, color: "text-yellow-400" },
@@ -711,7 +711,7 @@ export default function CustomersPage() {
                     <stat.icon size={14} className={stat.color} />
                     <div>
                       <div className={`text-sm font-black font-mono ${stat.color}`}>{stat.val}</div>
-                      <div className="text-[9px] text-gray-600 uppercase tracking-wide">{stat.label}</div>
+                      <div className={`text-[9px] ${isLight ? "text-slate-500" : "text-gray-600"} uppercase tracking-wide`}>{stat.label}</div>
                     </div>
                   </div>
                 ))}
@@ -719,7 +719,7 @@ export default function CustomersPage() {
             </div>
 
             {/* Tabs */}
-            <div className="shrink-0 border-b border-brand-dark-border px-5 flex gap-1 pt-2">
+            <div className={`shrink-0 border-b ${isLight ? "border-slate-200" : "border-brand-dark-border"} px-5 flex gap-1 pt-2`}>
               {(["overview", "purchases", "receipts", "loyalty", "credit"] as Tab[]).map(tab => (
                 <button
                   key={tab}
@@ -727,7 +727,7 @@ export default function CustomersPage() {
                   className={`px-4 py-2 text-[10px] font-bold uppercase tracking-wider rounded-t-lg border-b-2 transition ${
                     drawerTab === tab
                       ? "border-brand-sky text-brand-sky bg-brand-sky/5"
-                      : "border-transparent text-gray-500 hover:text-gray-300"
+                      : `border-transparent ${isLight ? "text-slate-500 hover:text-slate-700" : "text-gray-500 hover:text-gray-300"}`
                   }`}
                 >
                   {tab}
@@ -743,8 +743,8 @@ export default function CustomersPage() {
                 <div className="space-y-5">
 
                   {/* Contact Info Card */}
-                  <div className="bg-brand-dark-surface/40 border border-brand-dark-border rounded-2xl p-5 space-y-3">
-                    <h3 className="text-xs font-black text-white uppercase tracking-wider border-b border-brand-dark-border/50 pb-2 mb-3">Contact Information</h3>
+                  <div className={`${isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/40 border-brand-dark-border"} border rounded-2xl p-5 space-y-3`}>
+                    <h3 className={`text-xs font-black ${isLight ? "text-slate-900 border-slate-200" : "text-white border-brand-dark-border/50"} uppercase tracking-wider border-b pb-2 mb-3`}>Contact Information</h3>
                     {[
                       { icon: Hash, label: "Customer Number", val: selectedCustomer.customerNo || "N/A" },
                       { icon: User, label: "Full Name", val: selectedCustomer.name },
@@ -754,30 +754,30 @@ export default function CustomersPage() {
                       { icon: CreditCard, label: "CNIC", val: selectedCustomer.cnic || "—" },
                     ].map(row => (
                       <div key={row.label} className="flex items-start gap-3 text-xs">
-                        <row.icon size={13} className="text-gray-500 mt-0.5 shrink-0" />
+                        <row.icon size={13} className={`${isLight ? "text-slate-400" : "text-gray-500"} mt-0.5 shrink-0`} />
                         <div>
-                          <span className="text-gray-500 text-[9px] uppercase tracking-wide block">{row.label}</span>
-                          <span className="text-white font-semibold">{row.val}</span>
+                          <span className={`${isLight ? "text-slate-500" : "text-gray-500"} text-[9px] uppercase tracking-wide block`}>{row.label}</span>
+                          <span className={`${isLight ? "text-slate-900" : "text-white"} font-semibold`}>{row.val}</span>
                         </div>
                       </div>
                     ))}
                   </div>
 
                   {/* Recent Activity Snapshot */}
-                  <div className="bg-brand-dark-surface/40 border border-brand-dark-border rounded-2xl p-5">
-                    <h3 className="text-xs font-black text-white uppercase tracking-wider border-b border-brand-dark-border/50 pb-2 mb-3">Purchase Activity</h3>
+                  <div className={`${isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/40 border-brand-dark-border"} border rounded-2xl p-5`}>
+                    <h3 className={`text-xs font-black ${isLight ? "text-slate-900 border-slate-200" : "text-white border-brand-dark-border/50"} uppercase tracking-wider border-b pb-2 mb-3`}>Purchase Activity</h3>
                     {selectedCustomer.purchases.length === 0 ? (
                       <p className="text-xs text-gray-600 text-center py-6">No purchases recorded yet.</p>
                     ) : (
                       <div className="space-y-2">
                         {selectedCustomer.purchases.slice(0, 5).map(s => (
-                          <div key={s.id} className="flex items-center justify-between text-xs py-2 border-b border-brand-dark-border/30 last:border-0">
+                          <div key={s.id} className={`flex items-center justify-between text-xs py-2 border-b ${isLight ? "border-slate-200" : "border-brand-dark-border/30"} last:border-0`}>
                             <div>
-                              <span className="font-bold text-white text-[11px]">{s.receiptNumber}</span>
+                              <span className={`font-bold ${isLight ? "text-slate-900" : "text-white"} text-[11px]`}>{s.receiptNumber}</span>
                               <span className="text-gray-500 text-[9px] ml-2">{formatDate(s.date)}</span>
                             </div>
                             <div className="flex items-center gap-3">
-                              <span className="text-[9px] bg-brand-dark-border px-2 py-0.5 rounded text-gray-400">{s.paymentMethod}</span>
+                              <span className={`text-[9px] ${isLight ? "bg-slate-100 text-slate-600" : "bg-brand-dark-border text-gray-400"} px-2 py-0.5 rounded`}>{s.paymentMethod}</span>
                               <span className="font-black text-brand-sky font-mono">{currencySymbol} {Math.round(s.total).toLocaleString()}</span>
                             </div>
                           </div>
@@ -795,8 +795,8 @@ export default function CustomersPage() {
                   </div>
 
                   {/* Loyalty Progress */}
-                  <div className="bg-brand-dark-surface/40 border border-brand-dark-border rounded-2xl p-5">
-                    <h3 className="text-xs font-black text-white uppercase tracking-wider border-b border-brand-dark-border/50 pb-2 mb-3">Loyalty Tier Progress</h3>
+                  <div className={`${isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/40 border-brand-dark-border"} border rounded-2xl p-5`}>
+                    <h3 className={`text-xs font-black ${isLight ? "text-slate-900 border-slate-200" : "text-white border-brand-dark-border/50"} uppercase tracking-wider border-b pb-2 mb-3`}>Loyalty Tier Progress</h3>
                     {TIER_CONFIG.map((tier, i) => {
                       const next = TIER_CONFIG[i + 1];
                       const pts = selectedCustomer.loyaltyPoints;
@@ -815,13 +815,13 @@ export default function CustomersPage() {
                             </div>
                             {isCurrent && next && (
                               <>
-                                <div className="h-1.5 bg-brand-dark-border rounded-full overflow-hidden">
+                                <div className={`h-1.5 ${isLight ? "bg-slate-200" : "bg-brand-dark-border"} rounded-full overflow-hidden`}>
                                   <div
                                     className="h-full bg-brand-sky rounded-full transition-all duration-700"
                                     style={{ width: `${progress}%` }}
                                   />
                                 </div>
-                                <div className="text-[9px] text-gray-600 mt-1">
+                                <div className={`text-[9px] ${isLight ? "text-slate-500" : "text-gray-600"} mt-1`}>
                                   {next.minPts - pts} more pts to reach {next.label}
                                 </div>
                               </>
@@ -839,7 +839,7 @@ export default function CustomersPage() {
               {drawerTab === "purchases" && (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-xs font-black text-white uppercase tracking-wider">
+                    <h3 className={`text-xs font-black ${isLight ? "text-slate-900" : "text-white"} uppercase tracking-wider`}>
                       Purchase History <span className="text-brand-sky">({selectedCustomer.purchases.length})</span>
                     </h3>
                     <span className="text-[10px] text-gray-500">
@@ -856,11 +856,11 @@ export default function CustomersPage() {
                     [...selectedCustomer.purchases]
                       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
                       .map(sale => (
-                        <div key={sale.id} className="bg-brand-dark-surface/40 border border-brand-dark-border rounded-xl overflow-hidden">
+                        <div key={sale.id} className={`${isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/40 border-brand-dark-border"} border rounded-xl overflow-hidden`}>
                           {/* Sale Header */}
-                          <div className="flex items-center justify-between px-4 py-3 border-b border-brand-dark-border/50">
+                          <div className={`flex items-center justify-between px-4 py-3 border-b ${isLight ? "border-slate-200" : "border-brand-dark-border/50"}`}>
                             <div>
-                              <span className="text-[11px] font-black text-white">{sale.receiptNumber}</span>
+                              <span className={`text-[11px] font-black ${isLight ? "text-slate-900" : "text-white"}`}>{sale.receiptNumber}</span>
                               <span className="text-[9px] text-gray-500 ml-2">{formatDateTime(sale.date)}</span>
                             </div>
                             <div className="flex items-center gap-2">
@@ -869,7 +869,7 @@ export default function CustomersPage() {
                                 sale.status === "Returned" ? "bg-red-500/10 text-red-400 border border-red-500/20" :
                                 "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20"
                               }`}>{sale.status}</span>
-                              <span className="text-[9px] bg-brand-dark-border px-2 py-0.5 rounded text-gray-400">{sale.paymentMethod}</span>
+                              <span className={`text-[9px] ${isLight ? "bg-slate-100 text-slate-600" : "bg-brand-dark-border text-gray-400"} px-2 py-0.5 rounded`}>{sale.paymentMethod}</span>
                             </div>
                           </div>
 
@@ -877,14 +877,14 @@ export default function CustomersPage() {
                           <div className="px-4 py-2 space-y-1.5">
                             {sale.items.map((item, idx) => (
                               <div key={idx} className="flex justify-between text-[10px]">
-                                <span className="text-gray-300">{item.productName} <span className="text-gray-600">×{item.qty}</span></span>
-                                <span className="text-gray-400 font-mono">{currencySymbol} {item.subtotal.toLocaleString()}</span>
+                                <span className={`${isLight ? "text-slate-600" : "text-gray-300"}`}>{item.productName} <span className="text-gray-500">×{item.qty}</span></span>
+                                <span className={`${isLight ? "text-slate-900" : "text-gray-400"} font-mono`}>{currencySymbol} {item.subtotal.toLocaleString()}</span>
                               </div>
                             ))}
                           </div>
 
                           {/* Totals */}
-                          <div className="px-4 py-2.5 border-t border-brand-dark-border/40 flex items-center justify-between">
+                          <div className={`px-4 py-2.5 border-t ${isLight ? "border-slate-200" : "border-brand-dark-border/40"} flex items-center justify-between`}>
                             <div className="flex items-center gap-3 text-[9px] text-gray-500">
                               {sale.discount > 0 && <span className="text-red-400">Disc: -{currencySymbol} {Math.round(sale.discount)}</span>}
                               {sale.loyaltyPointsEarned !== undefined && (
@@ -910,7 +910,7 @@ export default function CustomersPage() {
               {/* ── RECEIPTS TAB ── */}
               {drawerTab === "receipts" && (
                 <div className="space-y-3">
-                  <h3 className="text-xs font-black text-white uppercase tracking-wider">
+                  <h3 className={`text-xs font-black ${isLight ? "text-slate-900" : "text-white"} uppercase tracking-wider`}>
                     Thermal Receipts <span className="text-brand-sky">({selectedCustomer.purchases.length})</span>
                   </h3>
 
@@ -923,10 +923,10 @@ export default function CustomersPage() {
                     [...selectedCustomer.purchases]
                       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
                       .map(sale => (
-                        <div key={sale.id} className="bg-brand-dark-surface/40 border border-brand-dark-border rounded-xl p-4">
+                        <div key={sale.id} className={`${isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/40 border-brand-dark-border"} border rounded-xl p-4`}>
                           <div className="flex items-center justify-between mb-3">
                             <div>
-                              <span className="text-xs font-black text-white">{sale.receiptNumber}</span>
+                              <span className={`text-xs font-black ${isLight ? "text-slate-900" : "text-white"}`}>{sale.receiptNumber}</span>
                               <span className="text-[9px] text-gray-500 ml-2">{formatDateTime(sale.date)}</span>
                             </div>
                             <button
@@ -948,55 +948,38 @@ export default function CustomersPage() {
                                   </div>
                                   <div class="line"></div>
                                   <div class="row"><span>Receipt:</span><span class="bold">${sale.receiptNumber}</span></div>
-                                  <div class="row"><span>Date:</span><span>${new Date(sale.date).toLocaleString()}</span></div>
-                                  <div class="row"><span>Cashier:</span><span>${sale.cashierName}</span></div>
-                                  <div class="row"><span>Customer:</span><span class="bold">${sale.customerName}</span></div>
+                                  <div class="row"><span>Date:</span><span>${formatDateTime(sale.date)}</span></div>
+                                  <div class="row"><span>Customer:</span><span>${sale.customerName}</span></div>
+                                  <div class="row"><span>Payment:</span><span>${sale.paymentMethod}</span></div>
                                   <div class="line"></div>
-                                  ${sale.items.map(i => `<div class="row"><span>${i.productName} x${i.qty}</span><span>PKR ${i.subtotal}</span></div>`).join("")}
+                                  ${sale.items.map(i => `<div class="row"><span>${i.productName} x${i.qty}</span><span>Rs. ${i.subtotal}</span></div>`).join("")}
                                   <div class="line"></div>
-                                  <div class="row"><span>Subtotal:</span><span>PKR ${sale.subtotal}</span></div>
-                                  <div class="row"><span>Tax:</span><span>PKR ${Math.round(sale.tax)}</span></div>
-                                  <div class="row"><span>Discount:</span><span>-PKR ${Math.round(sale.discount)}</span></div>
+                                  <div class="row bold big"><span>TOTAL:</span><span>Rs. ${Math.round(sale.total)}</span></div>
                                   <div class="line"></div>
-                                  <div class="row bold"><span>TOTAL:</span><span>PKR ${Math.round(sale.total)}</span></div>
-                                  <div class="line"></div>
-                                  ${sale.loyaltyPointsEarned !== undefined ? `<div class="row"><span>Points Earned:</span><span>+${sale.loyaltyPointsEarned} pts</span></div>
-                                  <div class="row"><span>Points Balance:</span><span>${sale.loyaltyPointsBalance} pts</span></div>` : ""}
-                                  <div class="line"></div>
-                                  <div class="center sm">Thank you for shopping!<br/>Powered by MT Core</div>
+                                  <div class="center sm">Thank you for your business!</div>
                                   </body></html>
                                 `);
                                 win.document.close();
                                 win.print();
                               }}
-                              className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-sky/10 border border-brand-sky/20 text-brand-sky hover:bg-brand-sky hover:text-black rounded-lg text-[10px] font-bold transition"
+                              className={`flex items-center gap-1 text-[10px] ${isLight ? "bg-slate-100 text-slate-700 hover:bg-slate-200" : "bg-brand-dark-border text-gray-300 hover:text-white"} px-2.5 py-1 rounded transition`}
                             >
-                              <Printer size={11} /> Print Receipt
+                              <Printer size={11} /> Print Thermal
                             </button>
                           </div>
-
-                          {/* Mini receipt preview */}
-                          <div className="bg-white text-black rounded-lg p-4 font-mono text-[9px] space-y-1 leading-relaxed">
-                            <div className="text-center font-sans font-black text-[11px]">MT CORE</div>
-                            <div className="text-center text-gray-500 text-[8px]">The core technology behind your business.</div>
-                            <div className="border-t border-dashed border-gray-300 my-1.5" />
-                            <div className="flex justify-between"><span className="text-gray-500">Receipt</span><span className="font-bold">{sale.receiptNumber}</span></div>
-                            <div className="flex justify-between"><span className="text-gray-500">Customer</span><span className="font-bold">{sale.customerName}</span></div>
-                            <div className="flex justify-between"><span className="text-gray-500">Date</span><span>{formatDate(sale.date)}</span></div>
-                            <div className="border-t border-dashed border-gray-300 my-1.5" />
-                            {sale.items.map((item, i) => (
-                              <div key={i} className="flex justify-between">
-                                <span>{item.productName} ×{item.qty}</span>
-                                <span>{currencySymbol} {item.subtotal}</span>
+                          <div className={`text-[10px] ${isLight ? "bg-slate-50 border-slate-200" : "bg-black/40 border-brand-dark-border/40"} border rounded-lg p-2.5 font-mono space-y-1`}>
+                            {sale.items.map((it, idx) => (
+                              <div key={idx} className={`flex justify-between ${isLight ? "text-slate-600" : "text-gray-400"}`}>
+                                <span>{it.productName} ×{it.qty}</span>
+                                <span>{currencySymbol} {it.subtotal.toLocaleString()}</span>
                               </div>
                             ))}
-                            <div className="border-t border-dashed border-gray-300 my-1.5" />
-                            <div className="flex justify-between font-bold">
+                            <div className={`border-t ${isLight ? "border-slate-200" : "border-brand-dark-border/40"} pt-1 flex justify-between font-bold ${isLight ? "text-slate-900" : "text-white"}`}>
                               <span>TOTAL</span>
-                              <span>{currencySymbol} {Math.round(sale.total)}</span>
+                              <span className="text-brand-sky">{currencySymbol} {Math.round(sale.total).toLocaleString()}</span>
                             </div>
                             {sale.loyaltyPointsEarned !== undefined && (
-                              <div className="flex justify-between text-gray-500">
+                              <div className="flex justify-between text-yellow-500 text-[9px] pt-0.5">
                                 <span>Points Earned</span><span>+{sale.loyaltyPointsEarned} pts</span>
                               </div>
                             )}
@@ -1014,22 +997,22 @@ export default function CustomersPage() {
                   <div className="bg-gradient-to-br from-yellow-500/10 to-brand-sky/5 border border-yellow-500/20 rounded-2xl p-6 text-center">
                     <Star size={32} className="text-yellow-400 fill-yellow-400 mx-auto mb-2" />
                     <div className="text-4xl font-black text-yellow-400 font-mono">{selectedCustomer.loyaltyPoints.toLocaleString()}</div>
-                    <div className="text-xs text-gray-400 mt-1">Total Loyalty Points</div>
+                    <div className={`text-xs ${isLight ? "text-slate-500" : "text-gray-400"} mt-1`}>Total Loyalty Points</div>
                     {selectedCustomer.loyaltyPoints >= 1000 && (
-                      <div className="mt-3 bg-purple-500/15 border border-purple-500/30 rounded-lg py-2 px-3 text-[10px] text-purple-300 font-bold">
+                      <div className="mt-3 bg-purple-500/15 border border-purple-500/30 rounded-lg py-2 px-3 text-[10px] text-purple-400 font-bold">
                         🎉 Eligible for {currencySymbol} 100 discount! (1000 pts redemption)
                       </div>
                     )}
                     {selectedCustomer.loyaltyPoints < 1000 && (
-                      <div className="mt-3 bg-brand-dark-border/60 rounded-lg py-2 px-3 text-[10px] text-gray-500">
+                      <div className={`mt-3 ${isLight ? "bg-slate-100 text-slate-600" : "bg-brand-dark-border/60 text-gray-500"} rounded-lg py-2 px-3 text-[10px]`}>
                         {1000 - selectedCustomer.loyaltyPoints} more points needed for {currencySymbol} 100 discount
                       </div>
                     )}
                   </div>
 
                   {/* Earning Rules */}
-                  <div className="bg-brand-dark-surface/40 border border-brand-dark-border rounded-2xl p-5 space-y-3">
-                    <h3 className="text-xs font-black text-white uppercase tracking-wider">Loyalty Program Rules</h3>
+                  <div className={`${isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/40 border-brand-dark-border"} border rounded-2xl p-5 space-y-3`}>
+                    <h3 className={`text-xs font-black ${isLight ? "text-slate-900" : "text-white"} uppercase tracking-wider`}>Loyalty Program Rules</h3>
                     {[
                       { rule: "Earn 2 points per PKR 100 spent", detail: "Automatically awarded on every purchase" },
                       { rule: "Redeem 1,000 pts = PKR 100 Discount", detail: "Applied at POS checkout when eligible" },
@@ -1039,16 +1022,16 @@ export default function CustomersPage() {
                       <div key={r.rule} className="flex items-start gap-2 text-xs">
                         <Check size={12} className="text-brand-sky mt-0.5 shrink-0" />
                         <div>
-                          <div className="text-white font-semibold">{r.rule}</div>
-                          <div className="text-gray-500 text-[9px]">{r.detail}</div>
+                          <div className={`${isLight ? "text-slate-900" : "text-white"} font-semibold`}>{r.rule}</div>
+                          <div className={`${isLight ? "text-slate-500" : "text-gray-500"} text-[9px]`}>{r.detail}</div>
                         </div>
                       </div>
                     ))}
                   </div>
 
                   {/* Points Ledger */}
-                  <div className="bg-brand-dark-surface/40 border border-brand-dark-border rounded-2xl p-5">
-                    <h3 className="text-xs font-black text-white uppercase tracking-wider border-b border-brand-dark-border/50 pb-2 mb-3">Points Transaction Ledger</h3>
+                  <div className={`${isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/40 border-brand-dark-border"} border rounded-2xl p-5`}>
+                    <h3 className={`text-xs font-black ${isLight ? "text-slate-900 border-slate-200" : "text-white border-brand-dark-border/50"} uppercase tracking-wider border-b pb-2 mb-3`}>Points Transaction Ledger</h3>
                     {selectedCustomer.purchases.length === 0 ? (
                       <p className="text-xs text-gray-600 text-center py-4">No point transactions yet.</p>
                     ) : (
@@ -1057,15 +1040,15 @@ export default function CustomersPage() {
                           .filter(s => s.loyaltyPointsEarned !== undefined)
                           .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
                           .map(s => (
-                            <div key={s.id} className="flex items-center justify-between text-[10px] py-2 border-b border-brand-dark-border/30 last:border-0">
+                            <div key={s.id} className={`flex items-center justify-between text-[10px] py-2 border-b ${isLight ? "border-slate-200" : "border-brand-dark-border/30"} last:border-0`}>
                               <div>
-                                <div className="text-white font-bold">{s.receiptNumber}</div>
+                                <div className={`font-bold ${isLight ? "text-slate-900" : "text-white"}`}>{s.receiptNumber}</div>
                                 <div className="text-gray-500">{formatDate(s.date)} · {currencySymbol} {Math.round(s.total).toLocaleString()}</div>
                               </div>
                               <div className="text-right">
-                                <div className="text-yellow-400 font-black">+{s.loyaltyPointsEarned} pts</div>
+                                <div className="text-yellow-500 font-black">+{s.loyaltyPointsEarned} pts</div>
                                 {s.redeemLoyalty && <div className="text-purple-400 text-[9px]">-1000 pts redeemed</div>}
-                                <div className="text-gray-600 text-[9px]">Bal: {s.loyaltyPointsBalance} pts</div>
+                                <div className={`${isLight ? "text-slate-500" : "text-gray-600"} text-[9px]`}>Bal: {s.loyaltyPointsBalance} pts</div>
                               </div>
                             </div>
                           ))
@@ -1080,10 +1063,10 @@ export default function CustomersPage() {
               {drawerTab === "credit" && (
                 <div className="space-y-4 font-sans">
                   {/* Credit summary banner */}
-                  <div className="bg-brand-dark-surface/40 border border-brand-dark-border rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div className={`${isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/40 border-brand-dark-border"} border rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4`}>
                     <div>
-                      <div className="text-xs text-gray-400 font-sans font-bold">Total Outstanding Credit Due</div>
-                      <div className="text-2xl font-black text-red-400 font-mono mt-1">
+                      <div className={`text-xs ${isLight ? "text-slate-500" : "text-gray-400"} font-sans font-bold`}>Total Outstanding Credit Due</div>
+                      <div className="text-2xl font-black text-red-500 font-mono mt-1">
                         {currencySymbol} {selectedCustomer.creditBalance.toLocaleString()}
                       </div>
                     </div>
@@ -1110,8 +1093,8 @@ export default function CustomersPage() {
                   </div>
 
                   {/* Credit Purchases section */}
-                  <div className="bg-brand-dark-surface/40 border border-brand-dark-border rounded-2xl p-5 space-y-3">
-                    <h3 className="text-xs font-black text-white uppercase tracking-wider border-b border-brand-dark-border/50 pb-2">Credit Purchases Ledger</h3>
+                  <div className={`${isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/40 border-brand-dark-border"} border rounded-2xl p-5 space-y-3`}>
+                    <h3 className={`text-xs font-black ${isLight ? "text-slate-900 border-slate-200" : "text-white border-brand-dark-border/50"} uppercase tracking-wider border-b pb-2`}>Credit Purchases Ledger</h3>
                     {(() => {
                       const creditSales = selectedCustomer.purchases.filter(
                         s => s.paymentMethod === "On Credit" || (s.splitPayments && s.splitPayments["On Credit"] > 0)
@@ -1124,16 +1107,16 @@ export default function CustomersPage() {
                           {creditSales.map(sale => {
                             const creditAmt = sale.splitPayments ? (sale.splitPayments["On Credit"] || 0) : sale.total;
                             return (
-                              <div key={sale.id} className="bg-black/30 border border-brand-dark-border/50 rounded-xl p-3 space-y-2 font-mono">
+                              <div key={sale.id} className={`${isLight ? "bg-slate-50 border-slate-200" : "bg-black/30 border-brand-dark-border/50"} border rounded-xl p-3 space-y-2 font-mono`}>
                                 <div className="flex justify-between items-start">
                                   <div>
-                                    <span className="text-[10px] font-bold text-white block">{sale.receiptNumber}</span>
+                                    <span className={`text-[10px] font-bold ${isLight ? "text-slate-900" : "text-white"} block`}>{sale.receiptNumber}</span>
                                     <span className="text-[8px] text-gray-500">{formatDateTime(sale.date)}</span>
                                   </div>
                                   <button
                                     type="button"
                                     onClick={() => printIndividualCreditSlip(sale)}
-                                    className="p-1.5 bg-brand-dark-border hover:bg-brand-sky/20 text-gray-400 hover:text-brand-sky rounded transition"
+                                    className={`p-1.5 ${isLight ? "bg-slate-200 text-slate-600 hover:text-brand-sky hover:bg-sky-50" : "bg-brand-dark-border hover:bg-brand-sky/20 text-gray-400 hover:text-brand-sky"} rounded transition`}
                                     title="Print Credit Receipt"
                                   >
                                     <Printer size={11} />
@@ -1141,15 +1124,15 @@ export default function CustomersPage() {
                                 </div>
                                 <div className="space-y-1 pl-1">
                                   {sale.items.map((item: any, idx: number) => (
-                                    <div key={idx} className="flex justify-between text-[9px] text-gray-400">
+                                    <div key={idx} className={`flex justify-between text-[9px] ${isLight ? "text-slate-600" : "text-gray-400"}`}>
                                       <span className="font-sans">{item.productName} ×{item.qty}</span>
                                       <span>{currencySymbol} {item.subtotal.toLocaleString()}</span>
                                     </div>
                                   ))}
                                 </div>
-                                <div className="border-t border-brand-dark-border/40 pt-1.5 flex justify-between items-center text-[10px]">
-                                  <span className="text-gray-500 font-bold font-sans">Credit Share:</span>
-                                  <span className="font-black text-red-400">{currencySymbol} {creditAmt.toLocaleString()}</span>
+                                <div className={`border-t ${isLight ? "border-slate-200" : "border-brand-dark-border/40"} pt-1.5 flex justify-between items-center text-[10px]`}>
+                                  <span className={`${isLight ? "text-slate-500" : "text-gray-500"} font-bold font-sans`}>Credit Share:</span>
+                                  <span className="font-black text-red-500">{currencySymbol} {creditAmt.toLocaleString()}</span>
                                 </div>
                               </div>
                             );
@@ -1160,24 +1143,24 @@ export default function CustomersPage() {
                   </div>
 
                   {/* Dues Settle payments ledger */}
-                  <div className="bg-brand-dark-surface/40 border border-brand-dark-border rounded-2xl p-5 space-y-3">
-                    <h3 className="text-xs font-black text-white uppercase tracking-wider border-b border-brand-dark-border/50 pb-2">Due Clearance / Settlement History</h3>
+                  <div className={`${isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/40 border-brand-dark-border"} border rounded-2xl p-5 space-y-3`}>
+                    <h3 className={`text-xs font-black ${isLight ? "text-slate-900 border-slate-200" : "text-white border-brand-dark-border/50"} uppercase tracking-wider border-b pb-2`}>Due Clearance / Settlement History</h3>
                     {!selectedCustomer.dueRecoveryHistory || selectedCustomer.dueRecoveryHistory.length === 0 ? (
                       <p className="text-xs text-gray-600 text-center py-4">No due settlements logged yet.</p>
                     ) : (
                       <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
                         {selectedCustomer.dueRecoveryHistory.map((rec: any, idx: number) => (
-                          <div key={idx} className="flex items-center justify-between text-[10px] py-2 border-b border-brand-dark-border/30 last:border-0 font-mono">
+                          <div key={idx} className={`flex items-center justify-between text-[10px] py-2 border-b ${isLight ? "border-slate-200" : "border-brand-dark-border/30"} last:border-0 font-mono`}>
                             <div>
-                              <div className="text-emerald-400 font-bold font-sans">Clearance Payment</div>
+                              <div className="text-emerald-500 font-bold font-sans">Clearance Payment</div>
                               <div className="text-gray-500 text-[9px] mt-0.5">{formatDate(rec.date)}</div>
                             </div>
                             <div className="flex items-center gap-2">
-                              <span className="text-emerald-400 font-bold">- {currencySymbol} {rec.amount.toLocaleString()}</span>
+                              <span className="text-emerald-500 font-bold">- {currencySymbol} {rec.amount.toLocaleString()}</span>
                               <button
                                 type="button"
                                 onClick={() => printCreditRecoverySlip(selectedCustomer, rec.amount)}
-                                className="p-1 bg-brand-dark-border hover:bg-brand-sky/20 text-gray-400 hover:text-brand-sky rounded transition"
+                                className={`p-1 ${isLight ? "bg-slate-200 text-slate-600 hover:text-brand-sky hover:bg-sky-50" : "bg-brand-dark-border hover:bg-brand-sky/20 text-gray-400 hover:text-brand-sky"} rounded transition`}
                                 title="Print Recovery Receipt"
                               >
                                 <Printer size={10} />
@@ -1201,18 +1184,18 @@ export default function CustomersPage() {
       ═══════════════════════════════════════════════════════════════ */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4">
-          <div className="bg-brand-dark-surface border border-brand-sky/30 p-6 rounded-2xl w-full max-w-md shadow-2xl animate-fade-in-up">
-            <div className="flex justify-between items-center border-b border-brand-dark-border pb-3 mb-5">
+          <div className={`${isLight ? "bg-white border-slate-200 shadow-2xl text-slate-900" : "bg-brand-dark-surface border-brand-sky/30 text-white"} border p-6 rounded-2xl w-full max-w-md shadow-2xl animate-fade-in-up`}>
+            <div className={`flex justify-between items-center border-b ${isLight ? "border-slate-200" : "border-brand-dark-border"} pb-3 mb-5`}>
               <div>
-                <h3 className="font-black text-white text-sm flex items-center gap-2">
+                <h3 className={`font-black ${isLight ? "text-slate-900" : "text-white"} text-sm flex items-center gap-2`}>
                   <Users size={16} className="text-brand-sky" />
                   {editingId ? "Edit Customer Profile" : "Register New Customer"}
                 </h3>
-                <p className="text-[9px] text-gray-500 mt-0.5">
+                <p className={`text-[9px] ${isLight ? "text-slate-500" : "text-gray-500"} mt-0.5`}>
                   {editingId ? "Update contact details and information" : "New customer starts with 0 loyalty points"}
                 </p>
               </div>
-              <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-white">
+              <button onClick={() => setShowModal(false)} className={`${isLight ? "text-slate-400 hover:text-slate-700" : "text-gray-400 hover:text-white"}`}>
                 <X size={18} />
               </button>
             </div>
@@ -1220,64 +1203,64 @@ export default function CustomersPage() {
             <form onSubmit={handleSubmit} className="space-y-4 text-xs">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[9px] uppercase font-bold text-gray-400 mb-1">Full Name *</label>
+                  <label className={`block text-[9px] uppercase font-bold ${isLight ? "text-slate-600" : "text-gray-400"} mb-1`}>Full Name *</label>
                   <input
                     type="text" required
                     placeholder="e.g. Ahmed Raza"
                     value={form.name}
                     onChange={e => setForm({ ...form, name: e.target.value })}
-                    className="w-full bg-black border border-brand-dark-border p-2.5 rounded-lg text-white focus:outline-none focus:border-brand-sky"
+                    className={`w-full ${isLight ? "bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-sky-500" : "bg-black border-brand-dark-border text-white focus:border-brand-sky"} border p-2.5 rounded-lg focus:outline-none`}
                   />
                 </div>
                 <div>
-                  <label className="block text-[9px] uppercase font-bold text-gray-400 mb-1">Mobile Number *</label>
+                  <label className={`block text-[9px] uppercase font-bold ${isLight ? "text-slate-600" : "text-gray-400"} mb-1`}>Mobile Number *</label>
                   <input
                     type="text" required
                     placeholder="03xxxxxxxxx"
                     value={form.mobile}
                     onChange={e => setForm({ ...form, mobile: e.target.value })}
-                    className="w-full bg-black border border-brand-dark-border p-2.5 rounded-lg text-white focus:outline-none focus:border-brand-sky font-mono"
+                    className={`w-full ${isLight ? "bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-sky-500" : "bg-black border-brand-dark-border text-white focus:border-brand-sky"} border p-2.5 rounded-lg focus:outline-none font-mono`}
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[9px] uppercase font-bold text-gray-400 mb-1">Email Address</label>
+                <label className={`block text-[9px] uppercase font-bold ${isLight ? "text-slate-600" : "text-gray-400"} mb-1`}>Email Address</label>
                 <input
                   type="email"
                   placeholder="customer@email.com"
                   value={form.email}
                   onChange={e => setForm({ ...form, email: e.target.value })}
-                  className="w-full bg-black border border-brand-dark-border p-2.5 rounded-lg text-white focus:outline-none focus:border-brand-sky"
+                  className={`w-full ${isLight ? "bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-sky-500" : "bg-black border-brand-dark-border text-white focus:border-brand-sky"} border p-2.5 rounded-lg focus:outline-none`}
                 />
               </div>
 
               <div>
-                <label className="block text-[9px] uppercase font-bold text-gray-400 mb-1">Home / Office Address</label>
+                <label className={`block text-[9px] uppercase font-bold ${isLight ? "text-slate-600" : "text-gray-400"} mb-1`}>Home / Office Address</label>
                 <input
                   type="text"
                   placeholder="Street, Area, City..."
                   value={form.address}
                   onChange={e => setForm({ ...form, address: e.target.value })}
-                  className="w-full bg-black border border-brand-dark-border p-2.5 rounded-lg text-white focus:outline-none focus:border-brand-sky"
+                  className={`w-full ${isLight ? "bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-sky-500" : "bg-black border-brand-dark-border text-white focus:border-brand-sky"} border p-2.5 rounded-lg focus:outline-none`}
                 />
               </div>
 
               <div>
-                <label className="block text-[9px] uppercase font-bold text-gray-400 mb-1">CNIC Number (optional)</label>
+                <label className={`block text-[9px] uppercase font-bold ${isLight ? "text-slate-600" : "text-gray-400"} mb-1`}>CNIC Number (optional)</label>
                 <input
                   type="text"
                   placeholder="XXXXX-XXXXXXX-X"
                   value={form.cnic}
                   onChange={e => setForm({ ...form, cnic: e.target.value })}
-                  className="w-full bg-black border border-brand-dark-border p-2.5 rounded-lg text-white focus:outline-none focus:border-brand-sky font-mono"
+                  className={`w-full ${isLight ? "bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-sky-500" : "bg-black border-brand-dark-border text-white focus:border-brand-sky"} border p-2.5 rounded-lg focus:outline-none font-mono`}
                 />
               </div>
 
               {!editingId && (
-                <div className="flex items-center gap-2 bg-brand-sky/5 border border-brand-sky/15 rounded-lg p-2.5 text-[9px] text-gray-400">
-                  <Star size={11} className="text-yellow-400 fill-yellow-400 shrink-0" />
-                  <span>Customer starts with <span className="text-white font-bold">0 loyalty points</span>. Points are earned automatically at each purchase.</span>
+                <div className={`flex items-center gap-2 ${isLight ? "bg-sky-50 border-sky-200 text-sky-800" : "bg-brand-sky/5 border-brand-sky/15 text-gray-400"} border rounded-lg p-2.5 text-[9px]`}>
+                  <Star size={11} className="text-yellow-500 fill-yellow-500 shrink-0" />
+                  <span>Customer starts with <span className={`font-bold ${isLight ? "text-slate-900" : "text-white"}`}>0 loyalty points</span>. Points are earned automatically at each purchase.</span>
                 </div>
               )}
 
@@ -1285,7 +1268,7 @@ export default function CustomersPage() {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="flex-1 py-2.5 bg-brand-dark-border hover:bg-brand-dark-border/70 text-gray-300 font-bold rounded-lg transition"
+                  className={`flex-1 py-2.5 ${isLight ? "bg-slate-100 hover:bg-slate-200 text-slate-700" : "bg-brand-dark-border hover:bg-brand-dark-border/70 text-gray-300"} font-bold rounded-lg transition`}
                 >
                   Cancel
                 </button>
@@ -1306,18 +1289,18 @@ export default function CustomersPage() {
       ═══════════════════════════════════════════════════════════════ */}
       {confirmDeleteId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4">
-          <div className="bg-brand-dark-surface border border-red-500/30 p-6 rounded-2xl w-full max-w-sm shadow-2xl text-center space-y-4 animate-fade-in-up">
-            <AlertCircle size={40} className="text-red-400 mx-auto" />
+          <div className={`${isLight ? "bg-white border-red-200 shadow-2xl text-slate-900" : "bg-brand-dark-surface border-red-500/30 text-white"} border p-6 rounded-2xl w-full max-w-sm shadow-2xl text-center space-y-4 animate-fade-in-up`}>
+            <AlertCircle size={40} className="text-red-500 mx-auto" />
             <div>
-              <h3 className="font-black text-white text-base">Delete Customer?</h3>
-              <p className="text-[10px] text-gray-400 mt-1">
+              <h3 className={`font-black ${isLight ? "text-slate-900" : "text-white"} text-base`}>Delete Customer?</h3>
+              <p className={`text-[10px] ${isLight ? "text-slate-500" : "text-gray-400"} mt-1`}>
                 This will permanently remove the customer and all their profile data. Purchase history in sales ledger will remain.
               </p>
             </div>
             <div className="flex gap-2">
               <button
                 onClick={() => setConfirmDeleteId(null)}
-                className="flex-1 py-2.5 bg-brand-dark-border text-gray-300 font-bold rounded-lg text-xs"
+                className={`flex-1 py-2.5 ${isLight ? "bg-slate-100 hover:bg-slate-200 text-slate-700" : "bg-brand-dark-border text-gray-300"} font-bold rounded-lg text-xs`}
               >
                 Cancel
               </button>
@@ -1337,31 +1320,31 @@ export default function CustomersPage() {
       ═══════════════════════════════════════════════════════════════ */}
       {recoveryCustomer && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4">
-          <div className="bg-brand-dark-surface border border-emerald-500/30 p-6 rounded-2xl w-full max-w-sm shadow-2xl animate-fade-in-up font-sans">
-            <div className="flex justify-between items-center border-b border-brand-dark-border pb-3 mb-4 text-xs">
-              <h3 className="font-black text-white uppercase tracking-wider flex items-center gap-1.5">
-                <CreditCard size={14} className="text-emerald-400" />
+          <div className={`${isLight ? "bg-white border-slate-200 shadow-2xl text-slate-900" : "bg-brand-dark-surface border-emerald-500/30 text-white"} border p-6 rounded-2xl w-full max-w-sm shadow-2xl animate-fade-in-up font-sans`}>
+            <div className={`flex justify-between items-center border-b ${isLight ? "border-slate-200" : "border-brand-dark-border"} pb-3 mb-4 text-xs`}>
+              <h3 className={`font-black ${isLight ? "text-slate-900" : "text-white"} uppercase tracking-wider flex items-center gap-1.5`}>
+                <CreditCard size={14} className="text-emerald-500" />
                 Settle Customer Dues
               </h3>
-              <button onClick={() => { setRecoveryCustomer(null); setRecoveryAmount(""); setRecoveryError(""); }} className="text-gray-400 hover:text-white">
+              <button onClick={() => { setRecoveryCustomer(null); setRecoveryAmount(""); setRecoveryError(""); }} className={`${isLight ? "text-slate-400 hover:text-slate-700" : "text-gray-400 hover:text-white"}`}>
                 <X size={16} />
               </button>
             </div>
 
             <form onSubmit={handleRecoverySubmit} className="space-y-4 text-xs">
               <div>
-                <h4 className="text-white font-bold text-sm">{recoveryCustomer.name}</h4>
-                <p className="text-[10px] text-gray-500 mt-0.5">
-                  Outstanding Credit Balance: <span className="text-red-400 font-black font-mono">{currencySymbol} {recoveryCustomer.creditBalance.toLocaleString()}</span>
+                <h4 className={`font-bold text-sm ${isLight ? "text-slate-900" : "text-white"}`}>{recoveryCustomer.name}</h4>
+                <p className={`text-[10px] ${isLight ? "text-slate-500" : "text-gray-500"} mt-0.5`}>
+                  Outstanding Credit Balance: <span className="text-red-500 font-black font-mono">{currencySymbol} {recoveryCustomer.creditBalance.toLocaleString()}</span>
                 </p>
               </div>
 
               <div>
-                <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Payment Method</label>
+                <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-slate-600" : "text-gray-400"} mb-1`}>Payment Method</label>
                 <select
                   value={recoveryPaymentMethod}
                   onChange={e => setRecoveryPaymentMethod(e.target.value)}
-                  className="w-full bg-black border border-brand-dark-border p-2.5 rounded text-white font-bold focus:outline-none focus:border-brand-sky mb-3"
+                  className={`w-full ${isLight ? "bg-white border-slate-300 text-slate-900 focus:border-sky-500" : "bg-black border-brand-dark-border text-white focus:border-brand-sky"} border p-2.5 rounded font-bold focus:outline-none mb-3`}
                 >
                   <option value="Cash">💵 Cash</option>
                   <option value="Card">💳 Credit / Debit Card</option>
@@ -1369,16 +1352,16 @@ export default function CustomersPage() {
                   <option value="EasyPaisa / JazzCash">📱 EasyPaisa / JazzCash</option>
                 </select>
 
-                <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Log Payment Received</label>
+                <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-slate-600" : "text-gray-400"} mb-1`}>Log Payment Received</label>
                 <input
                   type="number"
                   required
                   placeholder="e.g. 5000"
                   value={recoveryAmount}
                   onChange={e => setRecoveryAmount(e.target.value)}
-                  className="w-full bg-black border border-brand-dark-border p-2.5 rounded text-white font-mono font-bold focus:outline-none focus:border-brand-sky"
+                  className={`w-full ${isLight ? "bg-white border-slate-300 text-slate-900 focus:border-sky-500" : "bg-black border-brand-dark-border text-white focus:border-brand-sky"} border p-2.5 rounded font-mono font-bold focus:outline-none`}
                 />
-                {recoveryError && <p className="text-red-400 text-[9px] mt-1.5 flex items-center gap-1"><AlertCircle size={10} /> {recoveryError}</p>}
+                {recoveryError && <p className="text-red-500 text-[9px] mt-1.5 flex items-center gap-1"><AlertCircle size={10} /> {recoveryError}</p>}
               </div>
 
               <button
@@ -1397,13 +1380,13 @@ export default function CustomersPage() {
       ═══════════════════════════════════════════════════════════════ */}
       {showCreditReportModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="bg-brand-dark-surface border border-red-500/30 p-6 rounded-2xl w-full max-w-2xl shadow-2xl animate-fade-in-up font-sans">
-            <div className="flex justify-between items-center border-b border-brand-dark-border pb-3 mb-4 text-xs">
-              <h3 className="font-black text-white uppercase tracking-wider flex items-center gap-1.5">
-                <CreditCard size={14} className="text-red-400" />
+          <div className={`${isLight ? "bg-white border-slate-200 shadow-2xl text-slate-900" : "bg-brand-dark-surface border-red-500/30 text-white"} border p-6 rounded-2xl w-full max-w-2xl shadow-2xl animate-fade-in-up font-sans`}>
+            <div className={`flex justify-between items-center border-b ${isLight ? "border-slate-200" : "border-brand-dark-border"} pb-3 mb-4 text-xs`}>
+              <h3 className={`font-black ${isLight ? "text-slate-900" : "text-white"} uppercase tracking-wider flex items-center gap-1.5`}>
+                <CreditCard size={14} className="text-red-500" />
                 All-Customer Credit Ledger Report
               </h3>
-              <button onClick={() => setShowCreditReportModal(false)} className="text-gray-400 hover:text-white">
+              <button onClick={() => setShowCreditReportModal(false)} className={`${isLight ? "text-slate-400 hover:text-slate-700" : "text-gray-400 hover:text-white"}`}>
                 <X size={16} />
               </button>
             </div>
@@ -1411,54 +1394,54 @@ export default function CustomersPage() {
             <div className="space-y-4 text-xs">
               {/* Summary Cards */}
               <div className="grid grid-cols-2 gap-3">
-                <div className="bg-brand-dark-surface/60 border border-brand-dark-border rounded-xl p-4">
-                  <div className="text-xs text-gray-500 font-sans font-bold">Total Customers with Credit</div>
-                  <div className="text-xl font-black text-white font-mono mt-1">
+                <div className={`${isLight ? "bg-slate-50 border-slate-200" : "bg-brand-dark-surface/60 border-brand-dark-border"} border rounded-xl p-4`}>
+                  <div className={`text-xs ${isLight ? "text-slate-600" : "text-gray-500"} font-sans font-bold`}>Total Customers with Credit</div>
+                  <div className={`text-xl font-black ${isLight ? "text-slate-900" : "text-white"} font-mono mt-1`}>
                     {customers.filter(c => c.creditBalance > 0).length}
                   </div>
                 </div>
-                <div className="bg-brand-dark-surface/60 border border-brand-dark-border rounded-xl p-4">
-                  <div className="text-xs text-gray-500 font-sans font-bold">Total Outstanding Credit Dues</div>
-                  <div className="text-xl font-black text-red-400 font-mono mt-1">
+                <div className={`${isLight ? "bg-slate-50 border-slate-200" : "bg-brand-dark-surface/60 border-brand-dark-border"} border rounded-xl p-4`}>
+                  <div className={`text-xs ${isLight ? "text-slate-600" : "text-gray-500"} font-sans font-bold`}>Total Outstanding Credit Dues</div>
+                  <div className="text-xl font-black text-red-500 font-mono mt-1">
                     {currencySymbol} {customers.reduce((a, c) => a + c.creditBalance, 0).toLocaleString()}
                   </div>
                 </div>
               </div>
 
               {/* Table list */}
-              <div className="max-h-72 overflow-y-auto border border-brand-dark-border rounded-xl">
+              <div className={`max-h-72 overflow-y-auto border ${isLight ? "border-slate-200" : "border-brand-dark-border"} rounded-xl`}>
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
-                    <tr className="bg-brand-dark-surface/70 border-b border-brand-dark-border text-gray-500 font-mono text-[10px]">
+                    <tr className={`${isLight ? "bg-slate-100 text-slate-700 border-slate-200" : "bg-brand-dark-surface/70 border-brand-dark-border text-gray-500"} border-b font-mono text-[10px]`}>
                       <th className="p-3">Customer</th>
                       <th className="p-3">Phone</th>
                       <th className="p-3 text-right">Outstanding Credit</th>
                       <th className="p-3 text-center">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-brand-dark-border/40 font-mono text-[11px]">
+                  <tbody className={`divide-y ${isLight ? "divide-slate-200" : "divide-brand-dark-border/40"} font-mono text-[11px]`}>
                     {(() => {
                       const creditCusts = enriched.filter(c => c.creditBalance > 0);
                       if (creditCusts.length === 0) {
                         return (
                           <tr>
                             <td colSpan={4} className="p-8 text-center text-gray-600 font-sans">
-                              <Check size={24} className="mx-auto mb-1 text-emerald-400" />
+                              <Check size={24} className="mx-auto mb-1 text-emerald-500" />
                               No customers have outstanding credit balances.
                             </td>
                           </tr>
                         );
                       }
                       return creditCusts.map(c => (
-                        <tr key={c.id} className="hover:bg-brand-dark-surface/40 transition">
-                          <td className="p-3 font-sans font-bold text-white">
+                        <tr key={c.id} className={`transition ${isLight ? "hover:bg-slate-50 text-slate-900" : "hover:bg-brand-dark-surface/40 text-gray-100"}`}>
+                          <td className={`p-3 font-sans font-bold ${isLight ? "text-slate-900" : "text-white"}`}>
                             <div>{c.name}</div>
                             {c.customerNo && c.customerNo !== "N/A" && (
                               <div className="text-[9px] text-gray-500 font-mono mt-0.5">{c.customerNo}</div>
                             )}
                           </td>
-                          <td className="p-3 text-gray-400">{c.mobile}</td>
-                          <td className="p-3 text-right font-black text-red-400">{currencySymbol} {c.creditBalance.toLocaleString()}</td>
+                          <td className={`p-3 ${isLight ? "text-slate-600" : "text-gray-400"}`}>{c.mobile}</td>
+                          <td className="p-3 text-right font-black text-red-500">{currencySymbol} {c.creditBalance.toLocaleString()}</td>
                           <td className="p-3">
                             <div className="flex gap-2 justify-center">
                               <button

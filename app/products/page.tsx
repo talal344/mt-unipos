@@ -740,7 +740,7 @@ export default function ProductsPage() {
                     </td>
                   </tr>
                 ) : filtered.map((prod, idx) => (
-                  <tr key={prod.id} className="hover:bg-brand-dark-surface/60 transition">
+                  <tr key={prod.id} className={`transition ${isLight ? "hover:bg-slate-50" : "hover:bg-brand-dark-surface/60"}`}>
                     <td className="p-4">
                       <input
                         type="checkbox"
@@ -759,11 +759,11 @@ export default function ProductsPage() {
                     </td>
                     <td className="p-4 text-gray-600">{idx + 1}</td>
                     <td className="p-4">
-                      <div className="text-white font-bold tracking-wide">{prod.sku}</div>
+                      <div className={`font-bold tracking-wide ${isLight ? "text-slate-900" : "text-white"}`}>{prod.sku}</div>
                       <div className="text-[9px] text-brand-sky font-mono tracking-widest mt-0.5">{prod.barcode}</div>
                     </td>
                     <td className="p-4">
-                      <div className="text-white font-bold font-sans">{prod.name}</div>
+                      <div className={`font-bold font-sans ${isLight ? "text-slate-900" : "text-white"}`}>{prod.name}</div>
                       <div className="text-[9px] text-gray-500 font-sans">{prod.brand}{prod.variant ? ` · ${prod.variant}` : ""}</div>
                     </td>
                     <td className="p-4">
@@ -771,7 +771,7 @@ export default function ProductsPage() {
                         {prod.category}
                       </span>
                     </td>
-                    <td className="p-4 font-bold text-gray-300">{currencySymbol} {prod.costPrice.toLocaleString()}</td>
+                    <td className={`p-4 font-bold ${isLight ? "text-slate-600" : "text-gray-300"}`}>{currencySymbol} {prod.costPrice.toLocaleString()}</td>
                     <td className="p-4 text-brand-sky font-black">{currencySymbol} {prod.salePrice.toLocaleString()}</td>
                     <td className="p-4">
                       <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
@@ -844,7 +844,7 @@ export default function ProductsPage() {
       ═══════════════════════════════════════════════════════════════════════ */}
       {showBulkModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="bg-[#0d0d0d] border border-brand-dark-border rounded-2xl w-full max-w-3xl shadow-2xl my-4 animate-fade-in-up overflow-hidden">
+          <div className={`${isLight ? "bg-white border-slate-200 shadow-2xl" : "bg-[#0d0d0d] border-brand-dark-border"} border rounded-2xl w-full max-w-3xl shadow-2xl my-4 animate-fade-in-up overflow-hidden`}>
 
             {/* Modal Header */}
             <div className="flex items-center justify-between p-5 border-b border-brand-dark-border bg-gradient-to-r from-purple-500/10 to-transparent">
@@ -1203,16 +1203,16 @@ export default function ProductsPage() {
       ═══════════════════════════════════════════════════════════════════════ */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="bg-brand-dark-surface border border-brand-sky/30 p-6 rounded-2xl w-full max-w-lg shadow-2xl animate-fade-in-up my-4">
+          <div className={`${isLight ? "bg-white border-slate-200 shadow-2xl text-slate-900" : "bg-brand-dark-surface border-brand-sky/30 text-white"} border p-6 rounded-2xl w-full max-w-lg shadow-2xl animate-fade-in-up my-4`}>
             
-            <div className="flex justify-between items-center border-b border-brand-dark-border pb-3 mb-5">
+            <div className={`flex justify-between items-center border-b ${isLight ? "border-slate-200" : "border-brand-dark-border"} pb-3 mb-5`}>
               <div>
-                <h3 className="font-black text-white text-sm">{editingId ? "Edit Product SKU" : "Register New SKU"}</h3>
-                <p className="text-[9px] text-gray-500 mt-0.5">
+                <h3 className={`font-black ${isLight ? "text-slate-900" : "text-white"} text-sm`}>{editingId ? "Edit Product SKU" : "Register New SKU"}</h3>
+                <p className={`text-[9px] ${isLight ? "text-slate-500" : "text-gray-500"} mt-0.5`}>
                   {editingId ? "Update product details in catalog" : "SKU code and EAN barcode are auto-generated — regenerate anytime"}
                 </p>
               </div>
-              <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-white">
+              <button onClick={() => setShowModal(false)} className={`${isLight ? "text-slate-400 hover:text-slate-700" : "text-gray-400 hover:text-white"}`}>
                 <X size={18} />
               </button>
             </div>
@@ -1220,25 +1220,25 @@ export default function ProductsPage() {
             <form onSubmit={handleSubmit} className="space-y-4 text-xs">
 
               <div>
-                <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Product Description / Name *</label>
+                <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-slate-600" : "text-gray-400"} mb-1`}>Product Description / Name *</label>
                 <input
                   type="text" required
                   placeholder="e.g. Sprite 1.5L Chilled Bottle"
                   value={form.name}
                   onChange={e => setForm({ ...form, name: e.target.value })}
-                  className="w-full bg-black border border-brand-dark-border p-2.5 rounded-lg text-white focus:outline-none focus:border-brand-sky"
+                  className={`w-full ${isLight ? "bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-sky-500" : "bg-black border-brand-dark-border text-white focus:border-brand-sky"} border p-2.5 rounded-lg focus:outline-none`}
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Custom SKU Code *</label>
+                  <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-slate-600" : "text-gray-400"} mb-1`}>Custom SKU Code *</label>
                   <div className="flex gap-1">
                     <input
                       type="text" required placeholder="Auto-generated"
                       value={form.sku}
                       onChange={e => setForm({ ...form, sku: e.target.value })}
-                      className="flex-grow bg-black border border-brand-dark-border p-2.5 rounded-lg text-white font-mono focus:outline-none focus:border-brand-sky text-[10px]"
+                      className={`flex-grow ${isLight ? "bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-sky-500" : "bg-black border-brand-dark-border text-white focus:border-brand-sky"} border p-2.5 rounded-lg font-mono focus:outline-none text-[10px]`}
                     />
                     <button type="button"
                       onClick={() => setForm(prev => ({ ...prev, sku: generateSKU(effectiveCategory || form.category) }))}
@@ -1250,13 +1250,13 @@ export default function ProductsPage() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Standard EAN-13 Barcode *</label>
+                  <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-slate-600" : "text-gray-400"} mb-1`}>Standard EAN-13 Barcode *</label>
                   <div className="flex gap-1">
                     <input
                       type="text" required placeholder="Auto-generated"
                       value={form.barcode}
                       onChange={e => setForm({ ...form, barcode: e.target.value })}
-                      className="flex-grow bg-black border border-brand-dark-border p-2.5 rounded-lg text-white font-mono focus:outline-none focus:border-brand-sky text-[10px]"
+                      className={`flex-grow ${isLight ? "bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-sky-500" : "bg-black border-brand-dark-border text-white focus:border-brand-sky"} border p-2.5 rounded-lg font-mono focus:outline-none text-[10px]`}
                     />
                     <button type="button"
                       onClick={() => setForm(prev => ({ ...prev, barcode: generateEAN13() }))}
@@ -1270,7 +1270,7 @@ export default function ProductsPage() {
               </div>
 
               {!editingId && (
-                <div className="flex items-center gap-2 bg-brand-sky/5 border border-brand-sky/15 rounded-lg p-2.5 text-[9px] text-gray-400">
+                <div className={`flex items-center gap-2 ${isLight ? "bg-sky-50 border-sky-200 text-sky-800" : "bg-brand-sky/5 border-brand-sky/15 text-gray-400"} border rounded-lg p-2.5 text-[9px]`}>
                   <Tag size={12} className="text-brand-sky shrink-0" />
                   <span>SKU and EAN Barcode are <span className="text-brand-sky font-bold">auto-generated and unique</span>. Use the refresh icon to get a new code, or type your own.</span>
                 </div>
@@ -1278,19 +1278,19 @@ export default function ProductsPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Category *</label>
+                  <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-slate-600" : "text-gray-400"} mb-1`}>Category *</label>
                   {isCustomCat ? (
                     <div className="flex gap-1">
                       <input
                         type="text" required placeholder="Type your category..."
                         value={form.customCategory}
                         onChange={e => setForm({ ...form, customCategory: e.target.value })}
-                        className="flex-grow bg-black border border-brand-sky/40 p-2.5 rounded-lg text-white focus:outline-none focus:border-brand-sky text-[10px]"
+                        className={`flex-grow ${isLight ? "bg-white border-sky-400 text-slate-900" : "bg-black border-brand-sky/40 text-white"} border p-2.5 rounded-lg focus:outline-none focus:border-brand-sky text-[10px]`}
                         autoFocus
                       />
                       <button type="button"
                         onClick={() => { setIsCustomCat(false); setForm(prev => ({ ...prev, customCategory: "", category: "Grocery" })); }}
-                        className="p-2 bg-brand-dark-border rounded-lg text-gray-400 hover:text-white transition"
+                        className={`p-2 ${isLight ? "bg-slate-100 text-slate-600 hover:bg-slate-200" : "bg-brand-dark-border text-gray-400 hover:text-white"} rounded-lg transition`}
                       >
                         <X size={12} />
                       </button>
@@ -1299,19 +1299,19 @@ export default function ProductsPage() {
                     <select
                       value={form.category}
                       onChange={e => handleCategoryChange(e.target.value)}
-                      className="w-full bg-black border border-brand-dark-border p-2.5 rounded-lg text-white focus:outline-none focus:border-brand-sky appearance-none cursor-pointer"
+                      className={`w-full ${isLight ? "bg-white border-slate-300 text-slate-900 focus:border-sky-500" : "bg-black border-brand-dark-border text-white focus:border-brand-sky"} border p-2.5 rounded-lg focus:outline-none appearance-none cursor-pointer`}
                     >
                       {PRESET_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
                   )}
                 </div>
                 <div>
-                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Brand / Company</label>
+                  <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-slate-600" : "text-gray-400"} mb-1`}>Brand / Company</label>
                   <input
                     type="text" placeholder="e.g. Coca-Cola Pakistan"
                     value={form.brand}
                     onChange={e => setForm({ ...form, brand: e.target.value })}
-                    className="w-full bg-black border border-brand-dark-border p-2.5 rounded-lg text-white focus:outline-none focus:border-brand-sky"
+                    className={`w-full ${isLight ? "bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-sky-500" : "bg-black border-brand-dark-border text-white focus:border-brand-sky"} border p-2.5 rounded-lg focus:outline-none`}
                   />
                 </div>
               </div>
@@ -1323,12 +1323,12 @@ export default function ProductsPage() {
                   { label: "Wholesale", key: "wholesalePrice" as const },
                 ].map(field => (
                   <div key={field.key}>
-                    <label className="block text-[9px] uppercase font-bold text-gray-400 mb-1">{field.label}</label>
+                    <label className={`block text-[9px] uppercase font-bold ${isLight ? "text-slate-600" : "text-gray-400"} mb-1`}>{field.label}</label>
                     <input
                       type="number" min={0}
                       value={form[field.key] || ""}
                       onChange={e => setForm({ ...form, [field.key]: Number(e.target.value) })}
-                      className="w-full bg-black border border-brand-dark-border p-2 rounded text-white focus:outline-none focus:border-brand-sky"
+                      className={`w-full ${isLight ? "bg-white border-slate-300 text-slate-900 focus:border-sky-500" : "bg-black border-brand-dark-border text-white focus:border-brand-sky"} border p-2 rounded focus:outline-none`}
                     />
                   </div>
                 ))}
@@ -1336,39 +1336,39 @@ export default function ProductsPage() {
 
               <div className="grid grid-cols-4 gap-2">
                 <div>
-                  <label className="block text-[9px] uppercase font-bold text-gray-400 mb-1">Stock Qty</label>
+                  <label className={`block text-[9px] uppercase font-bold ${isLight ? "text-slate-600" : "text-gray-400"} mb-1`}>Stock Qty</label>
                   <input type="number" min={0} value={form.stock || ""}
                     onChange={e => setForm({ ...form, stock: Number(e.target.value) })}
-                    className="w-full bg-black border border-brand-dark-border p-2 rounded text-white focus:outline-none" />
+                    className={`w-full ${isLight ? "bg-white border-slate-300 text-slate-900" : "bg-black border-brand-dark-border text-white"} border p-2 rounded focus:outline-none`} />
                 </div>
                 <div>
-                  <label className="block text-[9px] uppercase font-bold text-gray-400 mb-1">Reorder Pt.</label>
+                  <label className={`block text-[9px] uppercase font-bold ${isLight ? "text-slate-600" : "text-gray-400"} mb-1`}>Reorder Pt.</label>
                   <input type="number" min={0} value={form.minStock || ""}
                     onChange={e => setForm({ ...form, minStock: Number(e.target.value) })}
-                    className="w-full bg-black border border-brand-dark-border p-2 rounded text-white focus:outline-none" />
+                    className={`w-full ${isLight ? "bg-white border-slate-300 text-slate-900" : "bg-black border-brand-dark-border text-white"} border p-2 rounded focus:outline-none`} />
                 </div>
                 <div>
-                  <label className="block text-[9px] uppercase font-bold text-gray-400 mb-1">Unit</label>
+                  <label className={`block text-[9px] uppercase font-bold ${isLight ? "text-slate-600" : "text-gray-400"} mb-1`}>Unit</label>
                   <select value={form.unit} onChange={e => setForm({ ...form, unit: e.target.value })}
-                    className="w-full bg-black border border-brand-dark-border p-2 rounded text-white focus:outline-none">
+                    className={`w-full ${isLight ? "bg-white border-slate-300 text-slate-900" : "bg-black border-brand-dark-border text-white"} border p-2 rounded focus:outline-none`}>
                     {UNITS.map(u => <option key={u}>{u}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[9px] uppercase font-bold text-gray-400 mb-1">Tax (%)</label>
+                  <label className={`block text-[9px] uppercase font-bold ${isLight ? "text-slate-600" : "text-gray-400"} mb-1`}>Tax (%)</label>
                   <input type="number" min={0} max={100} value={form.taxRate || ""}
                     onChange={e => setForm({ ...form, taxRate: Number(e.target.value) })}
-                    className="w-full bg-black border border-brand-dark-border p-2 rounded text-white focus:outline-none" />
+                    className={`w-full ${isLight ? "bg-white border-slate-300 text-slate-900" : "bg-black border-brand-dark-border text-white"} border p-2 rounded focus:outline-none`} />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Variant / Description (optional)</label>
+                <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-slate-600" : "text-gray-400"} mb-1`}>Variant / Description (optional)</label>
                 <input
                   type="text" placeholder="e.g. 1.5L, Red, Size M, Flavor Lemon..."
                   value={form.variant}
                   onChange={e => setForm({ ...form, variant: e.target.value })}
-                  className="w-full bg-black border border-brand-dark-border p-2.5 rounded-lg text-white focus:outline-none focus:border-brand-sky"
+                  className={`w-full ${isLight ? "bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-sky-500" : "bg-black border-brand-dark-border text-white focus:border-brand-sky"} border p-2.5 rounded-lg focus:outline-none`}
                 />
               </div>
 
@@ -1390,23 +1390,23 @@ export default function ProductsPage() {
         const productBatches = getProductBatches(batchViewProduct.id);
         return (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4">
-            <div className="bg-[#0d0d0d] border border-purple-500/30 rounded-2xl w-full max-w-xl shadow-2xl max-h-[85vh] flex flex-col">
-              <div className="flex items-center justify-between px-5 py-4 border-b border-brand-dark-border shrink-0">
+            <div className={`${isLight ? "bg-white border-purple-300 shadow-2xl text-slate-900" : "bg-[#0d0d0d] border-purple-500/30 text-white"} border rounded-2xl w-full max-w-xl shadow-2xl max-h-[85vh] flex flex-col`}>
+              <div className={`flex items-center justify-between px-5 py-4 border-b ${isLight ? "border-slate-200" : "border-brand-dark-border"} shrink-0`}>
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center">
                     <Layers size={14} className="text-purple-400" />
                   </div>
                   <div>
-                    <h3 className="font-black text-white text-sm">FIFO Batch Ledger</h3>
-                    <p className="text-[9px] text-gray-500">{batchViewProduct.name} · {productBatches.length} batch(es)</p>
+                    <h3 className={`font-black ${isLight ? "text-slate-900" : "text-white"} text-sm`}>FIFO Batch Ledger</h3>
+                    <p className={`text-[9px] ${isLight ? "text-slate-500" : "text-gray-500"}`}>{batchViewProduct.name} · {productBatches.length} batch(es)</p>
                   </div>
                 </div>
-                <button onClick={() => setBatchViewProduct(null)} className="text-gray-400 hover:text-white"><X size={16} /></button>
+                <button onClick={() => setBatchViewProduct(null)} className={`${isLight ? "text-slate-400 hover:text-slate-700" : "text-gray-400 hover:text-white"}`}><X size={16} /></button>
               </div>
               <div className="p-5 overflow-y-auto flex-grow space-y-3">
                 {productBatches.length === 0 ? (
-                  <div className="text-center py-10 text-gray-600 text-xs">
-                    <Layers size={32} className="mx-auto mb-3 text-gray-700" />
+                  <div className="text-center py-10 text-gray-500 text-xs">
+                    <Layers size={32} className="mx-auto mb-3 text-gray-400 opacity-40" />
                     No batches found. Receive goods via Purchase Orders to create FIFO batches.
                   </div>
                 ) : (
@@ -1414,29 +1414,29 @@ export default function ProductsPage() {
                     const isExpired = batch.expiryDate && new Date(batch.expiryDate) < new Date();
                     const isExpiringSoon = batch.expiryDate && !isExpired && new Date(batch.expiryDate) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
                     return (
-                      <div key={batch.id} className={`bg-black/50 border rounded-xl p-4 text-xs ${isExpired ? 'border-red-500/40' : isExpiringSoon ? 'border-amber-500/40' : 'border-brand-dark-border'}`}>
+                      <div key={batch.id} className={`${isLight ? "bg-slate-50 border-slate-200" : "bg-black/50 border-brand-dark-border"} border rounded-xl p-4 text-xs ${isExpired ? 'border-red-500/40' : isExpiringSoon ? 'border-amber-500/40' : ''}`}>
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-2">
-                            <span className="text-[9px] bg-purple-500/15 text-purple-400 border border-purple-500/30 px-2 py-0.5 rounded font-black font-mono">#{i + 1} FIFO</span>
-                            <span className="text-white font-black">{batch.batchNumber}</span>
+                            <span className="text-[9px] bg-purple-500/15 text-purple-600 border border-purple-500/30 px-2 py-0.5 rounded font-black font-mono">#{i + 1} FIFO</span>
+                            <span className={`font-black ${isLight ? "text-slate-900" : "text-white"}`}>{batch.batchNumber}</span>
                           </div>
                           <div className="flex items-center gap-2">
-                            {isExpired && <span className="text-[9px] bg-red-500/15 text-red-400 border border-red-500/30 px-2 py-0.5 rounded font-black">EXPIRED</span>}
-                            {isExpiringSoon && <span className="text-[9px] bg-amber-500/15 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded font-black animate-pulse">EXPIRING SOON</span>}
-                            <span className={`font-black font-mono ${batch.remainingQty > 0 ? 'text-emerald-400' : 'text-gray-600'}`}>{batch.remainingQty} / {batch.initialQty} left</span>
+                            {isExpired && <span className="text-[9px] bg-red-500/15 text-red-500 border border-red-500/30 px-2 py-0.5 rounded font-black">EXPIRED</span>}
+                            {isExpiringSoon && <span className="text-[9px] bg-amber-500/15 text-amber-500 border border-amber-500/30 px-2 py-0.5 rounded font-black animate-pulse">EXPIRING SOON</span>}
+                            <span className={`font-black font-mono ${batch.remainingQty > 0 ? 'text-emerald-500' : 'text-gray-400'}`}>{batch.remainingQty} / {batch.initialQty} left</span>
                           </div>
                         </div>
                         <div className="grid grid-cols-2 gap-3 font-mono text-[10px]">
                           <div className="space-y-1.5">
-                            <div className="flex justify-between"><span className="text-gray-500">Purchase Price:</span><span className="text-white font-bold">{currencySymbol} {batch.costPrice}</span></div>
-                            <div className="flex justify-between"><span className="text-gray-500">Sale Price:</span><span className="text-brand-sky font-bold">{currencySymbol} {batch.salePrice}</span></div>
+                            <div className="flex justify-between"><span className={`${isLight ? "text-slate-500" : "text-gray-500"}`}>Purchase Price:</span><span className={`font-bold ${isLight ? "text-slate-900" : "text-white"}`}>{currencySymbol} {batch.costPrice}</span></div>
+                            <div className="flex justify-between"><span className={`${isLight ? "text-slate-500" : "text-gray-500"}`}>Sale Price:</span><span className="text-brand-sky font-bold">{currencySymbol} {batch.salePrice}</span></div>
                           </div>
                           <div className="space-y-1.5">
-                            <div className="flex justify-between"><span className="text-gray-500">Received:</span><span className="text-gray-300">{new Date(batch.purchasedAt).toLocaleDateString('en-PK', {day:'2-digit', month:'short', year:'numeric'})}</span></div>
-                            {batch.expiryDate && <div className="flex justify-between"><span className="text-gray-500">Expiry:</span><span className={isExpired ? 'text-red-400 font-bold' : isExpiringSoon ? 'text-amber-400 font-bold' : 'text-gray-300'}>{batch.expiryDate}</span></div>}
+                            <div className="flex justify-between"><span className={`${isLight ? "text-slate-500" : "text-gray-500"}`}>Received:</span><span className={`${isLight ? "text-slate-700" : "text-gray-300"}`}>{new Date(batch.purchasedAt).toLocaleDateString('en-PK', {day:'2-digit', month:'short', year:'numeric'})}</span></div>
+                            {batch.expiryDate && <div className="flex justify-between"><span className={`${isLight ? "text-slate-500" : "text-gray-500"}`}>Expiry:</span><span className={isExpired ? 'text-red-500 font-bold' : isExpiringSoon ? 'text-amber-500 font-bold' : isLight ? 'text-slate-700' : 'text-gray-300'}>{batch.expiryDate}</span></div>}
                           </div>
                         </div>
-                        <div className="mt-2.5 bg-brand-dark-border/40 rounded-lg h-1.5">
+                        <div className={`mt-2.5 ${isLight ? "bg-slate-200" : "bg-brand-dark-border/40"} rounded-lg h-1.5`}>
                           <div className="h-full rounded-lg bg-gradient-to-r from-purple-500 to-brand-sky transition-all" style={{width: `${batch.initialQty > 0 ? (batch.remainingQty / batch.initialQty) * 100 : 0}%`}} />
                         </div>
                       </div>
@@ -1444,8 +1444,8 @@ export default function ProductsPage() {
                   })
                 )}
               </div>
-              <div className="px-5 py-4 border-t border-brand-dark-border shrink-0">
-                <button onClick={() => setBatchViewProduct(null)} className="w-full py-2.5 bg-brand-dark-border text-gray-300 font-bold text-xs rounded-xl hover:bg-brand-dark-border/70 transition">Close</button>
+              <div className={`px-5 py-4 border-t ${isLight ? "border-slate-200" : "border-brand-dark-border"} shrink-0`}>
+                <button onClick={() => setBatchViewProduct(null)} className={`w-full py-2.5 ${isLight ? "bg-slate-100 hover:bg-slate-200 text-slate-700" : "bg-brand-dark-border text-gray-300 hover:bg-brand-dark-border/70"} font-bold text-xs rounded-xl transition`}>Close</button>
               </div>
             </div>
           </div>
@@ -1457,11 +1457,11 @@ export default function ProductsPage() {
       ═══════════════════════════════════════════════════════════════════════ */}
       {activeBarcode && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4">
-          <div className="bg-brand-dark-surface border border-brand-sky/30 p-6 rounded-2xl w-full max-w-xs shadow-2xl text-center space-y-4 animate-fade-in-up">
+          <div className={`${isLight ? "bg-white border-slate-200 shadow-2xl text-slate-900" : "bg-brand-dark-surface border-brand-sky/30 text-white"} border p-6 rounded-2xl w-full max-w-xs shadow-2xl text-center space-y-4 animate-fade-in-up`}>
             
-            <div className="flex justify-between items-center border-b border-brand-dark-border/40 pb-2 mb-1 font-sans">
-              <h3 className="font-black text-white text-xs">EAN-13 Barcode Label</h3>
-              <button onClick={() => setActiveBarcode(null)} className="text-gray-400 hover:text-white text-xs bg-brand-dark-border px-2 py-0.5 rounded">
+            <div className={`flex justify-between items-center border-b ${isLight ? "border-slate-200" : "border-brand-dark-border/40"} pb-2 mb-1 font-sans`}>
+              <h3 className={`font-black ${isLight ? "text-slate-900" : "text-white"} text-xs`}>EAN-13 Barcode Label</h3>
+              <button onClick={() => setActiveBarcode(null)} className={`text-xs ${isLight ? "bg-slate-100 text-slate-500 hover:bg-slate-200" : "text-gray-400 hover:text-white bg-brand-dark-border"} px-2 py-0.5 rounded`}>
                 <X size={14} />
               </button>
             </div>
@@ -1499,22 +1499,22 @@ export default function ProductsPage() {
 
       {/* ── Floating Bulk Action Bar ── */}
       {selectedProductIds.size > 0 && (
-        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-brand-dark-surface/95 border border-brand-sky/40 backdrop-blur-md px-6 py-4 rounded-2xl shadow-2xl z-40 flex items-center gap-6 animate-slide-up">
+        <div className={`fixed bottom-6 left-1/2 transform -translate-x-1/2 ${isLight ? "bg-white/95 border-slate-300 text-slate-900" : "bg-brand-dark-surface/95 border-brand-sky/40 text-white"} border backdrop-blur-md px-6 py-4 rounded-2xl shadow-2xl z-40 flex items-center gap-6 animate-slide-up`}>
           <div className="text-xs">
-            <span className="font-bold text-white font-mono">{selectedProductIds.size}</span> products selected
+            <span className="font-bold text-brand-sky font-mono">{selectedProductIds.size}</span> products selected
           </div>
-          <div className="h-4 w-px bg-brand-dark-border" />
+          <div className={`h-4 w-px ${isLight ? "bg-slate-200" : "bg-brand-dark-border"}`} />
           <div className="flex items-center gap-3">
             <button
               onClick={() => setShowLabelSheet(true)}
-              className="flex items-center gap-1.5 bg-amber-500/10 hover:bg-amber-500/25 border border-amber-500/30 text-amber-400 text-xs px-3 py-1.5 rounded-lg font-bold transition"
+              className="flex items-center gap-1.5 bg-amber-500/10 hover:bg-amber-500/25 border border-amber-500/30 text-amber-500 text-xs px-3 py-1.5 rounded-lg font-bold transition"
             >
               <Printer size={13} />
               Print Labels
             </button>
             <button
               onClick={() => setShowBulkUpdateModal(true)}
-              className="flex items-center gap-1.5 bg-purple-500/10 hover:bg-purple-500/25 border border-purple-500/30 text-purple-400 text-xs px-3 py-1.5 rounded-lg font-bold transition"
+              className="flex items-center gap-1.5 bg-purple-500/10 hover:bg-purple-500/25 border border-purple-500/30 text-purple-500 text-xs px-3 py-1.5 rounded-lg font-bold transition"
             >
               <Edit2 size={13} />
               Bulk Update
@@ -1527,14 +1527,14 @@ export default function ProductsPage() {
                   triggerToast(`🗑️ ${selectedProductIds.size} products deleted successfully.`);
                 }
               }}
-              className="flex items-center gap-1.5 bg-red-500/10 hover:bg-red-500/25 border border-red-500/30 text-red-400 text-xs px-3 py-1.5 rounded-lg font-bold transition"
+              className="flex items-center gap-1.5 bg-red-500/10 hover:bg-red-500/25 border border-red-500/30 text-red-500 text-xs px-3 py-1.5 rounded-lg font-bold transition"
             >
               <Trash2 size={13} />
               Bulk Delete
             </button>
             <button
               onClick={() => setSelectedProductIds(new Set())}
-              className="text-gray-400 hover:text-white text-xs px-2 py-1.5 transition"
+              className={`${isLight ? "text-slate-500 hover:text-slate-800" : "text-gray-400 hover:text-white"} text-xs px-2 py-1.5 transition`}
             >
               Cancel
             </button>
@@ -1545,16 +1545,16 @@ export default function ProductsPage() {
       {/* ── BULK UPDATE MODAL ── */}
       {showBulkUpdateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="bg-brand-dark-surface border border-brand-sky/30 p-6 rounded-2xl w-full max-w-md shadow-2xl animate-fade-in-up my-4">
+          <div className={`${isLight ? "bg-white border-slate-200 shadow-2xl text-slate-900" : "bg-brand-dark-surface border-brand-sky/30 text-white"} border p-6 rounded-2xl w-full max-w-md shadow-2xl animate-fade-in-up my-4`}>
             
-            <div className="flex justify-between items-center border-b border-brand-dark-border pb-3 mb-5">
+            <div className={`flex justify-between items-center border-b ${isLight ? "border-slate-200" : "border-brand-dark-border"} pb-3 mb-5`}>
               <div>
-                <h3 className="font-black text-white text-sm">Bulk Update Products</h3>
-                <p className="text-[9px] text-gray-500 mt-0.5">
+                <h3 className={`font-black ${isLight ? "text-slate-900" : "text-white"} text-sm`}>Bulk Update Products</h3>
+                <p className={`text-[9px] ${isLight ? "text-slate-500" : "text-gray-500"} mt-0.5`}>
                   Modifying {selectedProductIds.size} selected products. Fill only fields you wish to change.
                 </p>
               </div>
-              <button onClick={() => setShowBulkUpdateModal(false)} className="text-gray-400 hover:text-white">
+              <button onClick={() => setShowBulkUpdateModal(false)} className={`${isLight ? "text-slate-400 hover:text-slate-700" : "text-gray-400 hover:text-white"}`}>
                 <X size={18} />
               </button>
             </div>
@@ -1563,19 +1563,19 @@ export default function ProductsPage() {
               
               {/* Category */}
               <div>
-                <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Update Category</label>
+                <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-slate-600" : "text-gray-400"} mb-1`}>Update Category</label>
                 {isBulkCustomCat ? (
                   <div className="flex gap-1">
                     <input
                       type="text" required placeholder="Type your category..."
                       value={bulkUpdateForm.customCategory}
                       onChange={e => setBulkUpdateForm({ ...bulkUpdateForm, customCategory: e.target.value })}
-                      className="flex-grow bg-black border border-brand-sky/40 p-2.5 rounded-lg text-white focus:outline-none focus:border-brand-sky text-[10px]"
+                      className={`flex-grow ${isLight ? "bg-white border-sky-400 text-slate-900" : "bg-black border-brand-sky/40 text-white"} border p-2.5 rounded-lg focus:outline-none focus:border-brand-sky text-[10px]`}
                       autoFocus
                     />
                     <button type="button"
                       onClick={() => { setIsBulkCustomCat(false); setBulkUpdateForm(prev => ({ ...prev, customCategory: "", category: "No Change" })); }}
-                      className="p-2 bg-brand-dark-border rounded-lg text-gray-400 hover:text-white transition"
+                      className={`p-2 ${isLight ? "bg-slate-100 text-slate-600 hover:bg-slate-200" : "bg-brand-dark-border text-gray-400 hover:text-white"} rounded-lg transition`}
                     >
                       <X size={12} />
                     </button>
@@ -1592,7 +1592,7 @@ export default function ProductsPage() {
                         setBulkUpdateForm(prev => ({ ...prev, category: e.target.value, customCategory: "" }));
                       }
                     }}
-                    className="w-full bg-black border border-brand-dark-border p-2.5 rounded-lg text-white focus:outline-none focus:border-brand-sky appearance-none cursor-pointer"
+                    className={`w-full ${isLight ? "bg-white border-slate-300 text-slate-900 focus:border-sky-500" : "bg-black border-brand-dark-border text-white focus:border-brand-sky"} border p-2.5 rounded-lg focus:outline-none appearance-none cursor-pointer`}
                   >
                     <option value="No Change">No Change (Leave as is)</option>
                     {PRESET_CATEGORIES.filter(c => c !== "Custom...").map(c => <option key={c} value={c}>{c}</option>)}
@@ -1603,24 +1603,24 @@ export default function ProductsPage() {
 
               {/* Brand */}
               <div>
-                <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Update Brand</label>
+                <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-slate-600" : "text-gray-400"} mb-1`}>Update Brand</label>
                 <input
                   type="text"
                   placeholder="Leave blank for no change..."
                   value={bulkUpdateForm.brand}
                   onChange={e => setBulkUpdateForm({ ...bulkUpdateForm, brand: e.target.value })}
-                  className="w-full bg-black border border-brand-dark-border p-2.5 rounded-lg text-white focus:outline-none focus:border-brand-sky"
+                  className={`w-full ${isLight ? "bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-sky-500" : "bg-black border-brand-dark-border text-white focus:border-brand-sky"} border p-2.5 rounded-lg focus:outline-none`}
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 {/* Unit */}
                 <div>
-                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Update Unit</label>
+                  <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-slate-600" : "text-gray-400"} mb-1`}>Update Unit</label>
                   <select
                     value={bulkUpdateForm.unit}
                     onChange={e => setBulkUpdateForm({ ...bulkUpdateForm, unit: e.target.value })}
-                    className="w-full bg-black border border-brand-dark-border p-2.5 rounded-lg text-white focus:outline-none focus:border-brand-sky appearance-none cursor-pointer"
+                    className={`w-full ${isLight ? "bg-white border-slate-300 text-slate-900 focus:border-sky-500" : "bg-black border-brand-dark-border text-white focus:border-brand-sky"} border p-2.5 rounded-lg focus:outline-none appearance-none cursor-pointer`}
                   >
                     <option value="No Change">No Change (Leave as is)</option>
                     {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
@@ -1629,13 +1629,13 @@ export default function ProductsPage() {
 
                 {/* Tax Rate */}
                 <div>
-                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Update Tax Rate (%)</label>
+                  <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-slate-600" : "text-gray-400"} mb-1`}>Update Tax Rate (%)</label>
                   <input
                     type="number" min={0} max={100}
                     placeholder="No change"
                     value={bulkUpdateForm.taxRate}
                     onChange={e => setBulkUpdateForm({ ...bulkUpdateForm, taxRate: e.target.value })}
-                    className="w-full bg-black border border-brand-dark-border p-2.5 rounded-lg text-white focus:outline-none focus:border-brand-sky"
+                    className={`w-full ${isLight ? "bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-sky-500" : "bg-black border-brand-dark-border text-white focus:border-brand-sky"} border p-2.5 rounded-lg focus:outline-none`}
                   />
                 </div>
               </div>
@@ -1644,7 +1644,7 @@ export default function ProductsPage() {
                 <button
                   type="button"
                   onClick={() => setShowBulkUpdateModal(false)}
-                  className="flex-1 py-3 bg-brand-dark-border hover:bg-brand-dark-border/70 text-gray-300 font-bold rounded-lg transition text-xs tracking-wider"
+                  className={`flex-1 py-3 ${isLight ? "bg-slate-100 hover:bg-slate-200 text-slate-700" : "bg-brand-dark-border hover:bg-brand-dark-border/70 text-gray-300"} font-bold rounded-lg transition text-xs tracking-wider`}
                 >
                   Cancel
                 </button>
