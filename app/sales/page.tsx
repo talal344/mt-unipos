@@ -263,7 +263,8 @@ function StaffCard({ staffName, sales, currencySymbol, onViewSales, onPrintRepor
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function SalesPage() {
-  const { sales, currencySymbol, currentBranch, businessSettings } = useGlobalContext();
+  const { sales, currencySymbol, currentBranch, businessSettings, theme } = useGlobalContext();
+  const isLight = theme === "light";
 
   // ── View & Filters ─────────────────────────────────────────────────────────
   const [viewMode, setViewMode]       = useState<ViewMode>("table");
@@ -441,7 +442,7 @@ export default function SalesPage() {
   const pLabel = periodLabel(period, customFrom, customTo);
 
   return (
-    <div className="flex min-h-screen bg-black text-gray-100 font-sans">
+    <div className={`flex min-h-screen font-sans ${isLight ? "bg-slate-100 text-slate-900" : "bg-black text-gray-100"}`}>
       <ClientSidebar />
 
       {slipSale && (
@@ -457,13 +458,13 @@ export default function SalesPage() {
       <main className="flex-grow p-5 space-y-5 overflow-y-auto max-h-screen">
 
         {/* ── HEADER ── */}
-        <div className="flex items-center justify-between border-b border-brand-dark-border/60 pb-4">
+        <div className={`flex items-center justify-between border-b pb-4 ${isLight ? "border-slate-200" : "border-brand-dark-border/60"}`}>
           <div>
-            <h1 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
-              <Receipt size={20} className="text-brand-sky" />
+            <h1 className={`text-xl font-black tracking-tight flex items-center gap-2 ${isLight ? "text-slate-900" : "text-white"}`}>
+              <Receipt size={20} className="text-sky-500" />
               Sales History
             </h1>
-            <p className="text-[10px] text-gray-500 mt-0.5">
+            <p className={`text-[10px] mt-0.5 ${isLight ? "text-slate-500" : "text-gray-500"}`}>
               {pLabel} · {filtered.length} transactions · filter by staff, payment or date
             </p>
           </div>

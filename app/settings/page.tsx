@@ -21,8 +21,10 @@ export default function SettingsPage() {
     posCounters, posShifts, sales, expenses, employees,
     attendanceRecords, payrollRecords, stockTransfers, tables,
     kitchenTickets, accounts, journalEntries, saasInvoices,
-    supportTickets, demoRequests, tenants
+    supportTickets, demoRequests, tenants,
+    theme
   } = useGlobalContext();
+  const isLight = theme === "light";
 
   const [form, setForm] = useState({
     businessName: businessSettings.businessName || "",
@@ -357,7 +359,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-black text-gray-100 font-sans">
+    <div className={`flex min-h-screen font-sans ${isLight ? "bg-slate-100 text-slate-900" : "bg-black text-gray-100"}`}>
       <ClientSidebar />
 
       {toast && (

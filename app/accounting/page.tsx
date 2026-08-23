@@ -16,7 +16,9 @@ export default function AccountingPage() {
     customers,
     suppliers,
     products,
+    theme
   } = useGlobalContext();
+  const isLight = theme === "light";
 
   const [successMsg, setSuccessMsg] = useState("");
   const [activeTab, setActiveTab] = useState<"chart" | "journal" | "pl">("chart");
@@ -181,7 +183,7 @@ export default function AccountingPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-black text-gray-100 font-sans">
+    <div className={`flex min-h-screen font-sans ${isLight ? "bg-slate-100 text-slate-900" : "bg-black text-gray-100"}`}>
       <ClientSidebar />
 
       <main className="flex-grow p-6 sm:p-8 space-y-6 overflow-y-auto max-h-screen">

@@ -55,7 +55,8 @@ function SvgBarChart({ data }: { data: { label: string; value: number }[] }) {
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function AiPage() {
-  const { products, customers, sales, currencySymbol } = useGlobalContext();
+  const { products, customers, sales, currencySymbol, theme } = useGlobalContext();
+  const isLight = theme === "light";
 
   // ── Day-of-week revenue breakdown ──────────────────────────────────────────
   const salesByDay = useMemo(() => {
@@ -125,7 +126,7 @@ export default function AiPage() {
   const RANK_COLORS = ["text-yellow-400","text-gray-300","text-amber-600"];
 
   return (
-    <div className="flex min-h-screen bg-black text-gray-100 font-sans">
+    <div className={`flex min-h-screen font-sans ${isLight ? "bg-slate-100 text-slate-900" : "bg-black text-gray-100"}`}>
       <ClientSidebar />
 
       <main className="flex-grow p-5 space-y-5 overflow-y-auto max-h-screen">

@@ -93,7 +93,9 @@ export default function ClientDashboardPage() {
     salesTaxRate,
     setSalesTaxRate,
     businessSettings,
+    theme,
   } = useGlobalContext();
+  const isLight = theme === "light";
 
     const [activeReportModal, setActiveReportModal] = React.useState<"revenue" | "gross_profit" | "net_profit" | "stock_value" | "wallet" | "cash_drawers" | null>(null);
 
@@ -672,25 +674,25 @@ export default function ClientDashboardPage() {
   const readingClubMembers = customers.filter(c => c.loyaltyPoints > 100);
 
   return (
-    <div className="flex min-h-screen bg-black text-gray-100 font-sans">
+    <div className={`flex min-h-screen font-sans ${isLight ? "bg-slate-100 text-slate-900" : "bg-black text-gray-100"}`}>
       <ClientSidebar />
 
       {/* Main Command Workspace */}
       <main className="flex-grow p-6 sm:p-8 space-y-6 overflow-y-auto max-h-screen">
         
         {/* Top Header */}
-        <div className="flex justify-between items-center border-b border-brand-dark-border/60 pb-4">
+        <div className={`flex justify-between items-center border-b pb-4 ${isLight ? "border-slate-200" : "border-brand-dark-border/60"}`}>
           <div>
-            <h1 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
+            <h1 className={`text-xl font-black tracking-tight flex items-center gap-2 ${isLight ? "text-slate-900" : "text-white"}`}>
               <span>{activeTenant?.businessName || "Client Command Center"}</span>
-              <span className="bg-brand-sky/20 text-brand-sky text-[8px] px-2 py-0.5 rounded font-black tracking-widest uppercase font-mono">
+              <span className="bg-sky-500/20 text-sky-600 text-[8px] px-2 py-0.5 rounded font-black tracking-widest uppercase font-mono border border-sky-500/30">
                 {bizType} Vertical
               </span>
             </h1>
-            <p className="text-[10px] text-gray-500 font-mono">Dynamic ERP Shard Dashboard is isolated for **{vertical}** workflows.</p>
+            <p className={`text-[10px] font-mono ${isLight ? "text-slate-500" : "text-gray-500"}`}>Dynamic ERP Shard Dashboard is isolated for **{vertical}** workflows.</p>
           </div>
-          <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full flex items-center gap-1">
-            <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-ping" />
+          <span className="text-[10px] font-mono text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full flex items-center gap-1">
+            <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping" />
             POS Shard Sync Active
           </span>
         </div>
@@ -699,23 +701,27 @@ export default function ClientDashboardPage() {
         <POSAlertBanner />
 
         {/* Global Configurations Settings Card */}
-        <div className="bg-brand-dark-surface/60 border border-brand-sky/20 p-4 rounded-2xl glass-panel flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className={`border p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 ${
+          isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/60 border-brand-sky/20 text-gray-100 glass-panel"
+        }`}>
           <div className="text-left space-y-1">
-            <h4 className="text-white font-bold text-xs flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-brand-sky animate-pulse" />
+            <h4 className={`font-bold text-xs flex items-center gap-1.5 ${isLight ? "text-slate-900" : "text-white"}`}>
+              <span className="w-2 h-2 rounded-full bg-sky-500 animate-pulse" />
               Global Store Shard Configurations
             </h4>
-            <p className="text-[9px] text-gray-500">Adjust active trading currency and tax compliance coefficients in real time.</p>
+            <p className={`text-[9px] ${isLight ? "text-slate-500" : "text-gray-500"}`}>Adjust active trading currency and tax compliance coefficients in real time.</p>
           </div>
 
           <div className="flex flex-wrap gap-4 text-xs">
             {/* Currency swapper */}
             <div className="flex items-center gap-2">
-              <span className="text-[10px] text-gray-400 font-bold uppercase">Active Currency:</span>
+              <span className={`text-[10px] font-bold uppercase ${isLight ? "text-slate-600" : "text-gray-400"}`}>Active Currency:</span>
               <select
                 value={currencySymbol}
                 onChange={(e) => setCurrencySymbol(e.target.value)}
-                className="bg-black border border-brand-dark-border/80 px-2 py-1.5 rounded text-[10px] text-white font-bold focus:outline-none"
+                className={`border px-2 py-1.5 rounded text-[10px] font-bold focus:outline-none ${
+                  isLight ? "bg-white border-slate-300 text-slate-900 shadow-xs" : "bg-black border-brand-dark-border/80 text-white"
+                }`}
               >
                 <option value="PKR">PKR (Rs) - Default</option>
                 <option value="USD">USD ($)</option>
@@ -726,15 +732,21 @@ export default function ClientDashboardPage() {
 
             {/* Sales Tax Rate config */}
             <div className="flex items-center gap-2">
-              <span className="text-[10px] text-gray-400 font-bold uppercase">GST / VAT Rate:</span>
-              <div className="flex items-center bg-black border border-brand-dark-border/80 rounded overflow-hidden">
+              <span className={`text-[10px] font-bold uppercase ${isLight ? "text-slate-600" : "text-gray-400"}`}>GST / VAT Rate:</span>
+              <div className={`flex items-center border rounded overflow-hidden ${
+                isLight ? "bg-white border-slate-300" : "bg-black border-brand-dark-border/80"
+              }`}>
                 <input
                   type="number"
                   value={salesTaxRate}
                   onChange={(e) => setSalesTaxRate(Math.min(100, Math.max(0, parseInt(e.target.value) || 0)))}
-                  className="w-12 bg-transparent text-center font-mono font-bold text-[10px] py-1 text-white focus:outline-none"
+                  className={`w-12 bg-transparent text-center font-mono font-bold text-[10px] py-1 focus:outline-none ${
+                    isLight ? "text-slate-900" : "text-white"
+                  }`}
                 />
-                <span className="bg-brand-dark-border text-gray-400 px-2 py-1 text-[9px] font-black">%</span>
+                <span className={`px-2 py-1 text-[9px] font-black ${
+                  isLight ? "bg-slate-100 text-slate-600 border-l border-slate-200" : "bg-brand-dark-border text-gray-400"
+                }`}>%</span>
               </div>
             </div>
           </div>

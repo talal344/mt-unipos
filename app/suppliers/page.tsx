@@ -28,8 +28,9 @@ const EMPTY_FORM = {
 export default function SuppliersPage() {
   const {
     suppliers, addSupplier, updateSupplier, deleteSupplier,
-    recordSupplierPayment, purchaseOrders, currencySymbol
+    recordSupplierPayment, purchaseOrders, currencySymbol, theme
   } = useGlobalContext();
+  const isLight = theme === "light";
 
   const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -141,7 +142,7 @@ export default function SuppliersPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-black text-gray-100 font-sans">
+    <div className={`flex min-h-screen font-sans ${isLight ? "bg-slate-100 text-slate-900" : "bg-black text-gray-100"}`}>
       <ClientSidebar />
 
       {/* Toast Alert */}

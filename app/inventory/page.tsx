@@ -6,7 +6,8 @@ import ClientSidebar from "@/components/client-sidebar";
 import { TrendingDown, TrendingUp, AlertTriangle, ShieldCheck, Database, Layers, ArrowLeftRight, Brain, Truck, CheckCircle2 } from "lucide-react";
 
 export default function InventoryPage() {
-  const { products, updateProduct, currentBranch, currencySymbol, sales, stockTransfers, createStockTransfer, updateStockTransfer } = useGlobalContext();
+  const { products, updateProduct, currentBranch, currencySymbol, sales, stockTransfers, createStockTransfer, updateStockTransfer, theme } = useGlobalContext();
+  const isLight = theme === "light";
   const [activeTab, setActiveTab] = useState<"Master" | "Transfers" | "AI Forecasting">("Master");
   const [successMsg, setSuccessMsg] = useState("");
   
@@ -65,7 +66,7 @@ export default function InventoryPage() {
   const totalStockLines = products.length;
 
   return (
-    <div className="flex min-h-screen bg-black text-gray-100 font-sans">
+    <div className={`flex min-h-screen font-sans ${isLight ? "bg-slate-100 text-slate-900" : "bg-black text-gray-100"}`}>
       <ClientSidebar />
 
       <main className="flex-grow p-6 sm:p-8 space-y-6 overflow-y-auto max-h-screen">

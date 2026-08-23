@@ -27,7 +27,8 @@ interface ReceiveItem {
 }
 
 export default function PurchasesPage() {
-  const { purchaseOrders, suppliers, products, createPurchaseOrder, receiveGoods, currencySymbol } = useGlobalContext();
+  const { purchaseOrders, suppliers, products, createPurchaseOrder, receiveGoods, currencySymbol, theme } = useGlobalContext();
+  const isLight = theme === "light";
 
   // ── List state ──────────────────────────────────────────────────────────────
   const [searchQ, setSearchQ]         = useState("");
@@ -132,7 +133,7 @@ export default function PurchasesPage() {
   const poGrandTotal = poLines.reduce((a, l) => a + l.subtotal, 0);
 
   return (
-    <div className="flex min-h-screen bg-black text-gray-100 font-sans">
+    <div className={`flex min-h-screen font-sans ${isLight ? "bg-slate-100 text-slate-900" : "bg-black text-gray-100"}`}>
       <ClientSidebar />
 
       {/* Toast */}

@@ -34,7 +34,8 @@ const EMPTY_FORM = {
 };
 
 export default function StaffPage() {
-  const { employees, addEmployee, updateEmployee, deleteEmployee, currencySymbol, attendanceRecords, addAttendanceRecord, updateAttendanceRecord, payrollRecords, addPayrollRecord } = useGlobalContext();
+  const { employees, addEmployee, updateEmployee, deleteEmployee, currencySymbol, attendanceRecords, addAttendanceRecord, updateAttendanceRecord, payrollRecords, addPayrollRecord, theme } = useGlobalContext();
+  const isLight = theme === "light";
 
   const [activeTab, setActiveTab] = useState<"Profiles" | "Attendance" | "Payroll">("Profiles");
 
@@ -176,7 +177,7 @@ export default function StaffPage() {
   const byCashiers = employees.filter(e => e.role === "Cashier").length;
 
   return (
-    <div className="flex min-h-screen bg-black text-gray-100 font-sans">
+    <div className={`flex min-h-screen font-sans ${isLight ? "bg-slate-100 text-slate-900" : "bg-black text-gray-100"}`}>
       <ClientSidebar />
 
       {toast && (

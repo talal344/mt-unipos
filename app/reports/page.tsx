@@ -82,8 +82,10 @@ export default function ReportsPage() {
     purchaseOrders, 
     suppliers, 
     currencySymbol, 
-    currentBranch 
+    currentBranch,
+    theme
   } = useGlobalContext();
+  const isLight = theme === "light";
 
   const [period, setPeriod] = useState<"today" | "week" | "month" | "quarter" | "custom">("month");
   const [customFromDate, setCustomFromDate] = useState<string>("");
@@ -807,7 +809,7 @@ export default function ReportsPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-black text-gray-100 font-sans">
+    <div className={`flex min-h-screen font-sans ${isLight ? "bg-slate-100 text-slate-900" : "bg-black text-gray-100"}`}>
       <ClientSidebar />
 
       {toast && (

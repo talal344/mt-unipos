@@ -98,7 +98,8 @@ interface ParsedRow {
 }
 
 export default function ProductsPage() {
-  const { products, addProduct, addProductsBulk, mergeProductsBulk, updateProduct, deleteProduct, deleteProductsBulk, currencySymbol, getProductBatches } = useGlobalContext();
+  const { products, addProduct, addProductsBulk, mergeProductsBulk, updateProduct, deleteProduct, deleteProductsBulk, currencySymbol, getProductBatches, theme } = useGlobalContext();
+  const isLight = theme === "light";
 
   // ── Single product modal state
   const [showModal, setShowModal] = useState(false);
@@ -555,7 +556,7 @@ export default function ProductsPage() {
   const errorCount = parsedRows.filter(r => !!r.error).length;
 
   return (
-    <div className="flex min-h-screen bg-black text-gray-100 font-sans">
+    <div className={`flex min-h-screen font-sans ${isLight ? "bg-slate-100 text-slate-900" : "bg-black text-gray-100"}`}>
       <ClientSidebar />
 
       {/* Toast */}

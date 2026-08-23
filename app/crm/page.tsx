@@ -8,7 +8,8 @@ import { MessageSquare, Users, Award, ShieldCheck, Mail, Send, DollarSign } from
 import ThermalSlipModal from "@/components/thermal-slip-modal";
 
 export default function CrmPage() {
-  const { customers, suppliers, recordDueRecovery, recordSupplierPayment, settleDuesWithWallet, currencySymbol } = useGlobalContext();
+  const { customers, suppliers, recordDueRecovery, recordSupplierPayment, settleDuesWithWallet, currencySymbol, theme } = useGlobalContext();
+  const isLight = theme === "light";
   const [successMsg, setSuccessMsg] = useState("");
   
   // Navigation tabs
@@ -71,7 +72,7 @@ export default function CrmPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-black text-gray-100 font-sans">
+    <div className={`flex min-h-screen font-sans ${isLight ? "bg-slate-100 text-slate-900" : "bg-black text-gray-100"}`}>
       <ClientSidebar />
 
       <main className="flex-grow p-6 sm:p-8 space-y-6 overflow-y-auto max-h-screen grid grid-cols-1 lg:grid-cols-12 gap-6">

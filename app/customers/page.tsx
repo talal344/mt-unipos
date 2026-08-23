@@ -56,8 +56,10 @@ function getLoyaltyTier(pts: number) {
 export default function CustomersPage() {
   const {
     customers, addCustomer, updateCustomer, deleteCustomer,
-    sales, currencySymbol, recordDueRecovery, settleDuesWithWallet
+    sales, currencySymbol, recordDueRecovery, settleDuesWithWallet,
+    theme
   } = useGlobalContext();
+  const isLight = theme === "light";
 
   // ── Thermal Slip Modal State
   const [thermalSale, setThermalSale] = useState<any>(null);
@@ -437,7 +439,7 @@ export default function CustomersPage() {
   }).length;
 
   return (
-    <div className="flex min-h-screen bg-black text-gray-100 font-sans">
+    <div className={`flex min-h-screen font-sans ${isLight ? "bg-slate-100 text-slate-900" : "bg-black text-gray-100"}`}>
       <ClientSidebar />
 
       {/* ── Toast ── */}

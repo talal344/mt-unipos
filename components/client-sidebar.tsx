@@ -7,14 +7,15 @@ import { useGlobalContext } from "@/context/global-context";
 import {
   Laptop, LayoutDashboard, ShoppingCart, Database, DollarSign, Utensils,
   Heart, Users, Users2, MessageCircle, FileDown, Brain, ExternalLink,
-  LogOut, ShieldAlert, ShoppingBag, Receipt, Sliders, Bell, X, Package, CreditCard, Monitor, Settings, Landmark
+  LogOut, ShieldAlert, ShoppingBag, Receipt, Sliders, Bell, X, Package, CreditCard, Monitor, Settings, Landmark, Sun, Moon
 } from "lucide-react";
 import MTCoreLogo from "@/components/mt-logo";
 
 export default function ClientSidebar() {
   const router = useRouter();
   const pathname = usePathname();
-  const { logout, currentUser, tenants, currentBranch, setCurrentBranch, products, customers } = useGlobalContext();
+  const { logout, currentUser, tenants, currentBranch, setCurrentBranch, products, customers, theme, toggleTheme } = useGlobalContext();
+  const isLight = theme === "light";
 
   const [showNotifications, setShowNotifications] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
@@ -76,7 +77,9 @@ export default function ClientSidebar() {
   const handleLogout = () => { logout(); router.push("/login"); };
 
   return (
-    <aside className="relative w-64 h-screen sticky top-0 bg-brand-dark-surface border-r border-brand-dark-border flex flex-col shrink-0 font-sans print:hidden">
+    <aside className={`relative w-64 h-screen sticky top-0 border-r flex flex-col shrink-0 font-sans print:hidden transition-colors duration-200 ${
+      isLight ? "bg-white border-slate-200 text-slate-900 shadow-xs" : "bg-brand-dark-surface border-brand-dark-border text-gray-100"
+    }`}>
 
       {/* ═══════════════════════════════════════════════════════════════
           NOTIFICATION PANEL — anchored to aside full-width below header
@@ -84,19 +87,23 @@ export default function ClientSidebar() {
       {showNotifications && (
         <div
           ref={notifRef}
-          className="absolute left-0 top-16 w-full bg-[#111111] border-x border-b border-brand-dark-border shadow-2xl z-[999]"
+          className={`absolute left-0 top-16 w-full border-x border-b shadow-2xl z-[999] ${
+            isLight ? "bg-white border-slate-200 text-slate-900" : "bg-[#111111] border-brand-dark-border text-white"
+          }`}
           style={{ borderBottomLeftRadius: 12, borderBottomRightRadius: 12 }}
         >
           {/* Panel header */}
-          <div className="flex items-center justify-between px-4 py-2.5 bg-black/40 border-b border-brand-dark-border">
-            <span className="text-[10px] font-black text-white uppercase tracking-wider flex items-center gap-1.5">
-              <Bell size={11} className="text-amber-400" />
+          <div className={`flex items-center justify-between px-4 py-2.5 border-b ${
+            isLight ? "bg-slate-50 border-slate-200 text-slate-900" : "bg-black/40 border-brand-dark-border text-white"
+          }`}>
+            <span className="text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5">
+              <Bell size={11} className="text-amber-500" />
               Alerts &amp; Notices
               <span className="ml-1 bg-red-500 text-white text-[8px] px-1.5 py-0.5 rounded-full font-black">{totalAlerts}</span>
             </span>
             <button
               onClick={() => setShowNotifications(false)}
-              className="text-gray-500 hover:text-white transition p-1 rounded hover:bg-brand-dark-border"
+              className={`p-1 rounded transition ${isLight ? "text-slate-400 hover:text-slate-900 hover:bg-slate-100" : "text-gray-500 hover:text-white hover:bg-brand-dark-border"}`}
             >
               <X size={12} />
             </button>
@@ -106,8 +113,8 @@ export default function ClientSidebar() {
             {/* Low Stock alerts */}
             {lowStockAlerts.length > 0 && (
               <div>
-                <div className="px-4 py-2 bg-amber-500/5 border-b border-brand-dark-border/40">
-                  <span className="text-[9px] font-black text-amber-400 uppercase tracking-widest flex items-center gap-1">
+                <div className={`px-4 py-2 border-b ${isLight ? "bg-amber-50 border-amber-100" : "bg-amber-500/5 border-brand-dark-border/40"}`}>
+                  <span className="text-[9px] font-black text-amber-500 uppercase tracking-widest flex items-center gap-1">
                     <Package size={9} /> Low Stock ({lowStockAlerts.length} items)
                   </span>
                 </div>
@@ -115,15 +122,17 @@ export default function ClientSidebar() {
                   <Link
                     key={p.id} href="/inventory"
                     onClick={() => setShowNotifications(false)}
-                    className="flex items-center justify-between px-4 py-2.5 hover:bg-brand-dark-border/30 transition group border-b border-brand-dark-border/15"
+                    className={`flex items-center justify-between px-4 py-2.5 transition group border-b ${
+                      isLight ? "hover:bg-slate-50 border-slate-100" : "hover:bg-brand-dark-border/30 border-brand-dark-border/15"
+                    }`}
                   >
                     <div className="min-w-0 flex-grow">
-                      <div className="text-[11px] font-bold text-white truncate group-hover:text-brand-sky transition">{p.name}</div>
-                      <div className="text-[9px] text-gray-500 font-mono">{p.sku}</div>
+                      <div className={`text-[11px] font-bold truncate transition ${isLight ? "text-slate-900 group-hover:text-sky-600" : "text-white group-hover:text-brand-sky"}`}>{p.name}</div>
+                      <div className={`text-[9px] font-mono ${isLight ? "text-slate-400" : "text-gray-500"}`}>{p.sku}</div>
                     </div>
                     <div className="text-right shrink-0 ml-3">
-                      <div className="text-[10px] font-black text-red-400 font-mono">{p.stock}</div>
-                      <div className="text-[8px] text-gray-600">/ min {p.minStock}</div>
+                      <div className="text-[10px] font-black text-red-500 font-mono">{p.stock}</div>
+                      <div className={`text-[8px] ${isLight ? "text-slate-400" : "text-gray-600"}`}>/ min {p.minStock}</div>
                     </div>
                   </Link>
                 ))}
@@ -133,8 +142,8 @@ export default function ClientSidebar() {
             {/* Overdue dues alerts */}
             {overdueCustomers.length > 0 && (
               <div>
-                <div className="px-4 py-2 bg-red-500/5 border-b border-brand-dark-border/40">
-                  <span className="text-[9px] font-black text-red-400 uppercase tracking-widest flex items-center gap-1">
+                <div className={`px-4 py-2 border-b ${isLight ? "bg-red-50 border-red-100" : "bg-red-500/5 border-brand-dark-border/40"}`}>
+                  <span className="text-[9px] font-black text-red-500 uppercase tracking-widest flex items-center gap-1">
                     <CreditCard size={9} /> Overdue Dues ({overdueCustomers.length})
                   </span>
                 </div>
@@ -142,17 +151,19 @@ export default function ClientSidebar() {
                   <Link
                     key={c.id} href="/crm"
                     onClick={() => setShowNotifications(false)}
-                    className="flex items-center justify-between px-4 py-2.5 hover:bg-brand-dark-border/30 transition group border-b border-brand-dark-border/15"
+                    className={`flex items-center justify-between px-4 py-2.5 transition group border-b ${
+                      isLight ? "hover:bg-slate-50 border-slate-100" : "hover:bg-brand-dark-border/30 border-brand-dark-border/15"
+                    }`}
                   >
                     <div className="min-w-0 flex-grow">
-                      <div className="text-[11px] font-bold text-white truncate group-hover:text-red-400 transition">{c.name}</div>
-                      <div className="text-[9px] text-gray-500 font-mono">{c.mobile}</div>
+                      <div className={`text-[11px] font-bold truncate transition ${isLight ? "text-slate-900 group-hover:text-red-600" : "text-white group-hover:text-red-400"}`}>{c.name}</div>
+                      <div className={`text-[9px] font-mono ${isLight ? "text-slate-400" : "text-gray-500"}`}>{c.mobile}</div>
                     </div>
                     <div className="text-right shrink-0 ml-3">
-                      <div className="text-[10px] font-black text-red-400 font-mono">
+                      <div className="text-[10px] font-black text-red-500 font-mono">
                         {c.creditBalance.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                       </div>
-                      <div className="text-[8px] text-gray-600">PKR due</div>
+                      <div className={`text-[8px] ${isLight ? "text-slate-400" : "text-gray-600"}`}>PKR due</div>
                     </div>
                   </Link>
                 ))}
@@ -163,16 +174,16 @@ export default function ClientSidebar() {
             {totalAlerts === 0 && (
               <div className="px-4 py-8 text-center">
                 <div className="text-2xl mb-2">✅</div>
-                <div className="text-[10px] text-gray-400 font-bold">All systems healthy!</div>
-                <div className="text-[9px] text-gray-600 mt-0.5">No active alerts right now.</div>
+                <div className={`text-[10px] font-bold ${isLight ? "text-slate-700" : "text-gray-400"}`}>All systems healthy!</div>
+                <div className={`text-[9px] mt-0.5 ${isLight ? "text-slate-400" : "text-gray-600"}`}>No active alerts right now.</div>
               </div>
             )}
           </div>
 
           {/* Footer */}
-          <div className="border-t border-brand-dark-border/40 px-4 py-2 bg-black/30">
+          <div className={`border-t px-4 py-2 ${isLight ? "bg-slate-50 border-slate-200" : "bg-black/30 border-brand-dark-border/40"}`}>
             <Link href="/reports" onClick={() => setShowNotifications(false)}
-              className="text-[9px] text-brand-sky font-black uppercase tracking-wider hover:underline">
+              className="text-[9px] text-sky-500 font-black uppercase tracking-wider hover:underline">
               View Full Reports →
             </Link>
           </div>
@@ -181,33 +192,41 @@ export default function ClientSidebar() {
 
       <div className="flex flex-col flex-1 min-h-0">
         {/* Brand Header */}
-        <div className="py-4 px-3 border-b border-brand-dark-border shrink-0 bg-black/50 flex items-center justify-center">
+        <div className={`py-4 px-3 border-b shrink-0 flex items-center justify-center ${
+          isLight ? "bg-slate-50 border-slate-200" : "bg-black/50 border-brand-dark-border"
+        }`}>
           <Link href="/dashboard" className="w-full flex items-center justify-center">
-            <MTCoreLogo variant="sky" size="md" showText={true} />
+            <MTCoreLogo variant="sky" size="md" showText={true} theme={isLight ? "light" : "dark"} />
           </Link>
         </div>
 
         {/* User Role Card */}
-        <div className="p-3 border-b border-brand-dark-border/40 space-y-2 shrink-0">
-          <div className="flex items-center justify-between gap-2 bg-black/40 border border-brand-dark-border/80 p-2.5 rounded-lg">
+        <div className={`p-3 border-b space-y-2 shrink-0 ${isLight ? "border-slate-200" : "border-brand-dark-border/40"}`}>
+          <div className={`flex items-center justify-between gap-2 border p-2.5 rounded-lg ${
+            isLight ? "bg-slate-50 border-slate-200" : "bg-black/40 border-brand-dark-border/80"
+          }`}>
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-8 h-8 rounded-full bg-brand-sky text-black font-black flex items-center justify-center text-xs shrink-0">
+              <div className="w-8 h-8 rounded-full bg-sky-500 text-white font-black flex items-center justify-center text-xs shrink-0 shadow-xs">
                 {currentUser?.name?.substring(0, 2).toUpperCase() || "MT"}
               </div>
               <div className="min-w-0">
-                <h4 className="text-white font-bold text-xs truncate">{currentUser?.name || "Mian Talal"}</h4>
-                <p className="text-[9px] text-brand-sky font-bold uppercase tracking-wider">{userRole}</p>
+                <h4 className={`font-bold text-xs truncate ${isLight ? "text-slate-900" : "text-white"}`}>{currentUser?.name || "Mian Talal"}</h4>
+                <p className="text-[9px] text-sky-500 font-bold uppercase tracking-wider">{userRole}</p>
               </div>
             </div>
             {/* Bell Icon inside User Card */}
             <button
               onClick={() => setShowNotifications(v => !v)}
               className={`relative shrink-0 w-8 h-8 flex items-center justify-center rounded-lg transition ${
-                showNotifications ? "bg-amber-500/20 border border-amber-500/40" : "hover:bg-brand-dark-border/80"
+                showNotifications 
+                  ? "bg-amber-500/20 border border-amber-500/40" 
+                  : isLight 
+                  ? "hover:bg-slate-200/60" 
+                  : "hover:bg-brand-dark-border/80"
               }`}
               title="Notifications"
             >
-              <Bell size={15} className={totalAlerts > 0 ? "text-amber-400" : "text-gray-400"} />
+              <Bell size={15} className={totalAlerts > 0 ? "text-amber-500" : isLight ? "text-slate-500" : "text-gray-400"} />
               {totalAlerts > 0 && (
                 <span className="absolute -top-1 -right-1 min-w-[16px] h-4 bg-red-500 text-white text-[8px] font-black rounded-full flex items-center justify-center leading-none px-0.5">
                   {totalAlerts > 9 ? "9+" : totalAlerts}
@@ -228,11 +247,15 @@ export default function ClientSidebar() {
                 href={link.href}
                 className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
                   active
-                    ? "bg-brand-sky/10 border border-brand-sky/30 text-brand-sky font-bold"
+                    ? isLight
+                      ? "bg-sky-100/90 border border-sky-300 text-sky-900 font-bold shadow-xs"
+                      : "bg-brand-sky/10 border border-brand-sky/30 text-brand-sky font-bold"
+                    : isLight
+                    ? "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                     : "text-gray-400 hover:text-white hover:bg-brand-dark-border"
                 }`}
               >
-                <Icon size={14} className={active ? "text-brand-sky" : ""} />
+                <Icon size={14} className={active ? "text-sky-500" : ""} />
                 <span>{link.name}</span>
               </Link>
             );
@@ -241,14 +264,34 @@ export default function ClientSidebar() {
       </div>
 
       {/* Footer */}
-      <div className="p-3 border-t border-brand-dark-border space-y-1.5 shrink-0">
-        <div className="bg-brand-dark-border/40 p-2 rounded text-[9px] text-gray-500 leading-normal flex items-start gap-1">
-          <ShieldAlert size={12} className="text-amber-400 shrink-0 mt-0.5" />
-          <span>RBAC Active · Role: <span className="text-white font-bold">{userRole}</span></span>
+      <div className={`p-3 border-t space-y-1.5 shrink-0 ${isLight ? "border-slate-200" : "border-brand-dark-border"}`}>
+        {/* Theme Switcher Toggle Button */}
+        <button
+          onClick={toggleTheme}
+          className={`w-full flex items-center justify-between px-3 py-2 border rounded-lg transition font-bold text-xs ${
+            isLight
+              ? "bg-slate-100 border-slate-300 text-slate-800 hover:bg-slate-200"
+              : "bg-black/60 border-brand-dark-border text-gray-300 hover:text-white"
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            {isLight ? <Sun size={14} className="text-amber-500" /> : <Moon size={14} className="text-sky-400" />}
+            <span>{isLight ? "Light Mode" : "Black Mode"}</span>
+          </div>
+          <span className="text-[9px] uppercase tracking-wider font-mono opacity-80">
+            {isLight ? "LIGHT" : "DARK"}
+          </span>
+        </button>
+
+        <div className={`p-2 rounded text-[9px] leading-normal flex items-start gap-1 ${
+          isLight ? "bg-slate-100 text-slate-600 border border-slate-200" : "bg-brand-dark-border/40 text-gray-500"
+        }`}>
+          <ShieldAlert size={12} className="text-amber-500 shrink-0 mt-0.5" />
+          <span>RBAC Active · Role: <span className={`font-bold ${isLight ? "text-slate-900" : "text-white"}`}>{userRole}</span></span>
         </div>
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-2 px-3 py-2 bg-red-500/10 border border-red-500/20 hover:bg-red-500 hover:text-white text-red-400 font-bold text-xs rounded transition"
+          className="w-full flex items-center gap-2 px-3 py-2 bg-red-500/10 border border-red-500/20 hover:bg-red-500 hover:text-white text-red-500 font-bold text-xs rounded transition"
         >
           <LogOut size={14} />
           <span>Lock Workstation</span>

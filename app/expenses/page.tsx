@@ -19,7 +19,8 @@ import {
 } from "lucide-react";
 
 export default function ExpensesPage() {
-  const { expenses, addExpense, currencySymbol } = useGlobalContext();
+  const { expenses, addExpense, currencySymbol, theme } = useGlobalContext();
+  const isLight = theme === "light";
   
   // Local form states
   const [showAddForm, setShowAddForm] = useState(false);
@@ -91,7 +92,7 @@ export default function ExpensesPage() {
   }, {} as Record<string, number>);
 
   return (
-    <div className="flex min-h-screen bg-black text-gray-100 font-sans">
+    <div className={`flex min-h-screen font-sans ${isLight ? "bg-slate-100 text-slate-900" : "bg-black text-gray-100"}`}>
       <ClientSidebar />
 
       {/* Main Expense Workspace */}
