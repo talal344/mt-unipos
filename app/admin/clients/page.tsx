@@ -1409,14 +1409,16 @@ export default function AdminClientsPage() {
 
     // Uniqueness validation within the same tenant
     const cleanUsername = (credForm.username || "").trim().toLowerCase().replace(/[^a-z0-9._-]/g, '');
+    const currentTenant = tenants.find((t: any) => t.id === selectedTenant.id) || selectedTenant;
+
     if (cleanUsername) {
       // 1. Check against the tenant's own main/owner username
-      if (selectedTenant.username && selectedTenant.username.toLowerCase() === cleanUsername) {
+      if (currentTenant.username && currentTenant.username.toLowerCase() === cleanUsername) {
         triggerToast("⛔ ERROR: Username is already taken by the Tenant Owner!");
         return;
       }
       // 2. Check against other presets in the same tenant
-      const isDuplicate = (selectedTenant.credentialPresets || []).some(
+      const isDuplicate = (currentTenant.credentialPresets || []).some(
         (p: any) => p.id !== credForm.id && p.username && p.username.toLowerCase() === cleanUsername
       );
       if (isDuplicate) {
@@ -1445,6 +1447,13 @@ export default function AdminClientsPage() {
         });
         triggerToast("Added new credential preset!");
       }
+
+      // Sync selectedTenant immediately
+      const freshTenant = tenants.find((t: any) => t.id === selectedTenant.id);
+      if (freshTenant) {
+        setSelectedTenant({ ...freshTenant });
+      }
+
       setCredForm({ id: "", label: "", email: "", username: "", pass: "", role: "Owner" });
     } catch (err: any) {
       triggerToast(`⛔ ERROR: ${err.message || "Failed to save credential preset!"}`);
@@ -1465,12 +1474,22 @@ export default function AdminClientsPage() {
   const handleDeleteCredential = (credId: string) => {
     if (!selectedTenant) return;
     deleteTenantCredential(selectedTenant.id, credId);
+    
+    // Sync selectedTenant immediately
+    const freshTenant = tenants.find((t: any) => t.id === selectedTenant.id);
+    if (freshTenant) {
+      setSelectedTenant({ ...freshTenant });
+    }
+    
     triggerToast("Removed credential preset.");
   };
 
   // ─────────────────────────────────────────────────────────────────────────
 
   const isLight = theme === "light";
+  const activePresetsTenant = selectedTenant
+    ? (tenants.find((t: any) => t.id === selectedTenant.id) || selectedTenant)
+    : null;
 
   return (
     <div className={`flex min-h-screen font-sans ${isLight ? "bg-slate-100 text-slate-900" : "bg-black text-gray-100"}`}>
@@ -2574,22 +2593,25 @@ export default function AdminClientsPage() {
       )}
 
       {/* Credentials Preset Manager Modal */}
-      {showPresetsModal && selectedTenant && (
+      {showPresetsModal && activePresetsTenant && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 overflow-y-auto">
-          {/* ... preset modal content ... */}
-          <div className="bg-brand-dark-surface border border-purple-500/30 p-6 rounded-2xl w-full max-w-2xl shadow-2xl animate-fade-in-up font-sans">
-            <div className="flex justify-between items-center border-b border-brand-dark-border pb-3 mb-4">
+          <div className={`border p-6 rounded-2xl w-full max-w-2xl shadow-2xl animate-fade-in-up font-sans ${
+            isLight ? "bg-white border-slate-200 text-slate-900" : "bg-brand-dark-surface border-purple-500/30 text-gray-100"
+          }`}>
+            <div className={`flex justify-between items-center border-b pb-3 mb-4 ${
+              isLight ? "border-slate-200" : "border-brand-dark-border"
+            }`}>
               <div>
-                <h3 className="font-black text-white text-sm">
-                  Credentials presets for {selectedTenant.businessName}
+                <h3 className={`font-black text-sm ${isLight ? "text-slate-900" : "text-white"}`}>
+                  Credentials presets for {activePresetsTenant.businessName}
                 </h3>
-                <p className="text-[10px] text-gray-500">
+                <p className={`text-[10px] ${isLight ? "text-slate-500" : "text-gray-500"}`}>
                   Provide sharded developer/staff preset accounts for quick login testing.
                 </p>
               </div>
               <button
                 onClick={() => setShowPresetsModal(false)}
-                className="text-gray-400 hover:text-white"
+                className={isLight ? "text-slate-400 hover:text-slate-900" : "text-gray-400 hover:text-white"}
               >
                 <X size={18} />
               </button>
@@ -2599,19 +2621,21 @@ export default function AdminClientsPage() {
               {/* Form */}
               <form
                 onSubmit={handleSaveCredential}
-                className="md:col-span-2 bg-black/40 border border-brand-dark-border/80 p-4 rounded-xl space-y-3.5 text-xs"
+                className={`md:col-span-2 border p-4 rounded-xl space-y-3.5 text-xs ${
+                  isLight ? "bg-slate-50 border-slate-200" : "bg-black/40 border-brand-dark-border/80"
+                }`}
               >
-                <h4 className="text-white font-bold flex items-center gap-1.5">
+                <h4 className={`font-bold flex items-center gap-1.5 ${isLight ? "text-slate-900" : "text-white"}`}>
                   {credForm.id ? (
-                    <Edit2 size={12} className="text-brand-sky" />
+                    <Edit2 size={12} className="text-sky-500" />
                   ) : (
-                    <PlusCircle size={14} className="text-purple-400" />
+                    <PlusCircle size={14} className="text-purple-500" />
                   )}
                   <span>{credForm.id ? "Edit Preset" : "Add New Preset"}</span>
                 </h4>
 
                 <div className="space-y-1">
-                  <label className="block text-[9px] uppercase font-bold text-gray-400">
+                  <label className={`block text-[9px] uppercase font-bold ${isLight ? "text-slate-600" : "text-gray-400"}`}>
                     Account Label
                   </label>
                   <input
@@ -2622,12 +2646,14 @@ export default function AdminClientsPage() {
                     onChange={(e) =>
                       setCredForm({ ...credForm, label: e.target.value })
                     }
-                    className="w-full bg-black border border-brand-dark-border p-2 rounded text-white"
+                    className={`w-full border p-2 rounded ${
+                      isLight ? "bg-white border-slate-300 text-slate-900 placeholder-slate-400" : "bg-black border-brand-dark-border text-white"
+                    }`}
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block text-[9px] uppercase font-bold text-gray-400">
+                  <label className={`block text-[9px] uppercase font-bold ${isLight ? "text-slate-600" : "text-gray-400"}`}>
                     Staff Role Group
                   </label>
                   <select
@@ -2635,7 +2661,9 @@ export default function AdminClientsPage() {
                     onChange={(e) =>
                       setCredForm({ ...credForm, role: e.target.value as any })
                     }
-                    className="w-full bg-black border border-brand-dark-border p-2 rounded text-white"
+                    className={`w-full border p-2 rounded ${
+                      isLight ? "bg-white border-slate-300 text-slate-900" : "bg-black border-brand-dark-border text-white"
+                    }`}
                   >
                     <option value="Owner">Owner (Full ERP)</option>
                     <option value="Manager">Manager</option>
@@ -2646,7 +2674,7 @@ export default function AdminClientsPage() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block text-[9px] uppercase font-bold text-gray-400">
+                  <label className={`block text-[9px] uppercase font-bold ${isLight ? "text-slate-600" : "text-gray-400"}`}>
                     Email Address
                   </label>
                   <input
@@ -2657,12 +2685,14 @@ export default function AdminClientsPage() {
                     onChange={(e) =>
                       setCredForm({ ...credForm, email: e.target.value })
                     }
-                    className="w-full bg-black border border-brand-dark-border p-2 rounded text-white"
+                    className={`w-full border p-2 rounded ${
+                      isLight ? "bg-white border-slate-300 text-slate-900 placeholder-slate-400" : "bg-black border-brand-dark-border text-white"
+                    }`}
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block text-[9px] uppercase font-bold text-gray-400">
+                  <label className={`block text-[9px] uppercase font-bold ${isLight ? "text-slate-600" : "text-gray-400"}`}>
                     Login Username (Optional)
                   </label>
                   <input
@@ -2672,12 +2702,14 @@ export default function AdminClientsPage() {
                     onChange={(e) =>
                       setCredForm({ ...credForm, username: e.target.value.toLowerCase().replace(/[^a-z0-9._-]/g, '') })
                     }
-                    className="w-full bg-black border border-brand-dark-border p-2 rounded text-white font-mono"
+                    className={`w-full border p-2 rounded font-mono ${
+                      isLight ? "bg-white border-slate-300 text-slate-900 placeholder-slate-400" : "bg-black border-brand-dark-border text-white"
+                    }`}
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block text-[9px] uppercase font-bold text-gray-400">
+                  <label className={`block text-[9px] uppercase font-bold ${isLight ? "text-slate-600" : "text-gray-400"}`}>
                     Preset Password
                   </label>
                   <input
@@ -2688,13 +2720,15 @@ export default function AdminClientsPage() {
                     onChange={(e) =>
                       setCredForm({ ...credForm, pass: e.target.value })
                     }
-                    className="w-full bg-black border border-brand-dark-border p-2 rounded text-white"
+                    className={`w-full border p-2 rounded font-mono font-bold ${
+                      isLight ? "bg-white border-slate-300 text-slate-900 placeholder-slate-400" : "bg-black border-brand-dark-border text-white"
+                    }`}
                   />
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded flex items-center justify-center gap-1.5 transition"
+                  className="w-full py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded flex items-center justify-center gap-1.5 transition shadow"
                 >
                   <Save size={12} />
                   <span>{credForm.id ? "Save Changes" : "Create Preset"}</span>
@@ -2713,7 +2747,9 @@ export default function AdminClientsPage() {
                         role: "Owner",
                       })
                     }
-                    className="w-full py-1.5 bg-brand-dark-border hover:bg-brand-dark-border/80 text-gray-300 font-bold rounded transition"
+                    className={`w-full py-1.5 border font-bold rounded transition ${
+                      isLight ? "bg-slate-200 border-slate-300 text-slate-800 hover:bg-slate-300" : "bg-brand-dark-border hover:bg-brand-dark-border/80 text-gray-300"
+                    }`}
                   >
                     Reset Form
                   </button>
@@ -2722,36 +2758,42 @@ export default function AdminClientsPage() {
 
               {/* Presets List */}
               <div className="md:col-span-3 space-y-3">
-                <h4 className="text-gray-400 uppercase tracking-wider text-[9px] font-black">
+                <h4 className={`uppercase tracking-wider text-[9px] font-black ${
+                  isLight ? "text-slate-600" : "text-gray-400"
+                }`}>
                   Active Presets Directory
                 </h4>
                 <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
-                  {!selectedTenant.credentialPresets ||
-                  selectedTenant.credentialPresets.length === 0 ? (
-                    <p className="text-[10px] text-gray-500 italic py-6 text-center">
+                  {!activePresetsTenant.credentialPresets ||
+                  activePresetsTenant.credentialPresets.length === 0 ? (
+                    <p className={`text-[10px] italic py-6 text-center ${isLight ? "text-slate-400" : "text-gray-500"}`}>
                       No credential presets linked to this database shard.
                     </p>
                   ) : (
-                    selectedTenant.credentialPresets.map((pre: any) => (
+                    activePresetsTenant.credentialPresets.map((pre: any) => (
                       <div
                         key={pre.id}
-                        className="bg-brand-dark-surface/60 border border-brand-dark-border/80 p-3 rounded-lg flex items-center justify-between gap-4 font-mono text-[10px]"
+                        className={`border p-3 rounded-lg flex items-center justify-between gap-4 font-mono text-[10px] ${
+                          isLight ? "bg-slate-50 border-slate-200 text-slate-900" : "bg-brand-dark-surface/60 border-brand-dark-border/80 text-gray-100"
+                        }`}
                       >
                         <div>
-                          <div className="font-sans font-bold text-white text-[11px]">
+                          <div className={`font-sans font-bold text-[11px] ${isLight ? "text-slate-900" : "text-white"}`}>
                             {pre.label}
                           </div>
-                          <div className="text-[9px] text-purple-400 font-bold uppercase mt-0.5">
+                          <div className="text-[9px] text-purple-500 font-bold uppercase mt-0.5">
                             {pre.role}
                           </div>
-                          <div className="text-gray-400 mt-1">E: {pre.email}</div>
-                          {pre.username && <div className="text-sky-400">U: {pre.username}</div>}
-                          <div className="text-gray-500">P: {pre.pass}</div>
+                          <div className={`mt-1 ${isLight ? "text-slate-500" : "text-gray-400"}`}>E: {pre.email}</div>
+                          {pre.username && <div className="text-sky-500 font-bold">U: {pre.username}</div>}
+                          <div className="text-emerald-500 font-bold">P: {pre.pass}</div>
                         </div>
                         <div className="flex gap-1">
                           <button
                             onClick={() => handleEditCredential(pre)}
-                            className="p-1 bg-brand-dark-border hover:bg-brand-sky/20 text-gray-300 hover:text-brand-sky rounded transition"
+                            className={`p-1 border rounded transition ${
+                              isLight ? "bg-white border-slate-300 text-slate-700 hover:bg-slate-100" : "bg-brand-dark-border text-gray-300 hover:text-white"
+                            }`}
                             title="Edit"
                           >
                             <Edit2 size={10} />
