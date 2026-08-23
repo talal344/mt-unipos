@@ -17,8 +17,13 @@ export function proxy(request: NextRequest) {
     currentSubdomain = hostname.replace('.localhost', '').split(':')[0]
   }
 
-  // If no subdomain or 'www', serve main landing page as normal
-  if (!currentSubdomain || currentSubdomain === 'www') {
+  // Strip 'www' if present
+  if (currentSubdomain === 'www') {
+    currentSubdomain = null
+  }
+
+  // If no subdomain, serve main landing page
+  if (!currentSubdomain) {
     return NextResponse.next()
   }
 
@@ -30,7 +35,49 @@ export function proxy(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Subdomain mapping table
+  const sub = currentSubdomain.toLowerCase()
+
+  // 1. POS Subdomain (pos.mtmodulix.com)
+  if (sub === 'pos') {
+    if (path === '/' || path === '/dashboard') {
+      url.pathname = '/pos'
+      return NextResponse.rewrite(url)
+    }
+  }
+
+  // 2. HRMS Subdomain (hrms.mtmodulix.com)
+  if (sub === 'hrms') {
+    if (path === '/' || path === '/dashboard') {
+      url.pathname = '/hrms'
+      return NextResponse.rewrite(url)
+    }
+  }
+
+  // 3. SMS / School Subdomain (school.mtmodulix.com / sms.mtmodulix.com)
+  if (sub === 'sms' || sub === 'school') {
+    if (path === '/' || path === '/dashboard') {
+      url.pathname = '/sms'
+      return NextResponse.rewrite(url)
+    }
+  }
+
+  // 4. Admin Subdomain (admin.mtmodulix.com)
+  if (sub === 'admin') {
+    if (path === '/' || path === '/dashboard') {
+      url.pathname = '/admin/dashboard'
+      return NextResponse.rewrite(url)
+    }
+  }
+
+  // 5. Central App Dashboard (app.mtmodulix.com)
+  if (sub === 'app') {
+    if (path === '/' || path === '/dashboard') {
+      url.pathname = '/dashboard'
+      return NextResponse.rewrite(url)
+    }
+  }
+
+  // Generic Subdomain Mapping Fallback
   const subdomainRoutes: Record<string, string> = {
     pos: '/pos',
     hrms: '/hrms',
@@ -45,14 +92,10 @@ export function proxy(request: NextRequest) {
     restaurant: '/restaurant',
   }
 
-  const targetFolder = subdomainRoutes[currentSubdomain.toLowerCase()]
-
-  if (targetFolder) {
-    // If path is not already prefixed with targetFolder
-    if (!path.startsWith(targetFolder)) {
-      url.pathname = `${targetFolder}${path === '/' ? '' : path}`
-      return NextResponse.rewrite(url)
-    }
+  const targetFolder = subdomainRoutes[sub]
+  if (targetFolder && !path.startsWith(targetFolder)) {
+    url.pathname = `${targetFolder}${path === '/' ? '' : path}`
+    return NextResponse.rewrite(url)
   }
 
   return NextResponse.next()
