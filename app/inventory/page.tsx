@@ -195,17 +195,25 @@ export default function InventoryPage() {
                         <div className="flex gap-2 justify-center">
                           <button
                             onClick={() => setActiveAdjustProduct(prod)}
-                            className="p-1.5 bg-brand-dark-border hover:bg-brand-sky/20 text-gray-300 hover:text-white rounded transition text-[10px] font-bold"
+                            className={`px-3 py-1.5 rounded-lg border transition text-[10px] font-bold ${
+                              isLight
+                                ? "bg-slate-100 border-slate-300 text-slate-700 hover:bg-sky-50 hover:border-sky-300 hover:text-sky-600 shadow-xs"
+                                : "bg-brand-dark-border border-transparent hover:bg-brand-sky/20 text-gray-300 hover:text-white"
+                            }`}
                             title="Adjust stock quantity"
                           >
                             Adjust
                           </button>
                           <button
                             onClick={() => setActiveTransferProduct(prod)}
-                            className="p-1.5 bg-brand-dark-border hover:bg-purple-600/30 text-gray-300 hover:text-white rounded transition text-[10px] font-bold flex items-center gap-1"
+                            className={`px-3 py-1.5 rounded-lg border transition text-[10px] font-bold flex items-center gap-1.5 ${
+                              isLight
+                                ? "bg-slate-100 border-slate-300 text-slate-700 hover:bg-purple-50 hover:border-purple-300 hover:text-purple-600 shadow-xs"
+                                : "bg-brand-dark-border border-transparent hover:bg-purple-600/30 text-gray-300 hover:text-white"
+                            }`}
                             title="Disburse to branch"
                           >
-                            <ArrowLeftRight size={10} />
+                            <ArrowLeftRight size={11} />
                             Transfer
                           </button>
                         </div>

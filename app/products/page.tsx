@@ -781,7 +781,7 @@ export default function ProductsPage() {
                       </span>
                     </td>
                     <td className="p-4">
-                      <div className="flex gap-2 justify-center">
+                      <div className="flex gap-1.5 justify-center">
                         <button
                           onClick={() => {
                             setSelectedProductIds(prev => {
@@ -790,28 +790,46 @@ export default function ProductsPage() {
                               return n;
                             });
                           }}
-                          className={`p-1.5 rounded transition ${selectedProductIds.has(prod.id) ? "bg-brand-sky text-black" : "bg-brand-dark-border text-gray-500 hover:text-white"}`}
+                          className={`p-1.5 rounded-lg border transition ${
+                            selectedProductIds.has(prod.id)
+                              ? "bg-brand-sky text-black border-brand-sky font-bold"
+                              : isLight
+                                ? "bg-slate-100 border-slate-300 text-slate-700 hover:bg-slate-200 shadow-xs"
+                                : "bg-brand-dark-border border-transparent text-gray-500 hover:text-white"
+                          }`}
                           title="Select for Label Print / Bulk Actions"
                         >
                           <Printer size={12} />
                         </button>
                         <button
                           onClick={() => handleOpenEdit(prod)}
-                          className="p-1.5 bg-brand-dark-border hover:bg-brand-sky/20 text-gray-300 hover:text-brand-sky rounded transition"
+                          className={`p-1.5 rounded-lg border transition ${
+                            isLight
+                              ? "bg-slate-100 border-slate-300 text-slate-700 hover:bg-sky-50 hover:border-sky-300 hover:text-sky-600 shadow-xs"
+                              : "bg-brand-dark-border border-transparent hover:bg-brand-sky/20 text-gray-300 hover:text-brand-sky"
+                          }`}
                           title="Edit Product"
                         >
                           <Edit2 size={12} />
                         </button>
                         <button
                           onClick={() => setBatchViewProduct(prod)}
-                          className="p-1.5 bg-brand-dark-border hover:bg-purple-500/20 text-gray-400 hover:text-purple-400 rounded transition"
+                          className={`p-1.5 rounded-lg border transition ${
+                            isLight
+                              ? "bg-slate-100 border-slate-300 text-slate-700 hover:bg-purple-50 hover:border-purple-300 hover:text-purple-600 shadow-xs"
+                              : "bg-brand-dark-border border-transparent hover:bg-purple-500/20 text-gray-400 hover:text-purple-400"
+                          }`}
                           title="View FIFO Batches"
                         >
                           <Layers size={12} />
                         </button>
                         <button
                           onClick={() => setActiveBarcode(prod)}
-                          className="p-1.5 bg-brand-dark-border hover:bg-brand-sky/20 text-gray-300 hover:text-white rounded transition"
+                          className={`p-1.5 rounded-lg border transition ${
+                            isLight
+                              ? "bg-slate-100 border-slate-300 text-slate-700 hover:bg-sky-50 hover:border-sky-300 hover:text-sky-600 shadow-xs"
+                              : "bg-brand-dark-border border-transparent hover:bg-brand-sky/20 text-gray-300 hover:text-white"
+                          }`}
                           title="View Barcode Label"
                         >
                           <Barcode size={12} />
@@ -823,7 +841,11 @@ export default function ProductsPage() {
                               triggerToast("🗑️ Product deleted successfully.");
                             }
                           }}
-                          className="p-1.5 bg-brand-dark-border hover:bg-red-600/20 text-gray-400 hover:text-red-400 rounded transition"
+                          className={`p-1.5 rounded-lg border transition ${
+                            isLight
+                              ? "bg-slate-100 border-slate-300 text-slate-700 hover:bg-red-50 hover:border-red-300 hover:text-red-600 shadow-xs"
+                              : "bg-brand-dark-border border-transparent hover:bg-red-600/20 text-gray-400 hover:text-red-400"
+                          }`}
                           title="Delete Product"
                         >
                           <Trash2 size={12} />

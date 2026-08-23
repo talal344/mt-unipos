@@ -1993,78 +1993,92 @@ export default function ClientDashboardPage() {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
 
               {/* Revenue + sparkline */}
-              <div onClick={() => setActiveReportModal("revenue")} className="bg-emerald-500/10 border border-emerald-500/25 p-4 rounded-xl space-y-2 cursor-pointer hover:bg-emerald-500/20 transition group">
+              <div onClick={() => setActiveReportModal("revenue")} className={`border p-4 rounded-xl space-y-2 cursor-pointer transition group shadow-xs ${
+                isLight ? "bg-emerald-50/80 border-emerald-300 hover:bg-emerald-100/70" : "bg-emerald-500/10 border-emerald-500/25 hover:bg-emerald-500/20"
+              }`}>
                 <div className="flex justify-between items-center">
-                  <span className="text-[10px] uppercase font-bold tracking-wider text-gray-400">Revenue</span>
-                  <TrendingUp size={14} className="text-emerald-400" />
+                  <span className={`text-[10px] uppercase font-bold tracking-wider ${isLight ? "text-emerald-800" : "text-gray-400"}`}>Revenue</span>
+                  <TrendingUp size={14} className={isLight ? "text-emerald-600" : "text-emerald-400"} />
                 </div>
-                <div className="text-xl font-black text-white font-mono">{currencySymbol} {totalRevenue.toLocaleString(undefined,{maximumFractionDigits:0})}</div>
-                <Sparkline values={sparkline7} color="#10b981" />
-                <p className="text-[9px] text-gray-500">{totalSalesCount} transactions</p>
+                <div className={`text-xl font-black font-mono ${isLight ? "text-slate-900" : "text-white"}`}>{currencySymbol} {totalRevenue.toLocaleString(undefined,{maximumFractionDigits:0})}</div>
+                <Sparkline values={sparkline7} color={isLight ? "#059669" : "#10b981"} />
+                <p className={`text-[9px] font-medium ${isLight ? "text-slate-600" : "text-gray-500"}`}>{totalSalesCount} transactions</p>
               </div>
 
               {/* Gross Profit */}
-              <div onClick={() => setActiveReportModal("gross_profit")} className="bg-brand-sky/10 border border-brand-sky/25 p-4 rounded-xl space-y-2 cursor-pointer hover:bg-brand-sky/20 transition group">
+              <div onClick={() => setActiveReportModal("gross_profit")} className={`border p-4 rounded-xl space-y-2 cursor-pointer transition group shadow-xs ${
+                isLight ? "bg-sky-50/80 border-sky-300 hover:bg-sky-100/70" : "bg-brand-sky/10 border-brand-sky/25 hover:bg-brand-sky/20"
+              }`}>
                 <div className="flex justify-between items-center">
-                  <span className="text-[10px] uppercase font-bold tracking-wider text-gray-400">Gross Profit</span>
-                  <ArrowUpRight size={14} className="text-brand-sky" />
+                  <span className={`text-[10px] uppercase font-bold tracking-wider ${isLight ? "text-sky-800" : "text-gray-400"}`}>Gross Profit</span>
+                  <ArrowUpRight size={14} className={isLight ? "text-sky-600" : "text-brand-sky"} />
                 </div>
-                <div className={`text-xl font-black font-mono ${grossProfit >= 0 ? 'text-brand-sky' : 'text-red-400'}`}>
+                <div className={`text-xl font-black font-mono ${grossProfit >= 0 ? (isLight ? 'text-slate-900' : 'text-brand-sky') : 'text-red-500'}`}>
                   {currencySymbol} {Math.abs(grossProfit).toLocaleString(undefined,{maximumFractionDigits:0})}
                 </div>
                 <div className="flex items-center gap-1 mt-1">
                   <span className={`text-[9px] px-1.5 py-0.5 rounded font-black font-mono ${
-                    grossMarginPct >= 30 ? 'bg-emerald-500/15 text-emerald-400' :
-                    grossMarginPct >= 15 ? 'bg-amber-500/15 text-amber-400' :
-                    'bg-red-500/15 text-red-400'
+                    grossMarginPct >= 30 
+                      ? isLight ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-emerald-500/15 text-emerald-400'
+                      : grossMarginPct >= 15 
+                        ? isLight ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-amber-500/15 text-amber-400'
+                        : isLight ? 'bg-red-100 text-red-800 border border-red-200' : 'bg-red-500/15 text-red-400'
                   }`}>{grossMarginPct.toFixed(1)}% margin</span>
                 </div>
-                <p className="text-[9px] text-gray-500">Revenue − COGS</p>
+                <p className={`text-[9px] font-medium ${isLight ? "text-slate-600" : "text-gray-500"}`}>Revenue − COGS</p>
               </div>
 
               {/* Net Profit */}
-              <div onClick={() => setActiveReportModal("net_profit")} className={`border p-4 rounded-xl space-y-2 cursor-pointer hover:opacity-90 transition group ${
-                netProfit >= 0 ? 'bg-purple-500/10 border-purple-500/25' : 'bg-red-500/10 border-red-500/25'
+              <div onClick={() => setActiveReportModal("net_profit")} className={`border p-4 rounded-xl space-y-2 cursor-pointer hover:opacity-90 transition group shadow-xs ${
+                netProfit >= 0 
+                  ? isLight ? 'bg-purple-50/80 border-purple-300' : 'bg-purple-500/10 border-purple-500/25' 
+                  : isLight ? 'bg-red-50/80 border-red-300' : 'bg-red-500/10 border-red-500/25'
               }`}>
                 <div className="flex justify-between items-center">
-                  <span className="text-[10px] uppercase font-bold tracking-wider text-gray-400">Net Profit</span>
-                  <DollarSign size={14} className={netProfit >= 0 ? 'text-purple-400' : 'text-red-400'} />
+                  <span className={`text-[10px] uppercase font-bold tracking-wider ${isLight ? (netProfit >= 0 ? "text-purple-800" : "text-red-800") : "text-gray-400"}`}>Net Profit</span>
+                  <DollarSign size={14} className={netProfit >= 0 ? (isLight ? 'text-purple-600' : 'text-purple-400') : 'text-red-500'} />
                 </div>
-                <div className={`text-xl font-black font-mono ${netProfit >= 0 ? 'text-purple-400' : 'text-red-400'}`}>
+                <div className={`text-xl font-black font-mono ${netProfit >= 0 ? (isLight ? 'text-purple-900' : 'text-purple-400') : 'text-red-500'}`}>
                   {netProfit < 0 ? '-' : ''}{currencySymbol} {Math.abs(netProfit).toLocaleString(undefined,{maximumFractionDigits:0})}
                 </div>
-                <p className="text-[9px] text-gray-500">Realized Cash (Excludes Dues {currencySymbol} {totalOutstandingDues.toLocaleString()} &amp; Exp {currencySymbol} {totalExpenses.toLocaleString()})</p>
+                <p className={`text-[9px] font-medium ${isLight ? "text-slate-600" : "text-gray-500"}`}>Realized Cash (Excludes Dues {currencySymbol} {totalOutstandingDues.toLocaleString()} &amp; Exp {currencySymbol} {totalExpenses.toLocaleString()})</p>
               </div>
 
               {/* Stock Valuation */}
-              <div onClick={() => setActiveReportModal("stock_value")} className="bg-amber-500/10 border border-amber-500/25 p-4 rounded-xl space-y-2 cursor-pointer hover:bg-amber-500/20 transition group">
+              <div onClick={() => setActiveReportModal("stock_value")} className={`border p-4 rounded-xl space-y-2 cursor-pointer transition group shadow-xs ${
+                isLight ? "bg-amber-50/80 border-amber-300 hover:bg-amber-100/70" : "bg-amber-500/10 border-amber-500/25 hover:bg-amber-500/20"
+              }`}>
                 <div className="flex justify-between items-center">
-                  <span className="text-[10px] uppercase font-bold tracking-wider text-gray-400">Stock Value</span>
-                  <Database size={14} className="text-amber-400" />
+                  <span className={`text-[10px] uppercase font-bold tracking-wider ${isLight ? "text-amber-800" : "text-gray-400"}`}>Stock Value</span>
+                  <Database size={14} className={isLight ? "text-amber-600" : "text-amber-400"} />
                 </div>
-                <div className="text-xl font-black text-amber-400 font-mono">{currencySymbol} {totalStockValue.toLocaleString(undefined,{maximumFractionDigits:0})}</div>
-                <p className="text-[9px] text-gray-500">{products.length} SKUs in catalog</p>
+                <div className={`text-xl font-black font-mono ${isLight ? "text-slate-900" : "text-amber-400"}`}>{currencySymbol} {totalStockValue.toLocaleString(undefined,{maximumFractionDigits:0})}</div>
+                <p className={`text-[9px] font-medium ${isLight ? "text-slate-600" : "text-gray-500"}`}>{products.length} SKUs in catalog</p>
               </div>
 
               {/* Customer Wallet Liabilities */}
               <div 
                 onClick={() => setShowWalletModal(true)}
-                className="bg-purple-500/10 border border-purple-500/25 p-4 rounded-xl space-y-2 cursor-pointer hover:bg-purple-500/15 transition group"
+                className={`border p-4 rounded-xl space-y-2 cursor-pointer transition group shadow-xs ${
+                  isLight ? "bg-purple-50/80 border-purple-300 hover:bg-purple-100/70" : "bg-purple-500/10 border-purple-500/25 hover:bg-purple-500/15"
+                }`}
               >
                 <div className="flex justify-between items-center">
-                  <span className="text-[10px] uppercase font-bold tracking-wider text-gray-400">Wallet Liabilities</span>
-                  <Wallet size={14} className="text-purple-400 group-hover:scale-110 transition-transform" />
+                  <span className={`text-[10px] uppercase font-bold tracking-wider ${isLight ? "text-purple-800" : "text-gray-400"}`}>Wallet Liabilities</span>
+                  <Wallet size={14} className={`${isLight ? "text-purple-600" : "text-purple-400"} group-hover:scale-110 transition-transform`} />
                 </div>
-                <div className="text-xl font-black text-purple-400 font-mono">{currencySymbol} {totalWalletLiability.toLocaleString(undefined,{maximumFractionDigits:0})}</div>
-                <p className="text-[9px] text-purple-400/80 font-bold">{walletCustomers.length} customers with store credit &rarr;</p>
+                <div className={`text-xl font-black font-mono ${isLight ? "text-purple-900" : "text-purple-400"}`}>{currencySymbol} {totalWalletLiability.toLocaleString(undefined,{maximumFractionDigits:0})}</div>
+                <p className={`text-[9px] font-bold ${isLight ? "text-purple-700" : "text-purple-400/80"}`}>{walletCustomers.length} customers with store credit &rarr;</p>
               </div>
 
               {/* Total Cash in Drawer (All Counters) */}
               <div 
-                className="bg-emerald-500/10 border border-emerald-500/25 p-4 rounded-xl space-y-2 cursor-pointer hover:bg-emerald-500/20 transition group relative"
+                className={`border p-4 rounded-xl space-y-2 cursor-pointer transition group relative shadow-xs ${
+                  isLight ? "bg-emerald-50/80 border-emerald-300 hover:bg-emerald-100/70" : "bg-emerald-500/10 border-emerald-500/25 hover:bg-emerald-500/20"
+                }`}
               >
                 <div className="flex justify-between items-center">
-                  <span className="text-[10px] uppercase font-bold tracking-wider text-gray-400">Total Drawer Cash</span>
+                  <span className={`text-[10px] uppercase font-bold tracking-wider ${isLight ? "text-emerald-800" : "text-gray-400"}`}>Total Drawer Cash</span>
                   <div className="flex items-center gap-1.5">
                     <button
                       onClick={(e) => {
@@ -2079,11 +2093,11 @@ export default function ClientDashboardPage() {
                     >
                       💸 Cash Out
                     </button>
-                    <Banknote size={14} className="text-emerald-400 group-hover:scale-110 transition-transform" />
+                    <Banknote size={14} className={`${isLight ? "text-emerald-600" : "text-emerald-400"} group-hover:scale-110 transition-transform`} />
                   </div>
                 </div>
-                <div onClick={() => setActiveReportModal("cash_drawers")} className="text-xl font-black text-emerald-400 font-mono">{currencySymbol} {totalStoreDrawerCash.toLocaleString(undefined,{maximumFractionDigits:0})}</div>
-                <p onClick={() => setActiveReportModal("cash_drawers")} className="text-[9px] text-emerald-400/80 font-bold">{posCounters.filter(c => c.status === "Active").length} active counter drawers &rarr;</p>
+                <div onClick={() => setActiveReportModal("cash_drawers")} className={`text-xl font-black font-mono ${isLight ? "text-emerald-900" : "text-emerald-400"}`}>{currencySymbol} {totalStoreDrawerCash.toLocaleString(undefined,{maximumFractionDigits:0})}</div>
+                <p onClick={() => setActiveReportModal("cash_drawers")} className={`text-[9px] font-bold ${isLight ? "text-emerald-700" : "text-emerald-400/80"}`}>{posCounters.filter(c => c.status === "Active").length} active counter drawers &rarr;</p>
               </div>
             </div>
 

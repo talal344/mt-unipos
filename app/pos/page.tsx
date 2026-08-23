@@ -1864,22 +1864,32 @@ export default function PosPage() {
       ══════════════════════════════════════════════════════════════════════ */}
       {showCheckoutModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4">
-          <div className="bg-brand-dark-surface border border-brand-sky/30 p-6 rounded-2xl max-w-md w-full shadow-2xl animate-fade-in-up font-sans">
-            <div className="flex justify-between items-center border-b border-brand-dark-border pb-3 mb-4">
+          <div className={`${
+            isLight ? "bg-white border-slate-200 shadow-2xl text-slate-900" : "bg-brand-dark-surface border-brand-sky/30 text-white"
+          } border p-6 rounded-2xl max-w-md w-full shadow-2xl animate-fade-in-up font-sans`}>
+            <div className={`flex justify-between items-center border-b pb-3 mb-4 ${isLight ? "border-slate-200" : "border-brand-dark-border"}`}>
               <div>
-                <h3 className="font-black text-white text-sm">POS Payment Gate</h3>
-                <p className="text-[9px] text-brand-sky">Finalizing sale transaction</p>
+                <h3 className={`font-black text-sm ${isLight ? "text-slate-900" : "text-white"}`}>POS Payment Gate</h3>
+                <p className={`text-[9px] font-bold ${isLight ? "text-sky-600" : "text-brand-sky"}`}>Finalizing sale transaction</p>
               </div>
-              <button onClick={() => setShowCheckoutModal(false)} className="text-gray-400 hover:text-white font-bold text-xs bg-brand-dark-border px-2 py-0.5 rounded">Cancel</button>
+              <button onClick={() => setShowCheckoutModal(false)} className={`font-bold text-xs px-2.5 py-1 rounded transition ${
+                isLight ? "bg-slate-100 border border-slate-300 text-slate-700 hover:bg-slate-200" : "text-gray-400 hover:text-white bg-brand-dark-border"
+              }`}>Cancel</button>
             </div>
 
             <form onSubmit={handleConfirmCheckout} className="space-y-4 text-xs">
               {/* Premium Single vs Split Toggle */}
-              <div className="flex bg-black rounded-lg p-0.5 border border-brand-dark-border/80 mb-2">
+              <div className={`flex rounded-lg p-0.5 border mb-2 ${
+                isLight ? "bg-slate-100 border-slate-300" : "bg-black border-brand-dark-border/80"
+              }`}>
                 <button
                   type="button"
                   onClick={() => setIsSplit(false)}
-                  className={`flex-grow py-2 text-[10px] uppercase tracking-wider text-center rounded-md font-black transition-all duration-200 ${!isSplit ? 'bg-brand-sky text-black' : 'text-gray-400 hover:text-white'}`}
+                  className={`flex-grow py-2 text-[10px] uppercase tracking-wider text-center rounded-md font-black transition-all duration-200 ${
+                    !isSplit 
+                      ? isLight ? 'bg-sky-600 text-white shadow-xs' : 'bg-brand-sky text-black' 
+                      : isLight ? 'text-slate-600 hover:text-slate-900' : 'text-gray-400 hover:text-white'
+                  }`}
                 >
                   Single Payment
                 </button>
@@ -1896,7 +1906,11 @@ export default function PosPage() {
                       "On Credit": ""
                     });
                   }}
-                  className={`flex-grow py-2 text-[10px] uppercase tracking-wider text-center rounded-md font-black transition-all duration-200 ${isSplit ? 'bg-brand-sky text-black' : 'text-gray-400 hover:text-white'}`}
+                  className={`flex-grow py-2 text-[10px] uppercase tracking-wider text-center rounded-md font-black transition-all duration-200 ${
+                    isSplit 
+                      ? isLight ? 'bg-sky-600 text-white shadow-xs' : 'bg-brand-sky text-black' 
+                      : isLight ? 'text-slate-600 hover:text-slate-900' : 'text-gray-400 hover:text-white'
+                  }`}
                 >
                   Split Payment
                 </button>
@@ -1904,7 +1918,7 @@ export default function PosPage() {
 
               {!isSplit ? (
                 <div>
-                  <label className="block text-[10px] uppercase font-bold text-gray-500 mb-2">Payment Method</label>
+                  <label className={`block text-[10px] uppercase font-bold mb-2 ${isLight ? "text-slate-600" : "text-gray-500"}`}>Payment Method</label>
                   <div className="grid grid-cols-3 gap-2">
                     {[
                       { id: "Cash", icon: DollarSign, label: "Cash" },
@@ -1917,34 +1931,47 @@ export default function PosPage() {
                     ].map(m => (
                       <button key={m.id} type="button"
                         onClick={() => { setPaymentMethod(m.id as any); if (m.id === "Cash") setAmountPaid(Math.ceil(cartGrandTotal).toString()); }}
-                        className={`p-2 rounded border flex items-center gap-1.5 transition ${
+                        className={`p-2 rounded-lg border flex items-center gap-1.5 transition ${
                           m.id === "On Credit"
-                            ? paymentMethod === m.id ? "bg-red-500/20 border-red-500 text-white" : "bg-black/60 border-red-500/30 text-red-400 hover:border-red-500/60"
+                            ? paymentMethod === m.id 
+                              ? isLight ? "bg-red-50 border-red-500 text-red-700 font-bold shadow-xs" : "bg-red-500/20 border-red-500 text-white" 
+                              : isLight ? "bg-slate-50 border-slate-200 text-red-600 hover:bg-red-50/50" : "bg-black/60 border-red-500/30 text-red-400 hover:border-red-500/60"
                             : m.id === "Store Wallet Credit"
-                              ? paymentMethod === m.id ? "bg-emerald-500/20 border-emerald-500 text-white" : "bg-black/60 border-emerald-500/30 text-emerald-400 hover:border-emerald-500/60"
-                              : paymentMethod === m.id ? "bg-brand-sky/15 border-brand-sky text-white" : "bg-black/60 border-brand-dark-border/80 text-gray-400 hover:border-brand-sky/20"
+                              ? paymentMethod === m.id 
+                                ? isLight ? "bg-emerald-50 border-emerald-500 text-emerald-800 font-bold shadow-xs" : "bg-emerald-500/20 border-emerald-500 text-white" 
+                                : isLight ? "bg-slate-50 border-slate-200 text-emerald-700 hover:bg-emerald-50/50" : "bg-black/60 border-emerald-500/30 text-emerald-400 hover:border-emerald-500/60"
+                              : paymentMethod === m.id 
+                                ? isLight ? "bg-sky-50 border-sky-500 text-sky-900 font-bold shadow-xs" : "bg-brand-sky/15 border-brand-sky text-white" 
+                                : isLight ? "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100" : "bg-black/60 border-brand-dark-border/80 text-gray-400 hover:border-brand-sky/20"
                         }`}
                       >
-                        <m.icon size={11} className={paymentMethod === m.id && m.id === "On Credit" ? "text-red-400" : paymentMethod === m.id && m.id === "Store Wallet Credit" ? "text-emerald-400" : paymentMethod === m.id ? "text-brand-sky" : ""} />
+                        <m.icon size={11} className={
+                          paymentMethod === m.id && m.id === "On Credit" ? "text-red-500" : 
+                          paymentMethod === m.id && m.id === "Store Wallet Credit" ? "text-emerald-500" : 
+                          paymentMethod === m.id ? (isLight ? "text-sky-600" : "text-brand-sky") : 
+                          (isLight ? "text-slate-400" : "")
+                        } />
                         <span className="text-[9px] font-bold">{m.label || m.id}</span>
                       </button>
                     ))}
                   </div>
 
                   {(paymentMethod === "Store Wallet Credit" || paymentMethod === "Store Wallet") && selectedCustomer === "Walk-in Customer" && (
-                    <div className="mt-2 text-[9px] text-red-400 bg-red-500/10 border border-red-500/20 rounded px-2 py-1.5">
+                    <div className="mt-2 text-[9px] text-red-500 bg-red-500/10 border border-red-500/20 rounded px-2 py-1.5 font-bold">
                       ⚠ Store Wallet payment requires a registered customer. Select a customer first.
                     </div>
                   )}
 
                   {(paymentMethod === "Store Wallet Credit" || paymentMethod === "Store Wallet") && selectedCustomer !== "Walk-in Customer" && (
-                    <div className="mt-2 text-[9px] bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded px-2.5 py-2 font-mono space-y-1">
+                    <div className={`mt-2 text-[9px] border rounded px-2.5 py-2 font-mono space-y-1 ${
+                      isLight ? "bg-emerald-50 border-emerald-300 text-emerald-800" : "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+                    }`}>
                       <div className="flex justify-between font-bold">
                         <span>💳 {selectedCustomer}&apos;s Store Wallet:</span>
                         <span>{currencySymbol} {selectedCustWalletBalance.toFixed(2)}</span>
                       </div>
                       {selectedCustWalletBalance < cartGrandTotal && (
-                        <div className="text-red-400 text-[9px]">
+                        <div className="text-red-500 text-[9px] font-bold">
                           ⚠️ Insufficient Wallet balance for full payment ({currencySymbol} {cartGrandTotal.toFixed(2)}). Use Split Payment to pay partial amount.
                         </div>
                       )}
@@ -1952,12 +1979,14 @@ export default function PosPage() {
                   )}
 
                   {paymentMethod === "On Credit" && selectedCustomer === "Walk-in Customer" && (
-                    <div className="mt-2 text-[9px] text-red-400 bg-red-500/10 border border-red-500/20 rounded px-2 py-1.5">
+                    <div className="mt-2 text-[9px] text-red-500 bg-red-500/10 border border-red-500/20 rounded px-2 py-1.5 font-bold">
                       ⚠ On Credit requires a registered customer. Select a customer first.
                     </div>
                   )}
                   {paymentMethod === "On Credit" && selectedCustomer !== "Walk-in Customer" && (
-                    <div className="mt-2 text-[9px] text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded px-2 py-1.5">
+                    <div className={`mt-2 text-[9px] border rounded px-2 py-1.5 font-bold ${
+                      isLight ? "bg-amber-50 border-amber-300 text-amber-800" : "text-amber-400 bg-amber-500/10 border-amber-500/20"
+                    }`}>
                       📋 This sale will be added to {selectedCustomer}&apos;s credit balance (due account).
                     </div>
                   )}
@@ -1965,7 +1994,7 @@ export default function PosPage() {
               ) : (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <label className="block text-[10px] uppercase font-bold text-gray-500">Split Breakdown</label>
+                    <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-slate-600" : "text-gray-500"}`}>Split Breakdown</label>
                     <div className="flex items-center gap-2">
                       {remainingSplit > 0 && (
                         <button
@@ -1978,33 +2007,39 @@ export default function PosPage() {
                               [targetKey]: (currentVal + remainingSplit).toFixed(2)
                             }));
                           }}
-                          className="text-[9px] bg-brand-sky/20 border border-brand-sky/40 text-brand-sky hover:bg-brand-sky hover:text-black font-bold px-2 py-0.5 rounded transition animate-pulse"
+                          className={`text-[9px] border font-bold px-2 py-0.5 rounded transition animate-pulse ${
+                            isLight 
+                              ? "bg-sky-50 border-sky-300 text-sky-700 hover:bg-sky-600 hover:text-white" 
+                              : "bg-brand-sky/20 border-brand-sky/40 text-brand-sky hover:bg-brand-sky hover:text-black"
+                          }`}
                         >
                           ⚡ Auto Balance ({currencySymbol} {remainingSplit.toFixed(2)})
                         </button>
                       )}
                       {selectedCustomer !== "Walk-in Customer" && (
-                        <span className="text-[9px] text-emerald-400 font-mono font-bold">
+                        <span className="text-[9px] text-emerald-600 font-mono font-bold">
                           💳 Wallet: {currencySymbol} {selectedCustWalletBalance.toFixed(2)}
                         </span>
                       )}
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-2.5 bg-black/40 p-3 rounded-xl border border-brand-dark-border/60">
+                  <div className={`grid grid-cols-2 gap-2.5 p-3 rounded-xl border ${
+                    isLight ? "bg-slate-50 border-slate-200" : "bg-black/40 border-brand-dark-border/60"
+                  }`}>
                     {[
-                      { id: "Cash", icon: DollarSign, color: "text-brand-sky" },
-                      { id: "Card", icon: CreditCard, color: "text-blue-400" },
-                      { id: "Bank Transfer", icon: Landmark, color: "text-purple-400" },
-                      { id: "EasyPaisa", icon: Wallet, color: "text-emerald-400" },
-                      { id: "JazzCash", icon: Wallet, color: "text-orange-400" },
-                      { id: "Store Wallet Credit", icon: Wallet, color: "text-emerald-400", label: "Store Wallet" },
-                      { id: "On Credit", icon: CreditCard, color: "text-red-400" }
+                      { id: "Cash", icon: DollarSign, color: isLight ? "text-sky-600" : "text-brand-sky" },
+                      { id: "Card", icon: CreditCard, color: "text-blue-500" },
+                      { id: "Bank Transfer", icon: Landmark, color: "text-purple-500" },
+                      { id: "EasyPaisa", icon: Wallet, color: "text-emerald-600" },
+                      { id: "JazzCash", icon: Wallet, color: "text-orange-500" },
+                      { id: "Store Wallet Credit", icon: Wallet, color: "text-emerald-600", label: "Store Wallet" },
+                      { id: "On Credit", icon: CreditCard, color: "text-red-500" }
                     ].map(m => {
                       const Icon = m.icon;
                       const isWallet = m.id === "Store Wallet Credit";
                       return (
                         <div key={m.id} className="space-y-1">
-                          <div className="flex items-center justify-between text-[9px] uppercase font-bold text-gray-400">
+                          <div className={`flex items-center justify-between text-[9px] uppercase font-bold ${isLight ? "text-slate-600" : "text-gray-400"}`}>
                             <div className="flex items-center gap-1">
                               <Icon size={10} className={m.color} />
                               <span>{m.label || m.id}</span>
@@ -2019,7 +2054,8 @@ export default function PosPage() {
                                     "Store Wallet Credit": applyAmt.toFixed(2)
                                   }));
                                 }}
-                                >
+                                className="text-[8px] text-emerald-600 hover:underline font-mono font-bold"
+                              >
                                 [Apply Max]
                               </button>
                             )}
@@ -2033,7 +2069,7 @@ export default function PosPage() {
                                     [m.id]: (currentVal + remainingSplit).toFixed(2)
                                   }));
                                 }}
-                                className="text-[8px] text-brand-sky hover:underline font-mono"
+                                className={`text-[8px] font-mono font-bold hover:underline ${isLight ? "text-sky-600" : "text-brand-sky"}`}
                               >
                                 [+ Remaining]
                               </button>
@@ -2050,19 +2086,23 @@ export default function PosPage() {
                                 [m.id]: val
                               }));
                             }}
-                            className="w-full bg-black border border-brand-dark-border hover:border-brand-sky/30 focus:border-brand-sky px-2.5 py-1.5 rounded-lg text-white font-mono text-xs focus:outline-none transition"
+                            className={`w-full border px-2.5 py-1.5 rounded-lg font-mono text-xs focus:outline-none transition ${
+                              isLight 
+                                ? "bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-sky-500 shadow-xs" 
+                                : "bg-black border-brand-dark-border hover:border-brand-sky/30 focus:border-brand-sky text-white"
+                            }`}
                           />
                         </div>
                       );
                     })}
                   </div>
                   {parsedSplits["Store Wallet Credit"] > 0 && selectedCustomer === "Walk-in Customer" && (
-                    <div className="text-[9px] text-red-400 bg-red-500/10 border border-red-500/20 rounded px-2 py-1.5">
+                    <div className="text-[9px] text-red-500 bg-red-500/10 border border-red-500/20 rounded px-2 py-1.5 font-bold">
                       ⚠ "Store Wallet Credit" split portion requires a registered customer.
                     </div>
                   )}
                   {parsedSplits["On Credit"] > 0 && selectedCustomer === "Walk-in Customer" && (
-                    <div className="text-[9px] text-red-400 bg-red-500/10 border border-red-500/20 rounded px-2 py-1.5">
+                    <div className="text-[9px] text-red-500 bg-red-500/10 border border-red-500/20 rounded px-2 py-1.5 font-bold">
                       ⚠ "On Credit" split portion requires a registered customer.
                     </div>
                   )}
@@ -2070,24 +2110,26 @@ export default function PosPage() {
               )}
 
               {/* Bill summary */}
-              <div className="bg-black/60 border border-brand-dark-border p-3.5 rounded-xl font-mono text-[10px] space-y-1">
-                <div className="flex justify-between"><span className="text-gray-500">Customer:</span><span className="text-white font-bold">{selectedCustomer}</span></div>
-                <div className="flex justify-between"><span className="text-gray-500">Items:</span><span className="text-white">{cart.length}</span></div>
-                <div className="flex justify-between"><span className="text-gray-500">Grand Total:</span><span className="text-brand-sky font-black">{currencySymbol} {cartGrandTotal.toFixed(2)}</span></div>
+              <div className={`p-3.5 rounded-xl font-mono text-[10px] space-y-1 border ${
+                isLight ? "bg-slate-50 border-slate-200 text-slate-800" : "bg-black/60 border-brand-dark-border text-white"
+              }`}>
+                <div className="flex justify-between"><span className={isLight ? "text-slate-500" : "text-gray-500"}>Customer:</span><span className={`font-bold ${isLight ? "text-slate-900" : "text-white"}`}>{selectedCustomer}</span></div>
+                <div className="flex justify-between"><span className={isLight ? "text-slate-500" : "text-gray-500"}>Items:</span><span className={`font-bold ${isLight ? "text-slate-900" : "text-white"}`}>{cart.length}</span></div>
+                <div className="flex justify-between"><span className={isLight ? "text-slate-500" : "text-gray-500"}>Grand Total:</span><span className="text-sky-600 font-black">{currencySymbol} {cartGrandTotal.toFixed(2)}</span></div>
                 {isSplit && (
                   <>
-                    <div className="flex justify-between border-t border-brand-dark-border/40 pt-1 mt-1">
-                      <span className="text-gray-500">Total Entered:</span>
-                      <span className="text-white font-black">{currencySymbol} {totalSplitEntered.toFixed(2)}</span>
+                    <div className={`flex justify-between border-t pt-1 mt-1 ${isLight ? "border-slate-200" : "border-brand-dark-border/40"}`}>
+                      <span className={isLight ? "text-slate-500" : "text-gray-500"}>Total Entered:</span>
+                      <span className={`font-black ${isLight ? "text-slate-900" : "text-white"}`}>{currencySymbol} {totalSplitEntered.toFixed(2)}</span>
                     </div>
                     {remainingSplit > 0 && (
-                      <div className="flex justify-between text-red-400 font-bold">
+                      <div className="flex justify-between text-red-500 font-bold">
                         <span>Remaining:</span>
                         <span>{currencySymbol} {remainingSplit.toFixed(2)}</span>
                       </div>
                     )}
                     {excessSplit > 0 && (
-                      <div className="flex justify-between text-emerald-400 font-bold">
+                      <div className="flex justify-between text-emerald-600 font-bold">
                         <span>Change (Cash):</span>
                         <span>{currencySymbol} {excessSplit.toFixed(2)}</span>
                       </div>
@@ -2097,7 +2139,7 @@ export default function PosPage() {
               </div>
 
               {isSplit && remainingSplit > 0 && (
-                <div className="bg-red-500/10 border border-red-500/30 p-2.5 rounded-xl text-[10px] text-red-400 font-bold flex items-center justify-between animate-shake">
+                <div className="bg-red-500/10 border border-red-500/30 p-2.5 rounded-xl text-[10px] text-red-500 font-bold flex items-center justify-between animate-shake">
                   <span>⚠️ Unpaid Remaining: {currencySymbol} {remainingSplit.toFixed(2)}</span>
                   <button
                     type="button"
@@ -2116,13 +2158,17 @@ export default function PosPage() {
               {/* Cash change */}
               {!isSplit && paymentMethod === "Cash" && (
                 <div className="space-y-1.5">
-                  <label className="block text-[10px] uppercase font-bold text-gray-400">Cash Received</label>
+                  <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-slate-600" : "text-gray-400"}`}>Cash Received</label>
                   <input type="number" required placeholder="Enter amount received" value={amountPaid}
                     onChange={e => setAmountPaid(e.target.value)}
-                    className="w-full bg-black border border-brand-dark-border p-3 rounded text-base text-brand-sky font-mono font-black focus:outline-none focus:border-brand-sky" />
+                    className={`w-full border p-3 rounded-xl text-base font-mono font-black focus:outline-none ${
+                      isLight ? "bg-white border-slate-300 text-sky-600 focus:border-sky-500 shadow-xs" : "bg-black border-brand-dark-border text-brand-sky focus:border-brand-sky"
+                    }`} />
                   {parseFloat(amountPaid) >= cartGrandTotal && (
-                    <div className="flex justify-between items-center bg-emerald-500/10 border border-emerald-500/20 p-2.5 rounded font-mono text-xs text-emerald-400">
-                      <span>Change:</span>
+                    <div className={`flex justify-between items-center border p-2.5 rounded-xl font-mono text-xs ${
+                      isLight ? "bg-emerald-50 border-emerald-300 text-emerald-800" : "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+                    }`}>
+                      <span className="font-bold">Change:</span>
                       <span className="font-black">{currencySymbol} {(parseFloat(amountPaid) - cartGrandTotal).toFixed(2)}</span>
                     </div>
                   )}
@@ -2130,16 +2176,18 @@ export default function PosPage() {
               )}
 
               {/* WhatsApp Receipt */}
-              <div className="space-y-1.5 pt-2 border-t border-brand-dark-border">
-                <label className="block text-[10px] uppercase font-bold text-gray-400">Digital Receipt (WhatsApp)</label>
+              <div className={`space-y-1.5 pt-2 border-t ${isLight ? "border-slate-200" : "border-brand-dark-border"}`}>
+                <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-slate-600" : "text-gray-400"}`}>Digital Receipt (WhatsApp)</label>
                 <div className="flex gap-2">
                   <input type="text" placeholder="+92 300 1234567 (Optional)" value={whatsappNumber}
                     onChange={e => setWhatsappNumber(e.target.value)}
-                    className="flex-1 bg-black border border-brand-dark-border p-2.5 rounded text-xs text-white focus:outline-none focus:border-emerald-500" />
+                    className={`flex-1 border p-2.5 rounded-lg text-xs focus:outline-none ${
+                      isLight ? "bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 shadow-xs" : "bg-black border-brand-dark-border text-white focus:border-emerald-500"
+                    }`} />
                 </div>
               </div>
 
-              <button type="submit" className="w-full py-3.5 bg-brand-sky hover:bg-brand-sky-light text-black font-black uppercase tracking-wider rounded-xl transition">
+              <button type="submit" className="w-full py-3.5 bg-brand-sky hover:bg-brand-sky-light text-black font-black uppercase tracking-wider rounded-xl transition shadow-lg shadow-brand-sky/15">
                 Dispatch Payment &amp; Log Sale
               </button>
             </form>
@@ -2152,27 +2200,31 @@ export default function PosPage() {
       ══════════════════════════════════════════════════════════════════════ */}
       {successReceipt && !showThermalModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 print:hidden">
-          <div className="bg-brand-dark-surface border border-brand-sky/30 p-6 rounded-2xl max-w-sm w-full shadow-2xl text-center space-y-4 animate-fade-in-up font-sans">
-            <CheckCircle2 size={44} className="text-emerald-400 mx-auto animate-pulse" />
+          <div className={`${
+            isLight ? "bg-white border-slate-200 shadow-2xl text-slate-900" : "bg-brand-dark-surface border-brand-sky/30 text-white"
+          } border p-6 rounded-2xl max-w-sm w-full shadow-2xl text-center space-y-4 animate-fade-in-up font-sans`}>
+            <CheckCircle2 size={44} className="text-emerald-500 mx-auto animate-pulse" />
             <div>
-              <h3 className="font-black text-white text-base">Checkout Complete!</h3>
-              <p className="text-[10px] text-gray-400">Inventory updated, ledger posted.</p>
+              <h3 className={`font-black text-base ${isLight ? "text-slate-900" : "text-white"}`}>Checkout Complete!</h3>
+              <p className={`text-[10px] ${isLight ? "text-slate-500" : "text-gray-400"}`}>Inventory updated, ledger posted.</p>
             </div>
-            <div className="bg-black/60 border border-brand-dark-border p-3 rounded font-mono text-[10px] text-left space-y-1">
-              <div>Receipt: <span className="text-white font-bold">{successReceipt.receiptNumber}</span></div>
-              <div>Customer: <span className="text-white font-bold">{successReceipt.customerName}</span></div>
-              <div>Total: <span className="text-brand-sky font-bold">{currencySymbol} {successReceipt.total.toFixed(2)}</span></div>
+            <div className={`p-3 rounded-xl font-mono text-[10px] text-left space-y-1 border ${
+              isLight ? "bg-slate-50 border-slate-200 text-slate-800" : "bg-black/60 border-brand-dark-border text-white"
+            }`}>
+              <div>Receipt: <span className={`font-bold ${isLight ? "text-purple-700" : "text-white"}`}>{successReceipt.receiptNumber}</span></div>
+              <div>Customer: <span className={`font-bold ${isLight ? "text-slate-900" : "text-white"}`}>{successReceipt.customerName}</span></div>
+              <div>Total: <span className="text-sky-600 font-bold">{currencySymbol} {successReceipt.total.toFixed(2)}</span></div>
             </div>
             <div className="grid grid-cols-3 gap-2 text-xs">
               <button onClick={() => setShowThermalModal(true)}
-                className="py-2.5 bg-brand-dark-surface border border-brand-sky hover:bg-brand-sky/10 text-white font-black uppercase rounded flex items-center justify-center gap-1 transition">
+                className={`py-2.5 border font-black uppercase rounded-lg flex items-center justify-center gap-1 transition ${
+                  isLight ? "bg-slate-100 border-slate-300 text-slate-700 hover:bg-slate-200 shadow-xs" : "bg-brand-dark-surface border-brand-sky hover:bg-brand-sky/10 text-white"
+                }`}>
                 <Printer size={13} /> View Slip
               </button>
               <button onClick={async () => {
-                  // Save receipt to Documents\MT Core folder + auto-print
                   try {
                     const { default: html2canvas } = await import("html2canvas-pro");
-                    // Build a temporary hidden slip to capture
                     const tempDiv = document.createElement("div");
                     tempDiv.style.cssText = "position:fixed;left:-9999px;top:0;width:302px;background:#fff;padding:10px;font-family:Arial,sans-serif;font-size:10px;z-index:-1;";
                     tempDiv.innerHTML = `<div style="text-align:center;padding:20px;font-size:11px;font-family:Arial">
@@ -2185,10 +2237,7 @@ export default function PosPage() {
                     document.body.appendChild(tempDiv);
                     const canvas = await html2canvas(tempDiv, { backgroundColor: "#ffffff", scale: 2, logging: false });
                     document.body.removeChild(tempDiv);
-                    const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
 
-
-                    // Open print window
                     const printWin = window.open("", "_blank", "width=420,height=600");
                     if (printWin) {
                       printWin.document.write(`<!DOCTYPE html><html><head><style>@page{size:80mm auto;margin:0}body{font-family:Arial;font-size:11px;padding:10px;width:80mm}</style></head><body>
@@ -2215,11 +2264,13 @@ export default function PosPage() {
                     setTimeout(() => setToastMsg(null), 3000);
                   }
                 }}
-                className="py-2.5 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase rounded flex items-center justify-center gap-1 transition">
+                className="py-2.5 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase rounded-lg flex items-center justify-center gap-1 transition shadow-xs">
                 <WifiOff size={13} /> Direct Print
               </button>
               <button onClick={() => setSuccessReceipt(null)}
-                className="py-2.5 bg-brand-dark-border hover:bg-brand-dark-border/70 text-white font-bold rounded">
+                className={`py-2.5 font-bold rounded-lg transition ${
+                  isLight ? "bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300" : "bg-brand-dark-border hover:bg-brand-dark-border/70 text-white"
+                }`}>
                 Close Register
               </button>
             </div>
@@ -2247,32 +2298,40 @@ export default function PosPage() {
       ══════════════════════════════════════════════════════════════════════ */}
       {showAddCustModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 font-sans">
-          <div className="bg-brand-dark-surface border border-brand-sky/30 p-6 rounded-2xl max-w-sm w-full shadow-2xl animate-fade-in-up">
-            <div className="flex justify-between items-center border-b border-brand-dark-border pb-3 mb-4">
-              <h3 className="font-black text-white text-sm flex items-center gap-2">
+          <div className={`${
+            isLight ? "bg-white border-slate-200 shadow-2xl text-slate-900" : "bg-brand-dark-surface border-brand-sky/30 text-white"
+          } border p-6 rounded-2xl max-w-sm w-full shadow-2xl animate-fade-in-up`}>
+            <div className={`flex justify-between items-center border-b pb-3 mb-4 ${isLight ? "border-slate-200" : "border-brand-dark-border"}`}>
+              <h3 className={`font-black text-sm flex items-center gap-2 ${isLight ? "text-slate-900" : "text-white"}`}>
                 <PlusCircle size={15} className="text-brand-sky" /> Register Loyalty Customer
               </h3>
-              <button onClick={() => setShowAddCustModal(false)}><X size={16} className="text-gray-400 hover:text-white" /></button>
+              <button onClick={() => setShowAddCustModal(false)}><X size={16} className={isLight ? "text-slate-400 hover:text-slate-900" : "text-gray-400 hover:text-white"} /></button>
             </div>
             <form onSubmit={handleAddCustSubmit} className="space-y-3 text-xs">
               <div>
-                <label className="block text-[9px] uppercase font-bold text-gray-400 mb-1">Customer Name</label>
+                <label className={`block text-[9px] uppercase font-bold mb-1 ${isLight ? "text-slate-600" : "text-gray-400"}`}>Customer Name</label>
                 <input type="text" required placeholder="e.g. Ahmed Raza" value={newCustName}
                   onChange={e => setNewCustName(e.target.value)}
-                  className="w-full bg-black border border-brand-dark-border p-2.5 rounded text-white focus:outline-none focus:border-brand-sky" />
+                  className={`w-full border p-2.5 rounded-lg focus:outline-none ${
+                    isLight ? "bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-sky-500" : "bg-black border-brand-dark-border text-white focus:border-brand-sky"
+                  }`} />
               </div>
               <div>
-                <label className="block text-[9px] uppercase font-bold text-gray-400 mb-1">Mobile Number</label>
+                <label className={`block text-[9px] uppercase font-bold mb-1 ${isLight ? "text-slate-600" : "text-gray-400"}`}>Mobile Number</label>
                 <input type="text" required placeholder="03xxxxxxxxx" value={newCustMobile}
                   onChange={e => setNewCustMobile(e.target.value)}
-                  className="w-full bg-black border border-brand-dark-border p-2.5 rounded text-white focus:outline-none focus:border-brand-sky font-mono" />
+                  className={`w-full border p-2.5 rounded-lg font-mono focus:outline-none ${
+                    isLight ? "bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-sky-500" : "bg-black border-brand-dark-border text-white focus:border-brand-sky"
+                  }`} />
               </div>
-              <div className="bg-brand-sky/5 border border-brand-sky/15 p-2.5 rounded text-[9px] text-gray-400">
+              <div className={`p-2.5 rounded text-[9px] border ${
+                isLight ? "bg-sky-50 border-sky-200 text-sky-800" : "bg-brand-sky/5 border-brand-sky/15 text-gray-400"
+              }`}>
                 <Star size={9} className="text-yellow-400 fill-yellow-400 inline mr-1" />
                 Loyalty points start at 0. Earned automatically per purchase.
               </div>
               <button type="submit"
-                className="w-full py-2.5 bg-brand-sky hover:bg-brand-sky-light text-black font-black uppercase rounded transition">
+                className="w-full py-2.5 bg-brand-sky hover:bg-brand-sky-light text-black font-black uppercase rounded-lg transition shadow-xs">
                 Register &amp; Select
               </button>
             </form>
@@ -2285,20 +2344,22 @@ export default function PosPage() {
       ══════════════════════════════════════════════════════════════════════ */}
       {showReturnModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 font-sans">
-          <div className="bg-[#0d0d0d] border border-amber-500/30 p-6 rounded-2xl w-full max-w-lg shadow-2xl animate-fade-in-up">
+          <div className={`${
+            isLight ? "bg-white border-slate-200 shadow-2xl text-slate-900" : "bg-[#0d0d0d] border-amber-500/30 text-white"
+          } border p-6 rounded-2xl w-full max-w-lg shadow-2xl animate-fade-in-up`}>
 
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-brand-dark-border pb-3 mb-5">
+            <div className={`flex items-center justify-between border-b pb-3 mb-5 ${isLight ? "border-slate-200" : "border-brand-dark-border"}`}>
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center">
-                  <RotateCcw size={14} className="text-amber-400" />
+                  <RotateCcw size={14} className="text-amber-500" />
                 </div>
                 <div>
-                  <h3 className="font-black text-white text-sm">Process Sales Return</h3>
-                  <p className="text-[9px] text-gray-500">Search receipt → select items → confirm refund</p>
+                  <h3 className={`font-black text-sm ${isLight ? "text-slate-900" : "text-white"}`}>Process Sales Return</h3>
+                  <p className={`text-[9px] ${isLight ? "text-slate-500" : "text-gray-500"}`}>Search receipt → select items → confirm refund</p>
                 </div>
               </div>
-              <button onClick={() => setShowReturnModal(false)} className="text-gray-400 hover:text-white">
+              <button onClick={() => setShowReturnModal(false)} className={isLight ? "text-slate-400 hover:text-slate-900" : "text-gray-400 hover:text-white"}>
                 <X size={16} />
               </button>
             </div>
@@ -2307,15 +2368,17 @@ export default function PosPage() {
               // ── Success State ──
               <div className="text-center py-8 space-y-4">
                 <div className="w-16 h-16 rounded-full bg-emerald-500/15 border-2 border-emerald-500/30 flex items-center justify-center mx-auto">
-                  <CheckCircle2 size={28} className="text-emerald-400" />
+                  <CheckCircle2 size={28} className="text-emerald-500" />
                 </div>
                 <div>
-                  <h4 className="font-black text-white">Return Processed!</h4>
-                  <p className="text-[10px] text-gray-400 mt-1">Stock has been restored. Refund issued to customer.</p>
+                  <h4 className={`font-black ${isLight ? "text-slate-900" : "text-white"}`}>Return Processed!</h4>
+                  <p className={`text-[10px] mt-1 ${isLight ? "text-slate-500" : "text-gray-400"}`}>Stock has been restored. Refund issued to customer.</p>
                 </div>
                 <div className="flex gap-2">
                   <button onClick={() => { setReturnSale(null); setReturnDone(false); setReturnReceiptSearch(""); }}
-                    className="flex-1 py-2.5 bg-brand-dark-border text-gray-300 font-bold rounded-lg text-xs hover:bg-brand-dark-border/70 transition">
+                    className={`flex-1 py-2.5 font-bold rounded-lg text-xs transition ${
+                      isLight ? "bg-slate-100 border border-slate-300 text-slate-700 hover:bg-slate-200" : "bg-brand-dark-border text-gray-300 hover:bg-brand-dark-border/70"
+                    }`}>
                     New Return
                   </button>
                   <button onClick={() => setShowReturnModal(false)}
@@ -2329,7 +2392,7 @@ export default function PosPage() {
 
                 {/* Search */}
                 <div>
-                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-2">Receipt Number or Sale ID</label>
+                  <label className={`block text-[10px] uppercase font-bold mb-2 ${isLight ? "text-slate-600" : "text-gray-400"}`}>Receipt Number or Sale ID</label>
                   <div className="flex gap-2">
                     <input
                       type="text"
@@ -2337,10 +2400,12 @@ export default function PosPage() {
                       value={returnReceiptSearch}
                       onChange={e => setReturnReceiptSearch(e.target.value)}
                       onKeyDown={e => e.key === "Enter" && handleSearchReturn()}
-                      className="flex-grow bg-black border border-brand-dark-border p-2.5 rounded-lg text-white font-mono focus:outline-none focus:border-amber-500"
+                      className={`flex-grow border p-2.5 rounded-lg font-mono focus:outline-none ${
+                        isLight ? "bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-amber-500 shadow-xs" : "bg-black border-brand-dark-border text-white focus:border-amber-500"
+                      }`}
                     />
                     <button onClick={handleSearchReturn}
-                      className="px-4 py-2.5 bg-amber-500/15 border border-amber-500/30 hover:bg-amber-500/25 text-amber-400 font-black rounded-lg transition">
+                      className="px-4 py-2.5 bg-amber-500/15 border border-amber-500/30 hover:bg-amber-500/25 text-amber-500 font-black rounded-lg transition">
                       Search
                     </button>
                   </div>
@@ -2349,17 +2414,19 @@ export default function PosPage() {
                 {/* Found Sale Preview */}
                 {returnSale && (
                   <div className="space-y-3">
-                    <div className="bg-black/60 border border-brand-dark-border rounded-xl p-3 font-mono text-[10px] space-y-1">
-                      <div className="flex justify-between"><span className="text-gray-500">Receipt:</span><span className="text-amber-400 font-bold">{returnSale.receiptNumber}</span></div>
-                      <div className="flex justify-between"><span className="text-gray-500">Customer:</span><span className="text-white">{returnSale.customerName}</span></div>
-                      <div className="flex justify-between"><span className="text-gray-500">Original Total:</span><span className="text-white font-black">{currencySymbol} {returnSale.total.toFixed(2)}</span></div>
-                      <div className="flex justify-between"><span className="text-gray-500">Date:</span><span className="text-gray-400">{new Date(returnSale.date).toLocaleString()}</span></div>
+                    <div className={`p-3 rounded-xl font-mono text-[10px] space-y-1 border ${
+                      isLight ? "bg-slate-50 border-slate-200 text-slate-800" : "bg-black/60 border-brand-dark-border text-white"
+                    }`}>
+                      <div className="flex justify-between"><span className={isLight ? "text-slate-500" : "text-gray-500"}>Receipt:</span><span className="text-amber-500 font-bold">{returnSale.receiptNumber}</span></div>
+                      <div className="flex justify-between"><span className={isLight ? "text-slate-500" : "text-gray-500"}>Customer:</span><span className={`font-bold ${isLight ? "text-slate-900" : "text-white"}`}>{returnSale.customerName}</span></div>
+                      <div className="flex justify-between"><span className={isLight ? "text-slate-500" : "text-gray-500"}>Original Total:</span><span className={`font-black ${isLight ? "text-slate-900" : "text-white"}`}>{currencySymbol} {returnSale.total.toFixed(2)}</span></div>
+                      <div className="flex justify-between"><span className={isLight ? "text-slate-500" : "text-gray-500"}>Date:</span><span className={isLight ? "text-slate-600" : "text-gray-400"}>{new Date(returnSale.date).toLocaleString()}</span></div>
                     </div>
 
                     {/* Items Quantities Selector */}
                     <div>
                       <div className="flex justify-between items-center mb-2">
-                        <label className="text-[10px] uppercase font-bold text-gray-400 block">Select Quantities to Return</label>
+                        <label className={`text-[10px] uppercase font-bold block ${isLight ? "text-slate-600" : "text-gray-400"}`}>Select Quantities to Return</label>
                         <div className="flex items-center gap-1.5 font-mono">
                           <button
                             type="button"
@@ -2370,17 +2437,17 @@ export default function PosPage() {
                               });
                               setReturnItemQtys(all);
                             }}
-                            className="text-[8px] font-black uppercase text-amber-400 hover:text-amber-300 transition"
+                            className="text-[8px] font-black uppercase text-amber-500 hover:text-amber-600 transition"
                           >
                             Return All
                           </button>
-                          <span className="text-gray-700 text-[8px] font-black font-sans">|</span>
+                          <span className={`${isLight ? "text-slate-300" : "text-gray-700"} text-[8px] font-black font-sans`}>|</span>
                           <button
                             type="button"
                             onClick={() => {
                               setReturnItemQtys({});
                             }}
-                            className="text-[8px] font-black uppercase text-gray-500 hover:text-white transition"
+                            className={`text-[8px] font-black uppercase transition ${isLight ? "text-slate-500 hover:text-slate-900" : "text-gray-500 hover:text-white"}`}
                           >
                             Clear All
                           </button>
@@ -2392,33 +2459,37 @@ export default function PosPage() {
                           const isSelected = currentQty > 0;
                           return (
                             <div key={i} className={`p-3 rounded-xl border transition flex items-center justify-between gap-3 ${
-                              isSelected ? "bg-amber-500/10 border-amber-500/30" : "bg-black/40 border-brand-dark-border hover:border-brand-dark-border/80"
+                              isSelected 
+                                ? isLight ? "bg-amber-50 border-amber-300" : "bg-amber-500/10 border-amber-500/30" 
+                                : isLight ? "bg-slate-50 border-slate-200" : "bg-black/40 border-brand-dark-border"
                             }`}>
                               <div className="flex-grow min-w-0">
-                                <div className="font-bold text-white text-[11px] truncate">{item.productName}</div>
-                                <div className="text-[9px] text-gray-500 font-mono">Bought: {item.qty} × {currencySymbol} {item.price}</div>
+                                <div className={`font-bold text-[11px] truncate ${isLight ? "text-slate-900" : "text-white"}`}>{item.productName}</div>
+                                <div className={`text-[9px] font-mono ${isLight ? "text-slate-500" : "text-gray-500"}`}>Bought: {item.qty} × {currencySymbol} {item.price}</div>
                               </div>
                               <div className="flex items-center gap-2 shrink-0">
-                                <div className="flex items-center bg-black border border-brand-dark-border rounded-lg overflow-hidden">
+                                <div className={`flex items-center border rounded-lg overflow-hidden ${
+                                  isLight ? "bg-white border-slate-300" : "bg-black border-brand-dark-border"
+                                }`}>
                                   <button
                                     type="button"
                                     onClick={() => setReturnItemQtys(prev => ({ ...prev, [i]: Math.max(0, (prev[i] || 0) - 1) }))}
-                                    className="px-2 py-1 bg-brand-dark-border/50 text-gray-400 hover:text-white transition"
+                                    className={`px-2 py-1 transition font-bold ${isLight ? "bg-slate-100 text-slate-700 hover:bg-slate-200" : "bg-brand-dark-border/50 text-gray-400 hover:text-white"}`}
                                   >
                                     -
                                   </button>
-                                  <span className="px-2 py-1 text-white font-mono font-bold text-[11px] min-w-[24px] text-center">
+                                  <span className={`px-2 py-1 font-mono font-bold text-[11px] min-w-[24px] text-center ${isLight ? "text-slate-900" : "text-white"}`}>
                                     {currentQty}
                                   </span>
                                   <button
                                     type="button"
                                     onClick={() => setReturnItemQtys(prev => ({ ...prev, [i]: Math.min(item.qty, (prev[i] || 0) + 1) }))}
-                                    className="px-2 py-1 bg-brand-dark-border/50 text-gray-400 hover:text-white transition"
+                                    className={`px-2 py-1 transition font-bold ${isLight ? "bg-slate-100 text-slate-700 hover:bg-slate-200" : "bg-brand-dark-border/50 text-gray-400 hover:text-white"}`}
                                   >
                                     +
                                   </button>
                                 </div>
-                                <span className="font-black font-mono text-[11px] text-amber-400 min-w-[60px] text-right">
+                                <span className="font-black font-mono text-[11px] text-amber-500 min-w-[60px] text-right">
                                   {currencySymbol} {(currentQty * item.price).toFixed(2)}
                                 </span>
                               </div>
@@ -2430,15 +2501,15 @@ export default function PosPage() {
 
                     {/* Refund Method Selector */}
                     <div>
-                      <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1.5">Refund Payment Mode</label>
+                      <label className={`block text-[10px] uppercase font-bold mb-1.5 ${isLight ? "text-slate-600" : "text-gray-400"}`}>Refund Payment Mode</label>
                       <div className="grid grid-cols-2 gap-2">
                         <button
                           type="button"
                           onClick={() => setRefundMethod("Cash")}
                           className={`p-2.5 rounded-xl border text-[10px] font-bold uppercase transition flex items-center justify-center gap-1.5 ${
                             refundMethod === "Cash"
-                              ? "bg-amber-500/20 border-amber-500/50 text-amber-400"
-                              : "bg-black/40 border-brand-dark-border text-gray-400 hover:text-white"
+                              ? isLight ? "bg-amber-50 border-amber-400 text-amber-900 font-black shadow-xs" : "bg-amber-500/20 border-amber-500/50 text-amber-400"
+                              : isLight ? "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100" : "bg-black/40 border-brand-dark-border text-gray-400 hover:text-white"
                           }`}
                         >
                           💵 Cash Refund
@@ -2448,8 +2519,8 @@ export default function PosPage() {
                           onClick={() => setRefundMethod("Wallet")}
                           className={`p-2.5 rounded-xl border text-[10px] font-bold uppercase transition flex items-center justify-center gap-1.5 ${
                             refundMethod === "Wallet"
-                              ? "bg-amber-500/20 border-amber-500/50 text-amber-400"
-                              : "bg-black/40 border-brand-dark-border text-gray-400 hover:text-white"
+                              ? isLight ? "bg-amber-50 border-amber-400 text-amber-900 font-black shadow-xs" : "bg-amber-500/20 border-amber-500/50 text-amber-400"
+                              : isLight ? "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100" : "bg-black/40 border-brand-dark-border text-gray-400 hover:text-white"
                           }`}
                         >
                           💳 Store Wallet Credit
@@ -2458,23 +2529,25 @@ export default function PosPage() {
                     </div>
 
                     {/* Refund Preview */}
-                    <div className="bg-amber-500/8 border border-amber-500/20 rounded-xl p-3 flex items-center justify-between font-mono text-[11px]">
-                      <span className="text-gray-400">Total Refund Amount:</span>
-                      <span className="font-black text-amber-400">
+                    <div className={`border rounded-xl p-3 flex items-center justify-between font-mono text-[11px] ${
+                      isLight ? "bg-amber-50 border-amber-200" : "bg-amber-500/8 border border-amber-500/20"
+                    }`}>
+                      <span className={isLight ? "text-slate-600 font-bold" : "text-gray-400"}>Total Refund Amount:</span>
+                      <span className="font-black text-amber-600">
                         {currencySymbol} {returnSale.items
                           .reduce((a: number, item: any, i: number) => a + ((returnItemQtys[i] || 0) * item.price), 0).toFixed(2)}
                       </span>
                     </div>
 
                     <button onClick={handleConfirmReturn}
-                      className="w-full py-3 bg-amber-500 hover:bg-amber-400 text-black font-black uppercase rounded-xl text-xs tracking-wider transition">
-                      Confirm Return & Issue Return Receipt
+                      className="w-full py-3 bg-amber-500 hover:bg-amber-400 text-black font-black uppercase rounded-xl text-xs tracking-wider transition shadow-xs">
+                      Confirm Return &amp; Issue Return Receipt
                     </button>
                   </div>
                 )}
 
                 {!returnSale && (
-                  <div className="text-center py-8 text-gray-600">
+                  <div className={`text-center py-8 ${isLight ? "text-slate-400" : "text-gray-600"}`}>
                     <Package size={28} className="mx-auto mb-2 opacity-30" />
                     <p className="text-[10px]">Enter a receipt number above to begin the return process.</p>
                   </div>
@@ -2488,28 +2561,34 @@ export default function PosPage() {
       {/* POS Quick Credit Recovery Modal */}
       {showPosRecoveryModal && selectedCustObj && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 font-sans">
-          <div className="bg-[#0d0d0d] border border-red-500/30 p-6 rounded-2xl w-full max-w-sm shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-brand-dark-border pb-3">
+          <div className={`${
+            isLight ? "bg-white border-slate-200 shadow-2xl text-slate-900" : "bg-[#0d0d0d] border-red-500/30 text-white"
+          } border p-6 rounded-2xl w-full max-w-sm shadow-2xl space-y-4`}>
+            <div className={`flex items-center justify-between border-b pb-3 ${isLight ? "border-slate-200" : "border-brand-dark-border"}`}>
               <div className="flex items-center gap-2">
-                <Wallet className="text-red-400" size={16} />
-                <h3 className="font-black text-white text-sm">Clear Customer Credit</h3>
+                <Wallet className="text-red-500" size={16} />
+                <h3 className={`font-black text-sm ${isLight ? "text-slate-900" : "text-white"}`}>Clear Customer Credit</h3>
               </div>
-              <button onClick={() => setShowPosRecoveryModal(false)} className="text-gray-400 hover:text-white">
+              <button onClick={() => setShowPosRecoveryModal(false)} className={isLight ? "text-slate-400 hover:text-slate-900" : "text-gray-400 hover:text-white"}>
                 <X size={16} />
               </button>
             </div>
             
-            <div className="bg-black/60 border border-brand-dark-border p-3 rounded-xl text-xs space-y-1 font-mono">
-              <div className="flex justify-between"><span className="text-gray-400">Customer:</span><span className="text-white font-bold">{selectedCustObj.name}</span></div>
-              <div className="flex justify-between"><span className="text-gray-400">Total Pending Due:</span><span className="text-red-400 font-black">{currencySymbol} {selectedCustObj.creditBalance.toFixed(2)}</span></div>
+            <div className={`p-3 rounded-xl text-xs space-y-1 font-mono border ${
+              isLight ? "bg-slate-50 border-slate-200" : "bg-black/60 border-brand-dark-border"
+            }`}>
+              <div className="flex justify-between"><span className={isLight ? "text-slate-500" : "text-gray-400"}>Customer:</span><span className={`font-bold ${isLight ? "text-slate-900" : "text-white"}`}>{selectedCustObj.name}</span></div>
+              <div className="flex justify-between"><span className={isLight ? "text-slate-500" : "text-gray-400"}>Total Pending Due:</span><span className="text-red-500 font-black">{currencySymbol} {selectedCustObj.creditBalance.toFixed(2)}</span></div>
             </div>
 
             <div>
-              <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Payment Method</label>
+              <label className={`block text-[10px] uppercase font-bold mb-1 ${isLight ? "text-slate-600" : "text-gray-400"}`}>Payment Method</label>
               <select
                 value={posRecoveryMethod}
                 onChange={e => setPosRecoveryMethod(e.target.value)}
-                className="w-full bg-black border border-brand-dark-border p-2.5 rounded-xl text-white font-bold focus:outline-none focus:border-red-500 mb-3"
+                className={`w-full border p-2.5 rounded-xl font-bold focus:outline-none mb-3 ${
+                  isLight ? "bg-white border-slate-300 text-slate-900 focus:border-red-500 shadow-xs" : "bg-black border-brand-dark-border text-white focus:border-red-500"
+                }`}
               >
                 <option value="Cash">💵 Cash</option>
                 <option value="Card">💳 Credit / Debit Card</option>
@@ -2517,13 +2596,15 @@ export default function PosPage() {
                 <option value="EasyPaisa / JazzCash">📱 EasyPaisa / JazzCash</option>
               </select>
 
-              <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Recovery Payment Amount</label>
+              <label className={`block text-[10px] uppercase font-bold mb-1 ${isLight ? "text-slate-600" : "text-gray-400"}`}>Recovery Payment Amount</label>
               <input
                 type="number"
                 value={posRecoveryAmount}
                 onChange={e => setPosRecoveryAmount(e.target.value)}
                 placeholder="Enter amount"
-                className="w-full bg-black border border-brand-dark-border p-2.5 rounded-xl text-white font-mono font-bold focus:outline-none focus:border-red-500"
+                className={`w-full border p-2.5 rounded-xl font-mono font-bold focus:outline-none ${
+                  isLight ? "bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-red-500 shadow-xs" : "bg-black border-brand-dark-border text-white focus:border-red-500"
+                }`}
               />
             </div>
 
@@ -2539,9 +2620,9 @@ export default function PosPage() {
                 triggerToast(`✅ Recovered ${currencySymbol} ${amt} via ${posRecoveryMethod}! Receipt saved in /Dues_Clear/`);
                 setShowPosRecoveryModal(false);
               }}
-              className="w-full py-3 bg-red-500 hover:bg-red-400 text-black font-black uppercase rounded-xl text-xs tracking-wider transition"
+              className="w-full py-3 bg-red-500 hover:bg-red-400 text-white font-black uppercase rounded-xl text-xs tracking-wider transition shadow-xs"
             >
-              Confirm Dues Recovery & Issue Receipt
+              Confirm Dues Recovery &amp; Issue Receipt
             </button>
           </div>
         </div>
@@ -2552,70 +2633,76 @@ export default function PosPage() {
       ══════════════════════════════════════════════════════════════════════ */}
       {showCloseShiftModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 print:hidden">
-          <div className="bg-brand-dark-surface border border-red-500/25 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
+          <div className={`${
+            isLight ? "bg-white border-slate-200 shadow-2xl text-slate-900" : "bg-brand-dark-surface border-red-500/25 text-white"
+          } border rounded-2xl w-full max-w-md shadow-2xl overflow-hidden`}>
 
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-brand-dark-border px-5 pt-5 pb-4">
+            <div className={`flex items-center justify-between border-b px-5 pt-5 pb-4 ${isLight ? "border-slate-200" : "border-brand-dark-border"}`}>
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl bg-red-500/15 border border-red-500/30 flex items-center justify-center">
-                  <LogOut size={15} className="text-red-400" />
+                  <LogOut size={15} className="text-red-500" />
                 </div>
                 <div>
-                  <h3 className="font-black text-white text-sm">Close Shift — Z-Report</h3>
-                  <p className="text-[9px] text-gray-500">End-of-shift summary for {currentUser?.name || 'Cashier'}</p>
+                  <h3 className={`font-black text-sm ${isLight ? "text-slate-900" : "text-white"}`}>Close Shift — Z-Report</h3>
+                  <p className={`text-[9px] ${isLight ? "text-slate-500" : "text-gray-500"}`}>End-of-shift summary for {currentUser?.name || 'Cashier'}</p>
                 </div>
               </div>
-              <button onClick={() => setShowCloseShiftModal(false)} className="text-gray-400 hover:text-white">
+              <button onClick={() => setShowCloseShiftModal(false)} className={isLight ? "text-slate-400 hover:text-slate-900" : "text-gray-400 hover:text-white"}>
                 <X size={16} />
               </button>
             </div>
 
             <div className="p-5 space-y-4 text-xs">
               {/* Shift Duration */}
-              <div className="bg-black/60 border border-brand-dark-border rounded-xl p-3.5 font-mono text-[10px] space-y-1.5">
+              <div className={`border rounded-xl p-3.5 font-mono text-[10px] space-y-1.5 ${
+                isLight ? "bg-slate-50 border-slate-200 text-slate-800" : "bg-black/60 border-brand-dark-border text-white"
+              }`}>
                 <div className="flex justify-between">
-                  <span className="text-gray-500 flex items-center gap-1"><Clock size={10} /> Shift Started:</span>
-                  <span className="text-white font-bold">{new Date(shiftStartTime).toLocaleString()}</span>
+                  <span className={`${isLight ? "text-slate-500" : "text-gray-500"} flex items-center gap-1`}><Clock size={10} /> Shift Started:</span>
+                  <span className={`font-bold ${isLight ? "text-slate-900" : "text-white"}`}>{new Date(shiftStartTime).toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500 flex items-center gap-1"><Timer size={10} /> Shift Ended:</span>
-                  <span className="text-white font-bold">{new Date().toLocaleString()}</span>
+                  <span className={`${isLight ? "text-slate-500" : "text-gray-500"} flex items-center gap-1`}><Timer size={10} /> Shift Ended:</span>
+                  <span className={`font-bold ${isLight ? "text-slate-900" : "text-white"}`}>{new Date().toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Cashier:</span>
-                  <span className="text-brand-sky font-bold">{currentUser?.name || 'Cashier'}</span>
+                  <span className={isLight ? "text-slate-500" : "text-gray-500"}>Cashier:</span>
+                  <span className="text-sky-600 font-bold">{currentUser?.name || 'Cashier'}</span>
                 </div>
               </div>
 
               {/* Sales Breakdown */}
               <div>
-                <p className="text-[9px] uppercase font-bold text-gray-400 mb-2">Sales Breakdown</p>
-                <div className="bg-black/60 border border-brand-dark-border rounded-xl p-3.5 font-mono text-[10px] space-y-2">
+                <p className={`text-[9px] uppercase font-bold mb-2 ${isLight ? "text-slate-600" : "text-gray-400"}`}>Sales Breakdown</p>
+                <div className={`border rounded-xl p-3.5 font-mono text-[10px] space-y-2 ${
+                  isLight ? "bg-slate-50 border-slate-200 text-slate-800" : "bg-black/60 border-brand-dark-border text-white"
+                }`}>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Total Transactions:</span>
-                    <span className="text-white font-black">{shiftSales.length}</span>
+                    <span className={isLight ? "text-slate-500" : "text-gray-500"}>Total Transactions:</span>
+                    <span className={`font-black ${isLight ? "text-slate-900" : "text-white"}`}>{shiftSales.length}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Items Sold:</span>
-                    <span className="text-white font-black">{shiftItemCount}</span>
+                    <span className={isLight ? "text-slate-500" : "text-gray-500"}>Items Sold:</span>
+                    <span className={`font-black ${isLight ? "text-slate-900" : "text-white"}`}>{shiftItemCount}</span>
                   </div>
-                  <div className="border-t border-brand-dark-border/40 pt-2 space-y-1.5">
+                  <div className={`border-t pt-2 space-y-1.5 ${isLight ? "border-slate-200" : "border-brand-dark-border/40"}`}>
                     <div className="flex justify-between">
-                      <span className="text-gray-500 flex items-center gap-1"><DollarSign size={9} /> Cash Sales:</span>
-                      <span className="text-emerald-400 font-black">{currencySymbol} {shiftCashSales.toFixed(2)}</span>
+                      <span className={`${isLight ? "text-slate-500" : "text-gray-500"} flex items-center gap-1`}><DollarSign size={9} /> Cash Sales:</span>
+                      <span className="text-emerald-600 font-black">{currencySymbol} {shiftCashSales.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-500 flex items-center gap-1"><CreditCard size={9} /> Card Sales:</span>
-                      <span className="text-blue-400 font-black">{currencySymbol} {shiftCardSales.toFixed(2)}</span>
+                      <span className={`${isLight ? "text-slate-500" : "text-gray-500"} flex items-center gap-1`}><CreditCard size={9} /> Card Sales:</span>
+                      <span className="text-blue-500 font-black">{currencySymbol} {shiftCardSales.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-500 flex items-center gap-1"><Wallet size={9} /> Other:</span>
-                      <span className="text-purple-400 font-black">{currencySymbol} {shiftOtherSales.toFixed(2)}</span>
+                      <span className={`${isLight ? "text-slate-500" : "text-gray-500"} flex items-center gap-1`}><Wallet size={9} /> Other:</span>
+                      <span className="text-purple-500 font-black">{currencySymbol} {shiftOtherSales.toFixed(2)}</span>
                     </div>
                   </div>
-                  <div className="border-t border-brand-dark-border/40 pt-2 flex justify-between text-sm">
-                    <span className="text-gray-300 font-bold">Total Revenue:</span>
-                    <span className="text-brand-sky font-black">
+                  <div className={`border-t pt-2 flex justify-between text-sm ${isLight ? "border-slate-200" : "border-brand-dark-border/40"}`}>
+                    <span className={`font-bold ${isLight ? "text-slate-700" : "text-gray-300"}`}>Total Revenue:</span>
+                    <span className="text-sky-600 font-black">
                       {currencySymbol} {(shiftCashSales + shiftCardSales + shiftOtherSales).toFixed(2)}
                     </span>
                   </div>
@@ -2624,19 +2711,21 @@ export default function PosPage() {
 
               {/* Cash Drawer */}
               <div>
-                <p className="text-[9px] uppercase font-bold text-gray-400 mb-2">Cash Drawer</p>
-                <div className="bg-black/60 border border-brand-dark-border rounded-xl p-3.5 font-mono text-[10px] space-y-1.5">
+                <p className={`text-[9px] uppercase font-bold mb-2 ${isLight ? "text-slate-600" : "text-gray-400"}`}>Cash Drawer</p>
+                <div className={`border rounded-xl p-3.5 font-mono text-[10px] space-y-1.5 ${
+                  isLight ? "bg-slate-50 border-slate-200 text-slate-800" : "bg-black/60 border-brand-dark-border text-white"
+                }`}>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Opening Balance:</span>
-                    <span className="text-white font-black">{currencySymbol} {parseFloat(openingCash || '0').toFixed(2)}</span>
+                    <span className={isLight ? "text-slate-500" : "text-gray-500"}>Opening Balance:</span>
+                    <span className={`font-black ${isLight ? "text-slate-900" : "text-white"}`}>{currencySymbol} {parseFloat(openingCash || '0').toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">+ Cash Sales:</span>
-                    <span className="text-emerald-400 font-black">+ {currencySymbol} {shiftCashSales.toFixed(2)}</span>
+                    <span className={isLight ? "text-slate-500" : "text-gray-500"}>+ Cash Sales:</span>
+                    <span className="text-emerald-600 font-black">+ {currencySymbol} {shiftCashSales.toFixed(2)}</span>
                   </div>
-                  <div className="border-t border-brand-dark-border/40 pt-1.5 flex justify-between">
-                    <span className="text-gray-300 font-bold">Expected Closing Cash:</span>
-                    <span className="text-brand-sky font-black">{currencySymbol} {closingCash.toFixed(2)}</span>
+                  <div className={`border-t pt-1.5 flex justify-between ${isLight ? "border-slate-200" : "border-brand-dark-border/40"}`}>
+                    <span className={`font-bold ${isLight ? "text-slate-700" : "text-gray-300"}`}>Expected Closing Cash:</span>
+                    <span className="text-sky-600 font-black">{currencySymbol} {closingCash.toFixed(2)}</span>
                   </div>
                 </div>
               </div>
@@ -2645,13 +2734,15 @@ export default function PosPage() {
               <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={() => window.print()}
-                  className="py-2.5 bg-brand-dark-border hover:bg-brand-dark-border/70 text-white font-black text-[10px] uppercase rounded-xl flex items-center justify-center gap-1.5 transition"
+                  className={`py-2.5 font-black text-[10px] uppercase rounded-xl flex items-center justify-center gap-1.5 transition ${
+                    isLight ? "bg-slate-100 border border-slate-300 text-slate-700 hover:bg-slate-200 shadow-xs" : "bg-brand-dark-border hover:bg-brand-dark-border/70 text-white"
+                  }`}
                 >
                   <Printer size={12} /> Print Z-Report
                 </button>
                 <button
                   onClick={handleCloseShift}
-                  className="py-2.5 bg-red-500 hover:bg-red-400 text-white font-black text-[10px] uppercase rounded-xl flex items-center justify-center gap-1.5 transition"
+                  className="py-2.5 bg-red-500 hover:bg-red-400 text-white font-black text-[10px] uppercase rounded-xl flex items-center justify-center gap-1.5 transition shadow-xs"
                 >
                   <LogOut size={12} /> Close Shift
                 </button>
@@ -2663,24 +2754,28 @@ export default function PosPage() {
       {/* Hold Cart Modal */}
       {showHoldModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm print:hidden">
-          <div className="bg-brand-dark-surface border border-brand-dark-border rounded-2xl w-full max-w-sm p-5 shadow-2xl">
-            <h3 className="text-white font-bold mb-4 flex items-center gap-2">
-              <PauseCircle size={18} className="text-amber-400" /> Hold Current Sale
+          <div className={`${
+            isLight ? "bg-white border-slate-200 shadow-2xl text-slate-900" : "bg-brand-dark-surface border-brand-dark-border text-white"
+          } border rounded-2xl w-full max-w-sm p-5 shadow-2xl`}>
+            <h3 className={`font-bold mb-4 flex items-center gap-2 ${isLight ? "text-slate-900" : "text-white"}`}>
+              <PauseCircle size={18} className="text-amber-500" /> Hold Current Sale
             </h3>
             <div className="mb-4">
-              <label className="block text-[10px] text-gray-400 uppercase font-bold mb-1">Reference Note (Optional)</label>
+              <label className={`block text-[10px] uppercase font-bold mb-1 ${isLight ? "text-slate-600" : "text-gray-400"}`}>Reference Note (Optional)</label>
               <input 
                 type="text" 
                 value={holdLabel} 
                 onChange={e => setHoldLabel(e.target.value)} 
                 placeholder="e.g. Table 4, Waiting for wallet..." 
-                className="w-full bg-black border border-brand-dark-border rounded-lg p-2.5 text-xs text-white focus:border-amber-400 focus:outline-none"
+                className={`w-full border rounded-lg p-2.5 text-xs focus:outline-none ${
+                  isLight ? "bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-amber-500 shadow-xs" : "bg-black border-brand-dark-border text-white focus:border-amber-400"
+                }`}
                 autoFocus
               />
             </div>
             <div className="flex gap-2 justify-end">
-              <button onClick={() => setShowHoldModal(false)} className="px-4 py-2 rounded-lg text-xs font-bold text-gray-400 hover:text-white">Cancel</button>
-              <button onClick={holdCurrentCart} className="px-4 py-2 rounded-lg text-xs font-bold bg-amber-500 text-black hover:bg-amber-400">Hold Sale</button>
+              <button onClick={() => setShowHoldModal(false)} className={`px-4 py-2 rounded-lg text-xs font-bold transition ${isLight ? "bg-slate-100 text-slate-700 hover:bg-slate-200" : "text-gray-400 hover:text-white"}`}>Cancel</button>
+              <button onClick={holdCurrentCart} className="px-4 py-2 rounded-lg text-xs font-bold bg-amber-500 text-black hover:bg-amber-400 shadow-xs">Hold Sale</button>
             </div>
           </div>
         </div>
@@ -2689,29 +2784,33 @@ export default function PosPage() {
       {/* Held Carts Panel */}
       {showHeldCartsPanel && (
         <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-sm print:hidden" onClick={() => setShowHeldCartsPanel(false)}>
-          <div className="bg-brand-dark-surface w-full max-w-md h-full border-l border-brand-dark-border shadow-2xl flex flex-col" onClick={e => e.stopPropagation()}>
-            <div className="p-4 border-b border-brand-dark-border flex justify-between items-center bg-black/20">
-              <h2 className="text-white font-bold flex items-center gap-2"><Clock size={18} className="text-brand-sky" /> Parked Sales ({heldCarts.length})</h2>
-              <button onClick={() => setShowHeldCartsPanel(false)} className="text-gray-400 hover:text-white"><X size={18}/></button>
+          <div className={`${
+            isLight ? "bg-white border-slate-200 text-slate-900" : "bg-brand-dark-surface border-brand-dark-border text-white"
+          } w-full max-w-md h-full border-l shadow-2xl flex flex-col`} onClick={e => e.stopPropagation()}>
+            <div className={`p-4 border-b flex justify-between items-center ${isLight ? "bg-slate-50 border-slate-200" : "bg-black/20 border-brand-dark-border"}`}>
+              <h2 className={`font-bold flex items-center gap-2 ${isLight ? "text-slate-900" : "text-white"}`}><Clock size={18} className="text-sky-500" /> Parked Sales ({heldCarts.length})</h2>
+              <button onClick={() => setShowHeldCartsPanel(false)} className={isLight ? "text-slate-400 hover:text-slate-900" : "text-gray-400 hover:text-white"}><X size={18}/></button>
             </div>
             <div className="flex-grow overflow-y-auto p-4 space-y-3">
               {heldCarts.length === 0 ? (
-                <div className="text-center text-gray-500 text-sm mt-10">No held sales.</div>
+                <div className={`text-center text-sm mt-10 ${isLight ? "text-slate-400" : "text-gray-500"}`}>No held sales.</div>
               ) : (
                 heldCarts.map(h => (
-                  <div key={h.id} className="bg-black/40 border border-brand-dark-border rounded-xl p-4 flex flex-col gap-3 hover:border-brand-sky/40 transition">
+                  <div key={h.id} className={`border rounded-xl p-4 flex flex-col gap-3 transition ${
+                    isLight ? "bg-slate-50 border-slate-200 hover:border-sky-400" : "bg-black/40 border-brand-dark-border hover:border-brand-sky/40"
+                  }`}>
                     <div className="flex justify-between items-start">
                       <div>
-                        <div className="font-bold text-white text-sm">{h.label}</div>
-                        <div className="text-[10px] text-gray-500 flex items-center gap-1 mt-0.5"><User size={10}/> {h.customer}</div>
+                        <div className={`font-bold text-sm ${isLight ? "text-slate-900" : "text-white"}`}>{h.label}</div>
+                        <div className={`text-[10px] flex items-center gap-1 mt-0.5 ${isLight ? "text-slate-500" : "text-gray-500"}`}><User size={10}/> {h.customer}</div>
                       </div>
-                      <div className="text-[10px] text-gray-500 font-mono">
+                      <div className={`text-[10px] font-mono ${isLight ? "text-slate-400" : "text-gray-500"}`}>
                         {new Date(h.heldAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </div>
                     </div>
-                    <div className="flex justify-between items-center border-t border-brand-dark-border/40 pt-3">
-                      <span className="text-xs text-brand-sky font-bold font-mono">{h.cart.length} items</span>
-                      <button onClick={() => retrieveHeldCart(h)} className="px-3 py-1.5 bg-brand-sky/10 hover:bg-brand-sky text-brand-sky hover:text-black rounded-lg text-xs font-bold transition">
+                    <div className={`flex justify-between items-center border-t pt-3 ${isLight ? "border-slate-200" : "border-brand-dark-border/40"}`}>
+                      <span className={`text-xs font-bold font-mono ${isLight ? "text-sky-600" : "text-brand-sky"}`}>{h.cart.length} items</span>
+                      <button onClick={() => retrieveHeldCart(h)} className="px-3 py-1.5 bg-brand-sky/15 hover:bg-brand-sky text-sky-700 hover:text-black rounded-lg text-xs font-bold transition">
                         Retrieve
                       </button>
                     </div>

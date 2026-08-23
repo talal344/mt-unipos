@@ -442,7 +442,7 @@ export default function SalesPage() {
   const pLabel = periodLabel(period, customFrom, customTo);
 
   return (
-    <div className={`flex min-h-screen font-sans ${isLight ? "bg-slate-100 text-slate-900" : "bg-black text-gray-100"}`}>
+    <div className={`flex h-screen overflow-hidden font-sans ${isLight ? "bg-slate-100 text-slate-900" : "bg-black text-gray-100"}`}>
       <ClientSidebar />
 
       {slipSale && (
@@ -455,7 +455,7 @@ export default function SalesPage() {
         />
       )}
 
-      <main className="flex-grow p-5 space-y-5 overflow-y-auto max-h-screen">
+      <main className="flex-grow p-5 space-y-5 overflow-y-auto h-screen">
 
         {/* ── HEADER ── */}
         <div className={`flex items-center justify-between border-b pb-4 ${isLight ? "border-slate-200" : "border-brand-dark-border/60"}`}>
@@ -757,7 +757,11 @@ export default function SalesPage() {
                       </td>
                       <td className="px-4 py-3 text-center">
                         <button onClick={() => setSlipSale(sale)}
-                          className="flex items-center gap-1 mx-auto px-3 py-1.5 bg-brand-dark-border hover:bg-brand-sky/20 hover:border-brand-sky/40 border border-transparent text-gray-400 hover:text-brand-sky font-bold text-[9px] rounded-lg transition">
+                          className={`flex items-center gap-1 mx-auto px-3 py-1.5 border font-bold text-[9px] rounded-lg transition ${
+                            isLight 
+                              ? "bg-slate-100 border-slate-300 text-slate-700 hover:bg-slate-200 shadow-xs" 
+                              : "bg-brand-dark-border hover:bg-brand-sky/20 hover:border-brand-sky/40 border-transparent text-gray-400 hover:text-brand-sky"
+                          }`}>
                           <Eye size={10} /> View Slip
                         </button>
                       </td>
@@ -768,10 +772,12 @@ export default function SalesPage() {
             </div>
 
             {filtered.length > 0 && (
-              <div className="px-4 py-3 border-t border-brand-dark-border flex items-center justify-between bg-black/30">
-                <span className="text-[10px] text-gray-500 font-mono">{filtered.length} transactions</span>
-                <span className="text-[10px] font-mono text-gray-500">
-                  Total: <span className="text-brand-sky font-black">{currencySymbol} {grandTotal.toLocaleString(undefined,{maximumFractionDigits:2})}</span>
+              <div className={`px-4 py-3 border-t flex items-center justify-between ${
+                isLight ? "bg-slate-50 border-slate-200 text-slate-700" : "border-brand-dark-border bg-black/30 text-gray-500"
+              }`}>
+                <span className={`text-[10px] font-mono ${isLight ? "text-slate-600 font-bold" : "text-gray-500"}`}>{filtered.length} transactions</span>
+                <span className={`text-[10px] font-mono ${isLight ? "text-slate-600" : "text-gray-500"}`}>
+                  Total: <span className={`${isLight ? "text-sky-600" : "text-brand-sky"} font-black`}>{currencySymbol} {grandTotal.toLocaleString(undefined,{maximumFractionDigits:2})}</span>
                 </span>
               </div>
             )}
