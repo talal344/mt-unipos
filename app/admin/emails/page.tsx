@@ -441,13 +441,13 @@ export default function AdminEmailsPage() {
         )}
 
         {/* Top Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-brand-dark-border/60 pb-4 gap-4">
+        <div className={`flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-4 gap-4 ${isLight ? "border-slate-200" : "border-brand-dark-border/60"}`}>
           <div>
-            <h1 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
-              <Mail size={24} className="text-purple-400" />
+            <h1 className={`text-xl font-black tracking-tight flex items-center gap-2 ${isLight ? "text-slate-900" : "text-white"}`}>
+              <Mail size={24} className="text-purple-500" />
               SaaS Email Dispatch Center &amp; Logs
             </h1>
-            <p className="text-[10px] text-gray-500 font-sans">
+            <p className={`text-[10px] font-sans ${isLight ? "text-slate-500" : "text-gray-500"}`}>
               Monitor, compose, preview, and dispatch executive tenant invoices &amp; credential emails via Resend API.
             </p>
           </div>
@@ -455,7 +455,9 @@ export default function AdminEmailsPage() {
           <div className="flex items-center gap-2">
             <button
               onClick={handleExportCSV}
-              className="px-3.5 py-2.5 bg-brand-dark-surface hover:bg-brand-dark-border border border-brand-dark-border text-gray-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5"
+              className={`px-3.5 py-2.5 border rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+                isLight ? "bg-white border-slate-300 text-slate-800 hover:bg-slate-50 shadow-xs" : "bg-brand-dark-surface hover:bg-brand-dark-border border border-brand-dark-border text-gray-300"
+              }`}
             >
               <Download size={14} />
               <span>Export Logs</span>

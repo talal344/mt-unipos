@@ -113,13 +113,13 @@ export default function AdminSettingsPage() {
         )}
 
         {/* Top Header */}
-        <div className="flex justify-between items-center border-b border-brand-dark-border/60 pb-4">
+        <div className={`flex justify-between items-center border-b pb-4 ${isLight ? "border-slate-200" : "border-brand-dark-border/60"}`}>
           <div>
-            <h1 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
-              <Settings size={24} className="text-purple-400" />
+            <h1 className={`text-xl font-black tracking-tight flex items-center gap-2 ${isLight ? "text-slate-900" : "text-white"}`}>
+              <Settings size={24} className="text-purple-500" />
               Platform Global Settings
             </h1>
-            <p className="text-[10px] text-gray-500 font-sans">Configure platform metadata, sharding thresholds, API keys, and maintenance schedules.</p>
+            <p className={`text-[10px] font-sans ${isLight ? "text-slate-500" : "text-gray-500"}`}>Configure platform metadata, sharding thresholds, API keys, and maintenance schedules.</p>
           </div>
         </div>
 

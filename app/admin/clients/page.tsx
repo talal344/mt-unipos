@@ -1486,12 +1486,12 @@ export default function AdminClientsPage() {
         )}
 
         {/* Page Header */}
-        <div className="flex justify-between items-center border-b border-brand-dark-border/60 pb-4">
+        <div className={`flex justify-between items-center border-b pb-4 ${isLight ? "border-slate-200" : "border-brand-dark-border/60"}`}>
           <div>
-            <h1 className="text-xl font-black tracking-tight text-white">
+            <h1 className={`text-xl font-black tracking-tight ${isLight ? "text-slate-900" : "text-white"}`}>
               Client Management
             </h1>
-            <p className="text-[10px] text-gray-500 font-sans">
+            <p className={`text-[10px] font-sans ${isLight ? "text-slate-500" : "text-gray-500"}`}>
               Manage demo requests pipeline and active tenant database shards.
             </p>
           </div>
@@ -1507,12 +1507,16 @@ export default function AdminClientsPage() {
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex gap-1 bg-brand-dark-surface/40 border border-brand-dark-border rounded-xl p-1 w-fit">
+        <div className={`flex gap-1 border rounded-xl p-1 w-fit ${
+          isLight ? "bg-slate-200/80 border-slate-300" : "bg-brand-dark-surface/40 border-brand-dark-border"
+        }`}>
           <button
             onClick={() => setActiveTab("demo")}
             className={`flex items-center gap-2 px-5 py-2 rounded-lg text-xs font-bold transition ${
               activeTab === "demo"
-                ? "bg-sky-600 text-white shadow"
+                ? "bg-sky-600 text-white shadow-xs"
+                : isLight
+                ? "text-slate-700 hover:text-slate-900 hover:bg-slate-100"
                 : "text-gray-400 hover:text-white"
             }`}
           >
@@ -1528,7 +1532,9 @@ export default function AdminClientsPage() {
             onClick={() => setActiveTab("tenants")}
             className={`flex items-center gap-2 px-5 py-2 rounded-lg text-xs font-bold transition ${
               activeTab === "tenants"
-                ? "bg-purple-600 text-white shadow"
+                ? "bg-purple-600 text-white shadow-xs"
+                : isLight
+                ? "text-slate-700 hover:text-slate-900 hover:bg-slate-100"
                 : "text-gray-400 hover:text-white"
             }`}
           >

@@ -378,30 +378,36 @@ export default function AdminReportsPage() {
                   </div>
                 </div>
 
-                <div className="bg-black/30 border border-brand-dark-border/60 p-4 rounded-xl text-center space-y-1">
-                  <div className="text-[10px] uppercase font-bold text-gray-400">Professional Plan</div>
-                  <div className="text-xl font-mono font-black text-white">{planPro}</div>
-                  <div className="text-[8px] text-gray-500 font-sans">Mid-tier database instances</div>
-                  <div className="w-full bg-gray-800 h-1 rounded-full overflow-hidden mt-2">
+                <div className={`border p-4 rounded-xl text-center space-y-1 ${
+                  isLight ? "bg-slate-50 border-slate-200 text-slate-900" : "bg-black/30 border-brand-dark-border/60 text-white"
+                }`}>
+                  <div className={`text-[10px] uppercase font-bold ${isLight ? "text-slate-500" : "text-gray-400"}`}>Professional Plan</div>
+                  <div className={`text-xl font-mono font-black ${isLight ? "text-slate-900" : "text-white"}`}>{planPro}</div>
+                  <div className={`text-[8px] font-sans ${isLight ? "text-slate-400" : "text-gray-500"}`}>Mid-tier database instances</div>
+                  <div className="w-full bg-slate-200 h-1 rounded-full overflow-hidden mt-2">
                     <div className="bg-purple-500 h-full" style={{ width: `${totalTenantsCount > 0 ? (planPro / totalTenantsCount) * 100 : 0}%` }} />
                   </div>
                 </div>
 
-                <div className="bg-black/30 border border-brand-dark-border/60 p-4 rounded-xl text-center space-y-1">
-                  <div className="text-[10px] uppercase font-bold text-gray-500">Enterprise Plan</div>
-                  <div className="text-xl font-mono font-black text-white">{planEnterprise}</div>
-                  <div className="text-[8px] text-gray-500 font-sans">Heavy-capacity sharded instances</div>
-                  <div className="w-full bg-gray-800 h-1 rounded-full overflow-hidden mt-2">
-                    <div className="bg-emerald-400 h-full" style={{ width: `${totalTenantsCount > 0 ? (planEnterprise / totalTenantsCount) * 100 : 0}%` }} />
+                <div className={`border p-4 rounded-xl text-center space-y-1 ${
+                  isLight ? "bg-slate-50 border-slate-200 text-slate-900" : "bg-black/30 border-brand-dark-border/60 text-white"
+                }`}>
+                  <div className={`text-[10px] uppercase font-bold ${isLight ? "text-slate-500" : "text-gray-500"}`}>Enterprise Plan</div>
+                  <div className={`text-xl font-mono font-black ${isLight ? "text-slate-900" : "text-white"}`}>{planEnterprise}</div>
+                  <div className={`text-[8px] font-sans ${isLight ? "text-slate-400" : "text-gray-500"}`}>Heavy-capacity sharded instances</div>
+                  <div className="w-full bg-slate-200 h-1 rounded-full overflow-hidden mt-2">
+                    <div className="bg-emerald-500 h-full" style={{ width: `${totalTenantsCount > 0 ? (planEnterprise / totalTenantsCount) * 100 : 0}%` }} />
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Revenue Compounding Projection Simulator */}
-            <div className="bg-brand-dark-surface/40 border border-brand-dark-border p-6 rounded-2xl space-y-4">
-              <h3 className="text-xs font-black uppercase text-gray-400 tracking-wider flex items-center gap-1.5">
-                <Sliders size={14} className="text-purple-400" />
+            <div className={`border p-6 rounded-2xl space-y-4 ${
+              isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/40 border-brand-dark-border text-gray-100"
+            }`}>
+              <h3 className={`text-xs font-black uppercase tracking-wider flex items-center gap-1.5 ${isLight ? "text-slate-700" : "text-gray-400"}`}>
+                <Sliders size={14} className="text-purple-500" />
                 12-Month ARR Growth Projection Simulator
               </h3>
 
@@ -410,8 +416,8 @@ export default function AdminReportsPage() {
                 <div className="space-y-4">
                   <div className="space-y-1">
                     <div className="flex justify-between text-[10px] font-bold">
-                      <span className="text-gray-400">Compounded Growth/Mo:</span>
-                      <span className="text-purple-400 font-mono">{expectedGrowth}%</span>
+                      <span className={isLight ? "text-slate-600" : "text-gray-400"}>Compounded Growth/Mo:</span>
+                      <span className="text-purple-500 font-mono">{expectedGrowth}%</span>
                     </div>
                     <input 
                       type="range" 
@@ -419,14 +425,14 @@ export default function AdminReportsPage() {
                       max="50" 
                       value={expectedGrowth} 
                       onChange={(e) => setExpectedGrowth(parseInt(e.target.value))}
-                      className="w-full h-1 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-purple-500"
+                      className="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-purple-600"
                     />
                   </div>
 
                   <div className="space-y-1">
                     <div className="flex justify-between text-[10px] font-bold">
-                      <span className="text-gray-400">Lead Conversion Rate:</span>
-                      <span className="text-purple-400 font-mono">{conversionTarget}%</span>
+                      <span className={isLight ? "text-slate-600" : "text-gray-400"}>Lead Conversion Rate:</span>
+                      <span className="text-purple-500 font-mono">{conversionTarget}%</span>
                     </div>
                     <input 
                       type="range" 
@@ -434,22 +440,24 @@ export default function AdminReportsPage() {
                       max="100" 
                       value={conversionTarget} 
                       onChange={(e) => setConversionTarget(parseInt(e.target.value))}
-                      className="w-full h-1 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-purple-500"
+                      className="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-purple-600"
                     />
                   </div>
                 </div>
 
                 {/* Outputs */}
-                <div className="bg-black/35 border border-brand-dark-border/80 rounded-xl p-4 flex flex-col justify-between font-mono">
+                <div className={`border rounded-xl p-4 flex flex-col justify-between font-mono ${
+                  isLight ? "bg-slate-50 border-slate-200 text-slate-900" : "bg-black/35 border-brand-dark-border/80 text-white"
+                }`}>
                   <div className="flex justify-between items-center text-[10px]">
-                    <span className="text-gray-400">Compounded MRR (Year 1):</span>
-                    <span className="text-emerald-400 font-bold">Rs. {simulatedForecast.mrr.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                    <span className={isLight ? "text-slate-500" : "text-gray-400"}>Compounded MRR (Year 1):</span>
+                    <span className="text-emerald-500 font-bold">Rs. {simulatedForecast.mrr.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
                   </div>
-                  <div className="flex justify-between items-center text-[10px] border-t border-brand-dark-border/40 pt-2.5 mt-2.5">
-                    <span className="text-gray-400">Compounded ARR Projection:</span>
-                    <span className="text-purple-400 font-bold text-sm">Rs. {simulatedForecast.arr.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                  <div className={`flex justify-between items-center text-[10px] border-t pt-2.5 mt-2.5 ${isLight ? "border-slate-200" : "border-brand-dark-border/40"}`}>
+                    <span className={isLight ? "text-slate-500" : "text-gray-400"}>Compounded ARR Projection:</span>
+                    <span className="text-purple-500 font-bold text-sm">Rs. {simulatedForecast.arr.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
                   </div>
-                  <span className="text-[8px] text-gray-500 font-sans mt-2.5 leading-normal">
+                  <span className={`text-[8px] font-sans mt-2.5 leading-normal ${isLight ? "text-slate-400" : "text-gray-500"}`}>
                     *Compounded from current MRR (Rs. {currentMRR.toLocaleString()}) and {pendingLeads} pending demo conversions at average plan pricing.
                   </span>
                 </div>
@@ -461,13 +469,17 @@ export default function AdminReportsPage() {
         </div>
 
         {/* Subscription standing Heatmap Grid */}
-        <div className="bg-brand-dark-surface/40 border border-brand-dark-border p-6 rounded-2xl space-y-4">
-          <h3 className="text-xs font-black uppercase text-gray-400 tracking-wider flex items-center gap-1.5 border-b border-brand-dark-border pb-2">
-            <Zap size={14} className="text-purple-400" />
+        <div className={`border p-6 rounded-2xl space-y-4 ${
+          isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/40 border-brand-dark-border text-gray-100"
+        }`}>
+          <h3 className={`text-xs font-black uppercase tracking-wider flex items-center gap-1.5 border-b pb-2 ${
+            isLight ? "text-slate-700 border-slate-200" : "text-gray-400 border-brand-dark-border"
+          }`}>
+            <Zap size={14} className="text-purple-500" />
             Client subscription billing standing heatmap
           </h3>
           {tenantStandingHeatmap.length === 0 ? (
-            <p className="text-center text-xs text-gray-500 py-6 italic font-sans">
+            <p className={`text-center text-xs py-6 italic font-sans ${isLight ? "text-slate-400" : "text-gray-500"}`}>
               No database shards active to map standings.
             </p>
           ) : (
@@ -476,21 +488,21 @@ export default function AdminReportsPage() {
                 <div 
                   key={client.id}
                   className={`border p-3 rounded-xl flex flex-col justify-between space-y-2 relative overflow-hidden transition-all duration-300 ${
-                    client.status === "PAID" ? "bg-emerald-500/5 border-emerald-500/25 hover:border-emerald-500/50 text-emerald-400" :
-                    client.status === "UNPAID" ? "bg-amber-500/5 border-amber-500/25 hover:border-amber-500/50 text-amber-400" :
-                    "bg-brand-sky/5 border-brand-sky/25 hover:border-brand-sky/50 text-brand-sky"
+                    client.status === "PAID" ? "bg-emerald-500/5 border-emerald-500/25 hover:border-emerald-500/50 text-emerald-500" :
+                    client.status === "UNPAID" ? "bg-amber-500/5 border-amber-500/25 hover:border-amber-500/50 text-amber-500" :
+                    "bg-sky-500/5 border-sky-500/25 hover:border-sky-500/50 text-sky-500"
                   }`}
                 >
                   <div>
                     <span className="text-[8px] font-mono tracking-wider opacity-60 uppercase font-bold block">{client.id}</span>
-                    <span className="text-[11px] text-white font-bold block truncate font-sans mt-0.5">{client.businessName}</span>
+                    <span className={`text-[11px] font-bold block truncate font-sans mt-0.5 ${isLight ? "text-slate-900" : "text-white"}`}>{client.businessName}</span>
                   </div>
                   <div className="flex justify-between items-center text-[8px] font-mono">
                     <span className="opacity-60">{client.plan}</span>
                     <span className={`px-1.5 py-0.5 rounded-full font-black uppercase tracking-wider text-[8px] ${
-                      client.status === "PAID" ? "bg-emerald-500/10 text-emerald-400" :
-                      client.status === "UNPAID" ? "bg-amber-500/10 text-amber-400" :
-                      "bg-brand-sky/10 text-brand-sky"
+                      client.status === "PAID" ? "bg-emerald-500/10 text-emerald-500" :
+                      client.status === "UNPAID" ? "bg-amber-500/10 text-amber-500" :
+                      "bg-sky-500/10 text-sky-500"
                     }`}>
                       {client.status}
                     </span>
@@ -502,16 +514,22 @@ export default function AdminReportsPage() {
         </div>
 
         {/* Detailed Tenant Performance Analytics Ledger */}
-        <div className="bg-brand-dark-surface/40 border border-brand-dark-border rounded-2xl overflow-hidden">
-          <div className="p-4 border-b border-brand-dark-border bg-black/40 flex justify-between items-center">
-            <h4 className="text-xs font-black uppercase text-gray-300 tracking-wider">Tenant Performance Ledger</h4>
-            <span className="text-[10px] text-gray-500 font-mono">Showing {filteredTenants.length} entries</span>
+        <div className={`border rounded-2xl overflow-hidden ${
+          isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/40 border-brand-dark-border text-gray-100"
+        }`}>
+          <div className={`p-4 border-b flex justify-between items-center ${
+            isLight ? "bg-slate-50 border-slate-200" : "bg-black/40 border-brand-dark-border"
+          }`}>
+            <h4 className={`text-xs font-black uppercase tracking-wider ${isLight ? "text-slate-800" : "text-gray-300"}`}>Tenant Performance Ledger</h4>
+            <span className={`text-[10px] font-mono ${isLight ? "text-slate-400" : "text-gray-500"}`}>Showing {filteredTenants.length} entries</span>
           </div>
 
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs font-sans">
               <thead>
-                <tr className="bg-black/60 text-gray-400 uppercase tracking-wider text-[9px] font-black border-b border-brand-dark-border">
+                <tr className={`uppercase tracking-wider text-[9px] font-black border-b ${
+                  isLight ? "bg-slate-100 border-slate-200 text-slate-700" : "bg-black/60 border-brand-dark-border text-gray-400"
+                }`}>
                   <th className="px-6 py-4">Client ID</th>
                   <th className="px-6 py-4">Business Name</th>
                   <th className="px-6 py-4">Sharded Branches</th>
@@ -520,10 +538,10 @@ export default function AdminReportsPage() {
                   <th className="px-6 py-4 text-center">Operational Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-brand-dark-border/30">
+              <tbody className={`divide-y ${isLight ? "divide-slate-100" : "divide-brand-dark-border/30"}`}>
                 {filteredTenants.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="text-center py-8 text-gray-600 italic font-sans">
+                    <td colSpan={6} className={`text-center py-8 italic font-sans ${isLight ? "text-slate-400" : "text-gray-500"}`}>
                       No records match the selected plan or sector filters.
                     </td>
                   </tr>
@@ -531,21 +549,23 @@ export default function AdminReportsPage() {
                   filteredTenants.map(tenant => {
                     const stats = getTenantDynamicStats(tenant.id);
                     return (
-                      <tr key={tenant.id} className="hover:bg-brand-dark-border/20 transition font-mono text-[11px]">
-                        <td className="px-6 py-3.5 text-purple-400 font-bold">{tenant.id}</td>
-                        <td className="px-6 py-3.5 text-white font-bold font-sans">{tenant.businessName}</td>
-                        <td className="px-6 py-3.5 font-sans text-gray-300">
+                      <tr key={tenant.id} className={`transition font-mono text-[11px] ${
+                        isLight ? "hover:bg-slate-50" : "hover:bg-brand-dark-border/20"
+                      }`}>
+                        <td className="px-6 py-3.5 text-purple-500 font-bold">{tenant.id}</td>
+                        <td className={`px-6 py-3.5 font-bold font-sans ${isLight ? "text-slate-900" : "text-white"}`}>{tenant.businessName}</td>
+                        <td className={`px-6 py-3.5 font-sans ${isLight ? "text-slate-600" : "text-gray-300"}`}>
                           {tenant.branches ? tenant.branches.join(", ") : "Main Branch"}
                         </td>
-                        <td className="px-6 py-3.5 text-center text-gray-400 font-bold">{stats.staffCount} staff</td>
-                        <td className="px-6 py-3.5 text-right text-emerald-400 font-bold">
+                        <td className={`px-6 py-3.5 text-center font-bold ${isLight ? "text-slate-500" : "text-gray-400"}`}>{stats.staffCount} staff</td>
+                        <td className="px-6 py-3.5 text-right text-emerald-500 font-bold">
                           Rs. {(stats.monthlyRevenue * (tenant.defaultCurrency === "USD" ? 280 : 1)).toLocaleString(undefined, { maximumFractionDigits: 0 })}
                         </td>
                         <td className="px-6 py-3.5 text-center">
                           <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-black ${
-                            tenant.status === "Active" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" :
-                            tenant.status === "Trial" ? "bg-brand-sky/10 text-brand-sky border border-brand-sky/20" :
-                            "bg-red-500/10 text-red-400 border border-red-500/20"
+                            tenant.status === "Active" ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20" :
+                            tenant.status === "Trial" ? "bg-sky-500/10 text-sky-500 border border-sky-500/20" :
+                            "bg-red-500/10 text-red-500 border border-red-500/20"
                           }`}>
                             {tenant.status}
                           </span>

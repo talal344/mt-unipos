@@ -226,8 +226,10 @@ export default function AdminSidebar() {
           isLight ? "bg-purple-50/60 border-slate-200" : "bg-black/60 border-brand-dark-border"
         }`}>
           <Link href="/admin/dashboard" className="flex items-center justify-center gap-2">
-            <MTCoreLogo variant="purple" size="sm" showText={true} />
-            <span className="bg-purple-500/20 text-purple-600 text-[8px] px-1.5 py-0.5 rounded font-black tracking-widest uppercase shrink-0">
+            <MTCoreLogo variant="purple" size="sm" showText={true} theme={isLight ? "light" : "dark"} />
+            <span className={`text-[8px] px-1.5 py-0.5 rounded font-black tracking-widest uppercase shrink-0 ${
+              isLight ? "bg-purple-100 text-purple-800 border border-purple-200" : "bg-purple-500/20 text-purple-400"
+            }`}>
               Admin
             </span>
           </Link>

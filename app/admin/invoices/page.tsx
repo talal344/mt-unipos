@@ -924,11 +924,15 @@ export default function AdminInvoicesPage() {
           </div>
 
           <div className="flex flex-wrap gap-2">
-            {/* Status dropdown */}
+            {/* Status Filter */}
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as any)}
-              className="bg-brand-dark-surface/40 border border-brand-dark-border px-3 py-1.5 rounded-lg text-[10px] text-gray-300 focus:outline-none focus:border-purple-500"
+              className={`border px-3 py-1.5 rounded-lg text-[10px] focus:outline-none focus:border-purple-500 ${
+                isLight 
+                  ? "bg-white border-slate-300 text-slate-900 shadow-xs" 
+                  : "bg-brand-dark-surface/40 border-brand-dark-border text-gray-300"
+              }`}
             >
               <option value="All">All Standings</option>
               <option value="Paid">Paid Only</option>
@@ -939,7 +943,11 @@ export default function AdminInvoicesPage() {
             <select
               value={planFilter}
               onChange={(e) => setPlanFilter(e.target.value as any)}
-              className="bg-brand-dark-surface/40 border border-brand-dark-border px-3 py-1.5 rounded-lg text-[10px] text-gray-300 focus:outline-none focus:border-purple-500"
+              className={`border px-3 py-1.5 rounded-lg text-[10px] focus:outline-none focus:border-purple-500 ${
+                isLight 
+                  ? "bg-white border-slate-300 text-slate-900 shadow-xs" 
+                  : "bg-brand-dark-surface/40 border-brand-dark-border text-gray-300"
+              }`}
             >
               <option value="All">All Plans</option>
               <option value="Starter">Starter</option>
@@ -950,7 +958,11 @@ export default function AdminInvoicesPage() {
             {/* Export CSV button */}
             <button
               onClick={handleExportCSV}
-              className="flex items-center gap-1.5 bg-brand-dark-surface border border-brand-dark-border px-3 py-1.5 rounded-lg text-[10px] text-gray-300 hover:text-white transition"
+              className={`flex items-center gap-1.5 border px-3 py-1.5 rounded-lg text-[10px] font-bold transition ${
+                isLight 
+                  ? "bg-white border-slate-300 text-slate-800 hover:bg-slate-50 shadow-xs" 
+                  : "bg-brand-dark-surface border-brand-dark-border text-gray-300 hover:text-white"
+              }`}
               title="Download CSV log"
             >
               <Download size={12} />
@@ -967,22 +979,22 @@ export default function AdminInvoicesPage() {
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className={`border-b font-mono ${
-                  isLight ? "bg-slate-50 border-slate-200 text-slate-700" : "bg-black/60 border-brand-dark-border text-gray-400"
+                  isLight ? "bg-slate-100 border-slate-200 text-slate-800 font-bold" : "bg-black/60 border-brand-dark-border text-gray-400"
                 }`}>
-                  <th className="p-4 font-semibold">Invoice No</th>
-                  <th className="p-4 font-semibold">Tenant Client Name</th>
-                  <th className="p-4 font-semibold">Deploy Plan</th>
-                  <th className="p-4 font-semibold">Total Bill (Currency)</th>
-                  <th className="p-4 font-semibold">Paid Amount</th>
-                  <th className="p-4 font-semibold">Remaining Dues</th>
-                  <th className="p-4 font-semibold">Status</th>
-                  <th className="p-4 font-semibold text-center">Payment &amp; Print Controls</th>
+                  <th className="p-4 font-bold">Invoice No</th>
+                  <th className="p-4 font-bold">Tenant Client Name</th>
+                  <th className="p-4 font-bold">Deploy Plan</th>
+                  <th className="p-4 font-bold">Total Bill (Currency)</th>
+                  <th className="p-4 font-bold">Paid Amount</th>
+                  <th className="p-4 font-bold">Remaining Dues</th>
+                  <th className="p-4 font-bold">Status</th>
+                  <th className="p-4 font-bold text-center">Payment &amp; Print Controls</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-brand-dark-border/40 font-mono text-[11px]">
+              <tbody className={`divide-y font-mono text-[11px] ${isLight ? "divide-slate-100" : "divide-brand-dark-border/40"}`}>
                 {filteredInvoices.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="p-8 text-center text-gray-600 italic font-sans">
+                    <td colSpan={8} className={`p-8 text-center italic font-sans ${isLight ? "text-slate-500" : "text-gray-600"}`}>
                       No invoices found matching current search/filter settings.
                     </td>
                   </tr>
