@@ -1345,17 +1345,17 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
 
     syncFromSupabase();
 
-    // Supabase Realtime Channel
+    // Supabase Realtime Channel (Instant Push Notifications without Egress Polling)
     const channel = supabase
       .channel("schema-db-changes")
       .on("postgres_changes", { event: "*", schema: "public", table: "unipos_global" }, () => syncFromSupabase())
       .on("postgres_changes", { event: "*", schema: "public", table: "unipos_collections" }, () => syncFromSupabase())
       .subscribe();
 
-    // Fast 3-second heartbeat polling fallback for rock-solid mobile sync
+    // Smart 5-minute background sync fallback (prevents Egress bandwidth spikes)
     const pollInterval = setInterval(() => {
       syncFromSupabase();
-    }, 3000);
+    }, 5 * 60 * 1000);
 
     const handleFocus = () => syncFromSupabase();
     window.addEventListener('online', syncFromSupabase);
