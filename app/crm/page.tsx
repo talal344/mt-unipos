@@ -72,10 +72,10 @@ export default function CrmPage() {
   };
 
   return (
-    <div className={`flex min-h-screen font-sans ${isLight ? "bg-slate-100 text-slate-900" : "bg-black text-gray-100"}`}>
+    <div className={`flex h-screen overflow-hidden font-sans ${isLight ? "bg-slate-100 text-slate-900" : "bg-black text-gray-100"}`}>
       <ClientSidebar />
 
-      <main className="flex-grow p-6 sm:p-8 space-y-6 overflow-y-auto max-h-screen">
+      <main className="flex-grow p-6 sm:p-8 space-y-6 overflow-y-auto h-screen">
         
         {/* Top Header */}
         <div className={`flex justify-between items-center border-b pb-4 ${isLight ? "border-slate-200" : "border-brand-dark-border/60"}`}>
@@ -263,7 +263,7 @@ export default function CrmPage() {
         </div>
 
         {/* Right Column: Bulk campaign sender (4 columns) */}
-        <div className={`border p-5 rounded-2xl h-fit ${
+        <div className={`lg:col-span-4 w-full border p-5 rounded-2xl h-fit ${
           isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/50 border-brand-dark-border text-gray-100"
         }`}>
           <h2 className={`text-xs font-black uppercase tracking-wider mb-4 border-b pb-2 flex items-center gap-1.5 ${
@@ -345,24 +345,24 @@ export default function CrmPage() {
       {/* Customer Dues Settlement Modal */}
       {recoveryCustomer && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4">
-          <div className="bg-brand-dark-surface border border-brand-sky/30 p-6 rounded-2xl w-full max-w-sm shadow-2xl animate-fade-in-up font-sans">
-            <div className="flex justify-between items-center border-b border-brand-dark-border pb-3 mb-4 text-xs">
-              <h3 className="font-black text-white">Settle Customer Account</h3>
-              <button onClick={() => setRecoveryCustomer(null)} className="text-gray-400 hover:text-white">Cancel</button>
+          <div className={`${isLight ? "bg-white border-slate-200 shadow-2xl text-slate-900" : "bg-brand-dark-surface border-brand-sky/30 text-white"} border p-6 rounded-2xl w-full max-w-sm shadow-2xl animate-fade-in-up font-sans`}>
+            <div className={`flex justify-between items-center border-b ${isLight ? "border-slate-200" : "border-brand-dark-border"} pb-3 mb-4 text-xs`}>
+              <h3 className={`font-black ${isLight ? "text-slate-900" : "text-white"}`}>Settle Customer Account</h3>
+              <button onClick={() => setRecoveryCustomer(null)} className={`${isLight ? "text-slate-400 hover:text-slate-900" : "text-gray-400 hover:text-white"}`}>Cancel</button>
             </div>
 
             <form onSubmit={handleRecoverySubmit} className="space-y-4 text-xs">
               <div>
-                <h4 className="text-white font-bold">{recoveryCustomer.name}</h4>
-                <p className="text-[9px] text-gray-500 font-mono">Accounts Receivable Balance: {currencySymbol} {recoveryCustomer.creditBalance.toLocaleString()}</p>
+                <h4 className={`font-bold ${isLight ? "text-slate-900" : "text-white"}`}>{recoveryCustomer.name}</h4>
+                <p className={`text-[9px] ${isLight ? "text-slate-500" : "text-gray-500"} font-mono`}>Accounts Receivable Balance: {currencySymbol} {recoveryCustomer.creditBalance.toLocaleString()}</p>
               </div>
 
               <div>
-                <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Payment Method</label>
+                <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-slate-600" : "text-gray-400"} mb-1`}>Payment Method</label>
                 <select
                   value={recoveryPaymentMethod}
                   onChange={e => setRecoveryPaymentMethod(e.target.value)}
-                  className="w-full bg-black border border-brand-dark-border p-2.5 rounded text-white font-bold focus:outline-none focus:border-brand-sky mb-3"
+                  className={`w-full ${isLight ? "bg-white border-slate-300 text-slate-900 focus:border-sky-500" : "bg-black border-brand-dark-border text-white focus:border-brand-sky"} border p-2.5 rounded font-bold focus:outline-none mb-3`}
                 >
                   <option value="Cash">💵 Cash</option>
                   <option value="Card">💳 Credit / Debit Card</option>
@@ -370,14 +370,14 @@ export default function CrmPage() {
                   <option value="EasyPaisa / JazzCash">📱 EasyPaisa / JazzCash</option>
                 </select>
 
-                <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Recovery Payment Received</label>
+                <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-slate-600" : "text-gray-400"} mb-1`}>Recovery Payment Received</label>
                 <input
                   type="number"
                   required
                   placeholder="e.g. 2000"
                   value={recoveryAmount}
                   onChange={(e) => setRecoveryAmount(e.target.value)}
-                  className="w-full bg-black border border-brand-dark-border p-2.5 rounded text-white font-mono font-bold"
+                  className={`w-full ${isLight ? "bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-sky-500" : "bg-black border-brand-dark-border text-white"} border p-2.5 rounded font-mono font-bold focus:outline-none`}
                 />
               </div>
 
@@ -395,27 +395,27 @@ export default function CrmPage() {
       {/* Supplier AP Payout Modal */}
       {payoutSupplier && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4">
-          <div className="bg-brand-dark-surface border border-purple-500/30 p-6 rounded-2xl w-full max-w-sm shadow-2xl animate-fade-in-up font-sans">
-            <div className="flex justify-between items-center border-b border-brand-dark-border pb-3 mb-4 text-xs">
-              <h3 className="font-black text-white">Settle Accounts Payable</h3>
-              <button onClick={() => setPayoutSupplier(null)} className="text-gray-400 hover:text-white">Cancel</button>
+          <div className={`${isLight ? "bg-white border-slate-200 shadow-2xl text-slate-900" : "bg-brand-dark-surface border-purple-500/30 text-white"} border p-6 rounded-2xl w-full max-w-sm shadow-2xl animate-fade-in-up font-sans`}>
+            <div className={`flex justify-between items-center border-b ${isLight ? "border-slate-200" : "border-brand-dark-border"} pb-3 mb-4 text-xs`}>
+              <h3 className={`font-black ${isLight ? "text-slate-900" : "text-white"}`}>Settle Accounts Payable</h3>
+              <button onClick={() => setPayoutSupplier(null)} className={`${isLight ? "text-slate-400 hover:text-slate-900" : "text-gray-400 hover:text-white"}`}>Cancel</button>
             </div>
 
             <form onSubmit={handlePayoutSubmit} className="space-y-4 text-xs">
               <div>
-                <h4 className="text-white font-bold">{payoutSupplier.name}</h4>
-                <p className="text-[9px] text-gray-500 font-mono">Accounts Payable Due: {currencySymbol} {payoutSupplier.dueAmount.toLocaleString()}</p>
+                <h4 className={`font-bold ${isLight ? "text-slate-900" : "text-white"}`}>{payoutSupplier.name}</h4>
+                <p className={`text-[9px] ${isLight ? "text-slate-500" : "text-gray-500"} font-mono`}>Accounts Payable Due: {currencySymbol} {payoutSupplier.dueAmount.toLocaleString()}</p>
               </div>
 
               <div>
-                <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Payment Amount Paid</label>
+                <label className={`block text-[10px] uppercase font-bold ${isLight ? "text-slate-600" : "text-gray-400"} mb-1`}>Payment Amount Paid</label>
                 <input
                   type="number"
                   required
                   placeholder="e.g. 10000"
                   value={payoutAmount}
                   onChange={(e) => setPayoutAmount(e.target.value)}
-                  className="w-full bg-black border border-brand-dark-border p-2.5 rounded text-white font-mono font-bold"
+                  className={`w-full ${isLight ? "bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-sky-500" : "bg-black border-brand-dark-border text-white"} border p-2.5 rounded font-mono font-bold focus:outline-none`}
                 />
               </div>
 

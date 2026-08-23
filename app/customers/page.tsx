@@ -439,7 +439,7 @@ export default function CustomersPage() {
   }).length;
 
   return (
-    <div className={`flex min-h-screen font-sans ${isLight ? "bg-slate-100 text-slate-900" : "bg-black text-gray-100"}`}>
+    <div className={`flex h-screen overflow-hidden font-sans ${isLight ? "bg-slate-100 text-slate-900" : "bg-black text-gray-100"}`}>
       <ClientSidebar />
 
       {/* ── Toast ── */}
@@ -449,12 +449,12 @@ export default function CustomersPage() {
         </div>
       )}
 
-      <main className="flex-grow flex overflow-hidden max-h-screen">
+      <main className="flex-grow flex overflow-hidden h-screen">
 
         {/* ═══════════════════════════════════════════════════════════════
             LEFT PANEL — Customer List
         ═══════════════════════════════════════════════════════════════ */}
-        <section className={`flex flex-col border-r border-brand-dark-border transition-all duration-300 ${selectedId ? "w-0 lg:w-[420px] overflow-hidden" : "flex-grow"}`}>
+        <section className={`flex flex-col border-r ${isLight ? "border-slate-200" : "border-brand-dark-border"} transition-all duration-300 ${selectedId ? "w-0 lg:w-[420px] overflow-hidden" : "flex-grow"}`}>
           <div className="flex-grow overflow-y-auto p-6 space-y-5">
 
             {/* Header */}
@@ -558,7 +558,11 @@ export default function CustomersPage() {
                   >
                     {/* Avatar */}
                     <div className={`w-11 h-11 rounded-full flex items-center justify-center font-black text-sm shrink-0 ${
-                      isActive ? "bg-brand-sky text-black" : "bg-brand-dark-border text-gray-300"
+                      isActive 
+                        ? "bg-brand-sky text-black" 
+                        : isLight 
+                        ? "bg-slate-200 text-slate-700" 
+                        : "bg-brand-dark-border text-gray-300"
                     }`}>
                       {c.name.charAt(0).toUpperCase()}
                     </div>
@@ -566,7 +570,7 @@ export default function CustomersPage() {
                     {/* Info */}
                     <div className="flex-grow min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-white text-sm truncate">{c.name}</span>
+                        <span className={`font-bold text-sm truncate ${isLight ? "text-slate-900" : "text-white"}`}>{c.name}</span>
                         {c.customerNo && c.customerNo !== "N/A" && (
                           <span className="text-[8px] bg-brand-sky/15 border border-brand-sky/30 text-brand-sky font-mono font-bold px-1.5 py-0.5 rounded">
                             {c.customerNo}
@@ -576,7 +580,7 @@ export default function CustomersPage() {
                           {tier.label}
                         </span>
                       </div>
-                      <div className="text-[10px] text-gray-500 mt-0.5 flex items-center gap-3">
+                      <div className={`text-[10px] mt-0.5 flex items-center gap-3 ${isLight ? "text-slate-500" : "text-gray-500"}`}>
                         <span className="flex items-center gap-1"><Phone size={9} /> {c.mobile}</span>
                         {c.totalVisits > 0 && (
                           <span className="flex items-center gap-1"><ShoppingBag size={9} /> {c.totalVisits} purchases</span>
@@ -586,25 +590,25 @@ export default function CustomersPage() {
 
                     {/* Points + Spent + Credit Balance */}
                     <div className="text-right shrink-0 space-y-1">
-                      <div className="flex items-center gap-1 justify-end text-yellow-400 font-black text-xs font-mono">
-                        <Star size={10} className="fill-yellow-400" /> {c.loyaltyPoints}
+                      <div className={`flex items-center gap-1 justify-end font-black text-xs font-mono ${isLight ? "text-amber-500" : "text-yellow-400"}`}>
+                        <Star size={10} className={isLight ? "fill-amber-500" : "fill-yellow-400"} /> {c.loyaltyPoints}
                       </div>
-                      <div className="text-[10px] text-brand-sky font-bold font-mono">
+                      <div className={`text-[10px] font-bold font-mono ${isLight ? "text-sky-600" : "text-brand-sky"}`}>
                         {currencySymbol} {Math.round(c.totalSpent).toLocaleString()}
                       </div>
                       {c.creditBalance > 0 && (
-                        <div className="text-[8px] bg-red-500/10 border border-red-500/35 text-red-400 font-black px-1.5 py-0.5 rounded mt-1 font-mono uppercase tracking-wide">
+                        <div className="text-[8px] bg-red-500/10 border border-red-500/35 text-red-500 font-black px-1.5 py-0.5 rounded mt-1 font-mono uppercase tracking-wide">
                           Due: {currencySymbol} {c.creditBalance.toLocaleString()}
                         </div>
                       )}
                       {(c.walletBalance || 0) > 0 && (
-                        <div className="text-[8px] bg-emerald-500/10 border border-emerald-500/35 text-emerald-400 font-black px-1.5 py-0.5 rounded mt-1 font-mono uppercase tracking-wide">
+                        <div className="text-[8px] bg-emerald-500/10 border border-emerald-500/35 text-emerald-500 font-black px-1.5 py-0.5 rounded mt-1 font-mono uppercase tracking-wide">
                           Wallet: {currencySymbol} {(c.walletBalance || 0).toLocaleString()}
                         </div>
                       )}
                     </div>
 
-                    <ChevronRight size={14} className="text-gray-600 group-hover:text-brand-sky transition shrink-0" />
+                    <ChevronRight size={14} className={`${isLight ? "text-slate-400 group-hover:text-sky-600" : "text-gray-600 group-hover:text-brand-sky"} transition shrink-0`} />
                   </div>
                 );
               })}

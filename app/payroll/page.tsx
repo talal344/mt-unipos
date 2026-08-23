@@ -25,10 +25,10 @@ export default function PayrollPage() {
   };
 
   return (
-    <div className={`flex min-h-screen font-sans print:bg-white print:text-black ${isLight ? "bg-slate-100 text-slate-900" : "bg-black text-gray-100"}`}>
+    <div className={`flex h-screen overflow-hidden font-sans print:bg-white print:text-black ${isLight ? "bg-slate-100 text-slate-900" : "bg-black text-gray-100"}`}>
       <ClientSidebar />
 
-      <main className="flex-grow p-6 sm:p-8 space-y-6 overflow-y-auto max-h-screen print:hidden">
+      <main className="flex-grow p-6 sm:p-8 space-y-6 overflow-y-auto h-screen print:hidden">
         
         {/* Top Header */}
         <div className={`flex justify-between items-center border-b pb-4 ${isLight ? "border-slate-200" : "border-brand-dark-border/60"}`}>

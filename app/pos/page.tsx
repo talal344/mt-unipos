@@ -952,7 +952,7 @@ export default function PosPage() {
   }
 
   return (
-    <div className={`flex min-h-screen font-sans print:bg-white print:text-black ${isLight ? "bg-slate-100 text-slate-900" : "bg-black text-gray-100"}`}>
+    <div className={`flex h-screen overflow-hidden font-sans print:bg-white print:text-black ${isLight ? "bg-slate-100 text-slate-900" : "bg-black text-gray-100"}`}>
       <ClientSidebar />
 
       {/* Toast */}
@@ -969,9 +969,9 @@ export default function PosPage() {
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-md print:hidden"
           style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.03) 1px, transparent 0)', backgroundSize: '28px 28px' }}
         >
-          <div className="bg-brand-dark-surface border border-brand-sky/25 rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+          <div className={`${isLight ? "bg-white border-slate-200 shadow-2xl text-slate-900" : "bg-brand-dark-surface border-brand-sky/25 text-white"} border rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden`}>
             {/* Header band */}
-            <div className="bg-gradient-to-r from-brand-sky/10 to-transparent border-b border-brand-dark-border px-6 pt-8 pb-6 text-center">
+            <div className={`bg-gradient-to-r ${isLight ? "from-sky-50 to-transparent border-slate-200" : "from-brand-sky/10 to-transparent border-brand-dark-border"} border-b px-6 pt-8 pb-6 text-center`}>
               <div className="w-14 h-14 rounded-2xl bg-brand-sky/15 border border-brand-sky/30 flex items-center justify-center mx-auto mb-4">
                 <DollarSign size={26} className="text-brand-sky" />
               </div>
@@ -983,19 +983,19 @@ export default function PosPage() {
 
             <div className="p-6 space-y-5">
               <div>
-                <h3 className="font-black text-white text-sm mb-1">Open New Shift</h3>
-                <p className="text-[10px] text-gray-500">Record your opening cash balance to begin selling.</p>
+                <h3 className={`font-black ${isLight ? "text-slate-900" : "text-white"} text-sm mb-1`}>Open New Shift</h3>
+                <p className={`text-[10px] ${isLight ? "text-slate-500" : "text-gray-500"}`}>Record your opening cash balance to begin selling.</p>
               </div>
 
               {/* Cashier & Date */}
               <div className="grid grid-cols-2 gap-3">
-                <div className="bg-black/50 border border-brand-dark-border rounded-xl p-3">
-                  <p className="text-[9px] uppercase font-bold text-gray-500 mb-1">Cashier</p>
-                  <p className="text-white font-black text-xs truncate">{currentUser?.name || 'Cashier'}</p>
+                <div className={`border rounded-xl p-3 ${isLight ? "bg-slate-50 border-slate-200" : "bg-black/50 border-brand-dark-border"}`}>
+                  <p className={`text-[9px] uppercase font-bold ${isLight ? "text-slate-500" : "text-gray-500"} mb-1`}>Cashier</p>
+                  <p className={`font-black text-xs truncate ${isLight ? "text-slate-900" : "text-white"}`}>{currentUser?.name || 'Cashier'}</p>
                 </div>
-                <div className="bg-black/50 border border-brand-dark-border rounded-xl p-3">
-                  <p className="text-[9px] uppercase font-bold text-gray-500 mb-1">Date & Time</p>
-                  <p className="text-white font-mono text-[10px] font-black">
+                <div className={`border rounded-xl p-3 ${isLight ? "bg-slate-50 border-slate-200" : "bg-black/50 border-brand-dark-border"}`}>
+                  <p className={`text-[9px] uppercase font-bold ${isLight ? "text-slate-500" : "text-gray-500"} mb-1`}>Date & Time</p>
+                  <p className={`font-mono text-[10px] font-black ${isLight ? "text-slate-900" : "text-white"}`}>
                     {new Date().toLocaleDateString()} {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </p>
                 </div>
@@ -1003,11 +1003,11 @@ export default function PosPage() {
 
               {/* Select Counter */}
               <div>
-                <label className="block text-[9px] uppercase font-bold text-gray-400 mb-1">Select Checkout Counter / Terminal</label>
+                <label className={`block text-[9px] uppercase font-bold ${isLight ? "text-slate-600" : "text-gray-400"} mb-1`}>Select Checkout Counter / Terminal</label>
                 <select
                   value={selectedCounter}
                   onChange={e => setSelectedCounter(e.target.value)}
-                  className="w-full bg-black border border-brand-dark-border p-3 rounded-xl text-white font-bold text-xs focus:outline-none mb-3"
+                  className={`w-full ${isLight ? "bg-white border-slate-300 text-slate-900" : "bg-black border-brand-dark-border text-white"} border p-3 rounded-xl font-bold text-xs focus:outline-none mb-3`}
                 >
                   <option value="Counter 1">Counter 1 (Main Checkout)</option>
                   <option value="Counter 2">Counter 2 (Secondary)</option>
@@ -1019,7 +1019,7 @@ export default function PosPage() {
 
               {/* Opening Cash Input */}
               <div>
-                <label className="block text-[9px] uppercase font-bold text-gray-400 mb-2">Opening Cash Float Balance ({currencySymbol})</label>
+                <label className={`block text-[9px] uppercase font-bold ${isLight ? "text-slate-600" : "text-gray-400"} mb-2`}>Opening Cash Float Balance ({currencySymbol})</label>
                 <div className="relative">
                   <DollarSign className="absolute left-3 top-3.5 text-brand-sky" size={15} />
                   <input
@@ -1031,10 +1031,10 @@ export default function PosPage() {
                     onChange={e => setOpeningCash(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && handleOpenShift()}
                     autoFocus
-                    className="w-full bg-black border border-brand-sky/30 focus:border-brand-sky pl-10 pr-4 py-3 rounded-xl text-white font-mono text-lg font-black focus:outline-none transition"
+                    className={`w-full ${isLight ? "bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-sky-500" : "bg-black border-brand-sky/30 text-white focus:border-brand-sky"} border pl-10 pr-4 py-3 rounded-xl font-mono text-lg font-black focus:outline-none transition`}
                   />
                 </div>
-                <p className="text-[9px] text-gray-600 mt-1">Enter 0 if starting with an empty drawer.</p>
+                <p className={`text-[9px] ${isLight ? "text-slate-500" : "text-gray-600"} mt-1`}>Enter 0 if starting with an empty drawer.</p>
               </div>
 
               <button
@@ -1051,7 +1051,7 @@ export default function PosPage() {
       {/* ══════════════════════════════════════════════════════════════════════
           MAIN POS GRID
       ══════════════════════════════════════════════════════════════════════ */}
-      <main className="flex-grow p-4 grid grid-cols-1 lg:grid-cols-12 gap-4 max-h-screen overflow-hidden print:hidden">
+      <main className="flex-grow p-4 grid grid-cols-1 lg:grid-cols-12 gap-4 h-screen overflow-hidden print:hidden">
 
         {/* ── SHIFT STATUS BAR ── */}
         {shiftOpen && (
@@ -1114,45 +1114,57 @@ export default function PosPage() {
               </div>
               <button 
                 onClick={() => setShowHeldCartsPanel(true)}
-                className={`flex items-center gap-1.5 text-[9px] font-black uppercase px-2 py-1 rounded transition ${heldCarts.length > 0 ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40 animate-pulse' : 'bg-gray-800 text-gray-400 border border-gray-700 hover:bg-gray-700'}`}>
+                className={`flex items-center gap-1.5 text-[9px] font-black uppercase px-2 py-1 rounded transition ${
+                  heldCarts.length > 0 
+                    ? 'bg-amber-500/20 text-amber-500 border border-amber-500/40 animate-pulse' 
+                    : isLight 
+                    ? 'bg-slate-100 text-slate-700 border border-slate-300 hover:bg-slate-200' 
+                    : 'bg-gray-800 text-gray-400 border border-gray-700 hover:bg-gray-700'
+                }`}>
                 <Clock size={10} />
                 Held ({heldCarts.length})
               </button>
-              <div className="hidden sm:flex items-center gap-1 text-[10px] text-gray-400 font-mono">
+              <div className={`hidden sm:flex items-center gap-1 text-[10px] font-mono ${isLight ? "text-slate-600" : "text-gray-400"}`}>
                 <DollarSign size={10} className="text-brand-sky" />
                 Cash: <span className="text-brand-sky font-black ml-0.5">{currencySymbol} {shiftCashSales.toFixed(0)}</span>
               </div>
               <div className="relative">
                 <button 
                   onClick={() => setShowLowStockModal(!showLowStockModal)}
-                  className={`flex items-center gap-1.5 text-[9px] font-black uppercase px-2 py-1 rounded transition ${lowStockAlerts.length > 0 ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40 animate-pulse' : 'bg-gray-800 text-gray-400 border border-gray-700 hover:bg-gray-700'}`}>
+                  className={`flex items-center gap-1.5 text-[9px] font-black uppercase px-2 py-1 rounded transition ${
+                    lowStockAlerts.length > 0 
+                      ? 'bg-amber-500/20 text-amber-500 border border-amber-500/40 animate-pulse' 
+                      : isLight 
+                      ? 'bg-slate-100 text-slate-700 border border-slate-300 hover:bg-slate-200' 
+                      : 'bg-gray-800 text-gray-400 border border-gray-700 hover:bg-gray-700'
+                  }`}>
                   <Bell size={10} />
                   Alerts {lowStockAlerts.length > 0 && `(${lowStockAlerts.length})`}
                 </button>
                 {showLowStockModal && (
-                  <div className="absolute top-8 left-0 w-64 bg-[#111111] border border-brand-dark-border rounded-xl shadow-2xl z-50 overflow-hidden">
-                    <div className="bg-amber-500/10 border-b border-brand-dark-border px-3 py-2 flex justify-between items-center">
-                      <span className="text-[10px] font-black text-amber-400 uppercase flex items-center gap-1">
+                  <div className={`absolute top-8 left-0 w-64 ${isLight ? "bg-white border-slate-200 text-slate-900 shadow-2xl" : "bg-[#111111] border-brand-dark-border text-white"} border rounded-xl shadow-2xl z-50 overflow-hidden`}>
+                    <div className={`bg-amber-500/10 border-b ${isLight ? "border-slate-200" : "border-brand-dark-border"} px-3 py-2 flex justify-between items-center`}>
+                      <span className="text-[10px] font-black text-amber-500 uppercase flex items-center gap-1">
                         <Package size={10} /> Low Stock Alerts
                       </span>
-                      <button onClick={() => setShowLowStockModal(false)} className="text-gray-500 hover:text-white"><X size={12} /></button>
+                      <button onClick={() => setShowLowStockModal(false)} className={`${isLight ? "text-slate-400 hover:text-slate-900" : "text-gray-500 hover:text-white"}`}><X size={12} /></button>
                     </div>
                     <div className="max-h-60 overflow-y-auto">
                       {lowStockAlerts.length > 0 ? (
                         lowStockAlerts.map(p => (
-                          <div key={p.id} className="flex justify-between items-center px-3 py-2 border-b border-brand-dark-border/40 hover:bg-brand-dark-border/20">
+                          <div key={p.id} className={`flex justify-between items-center px-3 py-2 border-b ${isLight ? "border-slate-100 hover:bg-slate-50" : "border-brand-dark-border/40 hover:bg-brand-dark-border/20"}`}>
                             <div>
-                              <div className="text-[10px] font-bold text-white truncate w-32">{p.name}</div>
-                              <div className="text-[8px] text-gray-500 font-mono">{p.sku}</div>
+                              <div className={`text-[10px] font-bold truncate w-32 ${isLight ? "text-slate-900" : "text-white"}`}>{p.name}</div>
+                              <div className={`text-[8px] font-mono ${isLight ? "text-slate-400" : "text-gray-500"}`}>{p.sku}</div>
                             </div>
                             <div className="text-right">
-                              <div className="text-[10px] font-black text-red-400">{p.stock} left</div>
-                              <div className="text-[8px] text-gray-500">Min: {p.minStock}</div>
+                              <div className="text-[10px] font-black text-red-500">{p.stock} left</div>
+                              <div className={`text-[8px] ${isLight ? "text-slate-400" : "text-gray-500"}`}>Min: {p.minStock}</div>
                             </div>
                           </div>
                         ))
                       ) : (
-                        <div className="px-3 py-6 text-center text-[10px] text-gray-500">All stock levels healthy!</div>
+                        <div className={`px-3 py-6 text-center text-[10px] ${isLight ? "text-slate-400" : "text-gray-500"}`}>All stock levels healthy!</div>
                       )}
                     </div>
                   </div>
@@ -1175,19 +1187,19 @@ export default function PosPage() {
                 }}
                 className={`flex items-center gap-1.5 text-[9px] font-black uppercase px-2.5 py-1 rounded transition cursor-pointer ${
                   hasSavedFolder 
-                    ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/20" 
-                    : "bg-red-500/20 text-red-400 border-2 border-red-500/60 animate-pulse hover:bg-red-500/30 shadow-lg shadow-red-500/30"
+                    ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/30 hover:bg-emerald-500/20" 
+                    : "bg-red-500/20 text-red-500 border-2 border-red-500/60 animate-pulse hover:bg-red-500/30 shadow-lg shadow-red-500/30"
                 }`}
                 title={hasSavedFolder ? `Save folder connected: ${folderName}` : "Click to set local save folder for auto-saving receipts"}
               >
                 {hasSavedFolder ? (
                   <>
-                    <CheckCircle2 size={11} className="text-emerald-400" />
+                    <CheckCircle2 size={11} className="text-emerald-500" />
                     <span>✓ {folderName ? `FOLDER: ${folderName}` : "SAVE FOLDER SET"}</span>
                   </>
                 ) : (
                   <>
-                    <Download size={11} className="animate-bounce text-red-400" />
+                    <Download size={11} className="animate-bounce text-red-500" />
                     <span>⚠️ SET SAVE FOLDER</span>
                   </>
                 )}
@@ -1210,7 +1222,7 @@ export default function PosPage() {
 
               <button
                 onClick={() => setShowCloseShiftModal(true)}
-                className="flex items-center gap-1.5 bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 text-red-400 font-black text-[10px] px-3 py-1.5 rounded-lg transition"
+                className="flex items-center gap-1.5 bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 text-red-500 font-black text-[10px] px-3 py-1.5 rounded-lg transition"
               >
                 <LogOut size={11} /> Close Shift
               </button>
@@ -1224,13 +1236,13 @@ export default function PosPage() {
           {/* Search + Barcode */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 shrink-0">
             <div className="relative">
-              <Search className="absolute left-3 top-3 text-gray-500" size={15} />
+              <Search className={`absolute left-3 top-3 ${isLight ? "text-slate-400" : "text-gray-500"}`} size={15} />
               <input
                 type="text"
                 placeholder="Search by name, SKU, barcode..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className="w-full bg-brand-dark-surface border border-brand-dark-border pl-10 pr-4 py-2.5 rounded-lg text-xs text-white focus:outline-none focus:border-brand-sky"
+                className={`w-full ${isLight ? "bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-sky-500 shadow-xs" : "bg-brand-dark-surface border-brand-dark-border text-white focus:border-brand-sky"} pl-10 pr-4 py-2.5 rounded-lg text-xs focus:outline-none border`}
               />
             </div>
             <form onSubmit={handleBarcodeSubmit} className="relative flex gap-2">
@@ -1241,7 +1253,7 @@ export default function PosPage() {
                   placeholder="Scan Barcode / SKU → Enter..."
                   value={barcodeInput}
                   onChange={e => setBarcodeInput(e.target.value)}
-                  className="w-full bg-brand-dark-surface border border-brand-sky/30 pl-10 pr-4 py-2.5 rounded-lg text-xs text-white font-mono focus:outline-none focus:border-brand-sky"
+                  className={`w-full ${isLight ? "bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-sky-500 shadow-xs" : "bg-brand-dark-surface border-brand-sky/30 text-white focus:border-brand-sky"} pl-10 pr-4 py-2.5 rounded-lg text-xs font-mono focus:outline-none border`}
                 />
               </div>
               <button
@@ -1271,14 +1283,18 @@ export default function PosPage() {
                   key={cat}
                   onClick={() => setSelectedCat(cat)}
                   className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase shrink-0 transition ${
-                    selectedCat === cat ? "bg-brand-sky text-black" : "bg-brand-dark-surface border border-brand-dark-border text-gray-400 hover:text-white"
+                    selectedCat === cat 
+                      ? "bg-brand-sky text-black font-black" 
+                      : isLight 
+                      ? "bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 shadow-xs" 
+                      : "bg-brand-dark-surface border border-brand-dark-border text-gray-400 hover:text-white"
                   }`}
                 >{cat}</button>
               ))}
             </div>
             <button
               onClick={() => { setShowReturnModal(true); setReturnSale(null); setReturnDone(false); setReturnReceiptSearch(""); }}
-              className="shrink-0 flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 text-amber-400 font-bold text-[10px] px-3 py-1.5 rounded-lg transition"
+              className="shrink-0 flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 text-amber-500 font-bold text-[10px] px-3 py-1.5 rounded-lg transition"
             >
               <RotateCcw size={11} /> Return
             </button>
@@ -1294,30 +1310,34 @@ export default function PosPage() {
                   key={prod.id}
                   onClick={() => openAddModal(prod)}
                   className={`p-3.5 rounded-xl text-left border flex flex-col justify-between h-36 transition hover:scale-[1.01] active:scale-[0.98] ${
-                    isLow ? "bg-red-500/5 border-red-500/20 hover:border-red-500/60" : "bg-brand-dark-surface/50 border-brand-dark-border/80 hover:border-brand-sky/50"
+                    isLow 
+                      ? "bg-red-500/5 border-red-500/20 hover:border-red-500/60" 
+                      : isLight 
+                      ? "bg-white border-slate-200 shadow-xs text-slate-900 hover:border-sky-400" 
+                      : "bg-brand-dark-surface/50 border-brand-dark-border/80 hover:border-brand-sky/50"
                   }`}
                 >
                   <div className="space-y-0.5">
-                    <span className="text-[8px] uppercase tracking-widest font-bold text-gray-500 flex items-center gap-1">
+                    <span className={`text-[8px] uppercase tracking-widest font-bold ${isLight ? "text-slate-500" : "text-gray-500"} flex items-center gap-1`}>
                       {isWeight && <Scale size={8} className="text-brand-sky" />}
                       {prod.category}
                     </span>
-                    <h4 className="text-white font-bold text-xs leading-snug truncate">{prod.name}</h4>
-                    <p className="text-[9px] text-gray-500 font-mono">{prod.variant || prod.unit}</p>
+                    <h4 className={`font-bold text-xs leading-snug truncate ${isLight ? "text-slate-900" : "text-white"}`}>{prod.name}</h4>
+                    <p className={`text-[9px] font-mono ${isLight ? "text-slate-500" : "text-gray-500"}`}>{prod.variant || prod.unit}</p>
                   </div>
                   <div className="flex justify-between items-end mt-2 w-full gap-1">
                     <div>
                       <span className="text-brand-sky font-black font-mono text-xs">{currencySymbol} {prod.salePrice}</span>
-                      <span className="text-[8px] text-gray-600 block">per {prod.unit}</span>
+                      <span className={`text-[8px] block ${isLight ? "text-slate-400" : "text-gray-600"}`}>per {prod.unit}</span>
                     </div>
                     <div className="text-right">
-                      <span className={`text-[9px] font-mono ${isLow ? "text-red-400 font-bold" : "text-gray-500"}`}>
+                      <span className={`text-[9px] font-mono ${isLow ? "text-red-500 font-bold" : isLight ? "text-slate-500" : "text-gray-500"}`}>
                         {prod.stock} {prod.unit}
                       </span>
                       {isWeight ? (
                         <div className="text-[7px] text-brand-sky/70 uppercase tracking-wide mt-0.5 font-bold">⚖ Qty / Amount</div>
                       ) : (
-                        <div className="text-[7px] text-gray-600 uppercase tracking-wide mt-0.5">Tap to add</div>
+                        <div className={`text-[7px] ${isLight ? "text-slate-400" : "text-gray-600"} uppercase tracking-wide mt-0.5`}>Tap to add</div>
                       )}
                     </div>
                   </div>
@@ -1609,34 +1629,38 @@ export default function PosPage() {
                     setDiscountType(discountType === "percent" ? "fixed" : "percent");
                     setDiscountValue(0);
                   }}
-                  className="absolute right-1 px-1.5 py-0.5 bg-brand-dark-border hover:bg-brand-sky/20 text-brand-sky hover:text-white font-bold text-[8px] rounded uppercase transition"
+                  className={`absolute right-1 px-1.5 py-0.5 ${
+                    isLight 
+                      ? "bg-slate-200 text-slate-700 hover:bg-slate-300" 
+                      : "bg-brand-dark-border hover:bg-brand-sky/20 text-brand-sky hover:text-white"
+                  } font-bold text-[8px] rounded uppercase transition`}
                 >
                   {discountType === "percent" ? "%" : currencySymbol}
                 </button>
               </div>
               <div className="relative">
-                <Notebook className="absolute left-2 top-2 text-gray-500" size={11} />
+                <Notebook className={`absolute left-2 top-2 ${isLight ? "text-slate-400" : "text-gray-500"}`} size={11} />
                 <input type="text" placeholder="Receipt Notes..." value={checkoutNotes}
                   onChange={e => setCheckoutNotes(e.target.value)}
-                  className="w-full bg-black border border-brand-dark-border pl-7 pr-2 py-1.5 rounded text-[10px] text-white focus:outline-none" />
+                  className={`w-full ${isLight ? "bg-slate-50 border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-sky-500" : "bg-black border-brand-dark-border text-white focus:border-brand-sky"} border pl-7 pr-2 py-1.5 rounded text-[10px] focus:outline-none`} />
               </div>
             </div>
 
             {/* Totals */}
-            <div className="space-y-1 font-mono text-[10px] text-gray-500 border-b border-brand-dark-border/40 pb-2">
-              <div className="flex justify-between"><span>Subtotal:</span><span className="text-white font-bold">{currencySymbol} {cartSubtotal.toFixed(2)}</span></div>
-              <div className="flex justify-between"><span>Tax:</span><span className="text-white">{currencySymbol} {cartTax.toFixed(2)}</span></div>
+            <div className={`space-y-1 font-mono text-[10px] ${isLight ? "text-slate-600 border-slate-200" : "text-gray-500 border-brand-dark-border/40"} border-b pb-2`}>
+              <div className="flex justify-between"><span>Subtotal:</span><span className={`font-bold ${isLight ? "text-slate-900" : "text-white"}`}>{currencySymbol} {cartSubtotal.toFixed(2)}</span></div>
+              <div className="flex justify-between"><span>Tax:</span><span className={isLight ? "text-slate-700" : "text-white"}>{currencySymbol} {cartTax.toFixed(2)}</span></div>
               {discountValue > 0 && (
-                <div className="flex justify-between text-red-400">
+                <div className="flex justify-between text-red-500">
                   <span>Discount ({discountType === "percent" ? `${discountValue}%` : `${currencySymbol} ${discountValue}`}):</span>
                   <span>-{currencySymbol} {discountAmount.toFixed(2)}</span>
                 </div>
               )}
-              {redeemLoyalty && <div className="flex justify-between text-purple-400 font-bold"><span>Loyalty Redeem:</span><span>-{currencySymbol} 100</span></div>}
+              {redeemLoyalty && <div className="flex justify-between text-purple-600 font-bold"><span>Loyalty Redeem:</span><span>-{currencySymbol} 100</span></div>}
             </div>
 
             <div className="flex justify-between items-baseline">
-              <span className="text-xs text-white font-black uppercase">Grand Total:</span>
+              <span className={`text-xs font-black uppercase ${isLight ? "text-slate-900" : "text-white"}`}>Grand Total:</span>
               <span className="text-xl font-black text-brand-sky font-mono">{currencySymbol} {cartGrandTotal.toFixed(2)}</span>
             </div>
 
@@ -1657,7 +1681,13 @@ export default function PosPage() {
                 }
               }}
               disabled={cart.length === 0}
-              className="w-full py-3.5 bg-brand-sky disabled:bg-brand-dark-border disabled:text-gray-500 hover:bg-brand-sky-light text-black font-black uppercase tracking-wider rounded-xl transition flex items-center justify-center gap-1.5 shadow-lg shadow-brand-sky/15 text-xs"
+              className={`w-full py-3.5 ${
+                cart.length === 0 
+                  ? isLight 
+                    ? "bg-slate-200 text-slate-400 border border-slate-300 cursor-not-allowed" 
+                    : "bg-brand-dark-border text-gray-500 cursor-not-allowed" 
+                  : "bg-brand-sky hover:bg-brand-sky-light text-black shadow-lg shadow-brand-sky/15"
+              } font-black uppercase tracking-wider rounded-xl transition flex items-center justify-center gap-1.5 text-xs`}
             >
               Confirm Checkout
             </button>

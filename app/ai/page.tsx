@@ -126,10 +126,10 @@ export default function AiPage() {
   const RANK_COLORS = ["text-yellow-400","text-gray-300","text-amber-600"];
 
   return (
-    <div className={`flex min-h-screen font-sans ${isLight ? "bg-slate-100 text-slate-900" : "bg-black text-gray-100"}`}>
+    <div className={`flex h-screen overflow-hidden font-sans ${isLight ? "bg-slate-100 text-slate-900" : "bg-black text-gray-100"}`}>
       <ClientSidebar />
 
-      <main className="flex-grow p-5 space-y-5 overflow-y-auto max-h-screen">
+      <main className="flex-grow p-5 space-y-5 overflow-y-auto h-screen">
 
         {/* Header */}
         <div className={`flex items-center justify-between border-b pb-4 ${isLight ? "border-slate-200" : "border-brand-dark-border/60"}`}>

@@ -674,11 +674,11 @@ export default function ClientDashboardPage() {
   const readingClubMembers = customers.filter(c => c.loyaltyPoints > 100);
 
   return (
-    <div className={`flex min-h-screen font-sans ${isLight ? "bg-slate-100 text-slate-900" : "bg-black text-gray-100"}`}>
+    <div className={`flex h-screen overflow-hidden font-sans ${isLight ? "bg-slate-100 text-slate-900" : "bg-black text-gray-100"}`}>
       <ClientSidebar />
 
       {/* Main Command Workspace */}
-      <main className="flex-grow p-6 sm:p-8 space-y-6 overflow-y-auto max-h-screen">
+      <main className="flex-grow p-6 sm:p-8 space-y-6 overflow-y-auto h-screen">
         
         {/* Top Header */}
         <div className={`flex justify-between items-center border-b pb-4 ${isLight ? "border-slate-200" : "border-brand-dark-border/60"}`}>

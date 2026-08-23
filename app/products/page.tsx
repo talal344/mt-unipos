@@ -556,7 +556,7 @@ export default function ProductsPage() {
   const errorCount = parsedRows.filter(r => !!r.error).length;
 
   return (
-    <div className={`flex min-h-screen font-sans ${isLight ? "bg-slate-100 text-slate-900" : "bg-black text-gray-100"}`}>
+    <div className={`flex h-screen overflow-hidden font-sans ${isLight ? "bg-slate-100 text-slate-900" : "bg-black text-gray-100"}`}>
       <ClientSidebar />
 
       {/* Toast */}
@@ -566,7 +566,7 @@ export default function ProductsPage() {
         </div>
       )}
 
-      <main className="flex-grow p-6 sm:p-8 space-y-6 overflow-y-auto max-h-screen">
+      <main className="flex-grow p-6 sm:p-8 space-y-6 overflow-y-auto h-screen">
 
         {/* ── Top Header ── */}
         <div className={`flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center border-b pb-4 ${
