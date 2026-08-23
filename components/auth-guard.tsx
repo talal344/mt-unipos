@@ -11,7 +11,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    // Wait for the next tick to ensure Context has loaded from localStorage
+    // Wait for context hydration from localStorage
     const timer = setTimeout(() => setHydrated(true), 50);
     return () => clearTimeout(timer);
   }, []);
@@ -19,12 +19,11 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!hydrated) return;
 
-    // Public routes that don't need protection
-    if (
-      pathname.startsWith("/sms") ||
-      pathname.startsWith("/login") || 
-      pathname.startsWith("/admin/login") || 
-      pathname === "/" || 
+    // Public un-protected routes across all subdomains
+    const isPublicRoute =
+      pathname === "/" ||
+      pathname.startsWith("/login") ||
+      pathname.startsWith("/admin/login") ||
       pathname.startsWith("/qr-menu") ||
       pathname.startsWith("/tracking") ||
       pathname.startsWith("/track-ticket") ||
@@ -32,20 +31,26 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
       pathname.startsWith("/features") ||
       pathname.startsWith("/about") ||
       pathname.startsWith("/blog") ||
-      pathname.startsWith("/contact")
-    ) {
+      pathname.startsWith("/contact");
+
+    if (isPublicRoute) {
       return;
     }
 
-    // If no user is logged in, send them to login
+    // If no user is logged in, redirect to login page
     if (!currentUser) {
-      router.replace("/login");
+      if (pathname.startsWith("/admin")) {
+        router.replace("/admin/login");
+      } else {
+        router.replace("/login");
+      }
       return;
     }
 
-    // Line of Business Isolation: HRMS vs POS
+    // Line of Business Isolation: HRMS vs POS vs SMS
     const isHRMSUser = currentUser.assignedSoftware === "HRMS" || (currentUser.businessName && currentUser.businessName.includes("HRMS"));
-    const assignedSoftware = isHRMSUser ? "HRMS" : "POS";
+    const isSMSUser = currentUser.assignedSoftware === "SMS" || (currentUser.businessName && currentUser.businessName.includes("SMS"));
+    const assignedSoftware = isSMSUser ? "SMS" : isHRMSUser ? "HRMS" : "POS";
 
     if (assignedSoftware === "HRMS") {
       // HRMS users can ONLY access /hrms routes (and /support /settings /profile)
@@ -53,9 +58,15 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
         router.replace("/hrms");
         return;
       }
+    } else if (assignedSoftware === "SMS") {
+      // SMS users can ONLY access /sms routes
+      if (!pathname.startsWith("/sms") && !pathname.startsWith("/support") && !pathname.startsWith("/settings")) {
+        router.replace("/sms");
+        return;
+      }
     } else {
-      // POS users cannot access HRMS routes
-      if (pathname.startsWith("/hrms")) {
+      // POS users cannot access HRMS or SMS routes
+      if (pathname.startsWith("/hrms") || pathname.startsWith("/sms")) {
         router.replace("/dashboard");
         return;
       }
@@ -66,14 +77,13 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 
     // Cashier allowed routes (/pos, /sales, /customers, /restaurant, /kds)
     const cashierAllowedRoutes = ["/pos", "/sales", "/customers", "/restaurant", "/kds"];
-    if (role === "Cashier" && !cashierAllowedRoutes.some(route => pathname.startsWith(route))) {
+    if (role === "Cashier" && !cashierAllowedRoutes.some((route) => pathname.startsWith(route))) {
       router.replace("/pos");
       return;
     }
-
   }, [hydrated, currentUser, pathname, router]);
 
-  // Optionally show nothing or a loader until hydrated
+  // Optionally show loader until hydrated
   if (!hydrated) return null;
 
   return <>{children}</>;
