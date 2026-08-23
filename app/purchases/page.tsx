@@ -146,17 +146,17 @@ export default function PurchasesPage() {
       <main className="flex-grow p-5 space-y-5 overflow-y-auto max-h-screen">
 
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-brand-dark-border/60 pb-4">
+        <div className={`flex items-center justify-between border-b pb-4 ${isLight ? "border-slate-200" : "border-brand-dark-border/60"}`}>
           <div>
-            <h1 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
-              <Truck size={20} className="text-brand-sky" />
+            <h1 className={`text-xl font-black tracking-tight flex items-center gap-2 ${isLight ? "text-slate-900" : "text-white"}`}>
+              <Truck size={20} className="text-sky-500" />
               Purchase Orders &amp; GRN
             </h1>
-            <p className="text-[10px] text-gray-500 mt-0.5">Create supplier POs, receive goods, and auto-update inventory stock.</p>
+            <p className={`text-[10px] mt-0.5 ${isLight ? "text-slate-500" : "text-gray-500"}`}>Create supplier POs, receive goods, and auto-update inventory stock.</p>
           </div>
           <button
             onClick={() => { setShowCreate(true); if (poLines.length === 0) addLine(); }}
-            className="flex items-center gap-1.5 bg-brand-sky hover:bg-brand-sky-light text-black font-black text-xs px-4 py-2.5 rounded-xl shadow-lg transition"
+            className="flex items-center gap-1.5 bg-sky-600 hover:bg-sky-500 text-white font-black text-xs px-4 py-2.5 rounded-xl shadow-lg transition"
           >
             <Plus size={14} /> Generate PO
           </button>
@@ -165,18 +165,20 @@ export default function PurchasesPage() {
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {[
-            { label: "Total POs",      value: purchaseOrders.length, color: "text-brand-sky",   icon: ClipboardList },
-            { label: "Pending",        value: pendingCount,          color: "text-amber-400",   icon: AlertTriangle },
-            { label: "Received",       value: recvdCount,            color: "text-emerald-400", icon: CheckCircle2  },
-            { label: "Total PO Value", value: `${currencySymbol} ${totalValue.toLocaleString(undefined,{maximumFractionDigits:0})}`, color: "text-purple-400", icon: DollarSign },
+            { label: "Total POs",      value: purchaseOrders.length, color: "text-sky-500",   icon: ClipboardList },
+            { label: "Pending",        value: pendingCount,          color: "text-amber-500",   icon: AlertTriangle },
+            { label: "Received",       value: recvdCount,            color: "text-emerald-500", icon: CheckCircle2  },
+            { label: "Total PO Value", value: `${currencySymbol} ${totalValue.toLocaleString(undefined,{maximumFractionDigits:0})}`, color: "text-purple-500", icon: DollarSign },
           ].map(s => {
             const Icon = s.icon;
             return (
-              <div key={s.label} className="bg-brand-dark-surface/50 border border-brand-dark-border rounded-xl p-4 flex items-center gap-3">
+              <div key={s.label} className={`border rounded-xl p-4 flex items-center gap-3 ${
+                isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/50 border-brand-dark-border text-gray-100"
+              }`}>
                 <Icon size={16} className={s.color} />
                 <div>
                   <div className={`text-sm font-black font-mono ${s.color}`}>{s.value}</div>
-                  <div className="text-[9px] text-gray-500 uppercase font-bold tracking-wider">{s.label}</div>
+                  <div className={`text-[9px] uppercase font-bold tracking-wider ${isLight ? "text-slate-500" : "text-gray-500"}`}>{s.label}</div>
                 </div>
               </div>
             );
@@ -186,19 +188,27 @@ export default function PurchasesPage() {
         {/* Filter Bar */}
         <div className="flex flex-wrap gap-2 items-center">
           <div className="relative flex-grow max-w-xs">
-            <Search className="absolute left-3 top-2.5 text-gray-500" size={13} />
+            <Search className={`absolute left-3 top-2.5 ${isLight ? "text-slate-400" : "text-gray-500"}`} size={13} />
             <input
               type="text" placeholder="Search PO# or supplier..."
               value={searchQ} onChange={e => setSearchQ(e.target.value)}
-              className="w-full bg-brand-dark-surface border border-brand-dark-border pl-9 pr-3 py-2 rounded-lg text-xs text-white focus:outline-none focus:border-brand-sky"
+              className={`w-full pl-9 pr-3 py-2 rounded-lg text-xs font-bold border focus:outline-none ${
+                isLight ? "bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-sky-500 shadow-xs" : "bg-brand-dark-surface border-brand-dark-border text-white focus:border-brand-sky"
+              }`}
             />
           </div>
           <div className="flex items-center gap-1.5">
-            <Filter size={12} className="text-gray-500" />
+            <Filter size={12} className={isLight ? "text-slate-400" : "text-gray-500"} />
             {(["All","Pending","Received"] as const).map(s => (
               <button key={s} onClick={() => setStatusFilter(s)}
                 className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase transition ${
-                  statusFilter === s ? "bg-brand-sky text-black" : "bg-brand-dark-surface border border-brand-dark-border text-gray-400 hover:text-white"
+                  statusFilter === s
+                    ? isLight
+                      ? "bg-sky-600 text-white shadow-xs border border-sky-600"
+                      : "bg-brand-sky text-black"
+                    : isLight
+                    ? "bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 shadow-xs"
+                    : "bg-brand-dark-surface border border-brand-dark-border text-gray-400 hover:text-white"
                 }`}
               >{s}</button>
             ))}
@@ -206,11 +216,15 @@ export default function PurchasesPage() {
         </div>
 
         {/* PO Table */}
-        <div className="bg-brand-dark-surface/30 border border-brand-dark-border rounded-2xl overflow-hidden">
+        <div className={`border rounded-2xl overflow-hidden ${
+          isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/30 border-brand-dark-border text-gray-100"
+        }`}>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="border-b border-brand-dark-border text-[9px] text-gray-500 uppercase font-bold tracking-wider">
+                <tr className={`border-b text-[9px] uppercase font-bold tracking-wider ${
+                  isLight ? "bg-slate-100 text-slate-700 border-slate-200" : "border-brand-dark-border text-gray-500 bg-black/60"
+                }`}>
                   <th className="px-4 py-3">PO Number</th>
                   <th className="px-4 py-3">Supplier</th>
                   <th className="px-4 py-3">Date</th>
@@ -220,27 +234,27 @@ export default function PurchasesPage() {
                   <th className="px-4 py-3 text-center">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-brand-dark-border/30">
+              <tbody className={`divide-y ${isLight ? "divide-slate-200" : "divide-brand-dark-border/30"}`}>
                 {filtered.map(po => (
-                  <tr key={po.id} className="hover:bg-brand-dark-surface/60 transition">
-                    <td className="px-4 py-3 text-purple-400 font-black font-mono text-[11px]">{po.id}</td>
-                    <td className="px-4 py-3 text-white font-bold">{po.supplierName}</td>
-                    <td className="px-4 py-3 text-gray-400 font-mono text-[10px]">
+                  <tr key={po.id} className={`transition ${isLight ? "hover:bg-slate-50 text-slate-900" : "hover:bg-brand-dark-surface/60 text-gray-100"}`}>
+                    <td className="px-4 py-3 text-purple-600 font-black font-mono text-[11px]">{po.id}</td>
+                    <td className={`px-4 py-3 font-bold ${isLight ? "text-slate-900" : "text-white"}`}>{po.supplierName}</td>
+                    <td className={`px-4 py-3 font-mono text-[10px] ${isLight ? "text-slate-500" : "text-gray-400"}`}>
                       {new Date(po.date).toLocaleDateString("en-PK",{day:"2-digit",month:"short",year:"numeric"})}
                     </td>
-                    <td className="px-4 py-3 text-gray-300 max-w-[180px]">
+                    <td className={`px-4 py-3 max-w-[180px] ${isLight ? "text-slate-700" : "text-gray-300"}`}>
                       {po.items.map((item, i) => (
                         <div key={i} className="truncate text-[10px]">
-                          {item.productName} <span className="text-brand-sky font-mono font-bold">×{item.qty}</span>
+                          {item.productName} <span className="text-sky-600 font-mono font-bold">×{item.qty}</span>
                         </div>
                       ))}
                     </td>
-                    <td className="px-4 py-3 text-white font-black font-mono">{currencySymbol} {po.total.toLocaleString()}</td>
+                    <td className={`px-4 py-3 font-black font-mono ${isLight ? "text-slate-900" : "text-white"}`}>{currencySymbol} {po.total.toLocaleString()}</td>
                     <td className="px-4 py-3">
                       <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase ${
                         po.status === "Received"
-                          ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400"
-                          : "bg-amber-500/10 border border-amber-500/30 text-amber-400 animate-pulse"
+                          ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-600"
+                          : "bg-amber-500/10 border border-amber-500/30 text-amber-600 animate-pulse"
                       }`}>
                         {po.status}
                       </span>
@@ -249,12 +263,14 @@ export default function PurchasesPage() {
                       <div className="flex items-center justify-center gap-1.5">
                         {po.status === "Pending" ? (
                           <button onClick={() => openReceive(po)}
-                            className="px-2.5 py-1.5 bg-emerald-500/15 border border-emerald-500/30 hover:bg-emerald-500/25 text-emerald-400 font-black text-[9px] rounded-lg transition flex items-center gap-1">
+                            className="px-2.5 py-1.5 bg-emerald-500/15 border border-emerald-500/30 hover:bg-emerald-500/25 text-emerald-600 font-black text-[9px] rounded-lg transition flex items-center gap-1">
                             <Package size={9} /> Receive GRN
                           </button>
                         ) : (
                           <button onClick={() => setDetailPO(po)}
-                            className="px-2.5 py-1.5 bg-brand-dark-border hover:bg-brand-dark-border/70 text-gray-400 font-black text-[9px] rounded-lg transition flex items-center gap-1">
+                            className={`px-2.5 py-1.5 border font-black text-[9px] rounded-lg transition flex items-center gap-1 ${
+                              isLight ? "bg-slate-100 border-slate-300 text-slate-700 hover:bg-slate-200" : "bg-brand-dark-border hover:bg-brand-dark-border/70 text-gray-400"
+                            }`}>
                             <Eye size={9} /> View
                           </button>
                         )}
@@ -264,7 +280,7 @@ export default function PurchasesPage() {
                 ))}
                 {filtered.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="px-4 py-12 text-center text-gray-600 text-[10px]">
+                    <td colSpan={7} className={`px-4 py-12 text-center text-[10px] ${isLight ? "text-slate-400" : "text-gray-600"}`}>
                       No purchase orders found. Generate your first PO above.
                     </td>
                   </tr>

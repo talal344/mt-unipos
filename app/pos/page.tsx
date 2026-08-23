@@ -1324,25 +1324,27 @@ export default function PosPage() {
         </section>
 
         {/* ── RIGHT: Cart Panel (5 cols) ── */}
-        <section className="lg:col-span-5 bg-brand-dark-surface/70 border border-brand-dark-border rounded-2xl p-4 flex flex-col h-[92vh] justify-between">
+        <section className={`lg:col-span-5 border rounded-2xl p-4 flex flex-col h-[92vh] justify-between ${
+          isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/70 border-brand-dark-border text-gray-100"
+        }`}>
 
           <div className="flex-grow overflow-y-auto space-y-3">
             {/* Customer Row */}
-            <div className="border-b border-brand-dark-border/40 pb-3 space-y-2 text-xs relative" ref={customerDropdownRef}>
+            <div className={`border-b pb-3 space-y-2 text-xs relative ${isLight ? "border-slate-200" : "border-brand-dark-border/40"}`} ref={customerDropdownRef}>
 
               {/* Clear cart */}
               <div className="flex items-center justify-end gap-2">
-                <button onClick={() => setShowHoldModal(true)} className="text-[10px] text-amber-400 hover:text-amber-300 font-bold flex items-center gap-1 bg-amber-500/10 px-2 py-1 rounded transition">
+                <button onClick={() => setShowHoldModal(true)} className="text-[10px] text-amber-500 hover:text-amber-600 font-bold flex items-center gap-1 bg-amber-500/10 px-2 py-1 rounded transition">
                   <PauseCircle size={11} /> Hold Sale
                 </button>
-                <button onClick={handleClearCart} className="text-[10px] text-red-400 hover:text-red-300 font-bold flex items-center gap-1">
+                <button onClick={handleClearCart} className="text-[10px] text-red-500 hover:text-red-600 font-bold flex items-center gap-1">
                   <Trash2 size={11} /> Clear Cart
                 </button>
               </div>
 
               {/* Customer Search */}
               <div className="flex items-center gap-2 relative">
-                <User size={12} className="text-gray-500 shrink-0" />
+                <User size={12} className={isLight ? "text-slate-400" : "text-gray-500"} />
                 <div className="relative flex-grow">
                   <input
                     type="text"
@@ -1350,41 +1352,49 @@ export default function PosPage() {
                     value={custSearch}
                     onFocus={() => setShowCustDropdown(true)}
                     onChange={e => { setCustSearch(e.target.value); setShowCustDropdown(true); }}
-                    className="w-full bg-black border border-brand-dark-border/80 p-2 rounded-lg text-[11px] text-white focus:outline-none focus:border-brand-sky"
+                    className={`w-full p-2 rounded-lg text-[11px] font-bold border focus:outline-none ${
+                      isLight ? "bg-slate-50 border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-sky-500" : "bg-black border-brand-dark-border/80 text-white focus:border-brand-sky"
+                    }`}
                   />
                   {showCustDropdown && (
-                    <div className="absolute left-0 right-0 top-9 bg-brand-dark-surface border border-brand-dark-border rounded-xl shadow-2xl max-h-44 overflow-y-auto z-30 p-1">
+                    <div className={`absolute left-0 right-0 top-9 border rounded-xl shadow-2xl max-h-44 overflow-y-auto z-30 p-1 ${
+                      isLight ? "bg-white border-slate-200 text-slate-900" : "bg-brand-dark-surface border-brand-dark-border text-gray-200"
+                    }`}>
                       <button
                         onClick={() => { setSelectedCustomer("Walk-in Customer"); setCustSearch(""); setShowCustDropdown(false); setRedeemLoyalty(false); }}
-                        className={`w-full text-left p-2.5 rounded-lg text-[10px] flex items-center gap-2 hover:bg-brand-sky/10 transition ${selectedCustomer === "Walk-in Customer" ? "bg-brand-sky/10 border-l-2 border-brand-sky" : ""}`}
+                        className={`w-full text-left p-2.5 rounded-lg text-[10px] flex items-center gap-2 hover:bg-sky-50 transition ${
+                          selectedCustomer === "Walk-in Customer" ? "bg-sky-100 font-bold border-l-2 border-sky-600" : ""
+                        }`}
                       >
-                        <User size={10} className="text-gray-500" />
+                        <User size={10} className="text-slate-400" />
                         <div>
-                          <div className="font-bold text-gray-300 text-[11px]">Walk-in Customer</div>
-                          <div className="text-gray-600 text-[9px]">Anonymous · no loyalty</div>
+                          <div className={`font-bold text-[11px] ${isLight ? "text-slate-900" : "text-gray-300"}`}>Walk-in Customer</div>
+                          <div className={`text-[9px] ${isLight ? "text-slate-500" : "text-gray-600"}`}>Anonymous · no loyalty</div>
                         </div>
                       </button>
                       {filteredCustomers.map(c => (
                         <button key={c.id} onClick={() => { setSelectedCustomer(c.name); setCustSearch(c.name); setShowCustDropdown(false); }}
-                          className={`w-full text-left p-2.5 rounded-lg text-[10px] flex justify-between hover:bg-brand-sky/15 text-gray-200 transition ${selectedCustomer === c.name ? "bg-brand-sky/10 border-l-2 border-brand-sky" : ""}`}
+                          className={`w-full text-left p-2.5 rounded-lg text-[10px] flex justify-between hover:bg-sky-50 transition ${
+                            selectedCustomer === c.name ? "bg-sky-100 font-bold border-l-2 border-sky-600" : ""
+                          }`}
                         >
                           <div>
-                            <div className="font-bold text-white text-[11px]">{c.name}</div>
-                            <div className="text-gray-500 font-mono text-[9px]">{c.mobile}</div>
+                            <div className={`font-bold text-[11px] ${isLight ? "text-slate-900" : "text-white"}`}>{c.name}</div>
+                            <div className={`font-mono text-[9px] ${isLight ? "text-slate-500" : "text-gray-500"}`}>{c.mobile}</div>
                           </div>
-                          <span className="text-yellow-400 font-black text-[9px] flex items-center gap-0.5">
-                            <Star size={9} className="fill-yellow-400" />{c.loyaltyPoints} pts
+                          <span className="text-amber-500 font-black text-[9px] flex items-center gap-0.5">
+                            <Star size={9} className="fill-amber-500" />{c.loyaltyPoints} pts
                           </span>
                         </button>
                       ))}
                       {filteredCustomers.length === 0 && custSearch && (
-                        <div className="text-center py-3 text-gray-500 text-[9px] italic">No match. Add new below.</div>
+                        <div className="text-center py-3 text-slate-400 text-[9px] italic">No match. Add new below.</div>
                       )}
                     </div>
                   )}
                 </div>
                 <button onClick={() => setShowAddCustModal(true)}
-                  className="p-1.5 bg-brand-sky/10 border border-brand-sky/20 text-brand-sky rounded-lg hover:bg-brand-sky hover:text-black transition shrink-0">
+                  className="p-1.5 bg-sky-500/10 border border-sky-500/20 text-sky-600 rounded-lg hover:bg-sky-600 hover:text-white transition shrink-0">
                   <PlusCircle size={13} />
                 </button>
               </div>
@@ -1393,17 +1403,19 @@ export default function PosPage() {
             {/* Customer Loyalty & Pending Credit Badge */}
             {selectedCustObj && selectedCustomer !== "Walk-in Customer" && (
               <div className="space-y-2">
-                <div className="bg-brand-sky/10 border border-brand-sky/20 p-2.5 rounded-xl text-xs flex justify-between items-center">
+                <div className={`border p-2.5 rounded-xl text-xs flex justify-between items-center ${
+                  isLight ? "bg-sky-50 border-sky-200 text-slate-900" : "bg-brand-sky/10 border-brand-sky/20 text-gray-100"
+                }`}>
                   <div className="flex items-center gap-2">
-                    <Star size={13} className="text-yellow-400 fill-yellow-400" />
+                    <Star size={13} className="text-amber-500 fill-amber-500" />
                     <div>
-                      <span className="font-bold text-white">{selectedCustomer}</span>
-                      <p className="text-[9px] text-gray-400">{selectedCustObj.mobile}</p>
+                      <span className={`font-bold ${isLight ? "text-slate-900" : "text-white"}`}>{selectedCustomer}</span>
+                      <p className={`text-[9px] ${isLight ? "text-slate-500" : "text-gray-400"}`}>{selectedCustObj.mobile}</p>
                     </div>
                   </div>
                   <div className="text-right font-mono">
-                    <span className="text-xs text-yellow-400 font-black">{selectedCustPoints} pts</span>
-                    <p className="text-[8px] text-gray-500">Loyalty Balance</p>
+                    <span className="text-xs text-amber-500 font-black">{selectedCustPoints} pts</span>
+                    <p className={`text-[8px] ${isLight ? "text-slate-500" : "text-gray-500"}`}>Loyalty Balance</p>
                   </div>
                 </div>
 
@@ -1411,8 +1423,8 @@ export default function PosPage() {
                 {(selectedCustObj.walletBalance || 0) > 0 && (
                   <div className="bg-emerald-500/10 border border-emerald-500/30 p-2.5 rounded-xl text-xs flex justify-between items-center animate-fade-in">
                     <div>
-                      <div className="text-[9px] uppercase font-black text-emerald-400 tracking-wider">Store Wallet Credit</div>
-                      <div className="font-mono font-black text-emerald-300 text-xs">{currencySymbol} {(selectedCustObj.walletBalance || 0).toFixed(2)}</div>
+                      <div className="text-[9px] uppercase font-black text-emerald-600 tracking-wider">Store Wallet Credit</div>
+                      <div className="font-mono font-black text-emerald-600 text-xs">{currencySymbol} {(selectedCustObj.walletBalance || 0).toFixed(2)}</div>
                     </div>
                     {selectedCustObj.creditBalance > 0 && (
                       <button
@@ -1424,7 +1436,7 @@ export default function PosPage() {
                             triggerToast(`⚡ Settled dues using Store Wallet! Receipt saved in /Dues_Clear/`);
                           }
                         }}
-                        className="px-2.5 py-1 bg-emerald-500 hover:bg-emerald-400 text-black font-black text-[9px] uppercase rounded-lg transition"
+                        className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[9px] uppercase rounded-lg transition"
                         title="Use available wallet balance to pay off credit dues"
                       >
                         Pay Dues via Wallet
@@ -1436,15 +1448,15 @@ export default function PosPage() {
                 {selectedCustObj.creditBalance > 0 && (
                   <div className="bg-red-500/10 border border-red-500/30 p-2.5 rounded-xl text-xs flex justify-between items-center animate-fade-in">
                     <div>
-                      <div className="text-[9px] uppercase font-black text-red-400 tracking-wider">Pending Credit Due</div>
-                      <div className="font-mono font-black text-red-300 text-xs">{currencySymbol} {selectedCustObj.creditBalance.toFixed(2)}</div>
+                      <div className="text-[9px] uppercase font-black text-red-500 tracking-wider">Pending Credit Due</div>
+                      <div className="font-mono font-black text-red-500 text-xs">{currencySymbol} {selectedCustObj.creditBalance.toFixed(2)}</div>
                     </div>
                     <button
                       onClick={() => {
                         setPosRecoveryAmount(String(selectedCustObj.creditBalance));
                         setShowPosRecoveryModal(true);
                       }}
-                      className="px-2.5 py-1 bg-red-500 hover:bg-red-400 text-black font-black text-[9px] uppercase rounded-lg transition"
+                      className="px-2.5 py-1 bg-red-600 hover:bg-red-500 text-white font-black text-[9px] uppercase rounded-lg transition"
                     >
                       Clear Due
                     </button>
@@ -1456,13 +1468,15 @@ export default function PosPage() {
             {/* Cart Items */}
             <div className="space-y-2">
               {cart.map(item => (
-                <div key={item.productId} className="bg-black/40 border border-brand-dark-border/60 p-2.5 rounded-xl">
+                <div key={item.productId} className={`border p-2.5 rounded-xl ${
+                  isLight ? "bg-slate-50 border-slate-200 text-slate-900" : "bg-black/40 border-brand-dark-border/60 text-gray-100"
+                }`}>
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-grow min-w-0">
-                      <h5 className="font-bold text-white text-xs truncate">{item.name}</h5>
-                      <span className="text-[9px] text-brand-sky font-mono">{currencySymbol} {item.price} / {item.unit}</span>
+                      <h5 className={`font-bold text-xs truncate ${isLight ? "text-slate-900" : "text-white"}`}>{item.name}</h5>
+                      <span className="text-[9px] text-sky-600 font-mono font-bold">{currencySymbol} {item.price} / {item.unit}</span>
                     </div>
-                    <button onClick={() => handleRemoveItem(item.productId)} className="text-gray-500 hover:text-red-400 shrink-0 mt-0.5">
+                    <button onClick={() => handleRemoveItem(item.productId)} className="text-slate-400 hover:text-red-500 shrink-0 mt-0.5">
                       <Trash2 size={11} />
                     </button>
                   </div>
@@ -1471,7 +1485,7 @@ export default function PosPage() {
                   <div className="flex items-center justify-between mt-2">
                     <div className="flex items-center gap-1.5">
                       <button onClick={() => handleQtyDelta(item.productId, -1)}
-                        className="p-1 bg-brand-dark-border hover:bg-red-500/20 hover:text-red-400 rounded text-gray-400">
+                        className={`p-1 rounded ${isLight ? "bg-slate-200 hover:bg-red-100 hover:text-red-600 text-slate-700" : "bg-brand-dark-border hover:bg-red-500/20 hover:text-red-400 text-gray-400"}`}>
                         <Minus size={10} />
                       </button>
 
@@ -1486,12 +1500,16 @@ export default function PosPage() {
                           onChange={e => setEditingQty({ id: item.productId, val: e.target.value })}
                           onBlur={() => commitQtyEdit(item.productId)}
                           onKeyDown={e => { if (e.key === "Enter") commitQtyEdit(item.productId); if (e.key === "Escape") setEditingQty(null); }}
-                          className="w-20 bg-black border border-brand-sky/60 text-brand-sky text-center text-[11px] font-mono font-black rounded px-1 py-0.5 focus:outline-none"
+                          className={`w-20 border text-center text-[11px] font-mono font-black rounded px-1 py-0.5 focus:outline-none ${
+                            isLight ? "bg-white border-sky-500 text-sky-600" : "bg-black border-brand-sky/60 text-brand-sky"
+                          }`}
                         />
                       ) : (
                         <button
                           onClick={() => setEditingQty({ id: item.productId, val: item.qty.toString() })}
-                          className="min-w-[4rem] text-center font-black font-mono text-white text-[11px] bg-brand-dark-border/70 rounded px-2 py-0.5 hover:bg-brand-sky/20 hover:text-brand-sky transition"
+                          className={`min-w-[4rem] text-center font-black font-mono text-[11px] rounded px-2 py-0.5 transition ${
+                            isLight ? "bg-white border border-slate-300 text-slate-900 hover:border-sky-500 hover:text-sky-600" : "bg-brand-dark-border/70 text-white hover:bg-brand-sky/20 hover:text-brand-sky"
+                          }`}
                           title="Click to edit quantity"
                         >
                           {fmtQty(item.qty, item.unit)}
@@ -1499,17 +1517,17 @@ export default function PosPage() {
                       )}
 
                       <button onClick={() => handleQtyDelta(item.productId, 1)}
-                        className="p-1 bg-brand-dark-border hover:bg-brand-sky/20 hover:text-brand-sky rounded text-gray-400">
+                        className={`p-1 rounded ${isLight ? "bg-slate-200 hover:bg-sky-100 hover:text-sky-600 text-slate-700" : "bg-brand-dark-border hover:bg-brand-sky/20 hover:text-brand-sky text-gray-400"}`}>
                         <Plus size={10} />
                       </button>
                     </div>
 
-                    <span className="font-black text-white font-mono text-xs">{currencySymbol} {item.subtotal.toFixed(2)}</span>
+                    <span className={`font-black font-mono text-xs ${isLight ? "text-slate-900" : "text-white"}`}>{currencySymbol} {item.subtotal.toFixed(2)}</span>
                   </div>
 
                   {/* Mode badge */}
                   {item.saleMode === "amount" && (
-                    <div className="mt-1 text-[8px] text-emerald-400/70 flex items-center gap-1">
+                    <div className="mt-1 text-[8px] text-emerald-600 font-bold flex items-center gap-1">
                       <Banknote size={8} /> Sold by amount
                     </div>
                   )}
@@ -1517,7 +1535,7 @@ export default function PosPage() {
                     const itemBatches = previewFIFO ? previewFIFO(item.productId, item.qty) : [];
                     if (itemBatches && itemBatches.length > 1) {
                       return (
-                        <div className="mt-1 text-[8px] text-purple-400 flex items-center gap-1">
+                        <div className="mt-1 text-[8px] text-purple-600 font-bold flex items-center gap-1">
                           <Package size={8} /> FIFO: {itemBatches.map((b: any) => `${b.qtyUsed}u @ ${b.costPrice}`).join(" + ")}
                         </div>
                       );
@@ -1528,16 +1546,16 @@ export default function PosPage() {
               ))}
 
               {cart.length === 0 && (
-                <div className="text-center py-12 text-xs">
-                  <ShoppingCart className="text-gray-700 mx-auto mb-2 animate-bounce" size={26} />
-                  <p className="text-gray-600">Cart is empty. Click a product to add.</p>
+                <div className={`text-center py-12 text-xs ${isLight ? "text-slate-400" : "text-gray-500"}`}>
+                  <ShoppingCart className={`mx-auto mb-2 animate-bounce ${isLight ? "text-slate-300" : "text-gray-700"}`} size={26} />
+                  <p className="font-bold">Cart is empty. Click a product to add.</p>
                 </div>
               )}
             </div>
           </div>
 
           {/* ── Financial Summary ── */}
-          <div className="border-t border-brand-dark-border pt-3 mt-2 space-y-2.5 shrink-0">
+          <div className={`border-t pt-3 mt-2 space-y-2.5 shrink-0 ${isLight ? "border-slate-200" : "border-brand-dark-border"}`}>
 
             {/* Loyalty Redemption */}
             {selectedCustPoints >= 1000 && selectedCustomer !== "Walk-in Customer" && (
@@ -1559,8 +1577,10 @@ export default function PosPage() {
 
             {/* Discount + Notes */}
             <div className="grid grid-cols-2 gap-2">
-              <div className="relative flex items-center bg-black border border-brand-dark-border rounded-lg overflow-hidden">
-                <Tag className="absolute left-2.5 text-gray-500" size={11} />
+              <div className={`relative flex items-center border rounded-lg overflow-hidden ${
+                isLight ? "bg-slate-50 border-slate-300 text-slate-900" : "bg-black border-brand-dark-border text-white"
+              }`}>
+                <Tag className={`absolute left-2.5 ${isLight ? "text-slate-400" : "text-gray-500"}`} size={11} />
                 <input
                   type="number"
                   placeholder={discountType === "percent" ? "Discount %" : `Discount (${currencySymbol})`}
@@ -1575,7 +1595,9 @@ export default function PosPage() {
                       setDiscountValue(Math.max(0, val));
                     }
                   }}
-                  className="w-full bg-transparent pl-7 pr-10 py-1.5 text-[10px] text-white focus:outline-none"
+                  className={`w-full bg-transparent pl-7 pr-10 py-1.5 text-[10px] font-bold focus:outline-none ${
+                    isLight ? "text-slate-900 placeholder:text-slate-400" : "text-white"
+                  }`}
                 />
                 <button
                   type="button"

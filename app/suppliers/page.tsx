@@ -161,17 +161,17 @@ export default function SuppliersPage() {
             {/* Title / Action */}
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-xl font-black text-white flex items-center gap-2">
-                  <Truck size={20} className="text-brand-sky" />
+                <h1 className={`text-xl font-black flex items-center gap-2 ${isLight ? "text-slate-900" : "text-white"}`}>
+                  <Truck size={20} className="text-sky-500" />
                   Supplier Directory
                 </h1>
-                <p className="text-[10px] text-gray-500 mt-0.5">
+                <p className={`text-[10px] mt-0.5 ${isLight ? "text-slate-500" : "text-gray-500"}`}>
                   {totalSuppliers} authorized wholesale distributors &amp; suppliers
                 </p>
               </div>
               <button
                 onClick={openAdd}
-                className="flex items-center gap-1.5 bg-brand-sky hover:bg-brand-sky-light text-black font-black text-xs px-4 py-2.5 rounded-lg shadow-lg transition"
+                className="flex items-center gap-1.5 bg-sky-600 hover:bg-sky-500 text-white font-black text-xs px-4 py-2.5 rounded-lg shadow-lg transition"
               >
                 <Plus size={14} /> Register Supplier
               </button>
@@ -180,37 +180,41 @@ export default function SuppliersPage() {
             {/* Stat Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               {[
-                { icon: Truck, label: "Suppliers", val: totalSuppliers, color: "text-brand-sky" },
-                { icon: DollarSign, label: "Accounts Payable", val: `${currencySymbol} ${Math.round(totalDueAmount).toLocaleString()}`, color: "text-red-400" },
-                { icon: ShoppingBag, label: "Total POs Filed", val: totalPOs, color: "text-purple-400" },
-                { icon: FileText, label: "Pending POs", val: pendingPOs, color: "text-amber-400" },
+                { icon: Truck, label: "Suppliers", val: totalSuppliers, color: "text-sky-500" },
+                { icon: DollarSign, label: "Accounts Payable", val: `${currencySymbol} ${Math.round(totalDueAmount).toLocaleString()}`, color: "text-red-500" },
+                { icon: ShoppingBag, label: "Total POs Filed", val: totalPOs, color: "text-purple-500" },
+                { icon: FileText, label: "Pending POs", val: pendingPOs, color: "text-amber-500" },
               ].map(stat => (
-                <div key={stat.label} className="bg-brand-dark-surface/40 border border-brand-dark-border rounded-xl p-4">
+                <div key={stat.label} className={`border rounded-xl p-4 ${
+                  isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/40 border-brand-dark-border text-gray-100"
+                }`}>
                   <stat.icon size={16} className={stat.color} />
                   <div className={`text-lg font-black font-mono mt-1 ${stat.color}`}>{stat.val}</div>
-                  <div className="text-[9px] text-gray-500 uppercase tracking-wide">{stat.label}</div>
+                  <div className={`text-[9px] uppercase tracking-wide font-bold ${isLight ? "text-slate-500" : "text-gray-500"}`}>{stat.label}</div>
                 </div>
               ))}
             </div>
 
             {/* Search Box */}
             <div className="relative">
-              <Search className="absolute left-3 top-2.5 text-gray-500" size={14} />
+              <Search className={`absolute left-3 top-2.5 ${isLight ? "text-slate-400" : "text-gray-500"}`} size={14} />
               <input
                 type="text"
                 placeholder="Search by supplier name, company or mobile..."
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                className="w-full bg-brand-dark-surface border border-brand-dark-border pl-9 pr-4 py-2 rounded-lg text-xs text-white focus:outline-none focus:border-brand-sky"
+                className={`w-full pl-9 pr-4 py-2 rounded-lg text-xs font-bold border focus:outline-none ${
+                  isLight ? "bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-sky-500 shadow-xs" : "bg-brand-dark-surface border-brand-dark-border text-white focus:border-brand-sky"
+                }`}
               />
             </div>
 
             {/* Supplier list */}
             <div className="space-y-2">
               {filtered.length === 0 ? (
-                <div className="text-center py-20 text-gray-600">
+                <div className={`text-center py-20 ${isLight ? "text-slate-400" : "text-gray-600"}`}>
                   <Truck size={36} className="mx-auto mb-3 opacity-30" />
-                  <p className="text-xs">No suppliers found. Click &apos;Register Supplier&apos; to add one.</p>
+                  <p className="text-xs font-bold">No suppliers found. Click &apos;Register Supplier&apos; to add one.</p>
                 </div>
               ) : filtered.map(s => {
                 const isActive = selectedId === s.id;
@@ -220,25 +224,35 @@ export default function SuppliersPage() {
                     onClick={() => setSelectedId(s.id)}
                     className={`group flex items-center gap-4 p-4 rounded-xl border cursor-pointer transition-all ${
                       isActive
-                        ? "bg-brand-sky/10 border-brand-sky/40"
-                        : "bg-brand-dark-surface/30 border-brand-dark-border hover:border-brand-sky/30 hover:bg-brand-dark-surface/60"
+                        ? isLight
+                          ? "bg-sky-50 border-sky-400 shadow-xs"
+                          : "bg-brand-sky/10 border-brand-sky/40"
+                        : isLight
+                        ? "bg-white border-slate-200 hover:border-sky-300 hover:bg-slate-50 shadow-xs text-slate-900"
+                        : "bg-brand-dark-surface/30 border-brand-dark-border hover:border-brand-sky/30 hover:bg-brand-dark-surface/60 text-gray-100"
                     }`}
                   >
                     {/* Avatar icon container */}
                     <div className={`w-11 h-11 rounded-full flex items-center justify-center font-black text-sm shrink-0 ${
-                      isActive ? "bg-brand-sky text-black" : "bg-brand-dark-border text-gray-300"
+                      isActive 
+                        ? "bg-sky-600 text-white" 
+                        : isLight
+                        ? "bg-slate-100 border border-slate-300 text-slate-700"
+                        : "bg-brand-dark-border text-gray-300"
                     }`}>
                       {s.company.charAt(0).toUpperCase()}
                     </div>
 
                     <div className="flex-grow min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-white text-sm truncate">{s.name}</span>
-                        <span className="text-[8px] font-black uppercase px-1.5 py-0.5 rounded border border-brand-dark-border bg-brand-dark-surface/80 text-gray-400">
+                        <span className={`font-bold text-sm truncate ${isLight ? "text-slate-900" : "text-white"}`}>{s.name}</span>
+                        <span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded border ${
+                          isLight ? "border-slate-300 bg-slate-100 text-slate-700" : "border-brand-dark-border bg-brand-dark-surface/80 text-gray-400"
+                        }`}>
                           {s.company}
                         </span>
                       </div>
-                      <div className="text-[10px] text-gray-500 mt-0.5 flex items-center gap-3">
+                      <div className={`text-[10px] mt-0.5 flex items-center gap-3 ${isLight ? "text-slate-500" : "text-gray-500"}`}>
                         <span className="flex items-center gap-1"><Phone size={9} /> {s.mobile}</span>
                         {s.purchaseHistory && s.purchaseHistory.length > 0 && (
                           <span className="flex items-center gap-1"><ShoppingBag size={9} /> {s.purchaseHistory.length} orders</span>
@@ -248,13 +262,13 @@ export default function SuppliersPage() {
 
                     {/* Payable Balance */}
                     <div className="text-right shrink-0 space-y-1">
-                      <div className="text-[9px] text-gray-500 uppercase tracking-wide">Balance Due</div>
-                      <div className={`font-black font-mono text-xs ${s.dueAmount > 0 ? "text-red-400" : "text-gray-400"}`}>
+                      <div className={`text-[9px] uppercase tracking-wide font-bold ${isLight ? "text-slate-500" : "text-gray-500"}`}>Balance Due</div>
+                      <div className={`font-black font-mono text-xs ${s.dueAmount > 0 ? "text-red-500" : isLight ? "text-slate-400" : "text-gray-400"}`}>
                         {currencySymbol} {s.dueAmount.toLocaleString()}
                       </div>
                     </div>
 
-                    <ChevronRight size={14} className="text-gray-600 group-hover:text-brand-sky transition shrink-0" />
+                    <ChevronRight size={14} className={`${isLight ? "text-slate-400 group-hover:text-sky-600" : "text-gray-600 group-hover:text-brand-sky"} transition shrink-0`} />
                   </div>
                 );
               })}

@@ -1498,14 +1498,18 @@ export default function ClientDashboardPage() {
         </section>
 
         {/* -------------------- LIVE POS COUNTERS & CASH DRAWERS MONITOR -------------------- */}
-        <section className="bg-brand-dark-surface/40 border border-brand-dark-border p-5 rounded-2xl space-y-4">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-brand-dark-border pb-3">
+        <section className={`border p-5 rounded-2xl space-y-4 ${
+          isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/40 border-brand-dark-border text-gray-100"
+        }`}>
+          <div className={`flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b pb-3 ${
+            isLight ? "border-slate-200" : "border-brand-dark-border"
+          }`}>
             <div>
-              <h3 className="text-xs uppercase font-bold text-white tracking-wide flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+              <h3 className={`text-xs uppercase font-bold tracking-wide flex items-center gap-2 ${isLight ? "text-slate-900" : "text-white"}`}>
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
                 Live POS Counters &amp; Cash Drawers Monitor
               </h3>
-              <p className="text-[10px] text-gray-500 font-mono mt-0.5">
+              <p className={`text-[10px] font-mono mt-0.5 ${isLight ? "text-slate-500" : "text-gray-500"}`}>
                 Owner &amp; Manager Control Panel: Assign staff, opening floats, and monitor live counter drawer cash, sales, credit &amp; profits.
               </p>
             </div>
@@ -2079,73 +2083,89 @@ export default function ClientDashboardPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
               {/* Today's Top Products */}
-              <div className="bg-brand-dark-surface/30 border border-brand-dark-border p-5 rounded-2xl">
-                <h3 className="text-xs uppercase font-bold text-white tracking-wide border-b border-brand-dark-border pb-2 mb-3 flex items-center gap-1.5">
-                  <Package size={13} className="text-amber-400" /> Today's Top Sellers
+              <div className={`border p-5 rounded-2xl ${
+                isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/30 border-brand-dark-border text-gray-100"
+              }`}>
+                <h3 className={`text-xs uppercase font-bold tracking-wide border-b pb-2 mb-3 flex items-center gap-1.5 ${
+                  isLight ? "text-slate-900 border-slate-200" : "text-white border-brand-dark-border"
+                }`}>
+                  <Package size={13} className="text-amber-500" /> Today's Top Sellers
                 </h3>
                 {todayTopProducts.length === 0
-                  ? <p className="text-[10px] text-gray-500 italic text-center py-8">No sales today yet.</p>
+                  ? <p className={`text-[10px] italic text-center py-8 ${isLight ? "text-slate-400" : "text-gray-500"}`}>No sales today yet.</p>
                   : <div className="space-y-2">
                     {todayTopProducts.map((p, i) => (
                       <div key={i} className="flex items-center gap-2">
-                        <span className="text-[9px] font-black font-mono text-gray-500 w-4">#{i+1}</span>
+                        <span className={`text-[9px] font-black font-mono w-4 ${isLight ? "text-slate-400" : "text-gray-500"}`}>#{i+1}</span>
                         <div className="flex-grow min-w-0">
-                          <div className="text-[10px] font-bold text-white truncate">{p.name}</div>
-                          <div className="text-[8px] text-gray-600">{p.qty} sold</div>
+                          <div className={`text-[10px] font-bold truncate ${isLight ? "text-slate-900" : "text-white"}`}>{p.name}</div>
+                          <div className={`text-[8px] ${isLight ? "text-slate-500" : "text-gray-600"}`}>{p.qty} sold</div>
                         </div>
-                        <span className="text-[10px] font-black font-mono text-brand-sky shrink-0">{formatAmt(p.revenue)}</span>
+                        <span className="text-[10px] font-black font-mono text-sky-600 shrink-0">{formatAmt(p.revenue)}</span>
                       </div>
                     ))}
                   </div>
                 }
-                <Link href="/reports" className="mt-3 block border-t border-brand-dark-border/40 pt-2 text-[9px] text-brand-sky font-black uppercase text-center hover:underline">Full Reports →</Link>
+                <Link href="/reports" className={`mt-3 block border-t pt-2 text-[9px] font-black uppercase text-center hover:underline ${
+                  isLight ? "border-slate-200 text-sky-600" : "border-brand-dark-border/40 text-brand-sky"
+                }`}>Full Reports →</Link>
               </div>
 
               {/* Low Stock Alerts */}
-              <div className="bg-brand-dark-surface/30 border border-brand-dark-border p-5 rounded-2xl">
-                <h3 className="text-xs uppercase font-bold text-white tracking-wide border-b border-brand-dark-border pb-2 mb-3 flex items-center gap-1.5">
-                  <AlertTriangle size={13} className="text-amber-400 animate-pulse" /> Low Stock ({lowStockAlerts.length})
+              <div className={`border p-5 rounded-2xl ${
+                isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/30 border-brand-dark-border text-gray-100"
+              }`}>
+                <h3 className={`text-xs uppercase font-bold tracking-wide border-b pb-2 mb-3 flex items-center gap-1.5 ${
+                  isLight ? "text-slate-900 border-slate-200" : "text-white border-brand-dark-border"
+                }`}>
+                  <AlertTriangle size={13} className="text-amber-500 animate-pulse" /> Low Stock ({lowStockAlerts.length})
                 </h3>
                 {lowStockAlerts.length === 0
-                  ? <p className="text-[10px] text-gray-500 italic text-center py-8">All stock levels healthy ✓</p>
+                  ? <p className={`text-[10px] italic text-center py-8 ${isLight ? "text-slate-400" : "text-gray-500"}`}>All stock levels healthy ✓</p>
                   : <div className="space-y-2 max-h-40 overflow-y-auto">
                     {lowStockAlerts.map(prod => (
                       <div key={prod.id} className="flex items-center justify-between">
                         <div className="min-w-0">
-                          <div className="text-[10px] font-bold text-white truncate">{prod.name}</div>
-                          <div className="text-[9px] text-gray-500 font-mono">{prod.sku}</div>
+                          <div className={`text-[10px] font-bold truncate ${isLight ? "text-slate-900" : "text-white"}`}>{prod.name}</div>
+                          <div className={`text-[9px] font-mono ${isLight ? "text-slate-500" : "text-gray-500"}`}>{prod.sku}</div>
                         </div>
                         <div className="text-right shrink-0">
-                          <div className="text-red-400 font-black font-mono text-[11px]">{prod.stock}</div>
-                          <div className="text-[8px] text-gray-600">min {prod.minStock}</div>
+                          <div className="text-red-500 font-black font-mono text-[11px]">{prod.stock}</div>
+                          <div className={`text-[8px] ${isLight ? "text-slate-400" : "text-gray-600"}`}>min {prod.minStock}</div>
                         </div>
                       </div>
                     ))}
                   </div>
                 }
-                <Link href="/inventory" className="mt-3 block border-t border-brand-dark-border/40 pt-2 text-[9px] text-brand-sky font-black uppercase text-center hover:underline">Manage Inventory →</Link>
+                <Link href="/inventory" className={`mt-3 block border-t pt-2 text-[9px] font-black uppercase text-center hover:underline ${
+                  isLight ? "border-slate-200 text-sky-600" : "border-brand-dark-border/40 text-brand-sky"
+                }`}>Manage Inventory →</Link>
               </div>
 
               {/* Overdue Customer Dues */}
-              <div className="bg-red-500/5 border border-red-500/20 p-5 rounded-2xl">
-                <h3 className="text-xs uppercase font-bold text-white tracking-wide border-b border-red-500/20 pb-2 mb-3 flex items-center gap-1.5">
-                  <Users size={13} className="text-red-400" /> Overdue Dues ({overdueCustomers.length})
+              <div className={`border p-5 rounded-2xl ${
+                isLight ? "bg-red-50/50 border-red-200 text-slate-900 shadow-xs" : "bg-red-500/5 border-red-500/20 text-gray-100"
+              }`}>
+                <h3 className={`text-xs uppercase font-bold tracking-wide border-b pb-2 mb-3 flex items-center gap-1.5 ${
+                  isLight ? "text-slate-900 border-red-200" : "text-white border-red-500/20"
+                }`}>
+                  <Users size={13} className="text-red-500" /> Overdue Dues ({overdueCustomers.length})
                 </h3>
                 {overdueCustomers.length === 0
-                  ? <p className="text-[10px] text-gray-500 italic text-center py-8">No outstanding dues 🎉</p>
+                  ? <p className={`text-[10px] italic text-center py-8 ${isLight ? "text-slate-400" : "text-gray-500"}`}>No outstanding dues 🎉</p>
                   : <div className="space-y-2 max-h-40 overflow-y-auto">
                     {overdueCustomers.map(c => (
                       <div key={c.id} className="flex items-center justify-between">
                         <div className="min-w-0">
-                          <div className="text-[10px] font-bold text-white truncate">{c.name}</div>
-                          <div className="text-[9px] text-gray-500 font-mono">{c.mobile}</div>
+                          <div className={`text-[10px] font-bold truncate ${isLight ? "text-slate-900" : "text-white"}`}>{c.name}</div>
+                          <div className={`text-[9px] font-mono ${isLight ? "text-slate-500" : "text-gray-500"}`}>{c.mobile}</div>
                         </div>
-                        <span className="text-red-400 font-black font-mono text-[11px] shrink-0">{formatAmt(c.creditBalance)}</span>
+                        <span className="text-red-500 font-black font-mono text-[11px] shrink-0">{formatAmt(c.creditBalance)}</span>
                       </div>
                     ))}
                   </div>
                 }
-                <Link href="/crm" className="mt-3 block border-t border-red-500/20 pt-2 text-[9px] text-red-400 font-black uppercase text-center hover:underline">Recover Dues →</Link>
+                <Link href="/crm" className="mt-3 block border-t border-red-500/20 pt-2 text-[9px] text-red-500 font-black uppercase text-center hover:underline">Recover Dues →</Link>
               </div>
 
             </div>
@@ -2154,34 +2174,42 @@ export default function ClientDashboardPage() {
         )}
 
         {/* -------------------- GENERAL RECENT sales GRID (Shared) -------------------- */}
-        <div className="bg-brand-dark-surface/40 border border-brand-dark-border p-5 rounded-2xl space-y-4">
-          <div className="flex justify-between items-center border-b border-brand-dark-border pb-2">
-            <h3 className="text-xs uppercase font-bold text-white tracking-wide">Recent POS Terminal Checkouts</h3>
-            <span className="text-[10px] text-gray-500 font-mono">Showing sharded journal syncs</span>
+        <div className={`border p-5 rounded-2xl space-y-4 ${
+          isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/40 border-brand-dark-border text-gray-100"
+        }`}>
+          <div className={`flex justify-between items-center border-b pb-2 ${
+            isLight ? "border-slate-200" : "border-brand-dark-border"
+          }`}>
+            <h3 className={`text-xs uppercase font-bold tracking-wide ${isLight ? "text-slate-900" : "text-white"}`}>Recent POS Terminal Checkouts</h3>
+            <span className={`text-[10px] font-mono ${isLight ? "text-slate-500" : "text-gray-500"}`}>Showing sharded journal syncs</span>
           </div>
 
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="border-b border-brand-dark-border text-gray-500 font-mono">
-                  <th className="pb-2 font-semibold">Receipt ID</th>
-                  <th className="pb-2 font-semibold">Customer</th>
-                  <th className="pb-2 font-semibold">Payment Source</th>
-                  <th className="pb-2 font-semibold">Items</th>
-                  <th className="pb-2 font-semibold">Grand Total</th>
-                  <th className="pb-2 font-semibold">Status</th>
+                <tr className={`border-b font-mono text-[10px] uppercase font-bold tracking-wider ${
+                  isLight ? "bg-slate-100 text-slate-700 border-slate-200" : "border-brand-dark-border text-gray-500 bg-black/60"
+                }`}>
+                  <th className="p-3 font-semibold">Receipt ID</th>
+                  <th className="p-3 font-semibold">Customer</th>
+                  <th className="p-3 font-semibold">Payment Source</th>
+                  <th className="p-3 font-semibold">Items</th>
+                  <th className="p-3 font-semibold">Grand Total</th>
+                  <th className="p-3 font-semibold">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-brand-dark-border/40 font-mono text-[11px]">
+              <tbody className={`divide-y font-mono text-[11px] ${
+                isLight ? "divide-slate-200 text-slate-900" : "divide-brand-dark-border/40 text-gray-200"
+              }`}>
                 {sales.map(sale => (
-                  <tr key={sale.id} className="hover:bg-brand-dark-surface/60 transition">
-                    <td className="py-2.5 text-brand-sky font-bold">{sale.receiptNumber}</td>
-                    <td className="py-2.5 text-white font-sans">{sale.customerName}</td>
-                    <td className="py-2.5 text-gray-400">{sale.paymentMethod}</td>
-                    <td className="py-2.5 text-gray-400">{sale.items.length} lines</td>
-                    <td className="py-2.5 text-white font-bold">{currencySymbol} {sale.total.toLocaleString()}</td>
-                    <td className="py-2.5">
-                      <span className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
+                  <tr key={sale.id} className={`transition ${isLight ? "hover:bg-slate-50 text-slate-900" : "hover:bg-brand-dark-surface/60 text-gray-100"}`}>
+                    <td className="p-3 text-sky-600 font-bold">{sale.receiptNumber}</td>
+                    <td className={`p-3 font-sans ${isLight ? "text-slate-900 font-bold" : "text-white"}`}>{sale.customerName}</td>
+                    <td className={`p-3 ${isLight ? "text-slate-600" : "text-gray-400"}`}>{sale.paymentMethod}</td>
+                    <td className={`p-3 ${isLight ? "text-slate-600" : "text-gray-400"}`}>{sale.items.length} lines</td>
+                    <td className={`p-3 font-bold ${isLight ? "text-slate-900" : "text-white"}`}>{currencySymbol} {sale.total.toLocaleString()}</td>
+                    <td className="p-3">
+                      <span className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
                         {sale.status}
                       </span>
                     </td>
