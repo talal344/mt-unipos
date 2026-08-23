@@ -9,7 +9,8 @@ import {
   Tag, DollarSign, Notebook, CreditCard, CheckCircle2, Printer,
   Landmark, Wallet, PlusCircle, Star, Check, X, Scale, Hash,
   Banknote, Calculator, ChevronDown, RotateCcw, AlertTriangle, Package,
-  Clock, Timer, LogOut, Download, WifiOff, Bell, Camera, PauseCircle, Play, Smartphone
+  Clock, Timer, LogOut, Download, WifiOff, Bell, Camera, PauseCircle, Play, Smartphone,
+  Sun, Moon
 } from "lucide-react";
 import { BrowserMultiFormatReader } from '@zxing/browser';
 import { autoSaveReceiptToDisk } from "@/lib/receipt-saver";
@@ -65,12 +66,15 @@ function isUserAssignedToCounter(counter: any, user: any): boolean {
 
 export default function PosPage() {
   const {
+    theme, toggleTheme,
     products, customers, addCustomer, addSale, updateProduct, sales, expenses,
     currencySymbol, currentBranch, currentUser, businessSettings, recordDueRecovery,
     localReceiptsDirHandle, setLocalReceiptsDirHandle, isOffline, previewFIFO, updateCustomerBalance,
     updateCustomerWalletBalance, settleDuesWithWallet,
     posCounters, assignCounterCashier, closeCounterSession, posShifts, startPOSShift, closePOSShift
   } = useGlobalContext();
+
+  const isLight = theme === "light";
 
   // ── Shift Management State
   const [selectedCounter, setSelectedCounter] = useState<string>("Counter 1");
@@ -948,7 +952,7 @@ export default function PosPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-black text-gray-100 font-sans print:bg-white print:text-black">
+    <div className={`flex min-h-screen font-sans print:bg-white print:text-black ${isLight ? "bg-slate-100 text-slate-900" : "bg-black text-gray-100"}`}>
       <ClientSidebar />
 
       {/* Toast */}
@@ -1185,12 +1189,28 @@ export default function PosPage() {
                 )}
               </button>
             </div>
-            <button
-              onClick={() => setShowCloseShiftModal(true)}
-              className="flex items-center gap-1.5 bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 text-red-400 font-black text-[10px] px-3 py-1.5 rounded-lg transition"
-            >
-              <LogOut size={11} /> Close Shift
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={toggleTheme}
+                className={`flex items-center gap-1.5 font-black text-[10px] px-3 py-1.5 rounded-lg transition border cursor-pointer ${
+                  isLight
+                    ? "bg-slate-100 border-slate-300 text-slate-700 hover:bg-slate-200"
+                    : "bg-white/10 border-white/20 text-amber-400 hover:bg-white/20"
+                }`}
+                title={isLight ? "Switch to Dark/Black Mode" : "Switch to Light Mode"}
+              >
+                {isLight ? <Moon size={11} className="text-indigo-600" /> : <Sun size={11} className="text-amber-400" />}
+                <span>{isLight ? "Dark Mode" : "Light Mode"}</span>
+              </button>
+
+              <button
+                onClick={() => setShowCloseShiftModal(true)}
+                className="flex items-center gap-1.5 bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 text-red-400 font-black text-[10px] px-3 py-1.5 rounded-lg transition"
+              >
+                <LogOut size={11} /> Close Shift
+              </button>
+            </div>
           </div>
         )}
 
