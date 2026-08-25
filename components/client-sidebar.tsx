@@ -66,7 +66,7 @@ export default function ClientSidebar() {
     { name: "ERP Dashboard",       href: "/dashboard",  icon: LayoutDashboard, roles: ["Owner","Manager","Accountant"],                              verticals: ["Retail","F&B","Pharmacy","Bookstore"] },
     { name: "Restaurant POS",       href: "/restaurant", icon: Utensils,        roles: ["Owner","Manager","Cashier"],                                 verticals: ["F&B"] },
     { name: "Kitchen Display",      href: "/kds",        icon: Monitor,         roles: ["Owner","Manager"],                                           verticals: ["F&B"] },
-    { name: "CASHIER POS",          href: "/pos",        icon: ShoppingCart,    roles: ["Owner","Manager","Cashier"],                                 verticals: ["Retail","Pharmacy","Bookstore"] },
+    { name: "Point of Sale",          href: "/pos",        icon: ShoppingCart,    roles: ["Owner","Manager","Cashier"],                                 verticals: ["Retail","Pharmacy","Bookstore"] },
     { name: "Sales History",         href: "/sales",      icon: Receipt,         roles: ["Owner","Manager","Cashier","Accountant"],                   verticals: ["Retail","F&B","Pharmacy","Bookstore"] },
     { name: "Customers",            href: "/customers",  icon: Users2,          roles: ["Owner","Manager","Cashier"],                                 verticals: ["Retail","F&B","Pharmacy","Bookstore"] },
     { name: "Menu & Recipes",       href: "/menu-builder",   icon: Database,        roles: ["Owner","Manager","Warehouse Staff"],                         verticals: ["F&B"] },
@@ -125,8 +125,8 @@ export default function ClientSidebar() {
           >
             <Menu size={20} />
           </button>
-          <Link href="/dashboard" className="flex items-center">
-            <MTCoreLogo variant="sky" size="sm" showText={true} theme={isLight ? "light" : "dark"} />
+          <Link href="/dashboard" className="flex items-center ml-2">
+            <MTCoreLogo variant="sky" size="md" showText={true} theme={isLight ? "light" : "dark"} />
           </Link>
         </div>
 

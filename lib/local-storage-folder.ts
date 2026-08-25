@@ -65,8 +65,16 @@ export async function verifyDirectoryPermission(handle: FileSystemDirectoryHandl
   try {
     const opts = { mode: "readwrite" as const };
     if (typeof (handle as any).queryPermission === "function") {
-      const status = await (handle as any).queryPermission(opts);
+      let status = await (handle as any).queryPermission(opts);
       if (status === "granted") return true;
+      if (status === "prompt" && typeof (handle as any).requestPermission === "function") {
+        try {
+          status = await (handle as any).requestPermission(opts);
+          if (status === "granted") return true;
+        } catch (reqErr) {
+          console.warn("Could not auto-request permission:", reqErr);
+        }
+      }
     }
   } catch (err) {
     console.warn("Directory permission check failed:", err);

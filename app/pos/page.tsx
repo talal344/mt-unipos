@@ -1055,17 +1055,17 @@ export default function PosPage() {
 
         {/* ── SHIFT STATUS BAR ── */}
         {shiftOpen && (
-          <div className={`lg:col-span-12 flex items-center justify-between border rounded-xl px-4 py-2 shrink-0 ${
+          <div className={`lg:col-span-12 flex items-center border rounded-xl px-4 py-2 shrink-0 ${
             isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/80 border-brand-dark-border text-gray-100"
           }`}>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-1 rounded-lg">
+            <div className="flex flex-1 items-center justify-between gap-2 overflow-x-auto no-scrollbar">
+              <div className="flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-1 rounded-lg shrink-0">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                 <span className="text-[10px] font-black text-emerald-600 uppercase">
                   {posCounters.find(c => c.status === "Active" && isUserAssignedToCounter(c, currentUser))?.name || selectedCounter} · SHIFT ACTIVE
                 </span>
               </div>
-              <div className={`hidden sm:flex items-center gap-1.5 border px-2.5 py-1 rounded-lg text-[10px] font-mono ${
+              <div className={`hidden sm:flex items-center gap-1.5 border px-2.5 py-1 rounded-lg text-[10px] font-mono shrink-0 ${
                 isLight ? "bg-slate-100 border-slate-300 text-slate-900" : "bg-brand-dark-surface border-brand-dark-border text-gray-100"
               }`}>
                 <span className={`font-bold ${isLight ? "text-slate-600" : "text-gray-400"}`}>DRAWER CASH:</span>
@@ -1099,22 +1099,22 @@ export default function PosPage() {
                 </span>
               </div>
               {isOffline && (
-                <div className="flex items-center gap-1.5 bg-red-500/20 px-2 py-1 rounded">
+                <div className="flex items-center gap-1.5 bg-red-500/20 px-2 py-1 rounded shrink-0">
                   <WifiOff size={10} className="text-red-500 animate-pulse" />
-                  <span className="text-[10px] font-black text-red-500 uppercase">Offline Mode (Syncing Paused)</span>
+                  <span className="text-[10px] font-black text-red-500 uppercase">Offline Mode</span>
                 </div>
               )}
-              <div className={`flex items-center gap-1 text-[10px] font-mono ${isLight ? "text-slate-500" : "text-gray-400"}`}>
+              <div className={`flex items-center gap-1 text-[10px] font-mono shrink-0 ${isLight ? "text-slate-500" : "text-gray-400"}`}>
                 <Clock size={10} className={isLight ? "text-slate-400" : "text-gray-500"} />
                 Started: {new Date(shiftStartTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </div>
-              <div className={`hidden sm:flex items-center gap-1 text-[10px] font-mono ${isLight ? "text-slate-500" : "text-gray-400"}`}>
+              <div className={`hidden sm:flex items-center gap-1 text-[10px] font-mono shrink-0 ${isLight ? "text-slate-500" : "text-gray-400"}`}>
                 <ShoppingCart size={10} className={isLight ? "text-slate-400" : "text-gray-500"} />
                 Sales: <span className={`font-black ml-0.5 ${isLight ? "text-slate-900" : "text-white"}`}>{shiftSales.length}</span>
               </div>
               <button 
                 onClick={() => setShowHeldCartsPanel(true)}
-                className={`flex items-center gap-1.5 text-[9px] font-black uppercase px-2 py-1 rounded transition ${
+                className={`flex items-center gap-1.5 text-[9px] font-black uppercase px-2 py-1 rounded transition shrink-0 ${
                   heldCarts.length > 0 
                     ? 'bg-amber-500/20 text-amber-500 border border-amber-500/40 animate-pulse' 
                     : isLight 
@@ -1124,11 +1124,11 @@ export default function PosPage() {
                 <Clock size={10} />
                 Held ({heldCarts.length})
               </button>
-              <div className={`hidden sm:flex items-center gap-1 text-[10px] font-mono ${isLight ? "text-slate-600" : "text-gray-400"}`}>
+              <div className={`hidden sm:flex items-center gap-1 text-[10px] font-mono shrink-0 ${isLight ? "text-slate-600" : "text-gray-400"}`}>
                 <DollarSign size={10} className="text-brand-sky" />
                 Cash: <span className="text-brand-sky font-black ml-0.5">{currencySymbol} {shiftCashSales.toFixed(0)}</span>
               </div>
-              <div className="relative">
+              <div className="relative shrink-0">
                 <button 
                   onClick={() => setShowLowStockModal(!showLowStockModal)}
                   className={`flex items-center gap-1.5 text-[9px] font-black uppercase px-2 py-1 rounded transition ${
@@ -1185,7 +1185,7 @@ export default function PosPage() {
                     triggerToast(`⚠️ ${res.error}`);
                   }
                 }}
-                className={`flex items-center gap-1.5 text-[9px] font-black uppercase px-2.5 py-1 rounded transition cursor-pointer ${
+                className={`flex items-center gap-1.5 text-[9px] font-black uppercase px-2.5 py-1 rounded transition cursor-pointer shrink-0 ${
                   hasSavedFolder 
                     ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/30 hover:bg-emerald-500/20" 
                     : "bg-red-500/20 text-red-500 border-2 border-red-500/60 animate-pulse hover:bg-red-500/30 shadow-lg shadow-red-500/30"
@@ -1203,28 +1203,6 @@ export default function PosPage() {
                     <span>⚠️ SET SAVE FOLDER</span>
                   </>
                 )}
-              </button>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={toggleTheme}
-                className={`flex items-center gap-1.5 font-black text-[10px] px-3 py-1.5 rounded-lg transition border cursor-pointer ${
-                  isLight
-                    ? "bg-slate-100 border-slate-300 text-slate-700 hover:bg-slate-200"
-                    : "bg-white/10 border-white/20 text-amber-400 hover:bg-white/20"
-                }`}
-                title={isLight ? "Switch to Dark/Black Mode" : "Switch to Light Mode"}
-              >
-                {isLight ? <Moon size={11} className="text-indigo-600" /> : <Sun size={11} className="text-amber-400" />}
-                <span>{isLight ? "Dark Mode" : "Light Mode"}</span>
-              </button>
-
-              <button
-                onClick={() => setShowCloseShiftModal(true)}
-                className="flex items-center gap-1.5 bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 text-red-500 font-black text-[10px] px-3 py-1.5 rounded-lg transition"
-              >
-                <LogOut size={11} /> Close Shift
               </button>
             </div>
           </div>
