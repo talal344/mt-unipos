@@ -338,7 +338,7 @@ export default function ClientSidebar() {
       )}
 
       <aside className={`
-        fixed ${isOffline ? "top-[88px]" : "top-16"} bottom-0 left-0 z-[999] transform transition-transform duration-300
+        fixed ${isOffline ? "top-[88px]" : "top-16"} bottom-0 left-0 z-[999] transform transition-transform duration-300 md:transition-none
         ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"}
         md:translate-x-0 md:relative md:top-0 md:bottom-auto md:h-full
         w-64 border-r flex flex-col shrink-0 font-sans print:hidden transition-colors ${
@@ -352,14 +352,14 @@ export default function ClientSidebar() {
               <Link
                 key={link.name}
                 href={link.href}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-semibold transition-all ${
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-semibold border transition-colors ${
                   active
                     ? isLight
-                      ? "bg-sky-100/90 border border-sky-300 text-sky-900 font-bold shadow-xs"
-                      : "bg-brand-sky/10 border border-brand-sky/30 text-brand-sky font-bold"
+                      ? "bg-sky-100/90 border-sky-300 text-sky-900 font-bold shadow-xs"
+                      : "bg-brand-sky/10 border-brand-sky/30 text-brand-sky font-bold"
                     : isLight
-                    ? "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-                    : "text-gray-400 hover:text-white hover:bg-brand-dark-border"
+                    ? "border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                    : "border-transparent text-gray-400 hover:text-white hover:bg-brand-dark-border"
                 }`}
               >
                 <Icon size={16} className={active ? "text-sky-500" : "opacity-80"} />
