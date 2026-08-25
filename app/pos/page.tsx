@@ -1360,28 +1360,36 @@ export default function PosPage() {
                   />
                   {showCustDropdown && (
                     <div className={`absolute left-0 right-0 top-9 border rounded-xl shadow-2xl max-h-44 overflow-y-auto z-30 p-1 ${
-                      isLight ? "bg-white border-slate-200 text-slate-900" : "bg-brand-dark-surface border-brand-dark-border text-gray-200"
+                      isLight ? "bg-white border-slate-200 text-slate-900" : "bg-[#111] border-brand-dark-border text-gray-200"
                     }`}>
                       <button
                         onClick={() => { setSelectedCustomer("Walk-in Customer"); setCustSearch(""); setShowCustDropdown(false); setRedeemLoyalty(false); }}
-                        className={`w-full text-left p-2.5 rounded-lg text-[10px] flex items-center gap-2 hover:bg-sky-50 transition ${
-                          selectedCustomer === "Walk-in Customer" ? "bg-sky-100 font-bold border-l-2 border-sky-600" : ""
+                        className={`w-full text-left p-2.5 rounded-lg text-[10px] flex items-center gap-2 transition ${
+                          isLight ? "hover:bg-sky-50" : "hover:bg-[#222]"
+                        } ${
+                          selectedCustomer === "Walk-in Customer" 
+                            ? (isLight ? "bg-sky-100 font-bold border-l-2 border-sky-600" : "bg-[#222] font-bold border-l-2 border-brand-sky")
+                            : ""
                         }`}
                       >
                         <User size={10} className="text-slate-400" />
                         <div>
-                          <div className={`font-bold text-[11px] ${isLight ? "text-slate-900" : "text-gray-300"}`}>Walk-in Customer</div>
-                          <div className={`text-[9px] ${isLight ? "text-slate-500" : "text-gray-600"}`}>Anonymous · no loyalty</div>
+                          <div className={`font-bold text-[11px] ${isLight ? "text-slate-900" : "text-gray-200"}`}>Walk-in Customer</div>
+                          <div className={`text-[9px] ${isLight ? "text-slate-500" : "text-gray-500"}`}>Anonymous · no loyalty</div>
                         </div>
                       </button>
                       {filteredCustomers.map(c => (
                         <button key={c.id} onClick={() => { setSelectedCustomer(c.name); setCustSearch(c.name); setShowCustDropdown(false); }}
-                          className={`w-full text-left p-2.5 rounded-lg text-[10px] flex justify-between hover:bg-sky-50 transition ${
-                            selectedCustomer === c.name ? "bg-sky-100 font-bold border-l-2 border-sky-600" : ""
+                          className={`w-full text-left p-2.5 rounded-lg text-[10px] flex justify-between transition ${
+                            isLight ? "hover:bg-sky-50" : "hover:bg-[#222]"
+                          } ${
+                            selectedCustomer === c.name 
+                              ? (isLight ? "bg-sky-100 font-bold border-l-2 border-sky-600" : "bg-[#222] font-bold border-l-2 border-brand-sky")
+                              : ""
                           }`}
                         >
                           <div>
-                            <div className={`font-bold text-[11px] ${isLight ? "text-slate-900" : "text-white"}`}>{c.name}</div>
+                            <div className={`font-bold text-[11px] ${isLight ? "text-slate-900" : "text-gray-200"}`}>{c.name}</div>
                             <div className={`font-mono text-[9px] ${isLight ? "text-slate-500" : "text-gray-500"}`}>{c.mobile}</div>
                           </div>
                           <span className="text-amber-500 font-black text-[9px] flex items-center gap-0.5">
@@ -1390,7 +1398,7 @@ export default function PosPage() {
                         </button>
                       ))}
                       {filteredCustomers.length === 0 && custSearch && (
-                        <div className="text-center py-3 text-slate-400 text-[9px] italic">No match. Add new below.</div>
+                        <div className={`text-center py-3 text-[9px] italic ${isLight ? "text-slate-400" : "text-gray-500"}`}>No match. Add new below.</div>
                       )}
                     </div>
                   )}
