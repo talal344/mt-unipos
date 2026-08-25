@@ -1051,7 +1051,7 @@ export default function PosPage() {
       {/* ══════════════════════════════════════════════════════════════════════
           MAIN POS GRID
       ══════════════════════════════════════════════════════════════════════ */}
-      <main className="flex-grow p-4 grid grid-cols-1 lg:grid-cols-12 gap-4 h-screen overflow-hidden print:hidden">
+      <main className="flex-grow p-4 grid grid-cols-1 lg:grid-cols-12 gap-4 h-screen lg:grid-rows-[auto_1fr] overflow-hidden print:hidden">
 
         {/* ── SHIFT STATUS BAR ── */}
         {shiftOpen && (
@@ -1209,7 +1209,7 @@ export default function PosPage() {
         )}
 
         {/* ── LEFT: Product Catalog (7 cols) ── */}
-        <section className="lg:col-span-7 flex flex-col h-[92vh] space-y-3">
+        <section className="lg:col-span-7 flex flex-col min-h-0 h-full space-y-3">
 
           {/* Search + Barcode */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 shrink-0">
@@ -1326,7 +1326,7 @@ export default function PosPage() {
         </section>
 
         {/* ── RIGHT: Cart Panel (5 cols) ── */}
-        <section className={`lg:col-span-5 border rounded-2xl p-4 flex flex-col h-[92vh] justify-between ${
+        <section className={`lg:col-span-5 border rounded-2xl p-4 flex flex-col min-h-0 h-full justify-between ${
           isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/70 border-brand-dark-border text-gray-100"
         }`}>
 
