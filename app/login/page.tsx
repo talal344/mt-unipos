@@ -13,6 +13,8 @@ import {
 
 const SUPER_ADMIN_PASSCODE = "talal344";
 
+const normalizeTenantId = (id: string) => (id || "").replace(/[\u2010-\u2015\u2212\uFE58\uFE63\uFF0D–—−-]/g, "-").trim().toUpperCase();
+
 function LoginContent() {
   const router       = useRouter();
   const searchParams = useSearchParams();
@@ -70,7 +72,7 @@ function LoginContent() {
   const [activatedCredentials, setActivatedCredentials] = useState<{ tenantId: string; email: string; pass: string; businessName: string } | null>(null);
 
 
-  const activeTenant = tenants.find(t => t.id.toLowerCase() === inputTenantId.trim().toLowerCase()) || null;
+  const activeTenant = tenants.find(t => normalizeTenantId(t.id) === normalizeTenantId(inputTenantId)) || null;
   const presets      = activeTenant?.credentialPresets || [];
 
   const isValidTenant = activeTenant !== null;
@@ -106,8 +108,8 @@ function LoginContent() {
       } catch {}
 
       if (activatedTenantId) {
-        const tenantInReg = tenants.find(t => t.id === activatedTenantId);
-        const isDeleted = blacklisted.includes(activatedTenantId) || (!tenantInReg && tenants.length > 0);
+        const tenantInReg = tenants.find(t => normalizeTenantId(t.id) === normalizeTenantId(activatedTenantId));
+        const isDeleted = blacklisted.some(bId => normalizeTenantId(bId) === normalizeTenantId(activatedTenantId)) || (!tenantInReg && tenants.length > 0);
         const isSuspended = tenantInReg && ((tenantInReg.status as string) === "Suspended" || (tenantInReg.status as string) === "Inactive");
 
         if (isDeleted || isSuspended) {
@@ -122,7 +124,7 @@ function LoginContent() {
     e.preventDefault();
     if (!email || !password) { setErrorMessage("Please enter both email and password."); return; }
 
-    const cleanTenantId = inputTenantId.trim().toUpperCase();
+    const cleanTenantId = normalizeTenantId(inputTenantId);
 
     // ─── Real-Time Supabase Cloud Verification ───
     try {
@@ -131,9 +133,9 @@ function LoginContent() {
         const blacklistRow = globalData.find((r: any) => r.key === 'unipos_blacklisted_tenants');
         if (blacklistRow && Array.isArray(blacklistRow.value)) {
           localStorage.setItem("unipos_blacklisted_tenants", JSON.stringify(blacklistRow.value));
-          if (blacklistRow.value.includes(cleanTenantId)) {
+          if (blacklistRow.value.some((bId: string) => normalizeTenantId(bId) === cleanTenantId)) {
             if (typeof window !== "undefined") {
-                  localStorage.removeItem("unipos_last_activated_tenant");
+              localStorage.removeItem("unipos_last_activated_tenant");
               localStorage.removeItem("unipos_current_user");
             }
             setErrorMessage(`⛔ ACCESS DENIED: Workspace "${cleanTenantId}" has been deleted by Super Admin. Access revoked!`);
@@ -143,14 +145,20 @@ function LoginContent() {
 
         const tenantsRow = globalData.find((r: any) => r.key === 'unipos_tenants');
         if (tenantsRow && Array.isArray(tenantsRow.value)) {
-          localStorage.setItem("unipos_tenants", JSON.stringify(tenantsRow.value));
-          const cloudTenant = tenantsRow.value.find((t: any) => t.id.toUpperCase() === cleanTenantId);
-          if (!cloudTenant) {
-            setErrorMessage(`⛔ ACCESS DENIED: Workspace ID "${cleanTenantId}" not found or deleted by Super Admin.`);
-            return;
-          }
-          if (cloudTenant.status === "Suspended" || cloudTenant.status === "Inactive" || cloudTenant.status === "Pending Payment") {
-            setErrorMessage(`⛔ ACCESS DENIED: Workspace status is "${cloudTenant.status}". Login blocked.`);
+          // Merge cloud tenants with existing local tenants so local tenants are preserved
+          const existingLocal: any[] = (() => {
+            try { return JSON.parse(localStorage.getItem("unipos_tenants") || "[]"); } catch { return []; }
+          })();
+          const mergedMap = new Map<string, any>();
+          existingLocal.forEach((t: any) => { if (t?.id) mergedMap.set(normalizeTenantId(t.id), t); });
+          tenants.forEach((t: any) => { if (t?.id) mergedMap.set(normalizeTenantId(t.id), t); });
+          tenantsRow.value.forEach((t: any) => { if (t?.id) mergedMap.set(normalizeTenantId(t.id), t); });
+          const mergedTenants = Array.from(mergedMap.values());
+          localStorage.setItem("unipos_tenants", JSON.stringify(mergedTenants));
+          
+          const matchedTenant = mergedTenants.find((t: any) => normalizeTenantId(t.id) === cleanTenantId);
+          if (matchedTenant && (matchedTenant.status === "Suspended" || matchedTenant.status === "Inactive" || matchedTenant.status === "Pending Payment")) {
+            setErrorMessage(`⛔ ACCESS DENIED: Workspace status is "${matchedTenant.status}". Login blocked.`);
             return;
           }
         }
@@ -164,7 +172,7 @@ function LoginContent() {
       blacklisted = JSON.parse(localStorage.getItem("unipos_blacklisted_tenants") || "[]");
     } catch {}
 
-    if (blacklisted.includes(cleanTenantId)) {
+    if (blacklisted.some((bId: string) => normalizeTenantId(bId) === cleanTenantId)) {
       if (typeof window !== "undefined") {
         localStorage.removeItem("unipos_last_activated_tenant");
         localStorage.removeItem("unipos_current_user");
@@ -173,7 +181,13 @@ function LoginContent() {
       return;
     }
 
-    let targetTenant = tenants.find((t) => t.id.toUpperCase() === cleanTenantId);
+    let targetTenant = tenants.find((t) => normalizeTenantId(t.id) === cleanTenantId);
+    if (!targetTenant) {
+      const stored = (() => {
+        try { return JSON.parse(localStorage.getItem("unipos_tenants") || "[]"); } catch { return []; }
+      })();
+      targetTenant = stored.find((t: any) => normalizeTenantId(t.id) === cleanTenantId);
+    }
 
     // Auto-resolve tenant if user entered a valid email/username & password registered in any tenant's credentialPresets
     if (!targetTenant) {
@@ -719,7 +733,7 @@ function LoginContent() {
                   type="text" 
                   required 
                   value={inputTenantId}
-                  onChange={e => { setInputTenantId(e.target.value.toUpperCase()); setErrorMessage(""); }}
+                  onChange={e => { setInputTenantId(e.target.value.replace(/[\u2010-\u2015\u2212\uFE58\uFE63\uFF0D–—−-]/g, "-").toUpperCase()); setErrorMessage(""); }}
                   placeholder="e.g. AFS-1234"
                   className={`w-full p-3 rounded-xl outline-none transition-all duration-300 font-mono text-xs border ${
                     isLight
