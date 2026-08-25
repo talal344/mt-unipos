@@ -338,8 +338,9 @@ export default function ClientSidebar() {
       )}
 
       <aside className={`
-        fixed ${isOffline ? "top-[88px]" : "top-16"} bottom-0 left-0 z-[999] transform transition-transform duration-300 md:relative md:top-0 md:inset-y-0
+        fixed ${isOffline ? "top-[88px]" : "top-16"} bottom-0 left-0 z-[999] transform transition-transform duration-300
         ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"}
+        md:translate-x-0 md:relative md:top-0 md:bottom-auto md:h-full
         w-64 border-r flex flex-col shrink-0 font-sans print:hidden transition-colors ${
         isLight ? "bg-white border-slate-200 text-slate-900 shadow-xs" : "bg-brand-dark-surface border-brand-dark-border text-gray-100"
       }`}>
