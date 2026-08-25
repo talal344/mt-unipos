@@ -688,23 +688,6 @@ export default function ClientDashboardPage() {
 
       {/* Main Command Workspace */}
       <main className="flex-grow p-6 sm:p-8 space-y-6 overflow-y-auto h-screen">
-        
-        {/* Top Header */}
-        <div className={`flex justify-between items-center border-b pb-4 ${isLight ? "border-slate-200" : "border-brand-dark-border/60"}`}>
-          <div>
-            <h1 className={`text-xl font-black tracking-tight flex items-center gap-2 ${isLight ? "text-slate-900" : "text-white"}`}>
-              <span>{activeTenant?.businessName || "Client Command Center"}</span>
-              <span className="bg-sky-500/20 text-sky-600 text-[8px] px-2 py-0.5 rounded font-black tracking-widest uppercase font-mono border border-sky-500/30">
-                {bizType} Vertical
-              </span>
-            </h1>
-            <p className={`text-[10px] font-mono ${isLight ? "text-slate-500" : "text-gray-500"}`}>Store Dashboard is isolated for **{vertical}** workflows.</p>
-          </div>
-          <span className="text-[10px] font-mono text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full flex items-center gap-1">
-            <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping" />
-            POS Shard Sync Active
-          </span>
-        </div>
 
         {/* POS Operational Alerts & Store Desk Announcements */}
         <POSAlertBanner />
