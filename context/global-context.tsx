@@ -676,6 +676,7 @@ interface GlobalContextType {
   // SaaS Admin State
   demoRequests: DemoRequest[];
   tenants: Tenant[];
+  setTenants: React.Dispatch<React.SetStateAction<Tenant[]>>;
   saasInvoices: SaaSInvoice[];
   supportTickets: SupportTicket[];
   addDemoRequest: (req: Omit<DemoRequest, "id" | "ticketNumber" | "date" | "status" | "messages">) => string;
@@ -5377,6 +5378,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       value={{
         demoRequests,
         tenants,
+        setTenants,
         saasInvoices,
         supportTickets,
         addDemoRequest,

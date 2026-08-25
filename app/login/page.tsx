@@ -18,7 +18,7 @@ const normalizeTenantId = (id: string) => (id || "").replace(/[\u2010-\u2015\u22
 function LoginContent() {
   const router       = useRouter();
   const searchParams = useSearchParams();
-  const { tenants, setCurrentUser, theme, toggleTheme } = useGlobalContext();
+  const { tenants, setTenants, setCurrentUser, theme, toggleTheme } = useGlobalContext();
   const isLight = theme === "light";
 
   const [inputTenantId, setInputTenantId] = useState("");
