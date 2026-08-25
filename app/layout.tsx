@@ -76,21 +76,22 @@ export default function RootLayout({
               if ('serviceWorker' in navigator) {
                 window.addEventListener('load', function() {
                   navigator.serviceWorker.register('/sw.js').then(function(reg) {
-                    reg.onupdatefound = function() {
-                      var installingWorker = reg.installing;
-                      if (installingWorker) {
-                        installingWorker.onstatechange = function() {
-                          if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                            if (window.caches) {
-                              caches.keys().then(function(names) {
-                                for (var name of names) caches.delete(name);
-                              });
-                            }
-                            window.location.reload();
-                          }
-                        };
-                      }
-                    };
+                    if (navigator.onLine) {
+                      var routes = [
+                        '/dashboard', '/pos', '/sales', '/customers', '/products', 
+                        '/suppliers', '/purchases', '/inventory', '/expenses', 
+                        '/accounting', '/payroll', '/staff', '/crm', '/reports', 
+                        '/ai', '/support', '/settings', '/restaurant', '/kds', 
+                        '/menu-builder', '/floor-editor', '/pharmacy'
+                      ];
+                      setTimeout(function() {
+                        routes.forEach(function(r) {
+                          fetch(r, { cache: 'no-cache' }).catch(function() {});
+                        });
+                      }, 2500);
+                    }
+                  }).catch(function(err) {
+                    console.warn('SW registration failed:', err);
                   });
                 });
               }

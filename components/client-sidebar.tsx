@@ -7,14 +7,14 @@ import { useGlobalContext } from "@/context/global-context";
 import {
   Laptop, LayoutDashboard, ShoppingCart, Database, DollarSign, Utensils,
   Heart, Users, Users2, MessageCircle, FileDown, Brain, ExternalLink, Menu,
-  LogOut, ShieldAlert, ShoppingBag, Receipt, Sliders, Bell, X, Package, CreditCard, Monitor, Settings, Landmark, Sun, Moon, Clock
+  LogOut, ShieldAlert, ShoppingBag, Receipt, Sliders, Bell, X, Package, CreditCard, Monitor, Settings, Landmark, Sun, Moon, Clock, WifiOff
 } from "lucide-react";
 import MTCoreLogo from "@/components/mt-logo";
 
 export default function ClientSidebar() {
   const router = useRouter();
   const pathname = usePathname();
-  const { logout, currentUser, tenants, currentBranch, setCurrentBranch, products, customers, theme, toggleTheme } = useGlobalContext();
+  const { logout, currentUser, tenants, currentBranch, setCurrentBranch, products, customers, theme, toggleTheme, isOffline } = useGlobalContext();
   const isLight = theme === "light";
 
   const [showNotifications, setShowNotifications] = useState(false);
@@ -63,7 +63,7 @@ export default function ClientSidebar() {
   else if (bizType.includes("Book") || bizType.includes("Library") || bizType.includes("Gift")) vertical = "Bookstore";
 
   const allLinks = [
-    { name: "ERP Dashboard",       href: "/dashboard",  icon: LayoutDashboard, roles: ["Owner","Manager","Accountant"],                              verticals: ["Retail","F&B","Pharmacy","Bookstore"] },
+    { name: "Dashboard",           href: "/dashboard",  icon: LayoutDashboard, roles: ["Owner","Manager","Accountant","Cashier","HR","Warehouse Staff"], verticals: ["Retail","F&B","Pharmacy","Bookstore"] },
     { name: "Restaurant POS",       href: "/restaurant", icon: Utensils,        roles: ["Owner","Manager","Cashier"],                                 verticals: ["F&B"] },
     { name: "Kitchen Display",      href: "/kds",        icon: Monitor,         roles: ["Owner","Manager"],                                           verticals: ["F&B"] },
     { name: "Point of Sale",          href: "/pos",        icon: ShoppingCart,    roles: ["Owner","Manager","Cashier"],                                 verticals: ["Retail","Pharmacy","Bookstore"] },
@@ -103,7 +103,7 @@ export default function ClientSidebar() {
     <>
       <style>{`
         .layout-topbar-adjusted {
-          padding-top: 64px !important;
+          padding-top: ${isOffline ? "88px" : "64px"} !important;
           height: 100vh !important;
           box-sizing: border-box !important;
         }
@@ -113,7 +113,15 @@ export default function ClientSidebar() {
         }
       `}</style>
 
-      <header className={`fixed top-0 left-0 right-0 h-16 z-[1000] border-b flex items-center justify-between px-4 sm:px-6 transition-colors duration-200 ${
+      {/* Persistent Top Offline Warning Banner */}
+      {isOffline && (
+        <div className="fixed top-0 left-0 right-0 h-6 bg-gradient-to-r from-red-600 via-amber-600 to-red-600 text-white text-[10px] font-black tracking-widest flex items-center justify-center gap-2 z-[1001] px-4 uppercase shadow-sm">
+          <WifiOff size={11} className="shrink-0 animate-pulse text-amber-200" />
+          <span className="truncate">OFFLINE MODE ACTIVE — LOCAL DATABASE RUNNING · AUTO-SYNC WILL RESUME WHEN RECONNECTED</span>
+        </div>
+      )}
+
+      <header className={`fixed ${isOffline ? "top-6" : "top-0"} left-0 right-0 h-16 z-[1000] border-b flex items-center justify-between px-4 sm:px-6 transition-all duration-200 ${
         isLight ? "bg-white border-slate-200 text-slate-900 shadow-xs" : "bg-brand-dark-surface border-brand-dark-border text-gray-100"
       }`}>
         <div className="flex items-center gap-3 md:gap-4 shrink-0">
@@ -134,7 +142,14 @@ export default function ClientSidebar() {
           <span className={`font-black text-lg tracking-widest uppercase ${isLight ? "text-slate-900" : "text-white"}`}>
             {businessName}
           </span>
-          <span className="text-[9px] text-sky-500 font-bold uppercase tracking-wider">{bizType}</span>
+          <div className="flex items-center gap-2">
+            <span className="text-[9px] text-sky-500 font-bold uppercase tracking-wider">{bizType}</span>
+            {isOffline && (
+              <span className="bg-red-500/20 text-red-500 text-[8px] font-black uppercase px-1.5 py-0.2 rounded font-mono border border-red-500/30 animate-pulse">
+                Offline
+              </span>
+            )}
+          </div>
         </div>
 
         <div className="flex items-center gap-2 sm:gap-4 shrink-0">
@@ -150,6 +165,14 @@ export default function ClientSidebar() {
           </div>
 
           <div className="flex items-center gap-1 sm:gap-2">
+            {isOffline && (
+              <div className="flex items-center gap-1.5 bg-red-500/15 border border-red-500/40 text-red-500 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider animate-pulse shrink-0">
+                <WifiOff size={12} className="text-red-500 shrink-0" />
+                <span className="hidden md:inline">OFFLINE MODE</span>
+                <span className="text-[8px] bg-red-500 text-white px-1.5 py-0.5 rounded font-mono">SYNC PAUSED</span>
+              </div>
+            )}
+
             <button
               onClick={toggleTheme}
               className={`p-2 rounded-full transition ${
@@ -309,13 +332,13 @@ export default function ClientSidebar() {
 
       {isMobileMenuOpen && (
         <div 
-          className="fixed inset-0 bg-black/60 z-[998] md:hidden backdrop-blur-sm transition-opacity"
+          className={`fixed inset-0 bg-black/60 z-[998] md:hidden backdrop-blur-sm transition-opacity ${isOffline ? "top-[88px]" : "top-16"}`}
           onClick={() => setIsMobileMenuOpen(false)}
         />
       )}
 
       <aside className={`
-        fixed inset-y-0 left-0 z-[999] transform transition-transform duration-300 md:relative md:translate-x-0
+        fixed ${isOffline ? "top-[88px]" : "top-16"} bottom-0 left-0 z-[999] transform transition-transform duration-300 md:relative md:top-0 md:inset-y-0
         ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"}
         w-64 border-r flex flex-col shrink-0 font-sans print:hidden transition-colors ${
         isLight ? "bg-white border-slate-200 text-slate-900 shadow-xs" : "bg-brand-dark-surface border-brand-dark-border text-gray-100"

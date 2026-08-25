@@ -698,7 +698,7 @@ export default function ClientDashboardPage() {
                 {bizType} Vertical
               </span>
             </h1>
-            <p className={`text-[10px] font-mono ${isLight ? "text-slate-500" : "text-gray-500"}`}>Dynamic ERP Shard Dashboard is isolated for **{vertical}** workflows.</p>
+            <p className={`text-[10px] font-mono ${isLight ? "text-slate-500" : "text-gray-500"}`}>Store Dashboard is isolated for **{vertical}** workflows.</p>
           </div>
           <span className="text-[10px] font-mono text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full flex items-center gap-1">
             <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping" />
