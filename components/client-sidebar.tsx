@@ -37,7 +37,7 @@ export default function ClientSidebar() {
   }, []);
 
   useEffect(() => {
-    const root = document.querySelector('.flex.h-screen');
+    const root = document.querySelector('.flex.h-screen, .flex.min-h-screen');
     if (root) {
       root.classList.add('layout-topbar-adjusted');
     }
