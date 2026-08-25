@@ -7,7 +7,9 @@ import { useGlobalContext } from "@/context/global-context";
 import {
   Laptop, LayoutDashboard, ShoppingCart, Database, DollarSign, Utensils,
   Heart, Users, Users2, MessageCircle, FileDown, Brain, ExternalLink, Menu,
-  LogOut, ShieldAlert, ShoppingBag, Receipt, Sliders, Bell, X, Package, CreditCard, Monitor, Settings, Landmark, Sun, Moon, Clock, WifiOff
+  LogOut, ShieldAlert, ShoppingBag, Receipt, Sliders, Bell, X, Package, CreditCard,
+  Monitor, Settings, Landmark, Sun, Moon, Clock, WifiOff, ChevronDown, ChevronRight,
+  Sparkles, CheckCircle2, ChevronRight as ChevronRightIcon
 } from "lucide-react";
 import MTCoreLogo from "@/components/mt-logo";
 
@@ -62,42 +64,273 @@ export default function ClientSidebar() {
   else if (bizType.includes("Pharmacy") || bizType.includes("Medical") || bizType.includes("Health") || bizType.includes("Clinic")) vertical = "Pharmacy";
   else if (bizType.includes("Book") || bizType.includes("Library") || bizType.includes("Gift")) vertical = "Bookstore";
 
-  const allLinks = [
-    { name: "Dashboard",           href: "/dashboard",  icon: LayoutDashboard, roles: ["Owner","Manager","Accountant","Cashier","HR","Warehouse Staff"], verticals: ["Retail","F&B","Pharmacy","Bookstore"] },
-    { name: "Restaurant POS",       href: "/restaurant", icon: Utensils,        roles: ["Owner","Manager","Cashier"],                                 verticals: ["F&B"] },
-    { name: "Kitchen Display",      href: "/kds",        icon: Monitor,         roles: ["Owner","Manager"],                                           verticals: ["F&B"] },
-    { name: "Point of Sale",          href: "/pos",        icon: ShoppingCart,    roles: ["Owner","Manager","Cashier"],                                 verticals: ["Retail","Pharmacy","Bookstore"] },
-    { name: "Sales History",         href: "/sales",      icon: Receipt,         roles: ["Owner","Manager","Cashier","Accountant"],                   verticals: ["Retail","F&B","Pharmacy","Bookstore"] },
-    { name: "Customers",            href: "/customers",  icon: Users2,          roles: ["Owner","Manager","Cashier"],                                 verticals: ["Retail","F&B","Pharmacy","Bookstore"] },
-    { name: "Menu & Recipes",       href: "/menu-builder",   icon: Database,        roles: ["Owner","Manager","Warehouse Staff"],                         verticals: ["F&B"] },
-    { name: "Floor Plan Editor",    href: "/floor-editor",   icon: Settings,        roles: ["Owner","Manager"],                                           verticals: ["F&B"] },
-    { name: "Drug Expiries FEFO",   href: "/pharmacy",   icon: Heart,           roles: ["Owner","Manager","Warehouse Staff"],                         verticals: ["Pharmacy"] },
-    { name: "Drugs Registry",       href: "/products",   icon: Database,        roles: ["Owner","Manager","Warehouse Staff"],                         verticals: ["Pharmacy"] },
-    { name: "Books Directory",      href: "/products",   icon: Database,        roles: ["Owner","Manager","Warehouse Staff"],                         verticals: ["Bookstore"] },
-    { name: "Reading Club Loyalty", href: "/crm",        icon: MessageCircle,   roles: ["Owner","Manager"],                                          verticals: ["Bookstore"] },
-    { name: "Products Catalog",     href: "/products",   icon: Database,        roles: ["Owner","Manager","Warehouse Staff"],                         verticals: ["Retail"] },
-    { name: "Suppliers Directory",  href: "/suppliers",  icon: ShoppingBag,     roles: ["Owner","Manager","Warehouse Staff"],     verticals: ["Retail","F&B","Pharmacy","Bookstore"] },
-    { name: "Purchase Orders",      href: "/purchases",  icon: ShoppingBag,     roles: ["Owner","Manager","Warehouse Staff"],     verticals: ["Retail","Pharmacy","Bookstore"] },
-    { name: "Inventory Ledger",     href: "/inventory",  icon: Database,        roles: ["Owner","Manager","Warehouse Staff"],     verticals: ["Retail","Pharmacy","Bookstore"] },
-    { name: "Expense Vouchers",     href: "/expenses",   icon: Receipt,         roles: ["Owner","Manager","Accountant"],                             verticals: ["Retail","F&B","Pharmacy","Bookstore"] },
-    { name: "Accounting Ledgers",   href: "/accounting", icon: Landmark,        roles: ["Owner","Manager","Accountant"],                             verticals: ["Retail","F&B","Pharmacy","Bookstore"] },
-    { name: "Staff Payroll",        href: "/payroll",    icon: Users,           roles: ["Owner","Manager","HR"],                                     verticals: ["Retail","F&B","Pharmacy","Bookstore"] },
-    { name: "Staff & Roles",        href: "/staff",      icon: Users,           roles: ["Owner","HR"],                                               verticals: ["Retail","F&B","Pharmacy","Bookstore"] },
-    { name: "CRM Campaigns",        href: "/crm",        icon: MessageCircle,   roles: ["Owner","Manager"],                                          verticals: ["Retail","F&B","Pharmacy"] },
-    { name: "Data Reports",         href: "/reports",    icon: FileDown,        roles: ["Owner","Manager","Accountant"],                             verticals: ["Retail","F&B","Pharmacy","Bookstore"] },
-    { name: "AI Analytics",         href: "/ai",         icon: Brain,           roles: ["Owner","Manager"],                                          verticals: ["Retail","F&B","Pharmacy","Bookstore"] },
-    { name: "Help & Support",       href: "/support",    icon: MessageCircle,   roles: ["Owner","Manager"],                                           verticals: ["Retail","F&B","Pharmacy","Bookstore"] },
-    { name: "Settings Desk",        href: "/settings",   icon: Sliders,         roles: ["Owner","Manager"],                                          verticals: ["Retail","F&B","Pharmacy","Bookstore"] },
+  const menuGroups = [
+    {
+      id: "sales",
+      title: "Point of Sale & Orders",
+      badge: "POS",
+      icon: ShoppingCart,
+      color: {
+        darkHeader: "text-sky-400 hover:bg-sky-500/10 border-sky-500/20",
+        lightHeader: "text-sky-800 hover:bg-sky-50 border-sky-200",
+        badgeDark: "bg-sky-500/20 text-sky-300 border-sky-500/30",
+        badgeLight: "bg-sky-100 text-sky-800 border-sky-200",
+        iconColorDark: "text-sky-400",
+        iconColorLight: "text-sky-600",
+        iconBgDark: "bg-sky-500/15 border-sky-500/30",
+        iconBgLight: "bg-sky-100 border-sky-200",
+        activeDark: "bg-sky-500/15 border-sky-500/40 text-sky-300 font-bold",
+        activeLight: "bg-sky-100 border-sky-300 text-sky-950 font-bold",
+      },
+      links: [
+        { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, roles: ["Owner","Manager","Accountant","Cashier","HR","Warehouse Staff"], verticals: ["Retail","F&B","Pharmacy","Bookstore"] },
+        { name: "Point of Sale", href: "/pos", icon: ShoppingCart, roles: ["Owner","Manager","Cashier"], verticals: ["Retail","Pharmacy","Bookstore"] },
+        { name: "Restaurant POS", href: "/restaurant", icon: Utensils, roles: ["Owner","Manager","Cashier"], verticals: ["F&B"] },
+        { name: "Kitchen Display", href: "/kds", icon: Monitor, roles: ["Owner","Manager"], verticals: ["F&B"] },
+        { name: "Sales History", href: "/sales", icon: Receipt, roles: ["Owner","Manager","Cashier","Accountant"], verticals: ["Retail","F&B","Pharmacy","Bookstore"] },
+        { name: "Customers Directory", href: "/customers", icon: Users2, roles: ["Owner","Manager","Cashier"], verticals: ["Retail","F&B","Pharmacy","Bookstore"] },
+      ]
+    },
+    {
+      id: "inventory",
+      title: "Inventory & Catalog",
+      badge: "Stock",
+      icon: Package,
+      color: {
+        darkHeader: "text-amber-400 hover:bg-amber-500/10 border-amber-500/20",
+        lightHeader: "text-amber-800 hover:bg-amber-50 border-amber-200",
+        badgeDark: "bg-amber-500/20 text-amber-300 border-amber-500/30",
+        badgeLight: "bg-amber-100 text-amber-800 border-amber-200",
+        iconColorDark: "text-amber-400",
+        iconColorLight: "text-amber-600",
+        iconBgDark: "bg-amber-500/15 border-amber-500/30",
+        iconBgLight: "bg-amber-100 border-amber-200",
+        activeDark: "bg-amber-500/15 border-amber-500/40 text-amber-300 font-bold",
+        activeLight: "bg-amber-100 border-amber-300 text-amber-950 font-bold",
+      },
+      links: [
+        { name: "Products Catalog", href: "/products", icon: Database, roles: ["Owner","Manager","Warehouse Staff"], verticals: ["Retail"] },
+        { name: "Drugs Registry", href: "/products", icon: Database, roles: ["Owner","Manager","Warehouse Staff"], verticals: ["Pharmacy"] },
+        { name: "Drug Expiries FEFO", href: "/pharmacy", icon: Heart, roles: ["Owner","Manager","Warehouse Staff"], verticals: ["Pharmacy"] },
+        { name: "Books Directory", href: "/products", icon: Database, roles: ["Owner","Manager","Warehouse Staff"], verticals: ["Bookstore"] },
+        { name: "Menu & Recipes", href: "/menu-builder", icon: Database, roles: ["Owner","Manager","Warehouse Staff"], verticals: ["F&B"] },
+        { name: "Floor Plan Editor", href: "/floor-editor", icon: Settings, roles: ["Owner","Manager"], verticals: ["F&B"] },
+        { name: "Suppliers Directory", href: "/suppliers", icon: ShoppingBag, roles: ["Owner","Manager","Warehouse Staff"], verticals: ["Retail","F&B","Pharmacy","Bookstore"] },
+        { name: "Purchase Orders", href: "/purchases", icon: ShoppingBag, roles: ["Owner","Manager","Warehouse Staff"], verticals: ["Retail","Pharmacy","Bookstore"] },
+        { name: "Inventory Ledger", href: "/inventory", icon: Database, roles: ["Owner","Manager","Warehouse Staff"], verticals: ["Retail","Pharmacy","Bookstore"] },
+      ]
+    },
+    {
+      id: "finance",
+      title: "Finance & Accounts",
+      badge: "Ledger",
+      icon: Landmark,
+      color: {
+        darkHeader: "text-emerald-400 hover:bg-emerald-500/10 border-emerald-500/20",
+        lightHeader: "text-emerald-800 hover:bg-emerald-50 border-emerald-200",
+        badgeDark: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
+        badgeLight: "bg-emerald-100 text-emerald-800 border-emerald-200",
+        iconColorDark: "text-emerald-400",
+        iconColorLight: "text-emerald-600",
+        iconBgDark: "bg-emerald-500/15 border-emerald-500/30",
+        iconBgLight: "bg-emerald-100 border-emerald-200",
+        activeDark: "bg-emerald-500/15 border-emerald-500/40 text-emerald-300 font-bold",
+        activeLight: "bg-emerald-100 border-emerald-300 text-emerald-950 font-bold",
+      },
+      links: [
+        { name: "Expense Vouchers", href: "/expenses", icon: Receipt, roles: ["Owner","Manager","Accountant"], verticals: ["Retail","F&B","Pharmacy","Bookstore"] },
+        { name: "Accounting Ledgers", href: "/accounting", icon: Landmark, roles: ["Owner","Manager","Accountant"], verticals: ["Retail","F&B","Pharmacy","Bookstore"] },
+      ]
+    },
+    {
+      id: "staff",
+      title: "Staff & HRMS",
+      badge: "Team",
+      icon: Users,
+      color: {
+        darkHeader: "text-purple-400 hover:bg-purple-500/10 border-purple-500/20",
+        lightHeader: "text-purple-800 hover:bg-purple-50 border-purple-200",
+        badgeDark: "bg-purple-500/20 text-purple-300 border-purple-500/30",
+        badgeLight: "bg-purple-100 text-purple-800 border-purple-200",
+        iconColorDark: "text-purple-400",
+        iconColorLight: "text-purple-600",
+        iconBgDark: "bg-purple-500/15 border-purple-500/30",
+        iconBgLight: "bg-purple-100 border-purple-200",
+        activeDark: "bg-purple-500/15 border-purple-500/40 text-purple-300 font-bold",
+        activeLight: "bg-purple-100 border-purple-300 text-purple-950 font-bold",
+      },
+      links: [
+        { name: "Staff Payroll", href: "/payroll", icon: Users, roles: ["Owner","Manager","HR"], verticals: ["Retail","F&B","Pharmacy","Bookstore"] },
+        { name: "Staff & Roles", href: "/staff", icon: ShieldAlert, roles: ["Owner","HR"], verticals: ["Retail","F&B","Pharmacy","Bookstore"] },
+      ]
+    },
+    {
+      id: "growth",
+      title: "Growth & Reports",
+      badge: "AI",
+      icon: Brain,
+      color: {
+        darkHeader: "text-rose-400 hover:bg-rose-500/10 border-rose-500/20",
+        lightHeader: "text-rose-800 hover:bg-rose-50 border-rose-200",
+        badgeDark: "bg-rose-500/20 text-rose-300 border-rose-500/30",
+        badgeLight: "bg-rose-100 text-rose-800 border-rose-200",
+        iconColorDark: "text-rose-400",
+        iconColorLight: "text-rose-600",
+        iconBgDark: "bg-rose-500/15 border-rose-500/30",
+        iconBgLight: "bg-rose-100 border-rose-200",
+        activeDark: "bg-rose-500/15 border-rose-500/40 text-rose-300 font-bold",
+        activeLight: "bg-rose-100 border-rose-300 text-rose-950 font-bold",
+      },
+      links: [
+        { name: "CRM Campaigns", href: "/crm", icon: MessageCircle, roles: ["Owner","Manager"], verticals: ["Retail","F&B","Pharmacy"] },
+        { name: "Reading Club Loyalty", href: "/crm", icon: MessageCircle, roles: ["Owner","Manager"], verticals: ["Bookstore"] },
+        { name: "Data Reports", href: "/reports", icon: FileDown, roles: ["Owner","Manager","Accountant"], verticals: ["Retail","F&B","Pharmacy","Bookstore"] },
+        { name: "AI Analytics", href: "/ai", icon: Brain, roles: ["Owner","Manager"], verticals: ["Retail","F&B","Pharmacy","Bookstore"] },
+      ]
+    },
+    {
+      id: "system",
+      title: "Settings & Help",
+      badge: "Desk",
+      icon: Sliders,
+      color: {
+        darkHeader: "text-cyan-400 hover:bg-cyan-500/10 border-cyan-500/20",
+        lightHeader: "text-cyan-800 hover:bg-cyan-50 border-cyan-200",
+        badgeDark: "bg-cyan-500/20 text-cyan-300 border-cyan-500/30",
+        badgeLight: "bg-cyan-100 text-cyan-800 border-cyan-200",
+        iconColorDark: "text-cyan-400",
+        iconColorLight: "text-cyan-600",
+        iconBgDark: "bg-cyan-500/15 border-cyan-500/30",
+        iconBgLight: "bg-cyan-100 border-cyan-200",
+        activeDark: "bg-cyan-500/15 border-cyan-500/40 text-cyan-300 font-bold",
+        activeLight: "bg-cyan-100 border-cyan-300 text-cyan-950 font-bold",
+      },
+      links: [
+        { name: "Settings Desk", href: "/settings", icon: Sliders, roles: ["Owner","Manager"], verticals: ["Retail","F&B","Pharmacy","Bookstore"] },
+        { name: "Help & Support", href: "/support", icon: MessageCircle, roles: ["Owner","Manager"], verticals: ["Retail","F&B","Pharmacy","Bookstore"] },
+      ]
+    }
   ];
 
-  const activeLinks = allLinks.filter(l => l.roles.includes(userRole) && l.verticals.includes(vertical));
+  const visibleGroups = menuGroups
+    .map(group => ({
+      ...group,
+      links: group.links.filter(l => l.roles.includes(userRole) && l.verticals.includes(vertical))
+    }))
+    .filter(group => group.links.length > 0);
+
   const handleLogout = () => { logout(); router.push("/login"); };
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
+    const initialOpen: Record<string, boolean> = {};
+    visibleGroups.forEach(g => {
+      if (g.links.some(l => l.href === pathname)) {
+        initialOpen[g.id] = true;
+      }
+    });
+    return initialOpen;
+  });
+
   useEffect(() => {
     setIsMobileMenuOpen(false);
+    visibleGroups.forEach(g => {
+      if (g.links.some(l => l.href === pathname)) {
+        setOpenGroups(prev => ({ ...prev, [g.id]: true }));
+      }
+    });
   }, [pathname]);
+
+  const toggleGroup = (groupId: string) => {
+    setOpenGroups(prev => ({ ...prev, [groupId]: !prev[groupId] }));
+  };
+
+  const renderNavContent = () => (
+    <div className="space-y-3">
+      {visibleGroups.map(group => {
+        const isOpen = !!openGroups[group.id];
+        const isGroupActive = group.links.some(l => l.href === pathname);
+        const GroupIcon = group.icon;
+
+        return (
+          <div 
+            key={group.id} 
+            className={`rounded-xl border transition-colors ${
+              isLight 
+                ? isGroupActive ? "bg-slate-50/80 border-slate-300" : "bg-slate-50/40 border-slate-200" 
+                : isGroupActive ? "bg-brand-dark-surface/90 border-brand-dark-border" : "bg-black/30 border-brand-dark-border/40"
+            }`}
+          >
+            <button
+              onClick={() => toggleGroup(group.id)}
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-colors text-left ${
+                isLight ? group.color.lightHeader : group.color.darkHeader
+              }`}
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className={`p-1.5 rounded-lg border shrink-0 ${
+                  isLight ? group.color.iconBgLight : group.color.iconBgDark
+                }`}>
+                  <GroupIcon size={14} className={isLight ? group.color.iconColorLight : group.color.iconColorDark} />
+                </div>
+                <span className="text-xs font-black uppercase tracking-wider truncate">
+                  {group.title}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                <span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded font-mono border ${
+                  isLight ? group.color.badgeLight : group.color.badgeDark
+                }`}>
+                  {group.badge}
+                </span>
+                <span className={`p-0.5 rounded transition-transform duration-200 ${isOpen ? "rotate-180" : "rotate-0"} opacity-70`}>
+                  <ChevronDown size={14} />
+                </span>
+              </div>
+            </button>
+
+            {isOpen && (
+              <div className={`px-2 pb-2 pt-1 space-y-1 border-t ${
+                isLight ? "border-slate-200/60" : "border-brand-dark-border/30"
+              }`}>
+                {group.links.map(link => {
+                  const Icon = link.icon;
+                  const active = pathname === link.href;
+                  return (
+                    <Link
+                      key={link.name + link.href}
+                      href={link.href}
+                      className={`flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold border transition-colors ${
+                        active
+                          ? isLight
+                            ? group.color.activeLight
+                            : group.color.activeDark
+                          : isLight
+                          ? "border-transparent text-slate-600 hover:text-slate-900 hover:bg-white"
+                          : "border-transparent text-gray-400 hover:text-white hover:bg-brand-dark-border/40"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <Icon size={14} className={active ? (isLight ? group.color.iconColorLight : group.color.iconColorDark) : "opacity-70"} />
+                        <span className="truncate">{link.name}</span>
+                      </div>
+                      {active && (
+                        <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                          isLight ? "bg-sky-600" : "bg-brand-sky"
+                        }`} />
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
 
   return (
     <>
@@ -113,7 +346,6 @@ export default function ClientSidebar() {
         }
       `}</style>
 
-      {/* Persistent Top Offline Warning Banner */}
       {isOffline && (
         <div className="fixed top-0 left-0 right-0 h-6 bg-gradient-to-r from-red-600 via-amber-600 to-red-600 text-white text-[10px] font-black tracking-widest flex items-center justify-center gap-2 z-[1001] px-4 uppercase shadow-sm">
           <WifiOff size={11} className="shrink-0 animate-pulse text-amber-200" />
@@ -159,150 +391,126 @@ export default function ClientSidebar() {
               <Clock size={12} className="text-sky-500" />
               {time.toLocaleTimeString()}
             </div>
-            <div className={`text-[9px] ${isLight ? "text-slate-500" : "text-gray-500"}`}>
-              {time.toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
+            <div className={`text-[9px] uppercase font-bold tracking-wider ${isLight ? "text-slate-500" : "text-gray-400"}`}>
+              {currentBranch}
             </div>
           </div>
 
-          <div className="flex items-center gap-1 sm:gap-2">
-            {isOffline && (
-              <div className="flex items-center gap-1.5 bg-red-500/15 border border-red-500/40 text-red-500 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider animate-pulse shrink-0">
-                <WifiOff size={12} className="text-red-500 shrink-0" />
-                <span className="hidden md:inline">OFFLINE MODE</span>
-                <span className="text-[8px] bg-red-500 text-white px-1.5 py-0.5 rounded font-mono">SYNC PAUSED</span>
-              </div>
-            )}
+          <button
+            onClick={toggleTheme}
+            className={`p-2 rounded-full transition-colors ${
+              isLight 
+                ? "bg-slate-100 text-slate-700 hover:bg-slate-200" 
+                : "bg-brand-dark-border/50 text-gray-300 hover:bg-brand-dark-border hover:text-white"
+            }`}
+            title={`Switch to ${isLight ? "Dark" : "Light"} Mode`}
+          >
+            {isLight ? <Moon size={16} /> : <Sun size={16} />}
+          </button>
 
+          <div className="relative" ref={notifRef}>
             <button
-              onClick={toggleTheme}
-              className={`p-2 rounded-full transition ${
-                isLight ? "bg-slate-100 hover:bg-slate-200 text-slate-600" : "bg-black/50 border border-brand-dark-border hover:bg-brand-dark-border text-gray-400"
+              onClick={() => setShowNotifications(prev => !prev)}
+              className={`relative p-2 rounded-full transition ${
+                isLight ? "text-slate-700 hover:bg-slate-100" : "text-gray-300 hover:bg-brand-dark-border"
               }`}
-              title="Toggle Theme"
+              title="Notifications"
             >
-              {isLight ? <Moon size={16} /> : <Sun size={16} className="text-amber-500" />}
+              <Bell size={18} />
+              {totalAlerts > 0 && (
+                <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse"></span>
+              )}
             </button>
 
-            <div className="relative">
-              <button
-                onClick={() => setShowNotifications(!showNotifications)}
-                className={`relative p-2 rounded-full transition ${
-                  showNotifications
-                    ? "bg-amber-500/20 text-amber-500"
-                    : isLight
-                    ? "bg-slate-100 hover:bg-slate-200 text-slate-600"
-                    : "bg-black/50 border border-brand-dark-border hover:bg-brand-dark-border text-gray-400"
-                }`}
-                title="Notifications"
-              >
-                <Bell size={16} className={totalAlerts > 0 ? "text-amber-500" : ""} />
-                {totalAlerts > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[16px] h-4 bg-red-500 text-white text-[8px] font-black rounded-full flex items-center justify-center leading-none px-0.5 shadow-xs border-2 border-white dark:border-black">
-                    {totalAlerts > 9 ? "9+" : totalAlerts}
+            {showNotifications && (
+              <div className={`absolute right-0 mt-2 w-80 rounded-2xl shadow-2xl border z-50 overflow-hidden font-sans ${
+                isLight ? "bg-white border-slate-200 text-slate-900 shadow-xl" : "bg-brand-dark-surface border-brand-dark-border text-gray-100"
+              }`}>
+                <div className={`px-4 py-3 border-b flex items-center justify-between ${
+                  isLight ? "bg-slate-50 border-slate-200" : "bg-black/40 border-brand-dark-border"
+                }`}>
+                  <div className="flex items-center gap-2">
+                    <Bell size={14} className="text-sky-500" />
+                    <span className="text-xs font-black uppercase tracking-wider">Live System Alerts</span>
+                  </div>
+                  <span className="text-[10px] font-mono font-bold bg-sky-500/20 text-sky-400 px-2 py-0.5 rounded-full">
+                    {totalAlerts} New
                   </span>
-                )}
-              </button>
-
-              {showNotifications && (
-                <div
-                  ref={notifRef}
-                  className={`absolute right-0 top-12 w-72 sm:w-80 border shadow-2xl rounded-xl overflow-hidden z-[1001] animate-fade-in-up ${
-                    isLight ? "bg-white border-slate-200" : "bg-[#111111] border-brand-dark-border"
-                  }`}
-                >
-                  <div className={`flex items-center justify-between px-4 py-2.5 border-b ${
-                    isLight ? "bg-slate-50 border-slate-200 text-slate-900" : "bg-black/40 border-brand-dark-border text-white"
-                  }`}>
-                    <span className="text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5">
-                      <Bell size={11} className="text-amber-500" />
-                      Alerts &amp; Notices
-                      <span className="ml-1 bg-red-500 text-white text-[8px] px-1.5 py-0.5 rounded-full font-black">{totalAlerts}</span>
-                    </span>
-                    <button
-                      onClick={() => setShowNotifications(false)}
-                      className={`p-1 rounded transition ${isLight ? "text-slate-400 hover:text-slate-900 hover:bg-slate-100" : "text-gray-500 hover:text-white hover:bg-brand-dark-border"}`}
-                    >
-                      <X size={12} />
-                    </button>
-                  </div>
-
-                  <div className="max-h-[60vh] overflow-y-auto">
-                    {lowStockAlerts.length > 0 && (
-                      <div>
-                        <div className={`px-4 py-2 border-b ${isLight ? "bg-amber-50 border-amber-100" : "bg-amber-500/5 border-brand-dark-border/40"}`}>
-                          <span className="text-[9px] font-black text-amber-500 uppercase tracking-widest flex items-center gap-1">
-                            <Package size={9} /> Low Stock ({lowStockAlerts.length} items)
-                          </span>
-                        </div>
-                        {lowStockAlerts.map(p => (
-                          <Link
-                            key={p.id} href="/inventory"
-                            onClick={() => setShowNotifications(false)}
-                            className={`flex items-center justify-between px-4 py-2.5 transition group border-b ${
-                              isLight ? "hover:bg-slate-50 border-slate-100" : "hover:bg-brand-dark-border/30 border-brand-dark-border/15"
-                            }`}
-                          >
-                            <div className="min-w-0 flex-grow">
-                              <div className={`text-[11px] font-bold truncate transition ${isLight ? "text-slate-900 group-hover:text-sky-600" : "text-white group-hover:text-brand-sky"}`}>{p.name}</div>
-                              <div className={`text-[9px] font-mono ${isLight ? "text-slate-400" : "text-gray-500"}`}>{p.sku}</div>
-                            </div>
-                            <div className="text-right shrink-0 ml-3">
-                              <div className="text-[10px] font-black text-red-500 font-mono">{p.stock}</div>
-                              <div className={`text-[8px] ${isLight ? "text-slate-400" : "text-gray-600"}`}>/ min {p.minStock}</div>
-                            </div>
-                          </Link>
-                        ))}
-                      </div>
-                    )}
-
-                    {overdueCustomers.length > 0 && (
-                      <div>
-                        <div className={`px-4 py-2 border-b ${isLight ? "bg-red-50 border-red-100" : "bg-red-500/5 border-brand-dark-border/40"}`}>
-                          <span className="text-[9px] font-black text-red-500 uppercase tracking-widest flex items-center gap-1">
-                            <CreditCard size={9} /> Overdue Dues ({overdueCustomers.length})
-                          </span>
-                        </div>
-                        {overdueCustomers.map(c => (
-                          <Link
-                            key={c.id} href="/crm"
-                            onClick={() => setShowNotifications(false)}
-                            className={`flex items-center justify-between px-4 py-2.5 transition group border-b ${
-                              isLight ? "hover:bg-slate-50 border-slate-100" : "hover:bg-brand-dark-border/30 border-brand-dark-border/15"
-                            }`}
-                          >
-                            <div className="min-w-0 flex-grow">
-                              <div className={`text-[11px] font-bold truncate transition ${isLight ? "text-slate-900 group-hover:text-red-600" : "text-white group-hover:text-red-400"}`}>{c.name}</div>
-                              <div className={`text-[9px] font-mono ${isLight ? "text-slate-400" : "text-gray-500"}`}>{c.mobile}</div>
-                            </div>
-                            <div className="text-right shrink-0 ml-3">
-                              <div className="text-[10px] font-black text-red-500 font-mono">
-                                {c.creditBalance.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                              </div>
-                              <div className={`text-[8px] ${isLight ? "text-slate-400" : "text-gray-600"}`}>PKR due</div>
-                            </div>
-                          </Link>
-                        ))}
-                      </div>
-                    )}
-
-                    {totalAlerts === 0 && (
-                      <div className="px-4 py-8 text-center">
-                        <div className="text-2xl mb-2">✅</div>
-                        <div className={`text-[10px] font-bold ${isLight ? "text-slate-700" : "text-gray-400"}`}>All systems healthy!</div>
-                        <div className={`text-[9px] mt-0.5 ${isLight ? "text-slate-400" : "text-gray-600"}`}>No active alerts right now.</div>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className={`border-t px-4 py-2 ${isLight ? "bg-slate-50 border-slate-200" : "bg-black/30 border-brand-dark-border/40"}`}>
-                    <Link href="/reports" onClick={() => setShowNotifications(false)}
-                      className="text-[9px] text-sky-500 font-black uppercase tracking-wider hover:underline">
-                      View Full Reports →
-                    </Link>
-                  </div>
                 </div>
-              )}
-            </div>
+
+                <div className="max-h-72 overflow-y-auto divide-y divide-slate-100 dark:divide-brand-dark-border/30">
+                  {lowStockAlerts.length > 0 && (
+                    <div className="p-3">
+                      <div className="text-[9px] font-black uppercase tracking-widest text-amber-500 mb-2 flex items-center gap-1">
+                        <Package size={11} /> Low Stock Warnings ({lowStockAlerts.length})
+                      </div>
+                      {lowStockAlerts.map(p => (
+                        <Link 
+                          key={p.id} 
+                          href="/inventory"
+                          onClick={() => setShowNotifications(false)}
+                          className={`flex items-center justify-between py-1.5 px-2 rounded-lg transition mb-1 ${
+                            isLight ? "hover:bg-slate-50 border-slate-100" : "hover:bg-brand-dark-border/30 border-brand-dark-border/15"
+                          }`}
+                        >
+                          <div className="min-w-0 flex-grow">
+                            <div className={`text-[11px] font-bold truncate ${isLight ? "text-slate-900" : "text-white"}`}>{p.name}</div>
+                            <div className={`text-[9px] font-mono ${isLight ? "text-slate-400" : "text-gray-500"}`}>Min: {p.minStock} {p.unit}</div>
+                          </div>
+                          <div className="text-right shrink-0 ml-3">
+                            <div className="text-[10px] font-black text-amber-500 font-mono">{p.stock} left</div>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+
+                  {overdueCustomers.length > 0 && (
+                    <div className="p-3">
+                      <div className="text-[9px] font-black uppercase tracking-widest text-red-500 mb-2 flex items-center gap-1">
+                        <CreditCard size={11} /> Outstanding Balances ({overdueCustomers.length})
+                      </div>
+                      {overdueCustomers.map(c => (
+                        <Link 
+                          key={c.id} 
+                          href="/customers"
+                          onClick={() => setShowNotifications(false)}
+                          className={`flex items-center justify-between py-1.5 px-2 rounded-lg transition mb-1 group ${
+                            isLight ? "hover:bg-slate-50 border-slate-100" : "hover:bg-brand-dark-border/30 border-brand-dark-border/15"
+                          }`}
+                        >
+                          <div className="min-w-0 flex-grow">
+                            <div className={`text-[11px] font-bold truncate transition ${isLight ? "text-slate-900 group-hover:text-red-600" : "text-white group-hover:text-red-400"}`}>{c.name}</div>
+                            <div className={`text-[9px] font-mono ${isLight ? "text-slate-400" : "text-gray-500"}`}>{c.mobile}</div>
+                          </div>
+                          <div className="text-right shrink-0 ml-3">
+                            <div className="text-[10px] font-black text-red-500 font-mono">
+                              {c.creditBalance.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                            </div>
+                            <div className={`text-[8px] ${isLight ? "text-slate-400" : "text-gray-600"}`}>PKR due</div>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+
+                  {totalAlerts === 0 && (
+                    <div className="px-4 py-8 text-center">
+                      <div className="text-2xl mb-2">✅</div>
+                      <div className={`text-[10px] font-bold ${isLight ? "text-slate-700" : "text-gray-400"}`}>All systems healthy!</div>
+                      <div className={`text-[9px] mt-0.5 ${isLight ? "text-slate-400" : "text-gray-600"}`}>No active alerts right now.</div>
+                    </div>
+                  )}
+                </div>
+                
+                <div className={`border-t px-4 py-2 ${isLight ? "bg-slate-50 border-slate-200" : "bg-black/30 border-brand-dark-border/40"}`}>
+                  <Link href="/reports" onClick={() => setShowNotifications(false)}
+                    className="text-[9px] text-sky-500 font-black uppercase tracking-wider hover:underline">
+                    View Full Reports →
+                  </Link>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="h-6 w-px bg-slate-300 dark:bg-brand-dark-border mx-1"></div>
@@ -338,35 +546,22 @@ export default function ClientSidebar() {
       )}
 
       <aside className={`
-        fixed ${isOffline ? "top-[88px]" : "top-16"} bottom-0 left-0 z-[999] transform transition-transform duration-300 md:transition-none
-        ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"}
-        md:translate-x-0 md:relative md:top-0 md:bottom-auto md:h-full
-        w-64 border-r flex flex-col shrink-0 font-sans print:hidden transition-colors ${
+        fixed ${isOffline ? "top-[88px]" : "top-16"} bottom-0 left-0 z-[999] w-64 border-r flex flex-col md:hidden font-sans print:hidden transform transition-transform duration-200 ${
+        isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+      } ${
+        isLight ? "bg-white border-slate-200 text-slate-900 shadow-2xl" : "bg-brand-dark-surface border-brand-dark-border text-gray-100"
+      }`}>
+        <nav className="flex-1 px-3 py-4 overflow-y-auto no-scrollbar">
+          {renderNavContent()}
+        </nav>
+      </aside>
+
+      <aside className={`
+        hidden md:flex flex-col relative top-0 h-full w-64 border-r shrink-0 font-sans print:hidden z-10 ${
         isLight ? "bg-white border-slate-200 text-slate-900 shadow-xs" : "bg-brand-dark-surface border-brand-dark-border text-gray-100"
       }`}>
-        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto no-scrollbar">
-          {activeLinks.map(link => {
-            const Icon = link.icon;
-            const active = pathname === link.href;
-            return (
-              <Link
-                key={link.name}
-                href={link.href}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-semibold border transition-colors ${
-                  active
-                    ? isLight
-                      ? "bg-sky-100/90 border-sky-300 text-sky-900 font-bold shadow-xs"
-                      : "bg-brand-sky/10 border-brand-sky/30 text-brand-sky font-bold"
-                    : isLight
-                    ? "border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-                    : "border-transparent text-gray-400 hover:text-white hover:bg-brand-dark-border"
-                }`}
-              >
-                <Icon size={16} className={active ? "text-sky-500" : "opacity-80"} />
-                <span>{link.name}</span>
-              </Link>
-            );
-          })}
+        <nav className="flex-1 px-3 py-4 overflow-y-auto no-scrollbar">
+          {renderNavContent()}
         </nav>
       </aside>
     </>
