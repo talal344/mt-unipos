@@ -312,10 +312,44 @@ export interface HRMSTicket {
 }
 
 // ─── PERMANENT SEED TENANTS ───────────────────────────────────────────────────
-// These tenants are ALWAYS guaranteed to exist regardless of browser clear.
-// Add your real clients here. They are seeded from code — not from localStorage.
-// ─────────────────────────────────────────────────────────────────────────────
-const PERMANENT_SEED_TENANTS: Tenant[] = [];
+const PERMANENT_SEED_TENANTS: Tenant[] = [
+  {
+    id: "AM-001",
+    businessName: "ABC Mart",
+    ownerName: "Store Owner",
+    email: "abc.mart@example.com",
+    username: "abc.mart",
+    phone: "+92 300 1234567",
+    businessType: "Super Markets",
+    assignedSoftware: "POS",
+    plan: "Enterprise",
+    billingCycle: "monthly",
+    status: "Active",
+    signupDate: "2026-08-01",
+    branches: ["Main Branch"],
+    usersCount: 5,
+    monthlyRevenue: 0,
+    defaultCurrency: "PKR",
+    credentialPresets: [
+      {
+        id: "PRESET-AM-001-1",
+        label: "Owner (Full ERP)",
+        email: "abc.mart@example.com",
+        username: "abc.mart",
+        pass: "owner123",
+        role: "Owner"
+      },
+      {
+        id: "PRESET-AM-001-2",
+        label: "Cashier POS",
+        email: "cashier@abcmart.com",
+        username: "cashier",
+        pass: "cashier123",
+        role: "Cashier"
+      }
+    ]
+  }
+];
 
 
 export interface SaaSInvoice {
@@ -1562,17 +1596,92 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         if (d) setDemoRequests(JSON.parse(d));
         
         const t = localStorage.getItem("unipos_tenants");
+        let localTenantsList: Tenant[] = [];
         if (t) {
-          const parsed: Tenant[] = JSON.parse(t);
-          const clean = parsed.filter(item => !blacklisted.includes(item.id)).map(item => {
-            const isHRMS = item.assignedSoftware === "HRMS" || (item.businessType && item.businessType.includes("HRMS"));
-            return {
-              ...item,
-              assignedSoftware: isHRMS ? ("HRMS" as const) : (item.assignedSoftware || ("POS" as const))
-            };
-          });
-          setTenants(clean);
+          try { localTenantsList = JSON.parse(t); } catch {}
         }
+        
+        // Scan for all shards and merge permanent seeds
+        const norm = (id: string) => (id || "").replace(/[\u2010-\u2015\u2212\uFE58\uFE63\uFF0D–—−-]/g, "-").trim().toUpperCase();
+        const tMap = new Map<string, Tenant>();
+        
+        // Permanent seeds
+        PERMANENT_SEED_TENANTS.forEach(seed => {
+          if (!blacklisted.some(b => norm(b) === norm(seed.id))) {
+            tMap.set(norm(seed.id), seed);
+          }
+        });
+
+        // Stored tenants
+        localTenantsList.forEach(item => {
+          if (item?.id && !blacklisted.some(b => norm(b) === norm(item.id))) {
+            tMap.set(norm(item.id), item);
+          }
+        });
+
+        // Scan localStorage for any tenant data shards
+        try {
+          for (let i = 0; i < localStorage.length; i++) {
+            const k = localStorage.key(i);
+            if (!k) continue;
+            const prefixes = ["unipos_settings_", "unipos_products_", "unipos_sales_", "unipos_customers_"];
+            for (const pf of prefixes) {
+              if (k.startsWith(pf)) {
+                const rawId = k.slice(pf.length);
+                const tid = norm(rawId);
+                if (tid && !tMap.has(tid) && !blacklisted.some(b => norm(b) === tid)) {
+                  let bizName = tid === "AM-001" ? "ABC Mart" : "Workspace " + tid;
+                  let bizType = "Super Markets";
+                  let email = "owner@" + tid.toLowerCase() + ".com";
+                  let uname = tid === "AM-001" ? "abc.mart" : tid.toLowerCase().replace(/[^a-z0-9]/g, ".");
+                  let pass = "owner123";
+                  try {
+                    const sRaw = localStorage.getItem("unipos_settings_" + rawId) || localStorage.getItem("unipos_settings_" + tid);
+                    if (sRaw) {
+                      const s = JSON.parse(sRaw);
+                      if (s.businessName) bizName = s.businessName;
+                      if (s.businessType) bizType = s.businessType;
+                      if (s.email) email = s.email;
+                      if (s.ownerPassword) pass = s.ownerPassword;
+                    }
+                  } catch {}
+                  tMap.set(tid, {
+                    id: tid,
+                    businessName: bizName,
+                    ownerName: "Owner",
+                    email,
+                    username: uname,
+                    phone: "",
+                    businessType: bizType,
+                    assignedSoftware: "POS",
+                    plan: "Enterprise",
+                    billingCycle: "monthly",
+                    status: "Active",
+                    signupDate: new Date().toISOString().split("T")[0],
+                    branches: ["Main Branch"],
+                    usersCount: 5,
+                    monthlyRevenue: 0,
+                    defaultCurrency: "PKR",
+                    credentialPresets: [
+                      { id: `PRESET-${tid}-1`, label: "Owner (Full ERP)", email, username: uname, pass, role: "Owner" }
+                    ]
+                  });
+                }
+                break;
+              }
+            }
+          }
+        } catch {}
+
+        const clean = Array.from(tMap.values()).map(item => {
+          const isHRMS = item.assignedSoftware === "HRMS" || (item.businessType && item.businessType.includes("HRMS"));
+          return {
+            ...item,
+            assignedSoftware: isHRMS ? ("HRMS" as const) : (item.assignedSoftware || ("POS" as const))
+          };
+        });
+        setTenants(clean);
+        try { localStorage.setItem("unipos_tenants", JSON.stringify(clean)); } catch {}
         
         const i = localStorage.getItem("unipos_saas_invoices");
         if (i) setSaasInvoices(JSON.parse(i));
