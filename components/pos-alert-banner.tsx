@@ -25,8 +25,11 @@ export default function POSAlertBanner() {
     suppliers,
     isOffline,
     currentUser,
-    currencySymbol
+    currencySymbol,
+    theme
   } = useGlobalContext();
+
+  const isLight = theme === "light";
 
   const [dismissed, setDismissed] = useState(false);
   const [storeNotice, setStoreNotice] = useState<string>("");
@@ -152,7 +155,7 @@ export default function POSAlertBanner() {
         {isOwner && (
           <button
             onClick={() => setIsEditingNotice(true)}
-            className="text-[10px] text-gray-500 hover:text-brand-sky flex items-center gap-1 font-mono transition"
+            className="text-[10px] text-slate-500 hover:text-sky-600 flex items-center gap-1 font-mono transition"
           >
             <Edit3 size={11} /> Edit Store Desk Notice
           </button>
@@ -167,21 +170,24 @@ export default function POSAlertBanner() {
     switch (sev) {
       case "critical":
         return {
-          border: "border-red-500/40 bg-gradient-to-r from-red-950/40 via-black to-black",
-          badge: "bg-red-500/20 text-red-400 border-red-500/30",
-          icon: <AlertCircle size={16} className="text-red-400" />
+          border: isLight ? "border-red-300 bg-red-50" : "border-red-500/40 bg-gradient-to-r from-red-950/40 via-black to-black",
+          badge: isLight ? "bg-red-100 text-red-700 border-red-200" : "bg-red-500/20 text-red-400 border-red-500/30",
+          icon: <AlertCircle size={16} className={isLight ? "text-red-500" : "text-red-400"} />,
+          iconBg: isLight ? "bg-white border-red-200" : "bg-black/60 border-gray-800",
         };
       case "warning":
         return {
-          border: "border-amber-500/30 bg-gradient-to-r from-amber-950/30 via-black to-black",
-          badge: "bg-amber-500/20 text-amber-300 border-amber-500/30",
-          icon: <AlertTriangle size={16} className="text-amber-400" />
+          border: isLight ? "border-amber-300 bg-amber-50" : "border-amber-500/30 bg-gradient-to-r from-amber-950/30 via-black to-black",
+          badge: isLight ? "bg-amber-100 text-amber-700 border-amber-200" : "bg-amber-500/20 text-amber-300 border-amber-500/30",
+          icon: <AlertTriangle size={16} className={isLight ? "text-amber-500" : "text-amber-400"} />,
+          iconBg: isLight ? "bg-white border-amber-200" : "bg-black/60 border-gray-800",
         };
       default:
         return {
-          border: "border-sky-500/30 bg-gradient-to-r from-sky-950/30 via-black to-black",
-          badge: "bg-sky-500/20 text-sky-300 border-sky-500/30",
-          icon: <Megaphone size={16} className="text-sky-400" />
+          border: isLight ? "border-sky-300 bg-sky-50" : "border-sky-500/30 bg-gradient-to-r from-sky-950/30 via-black to-black",
+          badge: isLight ? "bg-sky-100 text-sky-700 border-sky-200" : "bg-sky-500/20 text-sky-300 border-sky-500/30",
+          icon: <Megaphone size={16} className={isLight ? "text-sky-500" : "text-sky-400"} />,
+          iconBg: isLight ? "bg-white border-sky-200" : "bg-black/60 border-gray-800",
         };
     }
   };
@@ -196,7 +202,7 @@ export default function POSAlertBanner() {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           {/* Alert Content */}
           <div className="flex items-center gap-3 min-w-0 flex-1">
-            <div className="p-2 rounded-xl bg-black/60 border border-gray-800 shrink-0">
+            <div className={`p-2 rounded-xl border shrink-0 ${style.iconBg}`}>
               {style.icon}
             </div>
 
@@ -206,13 +212,13 @@ export default function POSAlertBanner() {
                   POS Operational Alert
                 </span>
                 {alerts.length > 1 && (
-                  <span className="text-[10px] text-gray-500 font-mono">
+                  <span className={`text-[10px] font-mono ${isLight ? "text-slate-500" : "text-gray-500"}`}>
                     ({activeAlertIdx + 1}/{alerts.length})
                   </span>
                 )}
               </div>
-              <div className="text-xs font-bold text-white truncate">{current.title}</div>
-              <div className="text-[11px] text-gray-400 truncate">{current.subtitle}</div>
+              <div className={`text-xs font-bold truncate ${isLight ? "text-slate-900" : "text-white"}`}>{current.title}</div>
+              <div className={`text-[11px] truncate ${isLight ? "text-slate-600" : "text-gray-400"}`}>{current.subtitle}</div>
             </div>
           </div>
 
@@ -221,7 +227,9 @@ export default function POSAlertBanner() {
             {current.actionUrl && (
               <Link
                 href={current.actionUrl}
-                className="flex items-center gap-1 bg-brand-sky/20 hover:bg-brand-sky/30 text-brand-sky border border-brand-sky/40 font-bold text-[11px] px-3 py-1.5 rounded-xl transition"
+                className={`flex items-center gap-1 font-bold text-[11px] px-3 py-1.5 rounded-xl transition ${
+                  isLight ? "bg-white hover:bg-slate-50 border border-slate-300 text-sky-600" : "bg-brand-sky/20 hover:bg-brand-sky/30 text-brand-sky border border-brand-sky/40"
+                }`}
               >
                 {current.actionLabel || "Review"} <ChevronRight size={12} />
               </Link>
@@ -230,7 +238,7 @@ export default function POSAlertBanner() {
             {isOwner && (
               <button
                 onClick={() => setIsEditingNotice(true)}
-                className="text-gray-400 hover:text-white p-1.5 rounded-lg hover:bg-white/5 transition"
+                className={`p-1.5 rounded-lg transition ${isLight ? "text-slate-400 hover:text-slate-700 hover:bg-slate-200/50" : "text-gray-400 hover:text-white hover:bg-white/5"}`}
                 title="Post / Edit Store Owner Announcement"
               >
                 <Edit3 size={13} />
@@ -239,7 +247,7 @@ export default function POSAlertBanner() {
 
             <button
               onClick={() => setDismissed(true)}
-              className="text-gray-500 hover:text-gray-300 p-1.5 rounded-lg hover:bg-white/5 transition"
+              className={`p-1.5 rounded-lg transition ${isLight ? "text-slate-400 hover:text-slate-700 hover:bg-slate-200/50" : "text-gray-500 hover:text-gray-300 hover:bg-white/5"}`}
               title="Dismiss for this session"
             >
               <X size={14} />
