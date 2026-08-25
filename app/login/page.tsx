@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { useGlobalContext } from "@/context/global-context";
+import { useGlobalContext, Tenant } from "@/context/global-context";
 import { supabase } from "@/lib/supabase";
 import MTCoreLogo from "@/components/mt-logo";
 import {

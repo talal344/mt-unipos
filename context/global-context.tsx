@@ -1833,126 +1833,88 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    // Automatic Deduplication: Remove any duplicate tenants matching Email or Business Name
-    const uniqueTenantsList: Tenant[] = [];
-    const seenEmails = new Set<string>();
-    const seenBusinesses = new Set<string>();
+    // Safe Unique Tenant Merging (Strictly by normalized Tenant ID - NO TENANTS ARE EVER AUTO-DELETED OR RENAMED)
+    const norm = (id: string) => (id || "").replace(/[\u2010-\u2015\u2212\uFE58\uFE63\uFF0D–—−-]/g, "-").trim().toUpperCase();
+    const finalTenantsMap = new Map<string, Tenant>();
 
-    for (const t of currentTenants) {
-      const eKey = (t.email || "").trim().toLowerCase();
-      const bKey = (t.businessName || "").trim().toLowerCase();
-
-      const isDupEmail = eKey && seenEmails.has(eKey);
-      const isDupBiz = bKey && seenBusinesses.has(bKey);
-
-      if (!isDupEmail && !isDupBiz) {
-        if (eKey) seenEmails.add(eKey);
-        if (bKey) seenBusinesses.add(bKey);
-        uniqueTenantsList.push(t);
+    // 1. Permanent seeds
+    PERMANENT_SEED_TENANTS.forEach(seed => {
+      if (!blacklistedTenants.some(b => norm(b) === norm(seed.id))) {
+        finalTenantsMap.set(norm(seed.id), seed);
       }
-    }
+    });
 
-    if (uniqueTenantsList.length !== currentTenants.length) {
-      currentTenants = uniqueTenantsList;
-      localStorage.setItem("unipos_tenants", JSON.stringify(currentTenants));
-    }
-
-    // ── LEGACY TENANT ID NORMALIZATION ───────────────────────────────────────
-    // Normalizes all existing tenants to INITIALS-001 / INITIALS-002 format seamlessly
-    let legacyTenantsMigrated = false;
-    const normalizedTenants: Tenant[] = [];
-    const legacyIdMap: Record<string, string> = {};
-    const seenNumbers = new Set<string>();
-    const ALL_STORAGE_KEYS = [
-      "unipos_products", "unipos_customers", "unipos_suppliers", "unipos_sales",
-      "unipos_expenses", "unipos_employees", "unipos_settings", "unipos_pos",
-      "unipos_batches", "unipos_tables", "unipos_kitchen", "unipos_accounts",
-      "unipos_journal", "unipos_attendance", "unipos_payroll", "unipos_transfers",
-      "unipos_counters", "unipos_hr_employees", "unipos_hr_attendance", "unipos_hr_leaves",
-      "unipos_hr_payrolls", "unipos_hr_jobs", "unipos_hr_candidates", "unipos_hr_appraisals",
-      "unipos_hr_departments", "unipos_hr_designations", "unipos_hr_shifts"
-    ];
-
-    for (const t of currentTenants) {
-      const match = t.id.match(/^([A-Z0-9]+)-(\d{3})$/);
-      const isLegacyPrefix = t.id.startsWith("TEN-") || t.id.startsWith("DEMO-");
-      const numPart = match ? match[2] : null;
-      const isDuplicateNumber = numPart ? seenNumbers.has(numPart) : true;
-
-      if (!match || isLegacyPrefix || isDuplicateNumber) {
-        const newId = generateTenantId(t.businessName, normalizedTenants);
-        legacyIdMap[t.id] = newId;
-        legacyTenantsMigrated = true;
-        const newNumMatch = newId.match(/-(\d{3})$/);
-        if (newNumMatch) seenNumbers.add(newNumMatch[1]);
-        normalizedTenants.push({ ...t, id: newId });
-      } else {
-        if (numPart) seenNumbers.add(numPart);
-        normalizedTenants.push(t);
+    // 2. Current tenants list (preserve all existing registered tenants)
+    currentTenants.forEach(t => {
+      if (t?.id && !blacklistedTenants.some(b => norm(b) === norm(t.id))) {
+        const nid = norm(t.id);
+        if (!finalTenantsMap.has(nid)) {
+          finalTenantsMap.set(nid, t);
+        } else {
+          finalTenantsMap.set(nid, { ...finalTenantsMap.get(nid), ...t });
+        }
       }
-    }
+    });
 
-    if (legacyTenantsMigrated) {
-      currentTenants = normalizedTenants;
-      localStorage.setItem("unipos_tenants", JSON.stringify(currentTenants));
-
-      // Remap local storage tenant dataset keys
-      Object.entries(legacyIdMap).forEach(([oldId, newId]) => {
-        ALL_STORAGE_KEYS.forEach((keyPrefix) => {
-          const oldData = localStorage.getItem(`${keyPrefix}_${oldId}`);
-          if (oldData) {
-            localStorage.setItem(`${keyPrefix}_${newId}`, oldData);
-            localStorage.removeItem(`${keyPrefix}_${oldId}`);
-          }
-        });
-      });
-
-      // Migrate invoices
-      const rawInvs = localStorage.getItem("unipos_invoices");
-      if (rawInvs) {
-        try {
-          const parsedInvs: SaaSInvoice[] = JSON.parse(rawInvs);
-          const updatedInvs = parsedInvs.map(inv => {
-            if (legacyIdMap[inv.tenantId]) {
-              return { ...inv, tenantId: legacyIdMap[inv.tenantId] };
+    // 3. Auto-recover any tenant shards found in localStorage
+    try {
+      const prefixes = ["unipos_settings_", "unipos_products_", "unipos_sales_", "unipos_customers_"];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (!k) continue;
+        for (const pf of prefixes) {
+          if (k.startsWith(pf)) {
+            const rawId = k.slice(pf.length);
+            const tid = norm(rawId);
+            if (tid && !finalTenantsMap.has(tid) && !blacklistedTenants.some(b => norm(b) === tid)) {
+              let bizName = tid === "AM-001" ? "ABC Mart" : "Workspace " + tid;
+              let bizType = "Super Markets";
+              let email = "owner@" + tid.toLowerCase() + ".com";
+              let uname = tid === "AM-001" ? "abc.mart" : tid.toLowerCase().replace(/[^a-z0-9]/g, ".");
+              let pass = "owner123";
+              try {
+                const sRaw = localStorage.getItem("unipos_settings_" + rawId) || localStorage.getItem("unipos_settings_" + tid);
+                if (sRaw) {
+                  const s = JSON.parse(sRaw);
+                  if (s.businessName) bizName = s.businessName;
+                  if (s.businessType) bizType = s.businessType;
+                  if (s.email) email = s.email;
+                  if (s.ownerPassword) pass = s.ownerPassword;
+                }
+              } catch {}
+              finalTenantsMap.set(tid, {
+                id: tid,
+                businessName: bizName,
+                ownerName: "Owner",
+                email,
+                username: uname,
+                phone: "",
+                businessType: bizType,
+                assignedSoftware: "POS",
+                plan: "Enterprise",
+                billingCycle: "monthly",
+                status: "Active",
+                signupDate: new Date().toISOString().split("T")[0],
+                branches: ["Main Branch"],
+                usersCount: 5,
+                monthlyRevenue: 0,
+                defaultCurrency: "PKR",
+                credentialPresets: [
+                  { id: `PRESET-${tid}-1`, label: "Owner (Full ERP)", email, username: uname, pass, role: "Owner" }
+                ]
+              });
             }
-            return inv;
-          });
-          localStorage.setItem("unipos_invoices", JSON.stringify(updatedInvs));
-        } catch {}
-      }
-
-      // Migrate tickets
-      const rawTickets = localStorage.getItem("unipos_tickets");
-      if (rawTickets) {
-        try {
-          const parsedTickets: SupportTicket[] = JSON.parse(rawTickets);
-          const updatedTickets = parsedTickets.map(ticket => {
-            if (legacyIdMap[ticket.tenantId]) {
-              return { ...ticket, tenantId: legacyIdMap[ticket.tenantId] };
-            }
-            return ticket;
-          });
-          localStorage.setItem("unipos_tickets", JSON.stringify(updatedTickets));
-        } catch {}
-      }
-
-      // Migrate active logged in session user
-      const rawUser = localStorage.getItem("unipos_current_user");
-      if (rawUser) {
-        try {
-          const parsedUser = JSON.parse(rawUser);
-          if (parsedUser?.tenantId && legacyIdMap[parsedUser.tenantId]) {
-            parsedUser.tenantId = legacyIdMap[parsedUser.tenantId];
-            localStorage.setItem("unipos_current_user", JSON.stringify(parsedUser));
+            break;
           }
-        } catch {}
+        }
       }
+    } catch {}
 
-      try {
-        supabase.from('unipos_global').upsert({ key: 'unipos_tenants', value: currentTenants }).then(() => {});
-      } catch {}
-    }
+    currentTenants = Array.from(finalTenantsMap.values());
+    localStorage.setItem("unipos_tenants", JSON.stringify(currentTenants));
+    try {
+      supabase.from('unipos_global').upsert({ key: 'unipos_tenants', value: currentTenants }).then(() => {});
+    } catch {}
 
     // Auto-Sync: Mark Demo Requests as "Converted" if a matching tenant is already Active
     if (savedDemos) {
