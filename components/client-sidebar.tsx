@@ -290,6 +290,7 @@ export default function ClientSidebar() {
                     <Link
                       key={link.name + link.href}
                       href={link.href}
+                      prefetch={true}
                       className={`flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold border transition-colors ${
                         active
                           ? isLight

@@ -4,6 +4,7 @@ import "./globals.css";
 import { GlobalProvider } from "@/context/global-context";
 import AuthGuard from "@/components/auth-guard";
 import AutoUpdaterBanner from "@/components/auto-updater-banner";
+import OfflinePrefetcher from "@/components/offline-prefetcher";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -66,6 +67,7 @@ export default function RootLayout({
       <body suppressHydrationWarning className="bg-black text-gray-100 min-h-full flex flex-col font-sans">
         <GlobalProvider>
           <AutoUpdaterBanner />
+          <OfflinePrefetcher />
           <AuthGuard>
             {children}
           </AuthGuard>
