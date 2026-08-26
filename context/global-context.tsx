@@ -1143,22 +1143,24 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
 
       const map = new Map<string, any>();
 
-      // Cloud items first
-      cloudArr.forEach(item => {
+      // 1. Local items first
+      localArr.forEach(item => {
         if (!item) return;
-        const key = item.id || item.receiptNumber || item.code || item.customerNo || (typeof item === 'object' ? JSON.stringify(item) : String(item));
+        const key = item.id || item.receiptNumber || item.code || item.sku || item.customerNo || item.ticketNumber || (typeof item === 'object' ? JSON.stringify(item) : String(item));
         map.set(String(key), item);
       });
 
-      // Local items override / append unique entries
-      localArr.forEach(item => {
-        if (!item) return;
-        const key = item.id || item.receiptNumber || item.code || item.customerNo || (typeof item === 'object' ? JSON.stringify(item) : String(item));
+      // 2. Cloud items override / append (Cloud is master for multi-device cross-sync)
+      cloudArr.forEach(cloudItem => {
+        if (!cloudItem) return;
+        const key = cloudItem.id || cloudItem.receiptNumber || cloudItem.code || cloudItem.sku || cloudItem.customerNo || cloudItem.ticketNumber || (typeof cloudItem === 'object' ? JSON.stringify(cloudItem) : String(cloudItem));
         const keyStr = String(key);
         if (!map.has(keyStr)) {
-          map.set(keyStr, item);
+          map.set(keyStr, cloudItem);
         } else {
-          map.set(keyStr, { ...map.get(keyStr), ...item });
+          const localItem = map.get(keyStr);
+          // Overlay cloud item attributes onto local item so updates on other devices are immediately reflected
+          map.set(keyStr, { ...localItem, ...cloudItem });
         }
       });
 
@@ -1387,21 +1389,27 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       .on("postgres_changes", { event: "*", schema: "public", table: "unipos_collections" }, () => syncFromSupabase())
       .subscribe();
 
-    // Smart 5-minute background sync fallback (prevents Egress bandwidth spikes)
+    // High-Frequency 3-second live sync poll for instant cross-device updates
     const pollInterval = setInterval(() => {
-      syncFromSupabase();
-    }, 5 * 60 * 1000);
+      if (typeof navigator !== "undefined" && navigator.onLine) {
+        syncFromSupabase();
+      }
+    }, 3000);
 
     const handleFocus = () => syncFromSupabase();
     window.addEventListener('online', syncFromSupabase);
     window.addEventListener('focus', handleFocus);
     window.addEventListener('visibilitychange', handleFocus);
+    window.addEventListener('pageshow', handleFocus);
+    window.addEventListener('touchstart', handleFocus);
 
     return () => {
       window.localStorage.setItem = originalSetItem;
       window.removeEventListener('online', syncFromSupabase);
       window.removeEventListener('focus', handleFocus);
       window.removeEventListener('visibilitychange', handleFocus);
+      window.removeEventListener('pageshow', handleFocus);
+      window.removeEventListener('touchstart', handleFocus);
       clearInterval(pollInterval);
       supabase.removeChannel(channel);
     };

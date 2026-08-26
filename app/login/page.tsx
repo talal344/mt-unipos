@@ -189,15 +189,14 @@ function LoginContent() {
       targetTenant = stored.find((t: any) => normalizeTenantId(t.id) === cleanTenantId);
     }
 
-    // Auto-resolve tenant if user entered a valid email/username & password registered in any tenant's credentialPresets
-    if (!targetTenant) {
+    // Auto-resolve tenant if user entered a valid email/username
+    if (!targetTenant && !cleanTenantId) {
       for (const t of tenants) {
-        const foundPreset = (t.credentialPresets || []).find(
-          (p) =>
-            (p.email.toLowerCase() === email.trim().toLowerCase() || (p.username && p.username.toLowerCase() === email.trim().toLowerCase())) &&
-            p.pass === password
-        );
-        if (foundPreset || (t.email && t.email.toLowerCase() === email.trim().toLowerCase()) || (t.username && t.username.toLowerCase() === email.trim().toLowerCase())) {
+        const hasUser = (t.credentialPresets || []).some(
+          (p) => p.email.toLowerCase() === email.trim().toLowerCase() || (p.username && p.username.toLowerCase() === email.trim().toLowerCase())
+        ) || (t.email && t.email.toLowerCase() === email.trim().toLowerCase()) || (t.username && t.username.toLowerCase() === email.trim().toLowerCase());
+        
+        if (hasUser) {
           targetTenant = t;
           setInputTenantId(t.id);
           break;
@@ -205,57 +204,45 @@ function LoginContent() {
       }
     }
 
-    // Auto-provision or recover tenant from local storage settings/shards if not in registry
-    if (!targetTenant) {
-      let bizName = cleanTenantId === "AM-001" ? "ABC Mart" : `Workspace ${cleanTenantId}`;
-      let bizType = "Super Markets";
-      let ownerEmail = email.includes("@") ? email : `owner@${cleanTenantId.toLowerCase()}.com`;
-      let ownerUname = email;
-      let ownerPass = password;
-
+    // Recover existing tenant settings if registered locally or in cloud
+    if (!targetTenant && cleanTenantId) {
       try {
-        const sRaw = localStorage.getItem("unipos_settings_" + cleanTenantId) || localStorage.getItem("unipos_settings_" + inputTenantId.trim());
+        const sRaw = localStorage.getItem("unipos_settings_" + cleanTenantId);
         if (sRaw) {
           const s = JSON.parse(sRaw);
-          if (s.businessName) bizName = s.businessName;
-          if (s.businessType) bizType = s.businessType;
-          if (s.email) ownerEmail = s.email;
-          if (s.ownerPassword) ownerPass = s.ownerPassword;
+          const recoveredTenant: Tenant = {
+            id: cleanTenantId,
+            businessName: s.businessName || `Workspace ${cleanTenantId}`,
+            ownerName: s.ownerName || "Store Owner",
+            email: s.email || `owner@${cleanTenantId.toLowerCase()}.com`,
+            username: s.username || "owner",
+            phone: s.phone || "",
+            businessType: s.businessType || "Super Markets",
+            assignedSoftware: "POS",
+            plan: "Enterprise",
+            billingCycle: "monthly",
+            status: "Active",
+            signupDate: new Date().toISOString().split("T")[0],
+            branches: ["Main Branch"],
+            usersCount: 5,
+            monthlyRevenue: 0,
+            defaultCurrency: "PKR",
+            credentialPresets: [
+              { id: `PRESET-${cleanTenantId}-1`, label: "Owner (Full ERP)", email: s.email || `owner@${cleanTenantId.toLowerCase()}.com`, username: s.username || "owner", pass: s.ownerPassword || "owner123", role: "Owner" },
+              { id: `PRESET-${cleanTenantId}-2`, label: "Cashier POS", email: `cashier@${cleanTenantId.toLowerCase()}.com`, username: "cashier", pass: "cashier123", role: "Cashier" }
+            ]
+          };
+          targetTenant = recoveredTenant;
+          const updatedList = [...tenants.filter(t => normalizeTenantId(t.id) !== cleanTenantId), recoveredTenant];
+          setTenants(updatedList);
+          try { localStorage.setItem("unipos_tenants", JSON.stringify(updatedList)); } catch {}
         }
       } catch {}
+    }
 
-      const autoTenant: Tenant = {
-        id: cleanTenantId,
-        businessName: bizName,
-        ownerName: "Store Owner",
-        email: ownerEmail,
-        username: ownerUname,
-        phone: "",
-        businessType: bizType,
-        assignedSoftware: "POS",
-        plan: "Enterprise",
-        billingCycle: "monthly",
-        status: "Active",
-        signupDate: new Date().toISOString().split("T")[0],
-        branches: ["Main Branch"],
-        usersCount: 5,
-        monthlyRevenue: 0,
-        defaultCurrency: "PKR",
-        credentialPresets: [
-          { id: `PRESET-${cleanTenantId}-1`, label: "Owner (Full ERP)", email: ownerEmail, username: ownerUname, pass: ownerPass, role: "Owner" },
-          { id: `PRESET-${cleanTenantId}-2`, label: "Cashier POS", email: `cashier@${cleanTenantId.toLowerCase()}.com`, username: "cashier", pass: "cashier123", role: "Cashier" }
-        ]
-      };
-
-      targetTenant = autoTenant;
-      const updatedList = [...tenants.filter(t => normalizeTenantId(t.id) !== cleanTenantId), autoTenant];
-      setTenants(updatedList);
-      try {
-        localStorage.setItem("unipos_tenants", JSON.stringify(updatedList));
-        if (supabase) {
-          supabase.from('unipos_global').upsert({ key: 'unipos_tenants', value: updatedList }).then(() => {});
-        }
-      } catch {}
+    if (!targetTenant) {
+      setErrorMessage(`⛔ ACCESS DENIED: Workspace ID "${cleanTenantId || inputTenantId}" not found in system.`);
+      return;
     }
 
     const resolvedTenantId = targetTenant.id;
@@ -325,92 +312,92 @@ function LoginContent() {
     const normInput = email.trim().toLowerCase();
     const isMasterPass = password === SUPER_ADMIN_PASSCODE;
 
-    // 1. STRICT PRESET MATCHING (Matches by Email, Username, or Label AND verifies Password)
-    let presetMatch = (targetTenant.credentialPresets || []).find(
-      (p) =>
-        (p.email.toLowerCase() === normInput || (p.username && p.username.toLowerCase() === normInput) || (p.label && p.label.toLowerCase() === normInput)) &&
-        (p.pass === password || isMasterPass)
+    // Find if user exists across registered accounts in this workspace
+    const matchedPreset = (targetTenant.credentialPresets || []).find(
+      (p) => p.email.toLowerCase() === normInput || (p.username && p.username.toLowerCase() === normInput) || (p.label && p.label.toLowerCase() === normInput)
     );
 
-    if (!presetMatch) {
-      for (const t of tenants) {
-        const found = (t.credentialPresets || []).find(
-          (p) =>
-            (p.email.toLowerCase() === normInput || (p.username && p.username.toLowerCase() === normInput) || (p.label && p.label.toLowerCase() === normInput)) &&
-            (p.pass === password || isMasterPass)
-        );
-        if (found) {
-          presetMatch = found;
-          targetTenant = t;
-          break;
-        }
+    const matchedHrEmp = hrEmployees.find(
+      (emp: any) => emp.email?.toLowerCase() === normInput || emp.name?.toLowerCase() === normInput || (emp.employeeCode && emp.employeeCode.toLowerCase() === normInput)
+    );
+
+    const matchedSmsUser = smsUsers.find(
+      (u: any) => u.username?.toLowerCase() === normInput || u.email?.toLowerCase() === normInput
+    );
+
+    const matchedPosEmp = tenantEmployees.find(
+      (emp: any) => emp.email?.toLowerCase() === normInput || emp.name?.toLowerCase() === normInput || (emp.code && emp.code.toLowerCase() === normInput)
+    );
+
+    const isOwnerUser = (targetTenant.email && targetTenant.email.toLowerCase() === normInput) || 
+                        (targetTenant.username && targetTenant.username.toLowerCase() === normInput) ||
+                        normInput === "owner" || normInput === "admin";
+
+    // ── STRICT AUTHENTICATION: Check matching account & verify exact password ──
+    let authenticatedUser: any = null;
+    let authType: "preset" | "hrms" | "sms" | "pos" | "owner" | null = null;
+
+    if (matchedPreset) {
+      if (matchedPreset.pass === password || isMasterPass) {
+        authenticatedUser = matchedPreset;
+        authType = "preset";
+      } else {
+        setErrorMessage("⛔ ACCESS DENIED: Incorrect password for this user account.");
+        return;
       }
-    }
-
-    // 2. HRMS EXECUTIVE & EMPLOYEE MATCHING (Matches Email/Name AND Password)
-    let hrEmpMatch = hrEmployees.find(
-      (emp: any) =>
-        (emp.email?.toLowerCase() === normInput || emp.name?.toLowerCase() === normInput) &&
-        (emp.password === password || emp.tempPassword === password || isMasterPass)
-    );
-
-    if (!hrEmpMatch && typeof window !== "undefined") {
-      for (const t of tenants) {
-        try {
-          const raw = localStorage.getItem(`unipos_hr_employees_${t.id}`);
-          if (raw) {
-            const list = JSON.parse(raw);
-            const found = list.find(
-              (emp: any) =>
-                (emp.email?.toLowerCase() === normInput || emp.name?.toLowerCase() === normInput) &&
-                (emp.password === password || emp.tempPassword === password || isMasterPass)
-            );
-            if (found) {
-              hrEmpMatch = found;
-              targetTenant = t;
-              break;
-            }
-          }
-        } catch {}
+    } else if (matchedPosEmp) {
+      if (matchedPosEmp.password === password || isMasterPass) {
+        authenticatedUser = matchedPosEmp;
+        authType = "pos";
+      } else {
+        setErrorMessage("⛔ ACCESS DENIED: Incorrect password for this employee account.");
+        return;
       }
-    }
-
-    // 3. SMS STUDENT, PARENT, TEACHER & ADMIN MATCHING (Matches Username/Email AND Password)
-    let smsUserMatch = smsUsers.find(
-      (u: any) =>
-        (u.username?.toLowerCase() === normInput || u.email?.toLowerCase() === normInput) &&
-        (u.password === password || isMasterPass)
-    );
-
-    // 4. OWNER DIRECT MATCH (Matches Tenant Email/Username/Name AND Password)
-    if (!presetMatch && !hrEmpMatch && !smsUserMatch && targetTenant && (targetTenant.status === "Active" || targetTenant.status === "Trial")) {
-      const isOwnerEmail = (targetTenant.email && targetTenant.email.toLowerCase() === normInput) || 
-                           (targetTenant.username && targetTenant.username.toLowerCase() === normInput) ||
-                           normInput === "abc.mart" || normInput === "owner" || normInput === "admin" || normInput === targetTenant.id.toLowerCase();
-      const tenantOwnerPass = (targetTenant as any).ownerPassword || (targetTenant as any).password;
-      const isOwnerPassCorrect = !tenantOwnerPass || password === tenantOwnerPass || password === "owner123" || password === "admin123" || isMasterPass || password.length >= 4;
+    } else if (matchedHrEmp) {
+      if (matchedHrEmp.password === password || matchedHrEmp.tempPassword === password || isMasterPass) {
+        authenticatedUser = matchedHrEmp;
+        authType = "hrms";
+      } else {
+        setErrorMessage("⛔ ACCESS DENIED: Incorrect password for this HRMS account.");
+        return;
+      }
+    } else if (matchedSmsUser) {
+      if (matchedSmsUser.password === password || isMasterPass) {
+        authenticatedUser = matchedSmsUser;
+        authType = "sms";
+      } else {
+        setErrorMessage("⛔ ACCESS DENIED: Incorrect password for this SMS account.");
+        return;
+      }
+    } else if (isOwnerUser && targetTenant && (targetTenant.status === "Active" || targetTenant.status === "Trial")) {
+      const ownerPreset = (targetTenant.credentialPresets || []).find(p => p.role === "Owner");
+      const configuredOwnerPass = (targetTenant as any).ownerPassword || (targetTenant as any).password || ownerPreset?.pass || "owner123";
       
-      if (isOwnerEmail && isOwnerPassCorrect) {
-        presetMatch = {
+      if (password === configuredOwnerPass || isMasterPass) {
+        authenticatedUser = {
           id: `CRED-${targetTenant.id}`,
           label: "Owner (Full ERP)",
-          email: targetTenant.email || (email.includes("@") ? email : `${email}@${targetTenant.id.toLowerCase()}.com`),
+          email: targetTenant.email || email,
           username: targetTenant.username || email,
-          pass: password,
+          pass: configuredOwnerPass,
           role: "Owner"
         };
+        authType = "owner";
+      } else {
+        setErrorMessage("⛔ ACCESS DENIED: Incorrect password for Owner account.");
+        return;
       }
     }
 
-    const employeeMatch = tenantEmployees.find((emp: any) => 
-      (emp.email?.toLowerCase() === normInput || emp.name?.toLowerCase() === normInput) && 
-      (emp.password === password || isMasterPass)
-    );
-
-    if (!presetMatch && !employeeMatch && !hrEmpMatch && !smsUserMatch) {
-      setErrorMessage("⛔ ACCESS DENIED: Incorrect email, username, or password provided.");
+    if (!authenticatedUser) {
+      setErrorMessage(`⛔ ACCESS DENIED: User "${email}" is not registered in workspace "${targetTenant.businessName}".`);
       return;
     }
+
+    const presetMatch = authType === "preset" || authType === "owner" ? authenticatedUser : null;
+    const employeeMatch = authType === "pos" ? authenticatedUser : null;
+    const hrEmpMatch = authType === "hrms" ? authenticatedUser : null;
+    const smsUserMatch = authType === "sms" ? authenticatedUser : null;
 
     if (presetMatch || employeeMatch || hrEmpMatch || smsUserMatch) {
       if (employeeMatch && employeeMatch.status === "Inactive") {
