@@ -33,19 +33,19 @@ export default function MTCoreLogo({
   width,
   alt = "MT Core Enterprise Platform"
 }: MTCoreLogoProps) {
+  const [imgError, setImgError] = React.useState(false);
+
   // Determine if we should display 1:1 Square or Rectangle
   const isSquare = collapsed || !showText || shape === "square";
 
   // Determine dark vs light background
-  // If theme === "dark" (on dark surface), we use the Light logo files
-  // If theme === "light" (on light surface), we use the Dark logo files
   const isDarkBackground = theme !== "light";
 
   let logoSrc = "";
   if (isSquare) {
-    logoSrc = isDarkBackground ? "/logo light.png" : "/Logo Dark.png";
+    logoSrc = isDarkBackground ? "/logo%20light.png" : "/Logo%20Dark.png";
   } else {
-    logoSrc = isDarkBackground ? "/rectangle light.png" : "/rectangle dark.png";
+    logoSrc = isDarkBackground ? "/rectangle%20light.png" : "/rectangle%20dark.png";
   }
 
   // Size dimensions
@@ -60,6 +60,32 @@ export default function MTCoreLogo({
   const finalH = height || activeDim.h;
   const finalW = width || activeDim.w;
 
+  if (imgError) {
+    return (
+      <div className={`inline-flex items-center gap-2 select-none font-sans group ${className}`}>
+        <div className={`rounded-xl flex items-center justify-center font-black tracking-tighter border shadow-sm ${
+          size === "sm" ? "w-8 h-8 text-[11px]" : size === "lg" ? "w-12 h-12 text-base" : size === "xl" ? "w-16 h-16 text-xl" : "w-9 h-9 text-xs"
+        } ${
+          isDarkBackground
+            ? "bg-gradient-to-tr from-sky-600 to-cyan-400 text-white border-sky-400/40 shadow-sky-500/20"
+            : "bg-gradient-to-tr from-sky-700 to-blue-600 text-white border-sky-600/30 shadow-sky-700/20"
+        }`}>
+          MT
+        </div>
+        {showText && !collapsed && (
+          <div className="flex flex-col text-left">
+            <span className={`font-black text-sm tracking-tight leading-none ${isDarkBackground ? "text-white" : "text-slate-900"}`}>
+              MT <span className="text-sky-500 font-extrabold">CORE</span>
+            </span>
+            <span className={`text-[8px] font-bold uppercase tracking-widest mt-0.5 ${isDarkBackground ? "text-gray-400" : "text-slate-500"}`}>
+              Enterprise Platform
+            </span>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className={`inline-flex items-center select-none transition duration-200 group ${className}`}>
       <img
@@ -67,6 +93,7 @@ export default function MTCoreLogo({
         alt={alt}
         width={finalW}
         height={finalH}
+        onError={() => setImgError(true)}
         className={`object-contain transition-transform duration-200 group-hover:scale-105 ${
           isSquare ? "rounded-xl" : ""
         }`}

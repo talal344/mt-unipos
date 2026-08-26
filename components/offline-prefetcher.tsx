@@ -46,7 +46,26 @@ export default function OfflinePrefetcher() {
 
       // 2. Fetch and Cache HTML, RSC streams, and static assets in CacheStorage
       if (typeof navigator !== "undefined" && navigator.onLine && "caches" in window) {
+        const logoFiles = [
+          "/rectangle light.png",
+          "/rectangle%20light.png",
+          "/rectangle dark.png",
+          "/rectangle%20dark.png",
+          "/logo light.png",
+          "/logo%20light.png",
+          "/Logo Dark.png",
+          "/Logo%20Dark.png",
+          "/logo.png",
+          "/favicon.png"
+        ];
+
         caches.open("mt-unipos-v5").then((cache) => {
+          logoFiles.forEach((logo) => {
+            fetch(logo, { cache: "no-cache" })
+              .then((res) => { if (res && res.status === 200) cache.put(logo, res); })
+              .catch(() => {});
+          });
+
           OFFLINE_ROUTES.forEach(async (route) => {
             try {
               // Cache HTML document
