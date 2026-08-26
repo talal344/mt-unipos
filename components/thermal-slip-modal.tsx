@@ -402,34 +402,41 @@ export default function ThermalSlipModal({
   const changeAmt = sale.changeReturned ?? (receivedAmt !== undefined ? Math.max(0, receivedAmt - sale.total) : 0);
 
   return (
-    <div className={isHidden ? "fixed -left-[9999px] top-0 opacity-0 pointer-events-none z-[-1]" : `fixed inset-0 z-[200] flex items-center justify-center ${isLight ? "bg-slate-900/60" : "bg-black/90"} backdrop-blur-md p-4 font-sans`}>
-      <div className={`${isLight ? "bg-white border-slate-200" : "bg-[#0d0d0d] border-brand-dark-border"} border rounded-2xl w-full max-w-sm shadow-2xl flex flex-col max-h-[96vh]`}>
+    <div 
+      className={isHidden ? "fixed -left-[9999px] top-0 opacity-0 pointer-events-none z-[-1]" : `fixed inset-0 z-[200] flex items-center justify-center ${isLight ? "bg-slate-900/60" : "bg-black/90"} backdrop-blur-md p-2 sm:p-4 font-sans`}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div className={`${isLight ? "bg-white border-slate-200" : "bg-[#0d0d0d] border-brand-dark-border"} border rounded-2xl w-full max-w-[360px] sm:max-w-sm shadow-2xl flex flex-col max-h-[96vh] overflow-hidden`}>
 
         {/* Modal Header */}
-        <div className={`flex items-center justify-between px-4 py-3 border-b shrink-0 ${isLight ? "border-slate-200" : "border-brand-dark-border"}`}>
-          <div className="flex items-center gap-2">
+        <div className={`flex items-center justify-between px-3.5 py-3 border-b shrink-0 ${isLight ? "border-slate-200" : "border-brand-dark-border"}`}>
+          <div className="flex items-center gap-2 min-w-0 flex-1 pr-2">
             {onBack && (
-              <button onClick={onBack} className={`p-1.5 rounded-lg transition ${isLight ? "text-slate-500 hover:text-slate-900 hover:bg-slate-100" : "text-gray-400 hover:text-white hover:bg-white/10"}`}>
+              <button onClick={onBack} className={`p-1.5 rounded-lg transition shrink-0 ${isLight ? "text-slate-500 hover:text-slate-900 hover:bg-slate-100" : "text-gray-400 hover:text-white hover:bg-white/10"}`}>
                 <ArrowLeft size={15} />
               </button>
             )}
-            <div>
-              <h3 className={`font-black text-sm flex items-center gap-2 ${isLight ? "text-slate-900" : "text-white"}`}>
-                Thermal Slip
-                {autoSaveStatus === "saving" && <Loader2 size={12} className={`animate-spin ${isLight ? "text-sky-600" : "text-brand-sky"}`} />}
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5">
+                <h3 className={`font-black text-sm truncate ${isLight ? "text-slate-900" : "text-white"}`}>
+                  Thermal Slip
+                </h3>
+                {autoSaveStatus === "saving" && <Loader2 size={12} className={`animate-spin shrink-0 ${isLight ? "text-sky-600" : "text-brand-sky"}`} />}
                 {autoSaveStatus === "success" && (
                   <span
-                    className="text-[9px] bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-500/30 cursor-pointer font-bold"
+                    className="text-[9px] bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-500/30 cursor-pointer font-bold shrink-0"
                     title={autoSavedPath ? `Saved to: ${autoSavedPath}` : "Saved to MT Core folder"}
                   >
                     ✅ Saved
                   </span>
                 )}
-                {autoSaveStatus === "error" && <span className="text-[9px] bg-red-500/20 text-red-600 dark:text-red-400 px-1.5 py-0.5 rounded border border-red-500/30 font-bold">Save Failed</span>}
-              </h3>
-              <p className={`text-[9px] font-mono ${isLight ? "text-slate-500" : "text-gray-500"}`}>{sale.receiptNumber}</p>
+                {autoSaveStatus === "error" && <span className="text-[9px] bg-red-500/20 text-red-600 dark:text-red-400 px-1.5 py-0.5 rounded border border-red-500/30 font-bold shrink-0">Save Failed</span>}
+              </div>
+              <p className={`text-[9px] font-mono truncate ${isLight ? "text-slate-500" : "text-gray-500"}`}>{sale.receiptNumber}</p>
               {autoSaveStatus === "success" && autoSavedPath && (
-                <p className="text-[8px] text-emerald-600 dark:text-emerald-400/70 font-mono truncate max-w-[200px]" title={autoSavedPath}>
+                <p className="text-[8px] text-emerald-600 dark:text-emerald-400/70 font-mono truncate" title={autoSavedPath}>
                   📁 {autoSavedPath.split(/[\/\\]/).slice(-3).join(" › ")}
                 </p>
               )}
@@ -437,14 +444,11 @@ export default function ThermalSlipModal({
           </div>
           <button 
             onClick={onClose} 
-            className={`p-2 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 ${
-              isLight 
-                ? "bg-slate-100 hover:bg-red-50 text-slate-500 hover:text-red-600 border border-slate-200 hover:border-red-200 shadow-xs" 
-                : "bg-white/5 hover:bg-red-500/20 text-gray-400 hover:text-red-400 border border-white/10 hover:border-red-500/30"
-            }`}
+            className="flex items-center justify-center w-8 h-8 rounded-full bg-red-500/20 hover:bg-red-500 text-red-500 hover:text-white border border-red-500/40 transition-all duration-150 hover:scale-105 active:scale-95 shrink-0 cursor-pointer shadow-xs"
             title="Close Slip"
+            aria-label="Close"
           >
-            <X size={16} />
+            <X size={16} className="stroke-[2.5]" />
           </button>
         </div>
 
@@ -669,10 +673,10 @@ export default function ThermalSlipModal({
         </div>
 
         {/* Action Buttons */}
-        <div className={`p-3.5 border-t shrink-0 grid grid-cols-3 gap-2 sm:gap-2.5 ${isLight ? "bg-slate-50 border-slate-200" : "bg-[#080808] border-brand-dark-border"}`}>
+        <div className={`p-3 border-t shrink-0 grid grid-cols-3 gap-2 ${isLight ? "bg-slate-50 border-slate-200" : "bg-[#080808] border-brand-dark-border"}`}>
           <button
             onClick={handleDownload}
-            className={`flex items-center justify-center gap-1.5 py-2.5 px-2 font-bold text-[11px] sm:text-xs uppercase tracking-wider rounded-xl transition-all duration-200 active:scale-95 ${
+            className={`flex items-center justify-center gap-1.5 py-2.5 px-1 font-bold text-[11px] uppercase tracking-wider rounded-xl transition-all duration-200 active:scale-95 ${
               isLight 
                 ? "bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 shadow-xs" 
                 : "bg-[#141414] hover:bg-[#1f1f1f] border border-white/10 text-gray-200 hover:text-white"
@@ -680,29 +684,29 @@ export default function ThermalSlipModal({
             title="Export receipt as JPG image"
           >
             <Download size={14} className="shrink-0 text-sky-400" />
-            <span className="truncate">Export JPG</span>
+            <span className="whitespace-nowrap font-black">JPG Slip</span>
           </button>
           
           <button
             onClick={handleSaveToDisk}
-            className={`flex items-center justify-center gap-1.5 py-2.5 px-2 font-bold text-[11px] sm:text-xs uppercase tracking-wider rounded-xl transition-all duration-200 active:scale-95 ${
+            className={`flex items-center justify-center gap-1.5 py-2.5 px-1 font-bold text-[11px] uppercase tracking-wider rounded-xl transition-all duration-200 active:scale-95 ${
               isLight
                 ? "bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-800 shadow-xs"
                 : "bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-400 hover:text-emerald-300"
             }`}
             title="Save receipt copy to local disk"
           >
-            <HardDrive size={14} className="shrink-0" />
-            <span className="truncate">Save Disk</span>
+            <HardDrive size={14} className="shrink-0 text-emerald-400" />
+            <span className="whitespace-nowrap font-black">Save Disk</span>
           </button>
 
           <button
             onClick={handlePrint}
-            className="flex items-center justify-center gap-1.5 py-2.5 px-2 bg-gradient-to-r from-sky-500 to-cyan-500 hover:from-sky-400 hover:to-cyan-400 text-black font-black text-[11px] sm:text-xs uppercase tracking-wider rounded-xl transition-all duration-200 shadow-lg shadow-sky-500/25 active:scale-95"
+            className="flex items-center justify-center gap-1.5 py-2.5 px-1 bg-gradient-to-r from-sky-500 to-cyan-500 hover:from-sky-400 hover:to-cyan-400 text-black font-black text-[11px] uppercase tracking-wider rounded-xl transition-all duration-200 shadow-lg shadow-sky-500/25 active:scale-95"
             title="Print thermal receipt"
           >
             <Printer size={14} className="shrink-0" />
-            <span className="truncate">Print</span>
+            <span className="whitespace-nowrap font-black">Print Slip</span>
           </button>
         </div>
       </div>

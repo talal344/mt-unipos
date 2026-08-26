@@ -38,18 +38,6 @@ export default function ClientSidebar() {
     return () => clearInterval(timer);
   }, []);
 
-  useEffect(() => {
-    const root = document.querySelector('.flex.h-screen, .flex.min-h-screen');
-    if (root) {
-      root.classList.add('layout-topbar-adjusted');
-    }
-    return () => {
-      if (root) {
-        root.classList.remove('layout-topbar-adjusted');
-      }
-    };
-  }, []);
-
   const lowStockAlerts   = products.filter(p => p.stock <= p.minStock && p.minStock > 0).slice(0, 6);
   const overdueCustomers = customers.filter(c => c.creditBalance > 0).slice(0, 6);
   const totalAlerts      = lowStockAlerts.length + overdueCustomers.length;
@@ -67,7 +55,7 @@ export default function ClientSidebar() {
   const menuGroups = [
     {
       id: "sales",
-      title: "Point of Sale & Orders",
+      title: "Point of Sale",
       badge: "POS",
       icon: ShoppingCart,
       color: {
@@ -93,7 +81,7 @@ export default function ClientSidebar() {
     },
     {
       id: "inventory",
-      title: "Inventory & Catalog",
+      title: "Inventory",
       badge: "Stock",
       icon: Package,
       color: {
@@ -137,6 +125,15 @@ export default function ClientSidebar() {
         activeDark: "bg-emerald-500/15 border-emerald-500/40 text-emerald-300 font-bold",
         activeLight: "bg-emerald-100 border-emerald-300 text-emerald-950 font-bold",
       },
+        badgeDark: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
+        badgeLight: "bg-emerald-100 text-emerald-800 border-emerald-200",
+        iconColorDark: "text-emerald-400",
+        iconColorLight: "text-emerald-600",
+        iconBgDark: "bg-emerald-500/15 border-emerald-500/30",
+        iconBgLight: "bg-emerald-100 border-emerald-200",
+        activeDark: "bg-emerald-500/15 border-emerald-500/40 text-emerald-300 font-bold",
+        activeLight: "bg-emerald-100 border-emerald-300 text-emerald-950 font-bold",
+      },
       links: [
         { name: "Expense Vouchers", href: "/expenses", icon: Receipt, roles: ["Owner","Manager","Accountant"], verticals: ["Retail","F&B","Pharmacy","Bookstore"] },
         { name: "Accounting Ledgers", href: "/accounting", icon: Landmark, roles: ["Owner","Manager","Accountant"], verticals: ["Retail","F&B","Pharmacy","Bookstore"] },
@@ -166,7 +163,7 @@ export default function ClientSidebar() {
     },
     {
       id: "growth",
-      title: "Growth & Reports",
+      title: "Reports & AI",
       badge: "AI",
       icon: Brain,
       color: {
@@ -190,7 +187,7 @@ export default function ClientSidebar() {
     },
     {
       id: "system",
-      title: "Settings & Help",
+      title: "Settings & Desk",
       badge: "Desk",
       icon: Sliders,
       color: {
@@ -247,7 +244,7 @@ export default function ClientSidebar() {
   };
 
   const renderNavContent = () => (
-    <div className="space-y-3">
+    <div className="space-y-2.5">
       {visibleGroups.map(group => {
         const isOpen = !!openGroups[group.id];
         const isGroupActive = group.links.some(l => l.href === pathname);
@@ -268,18 +265,18 @@ export default function ClientSidebar() {
                 isLight ? group.color.lightHeader : group.color.darkHeader
               }`}
             >
-              <div className="flex items-center gap-2.5 min-w-0">
+              <div className="flex items-center gap-2.5 min-w-0 flex-1">
                 <div className={`p-1.5 rounded-lg border shrink-0 ${
                   isLight ? group.color.iconBgLight : group.color.iconBgDark
                 }`}>
                   <GroupIcon size={14} className={isLight ? group.color.iconColorLight : group.color.iconColorDark} />
                 </div>
-                <span className="text-xs font-black uppercase tracking-wider truncate">
+                <span className="text-[12px] font-black uppercase tracking-wide whitespace-nowrap">
                   {group.title}
                 </span>
               </div>
 
-              <div className="flex items-center gap-1.5 shrink-0 ml-2">
+              <div className="flex items-center gap-1.5 shrink-0 ml-1.5">
                 <span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded font-mono border ${
                   isLight ? group.color.badgeLight : group.color.badgeDark
                 }`}>
@@ -334,17 +331,6 @@ export default function ClientSidebar() {
 
   return (
     <>
-      <style>{`
-        .layout-topbar-adjusted {
-          padding-top: ${isOffline ? "88px" : "64px"} !important;
-          height: 100vh !important;
-          box-sizing: border-box !important;
-        }
-        .layout-topbar-adjusted > aside,
-        .layout-topbar-adjusted > main {
-          height: 100% !important;
-        }
-      `}</style>
 
       {isOffline && (
         <div className="fixed top-0 left-0 right-0 h-6 bg-gradient-to-r from-red-600 via-amber-600 to-red-600 text-white text-[10px] font-black tracking-widest flex items-center justify-center gap-2 z-[1001] px-4 uppercase shadow-sm">
@@ -546,7 +532,7 @@ export default function ClientSidebar() {
       )}
 
       <aside className={`
-        fixed ${isOffline ? "top-[88px]" : "top-16"} bottom-0 left-0 z-[999] w-64 border-r flex flex-col md:hidden font-sans print:hidden transform transition-transform duration-200 ${
+        fixed ${isOffline ? "top-[88px]" : "top-16"} bottom-0 left-0 z-[999] w-72 border-r flex flex-col md:hidden font-sans print:hidden transform transition-transform duration-200 ${
         isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
       } ${
         isLight ? "bg-white border-slate-200 text-slate-900 shadow-2xl" : "bg-brand-dark-surface border-brand-dark-border text-gray-100"
@@ -557,7 +543,7 @@ export default function ClientSidebar() {
       </aside>
 
       <aside className={`
-        hidden md:flex flex-col relative top-0 h-full w-64 border-r shrink-0 font-sans print:hidden z-10 ${
+        hidden md:flex flex-col relative top-0 h-full w-72 border-r shrink-0 font-sans print:hidden z-10 ${
         isLight ? "bg-white border-slate-200 text-slate-900 shadow-xs" : "bg-brand-dark-surface border-brand-dark-border text-gray-100"
       }`}>
         <nav className="flex-1 px-3 py-4 overflow-y-auto no-scrollbar">

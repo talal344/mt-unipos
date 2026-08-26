@@ -160,3 +160,24 @@ body {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
+
+/* Permanent Static Layout Fix: Eliminates all page-change shaking/jumping */
+.flex.h-screen,
+.flex.min-h-screen {
+  padding-top: 64px;
+  height: 100vh;
+  box-sizing: border-box;
+}
+
+body.offline-active .flex.h-screen,
+body.offline-active .flex.min-h-screen {
+  padding-top: 88px;
+}
+
+.flex.h-screen > aside,
+.flex.h-screen > main,
+.flex.min-h-screen > aside,
+.flex.min-h-screen > main {
+  height: 100%;
+}
+
