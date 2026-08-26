@@ -110,7 +110,7 @@ export default function ClientSidebar() {
     },
     {
       id: "finance",
-      title: "Finance & Accounts",
+      title: "Finance",
       badge: "Ledger",
       icon: Landmark,
       color: {
@@ -252,7 +252,7 @@ export default function ClientSidebar() {
           >
             <button
               onClick={() => toggleGroup(group.id)}
-              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-colors text-left ${
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-colors text-left gap-2 ${
                 isLight ? group.color.lightHeader : group.color.darkHeader
               }`}
             >
@@ -262,12 +262,12 @@ export default function ClientSidebar() {
                 }`}>
                   <GroupIcon size={14} className={isLight ? group.color.iconColorLight : group.color.iconColorDark} />
                 </div>
-                <span className="text-[12px] font-black uppercase tracking-wide whitespace-nowrap">
+                <span className="text-[11.5px] font-black uppercase tracking-wide whitespace-nowrap">
                   {group.title}
                 </span>
               </div>
 
-              <div className="flex items-center gap-1.5 shrink-0 ml-1.5">
+              <div className="flex items-center gap-1.5 shrink-0 ml-auto">
                 <span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded font-mono border ${
                   isLight ? group.color.badgeLight : group.color.badgeDark
                 }`}>
