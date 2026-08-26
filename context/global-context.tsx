@@ -1261,16 +1261,40 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
           if (!error) await dequeueItem(STORE_RECEIPTS, receipt.id);
         }
 
-        // 1. Process local offline queue
+        // 1. Process local offline queue directly & sequentially
         const pendingSyncs = await getQueuedItems(STORE_SYNC_KEYS);
-        const pendingKeySet = new Set(pendingSyncs.map(i => i.key));
-
         for (const item of pendingSyncs) {
           const val = window.localStorage.getItem(item.key);
           if (val) {
-            window.localStorage.setItem(item.key, val);
+            try {
+              const parsed = JSON.parse(val);
+              const isGlobal = ["unipos_tenants", "unipos_demos", "unipos_invoices", "unipos_tickets", "unipos_blacklisted_tenants"].includes(item.key);
+              if (isGlobal) {
+                const { error } = await supabase.from('unipos_global').upsert({
+                  key: item.key,
+                  value: parsed,
+                  updated_at: new Date().toISOString()
+                });
+                if (!error) await dequeueItem(STORE_SYNC_KEYS, item.key);
+              } else {
+                const lastIdx = item.key.lastIndexOf('_');
+                if (lastIdx !== -1) {
+                  const tid = item.key.substring(lastIdx + 1);
+                  const col = item.key.substring(0, lastIdx);
+                  const { error } = await supabase.from('unipos_collections').upsert({
+                    tenant_id: tid,
+                    collection: col,
+                    item_id: 'all',
+                    data: parsed,
+                    updated_at: new Date().toISOString()
+                  });
+                  if (!error) await dequeueItem(STORE_SYNC_KEYS, item.key);
+                }
+              }
+            } catch (err) {}
+          } else {
+            await dequeueItem(STORE_SYNC_KEYS, item.key);
           }
-          await dequeueItem(STORE_SYNC_KEYS, item.key);
         }
 
         // 2. Global Data (Tenants, Demos, etc.)
@@ -1298,7 +1322,6 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
 
           globalData.forEach(row => {
             if (row.key === 'unipos_tenants') return;
-            if (pendingKeySet.has(row.key)) return;
             const current = window.localStorage.getItem(row.key);
             const incoming = JSON.stringify(row.value);
 
@@ -1319,53 +1342,82 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
           });
         }
 
-        // 3. Tenant Collections Data
+        // 3. Bidirectional Tenant Collections Sync (Ensure offline items on this device reach Cloud & Laptop)
         const savedUser = window.localStorage.getItem("unipos_current_user");
         if (savedUser) {
           const user = JSON.parse(savedUser);
           if (user?.tenantId) {
+            const tid = user.tenantId;
             const { data: tenantData } = await supabase
               .from('unipos_collections')
               .select('*')
-              .eq('tenant_id', user.tenantId);
+              .eq('tenant_id', tid);
 
-            if (tenantData) {
-              for (const row of tenantData) {
-                const localKey = `${row.collection}_${row.tenant_id}`;
-                if (pendingKeySet.has(localKey)) continue;
+            const ALL_TENANT_COLLECTIONS = [
+              "unipos_sales",
+              "unipos_products",
+              "unipos_customers",
+              "unipos_expenses",
+              "unipos_suppliers",
+              "unipos_pos",
+              "unipos_accounts",
+              "unipos_counters",
+              "unipos_settings",
+              "unipos_employees",
+              "unipos_hr_employees",
+              "unipos_tables",
+              "unipos_kds"
+            ];
 
-                const current = window.localStorage.getItem(localKey);
-                let localParsed: any = null;
-                if (current) {
-                  try { localParsed = JSON.parse(current); } catch {}
+            const cloudMap = new Map<string, any>();
+            (tenantData || []).forEach((row: any) => {
+              cloudMap.set(row.collection, row.data);
+            });
+
+            for (const col of ALL_TENANT_COLLECTIONS) {
+              const localKey = `${col}_${tid}`;
+              const currentLocalStr = window.localStorage.getItem(localKey);
+              let localParsed: any = null;
+              if (currentLocalStr) {
+                try { localParsed = JSON.parse(currentLocalStr); } catch {}
+              }
+
+              const cloudParsed = cloudMap.get(col);
+
+              if (localParsed !== null && cloudParsed === undefined) {
+                // Local has offline-created data (e.g. offline sale), but Cloud doesn't have it yet!
+                if (!Array.isArray(localParsed) || localParsed.length > 0) {
+                  await supabase.from('unipos_collections').upsert({
+                    tenant_id: tid,
+                    collection: col,
+                    item_id: 'all',
+                    data: localParsed,
+                    updated_at: new Date().toISOString()
+                  });
+                }
+              } else if (Array.isArray(cloudParsed)) {
+                const merged = mergeCollectionsData(localParsed || [], cloudParsed);
+                const mergedStr = JSON.stringify(merged);
+                if (mergedStr !== currentLocalStr) {
+                  originalSetItem.call(window.localStorage, localKey, mergedStr);
+                  changed = true;
                 }
 
-                const cloudParsed = row.data;
-
-                if (Array.isArray(cloudParsed)) {
-                  const merged = mergeCollectionsData(localParsed || [], cloudParsed);
-                  const mergedStr = JSON.stringify(merged);
-                  if (mergedStr !== current) {
-                    originalSetItem.call(window.localStorage, localKey, mergedStr);
-                    changed = true;
-
-                    // If local merged array contains items that Cloud did not have, push back to Cloud
-                    if (merged.length > cloudParsed.length) {
-                      supabase.from('unipos_collections').upsert({
-                        tenant_id: row.tenant_id,
-                        collection: row.collection,
-                        item_id: 'all',
-                        data: merged,
-                        updated_at: new Date().toISOString()
-                      });
-                    }
-                  }
-                } else if (cloudParsed && typeof cloudParsed === 'object') {
-                  const incomingStr = JSON.stringify(cloudParsed);
-                  if (incomingStr !== current) {
-                    originalSetItem.call(window.localStorage, localKey, incomingStr);
-                    changed = true;
-                  }
+                // If local has more/newer items than Cloud (e.g. offline sales made on mobile), push merged data to Cloud!
+                if (merged.length > cloudParsed.length) {
+                  await supabase.from('unipos_collections').upsert({
+                    tenant_id: tid,
+                    collection: col,
+                    item_id: 'all',
+                    data: merged,
+                    updated_at: new Date().toISOString()
+                  });
+                }
+              } else if (cloudParsed && typeof cloudParsed === 'object') {
+                const incomingStr = JSON.stringify(cloudParsed);
+                if (incomingStr !== currentLocalStr) {
+                  originalSetItem.call(window.localStorage, localKey, incomingStr);
+                  changed = true;
                 }
               }
             }
