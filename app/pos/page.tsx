@@ -1392,9 +1392,11 @@ export default function PosPage() {
                             <div className={`font-bold text-[11px] ${isLight ? "text-slate-900" : "text-gray-200"}`}>{c.name}</div>
                             <div className={`font-mono text-[9px] ${isLight ? "text-slate-500" : "text-gray-500"}`}>{c.mobile}</div>
                           </div>
-                          <span className="text-amber-500 font-black text-[9px] flex items-center gap-0.5">
-                            <Star size={9} className="fill-amber-500" />{c.loyaltyPoints} pts
-                          </span>
+                          {!c.name.toLowerCase().includes("walk-in") && c.id !== "C-203" && c.id !== "walk-in" && (
+                            <span className="text-amber-500 font-black text-[9px] flex items-center gap-0.5">
+                              <Star size={9} className="fill-amber-500" />{c.loyaltyPoints} pts
+                            </span>
+                          )}
                         </button>
                       ))}
                       {filteredCustomers.length === 0 && custSearch && (

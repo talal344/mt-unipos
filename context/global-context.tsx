@@ -2258,8 +2258,8 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         if (c.customerNo && c.customerNo !== "N/A") seenNos.add(c.customerNo);
       });
       const sanitized = parsed.map(c => {
-        if (c.name === "Walk-in Customer") {
-          return { ...c, customerNo: "N/A" };
+        if (c.name.toLowerCase().includes("walk-in") || c.id === "C-203" || c.id === "walk-in") {
+          return { ...c, customerNo: "N/A", loyaltyPoints: 0, creditBalance: 0, walletBalance: 0 };
         }
         if (!c.customerNo || c.customerNo === "N/A") {
           let num = `CUST-${Math.floor(1000 + Math.random() * 9000)}`;
@@ -4698,15 +4698,17 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
 
 
     // 3. Accumulate loyalty points & credit/wallet balance for customer
-    if (matchCust && matchCust.id !== "C-203") {
-      const addedPoints = isReturn ? 0 : Math.floor(sale.total / 50);
+    const isWalkInCust = (sale.customerName || "").toLowerCase().includes("walk-in") || (matchCust && (matchCust.id === "C-203" || matchCust.id === "walk-in" || matchCust.name.toLowerCase().includes("walk-in")));
+    if (matchCust && !isWalkInCust) {
+      const ptsRatio = businessSettings?.loyaltyPointsPerAmount || 50;
+      const addedPoints = isReturn ? 0 : Math.floor(sale.total / ptsRatio);
       const deductPoints = sale.redeemLoyalty ? 1000 : 0;
       
       // If payment is "On Credit" or split payment contains "On Credit", add to customer creditBalance (Accounts Receivable)
       let creditChange = 0;
-      if (sale.paymentMethod === "On Credit" && sale.customerName !== "Walk-in Customer") {
+      if (sale.paymentMethod === "On Credit") {
         creditChange = sale.total;
-      } else if (sale.splitPayments && sale.customerName !== "Walk-in Customer") {
+      } else if (sale.splitPayments) {
         creditChange = sale.splitPayments["On Credit"] || 0;
       }
 
@@ -4714,13 +4716,13 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       // If payment method is "Store Wallet Credit", deduct (-) from walletBalance
       let walletChange = 0;
       const isWalletPayment = sale.paymentMethod === "Store Wallet Credit" || sale.paymentMethod === "Wallet";
-      if (isWalletPayment && sale.customerName !== "Walk-in Customer") {
+      if (isWalletPayment) {
         if (isReturn) {
           walletChange = sale.total;
         } else {
           walletChange = -sale.total;
         }
-      } else if (sale.splitPayments && sale.customerName !== "Walk-in Customer") {
+      } else if (sale.splitPayments) {
         const walletAmt = sale.splitPayments["Store Wallet Credit"] || sale.splitPayments["Wallet"] || 0;
         if (walletAmt > 0) {
           if (isReturn) {
@@ -4754,6 +4756,9 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       });
       setCustomers(updatedCusts);
       saveTenantData("unipos_customers", updatedCusts);
+    } else {
+      newSale.loyaltyPointsEarned = 0;
+      newSale.loyaltyPointsBalance = 0;
     }
 
     // 1. Save Sale record (with attached credit statement balances)

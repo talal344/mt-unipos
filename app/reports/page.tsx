@@ -1544,19 +1544,19 @@ export default function ReportsPage() {
                     <div className={`${isLight ? "bg-slate-100 border-slate-200" : "bg-black border-brand-dark-border"} border p-1 rounded-lg flex gap-1 text-[10px]`}>
                       <button 
                         onClick={() => setSalesFilterType("all")}
-                        className={`px-3 py-1 rounded font-bold uppercase ${salesFilterType === "all" ? "bg-brand-sky text-black font-black" : "text-gray-400 hover:text-white"}`}
+                        className={`px-3 py-1 rounded font-bold uppercase transition ${salesFilterType === "all" ? "bg-brand-sky text-black font-black" : isLight ? "text-slate-600 hover:text-slate-900 hover:bg-slate-200" : "text-gray-400 hover:text-white"}`}
                       >
                         All Sales
                       </button>
                       <button 
                         onClick={() => setSalesFilterType("customer")}
-                        className={`px-3 py-1 rounded font-bold uppercase ${salesFilterType === "customer" ? "bg-brand-sky text-black font-black" : "text-gray-400 hover:text-white"}`}
+                        className={`px-3 py-1 rounded font-bold uppercase transition ${salesFilterType === "customer" ? "bg-brand-sky text-black font-black" : isLight ? "text-slate-600 hover:text-slate-900 hover:bg-slate-200" : "text-gray-400 hover:text-white"}`}
                       >
                         Customer-wise
                       </button>
                       <button 
                         onClick={() => setSalesFilterType("staff")}
-                        className={`px-3 py-1 rounded font-bold uppercase ${salesFilterType === "staff" ? "bg-brand-sky text-black font-black" : "text-gray-400 hover:text-white"}`}
+                        className={`px-3 py-1 rounded font-bold uppercase transition ${salesFilterType === "staff" ? "bg-brand-sky text-black font-black" : isLight ? "text-slate-600 hover:text-slate-900 hover:bg-slate-200" : "text-gray-400 hover:text-white"}`}
                       >
                         Staff-wise
                       </button>
@@ -1569,13 +1569,13 @@ export default function ReportsPage() {
                     <div className={`${isLight ? "bg-slate-100 border-slate-200" : "bg-black border-brand-dark-border"} border p-1 rounded-lg flex gap-1 text-[10px]`}>
                       <button 
                         onClick={() => setSalesDetailLevel("itemized")}
-                        className={`px-3 py-1 rounded font-bold uppercase ${salesDetailLevel === "itemized" ? "bg-purple-500 text-white font-black" : "text-gray-400 hover:text-white"}`}
+                        className={`px-3 py-1 rounded font-bold uppercase transition ${salesDetailLevel === "itemized" ? "bg-purple-500 text-white font-black" : isLight ? "text-slate-600 hover:text-slate-900 hover:bg-slate-200" : "text-gray-400 hover:text-white"}`}
                       >
                         📦 Itemized Products
                       </button>
                       <button 
                         onClick={() => setSalesDetailLevel("summary")}
-                        className={`px-3 py-1 rounded font-bold uppercase ${salesDetailLevel === "summary" ? "bg-purple-500 text-white font-black" : "text-gray-400 hover:text-white"}`}
+                        className={`px-3 py-1 rounded font-bold uppercase transition ${salesDetailLevel === "summary" ? "bg-purple-500 text-white font-black" : isLight ? "text-slate-600 hover:text-slate-900 hover:bg-slate-200" : "text-gray-400 hover:text-white"}`}
                       >
                         📋 Summary Table
                       </button>
@@ -1972,7 +1972,7 @@ export default function ReportsPage() {
                           <td className="p-3 text-right text-purple-400 font-bold">{cust.buyCount} orders</td>
                           <td className="p-3 text-right text-emerald-500 font-black">{currencySymbol} {cust.totalSpent.toLocaleString()}</td>
                           <td className="p-3 text-right text-red-500 font-bold">{currencySymbol} {cust.creditBalance.toLocaleString()}</td>
-                          <td className="p-3 text-right text-amber-500 font-bold">{cust.loyaltyPoints} pts</td>
+                          <td className="p-3 text-right text-amber-500 font-bold">{cust.name.toLowerCase().includes("walk-in") ? "0 pts (N/A)" : `${cust.loyaltyPoints} pts`}</td>
                         </tr>
                       ))}
                     </tbody>

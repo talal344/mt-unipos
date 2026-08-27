@@ -318,13 +318,23 @@ export default function CustomersPage() {
   // ── Derived: enrich customers with purchase stats
   const enriched = useMemo(() => {
     return customers.map(c => {
+      const isWalkIn = c.name.toLowerCase().includes("walk-in") || c.id === "C-203" || c.id === "walk-in";
       const custSales = sales.filter(s => s.customerName === c.name);
-      const totalSpent = custSales.reduce((a, s) => a + s.total, 0);
+      const totalSpent = custSales.reduce((a, s) => (s.status === "Returned" || s.status === "Refunded") ? a - s.total : a + s.total, 0);
       const totalVisits = custSales.length;
       const lastVisit = custSales.length
         ? custSales.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0].date
         : null;
-      return { ...c, totalSpent, totalVisits, lastVisit, purchases: custSales };
+      return { 
+        ...c, 
+        loyaltyPoints: isWalkIn ? 0 : (c.loyaltyPoints || 0),
+        creditBalance: isWalkIn ? 0 : (c.creditBalance || 0),
+        walletBalance: isWalkIn ? 0 : (c.walletBalance || 0),
+        totalSpent, 
+        totalVisits, 
+        lastVisit, 
+        purchases: custSales 
+      };
     });
   }, [customers, sales]);
 
@@ -428,8 +438,9 @@ export default function CustomersPage() {
   };
 
   // ── Aggregate stats
-  const totalCustomers = customers.length;
-  const totalLoyaltyPts = customers.reduce((a, c) => a + c.loyaltyPoints, 0);
+  const totalCustomers = enriched.length;
+  const registeredLoyaltyMembers = enriched.filter(c => !c.name.toLowerCase().includes("walk-in") && c.id !== "C-203" && c.id !== "walk-in").length;
+  const totalLoyaltyPts = enriched.filter(c => !c.name.toLowerCase().includes("walk-in") && c.id !== "C-203" && c.id !== "walk-in").reduce((a, c) => a + c.loyaltyPoints, 0);
   const totalRevenue = enriched.reduce((a, c) => a + c.totalSpent, 0);
   const activeThisMonth = enriched.filter(c => {
     if (!c.lastVisit) return false;
@@ -454,32 +465,32 @@ export default function CustomersPage() {
         {/* ═══════════════════════════════════════════════════════════════
             LEFT PANEL — Customer List
         ═══════════════════════════════════════════════════════════════ */}
-        <section className={`flex flex-col border-r ${isLight ? "border-slate-200" : "border-brand-dark-border"} transition-all duration-300 ${selectedId ? "w-0 lg:w-[420px] overflow-hidden" : "flex-grow"}`}>
-          <div className="flex-grow overflow-y-auto p-6 space-y-5">
+        <section className={`flex flex-col border-r ${isLight ? "border-slate-200" : "border-brand-dark-border"} transition-all duration-300 ${selectedId ? "hidden lg:flex w-full lg:w-[380px] xl:w-[420px] shrink-0" : "flex-grow w-full"}`}>
+          <div className="flex-grow overflow-y-auto p-4 sm:p-6 space-y-4">
 
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <h1 className={`text-xl font-black flex items-center gap-2 ${isLight ? "text-slate-900" : "text-white"}`}>
                   <Users size={20} className="text-sky-500" />
                   Customer Directory
                 </h1>
                 <p className={`text-[10px] mt-0.5 ${isLight ? "text-slate-500" : "text-gray-500"}`}>
-                  {totalCustomers} registered loyalty members
+                  {registeredLoyaltyMembers} registered loyalty members · {totalCustomers} total profiles
                 </p>
               </div>
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => setShowCreditReportModal(true)}
-                  className="flex items-center gap-1.5 bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 text-red-600 font-bold text-xs px-3.5 py-2.5 rounded-lg transition"
+                  className="flex items-center gap-1.5 bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 text-red-600 font-bold text-xs px-3 py-2 rounded-lg transition shrink-0"
                 >
                   <CreditCard size={13} /> Credit Report
                 </button>
                 <button
                   type="button"
                   onClick={openAdd}
-                  className="flex items-center gap-1.5 bg-sky-600 hover:bg-sky-500 text-white font-black text-xs px-4 py-2.5 rounded-lg shadow-lg transition"
+                  className="flex items-center gap-1.5 bg-sky-600 hover:bg-sky-500 text-white font-black text-xs px-3.5 py-2 rounded-lg shadow-lg transition shrink-0"
                 >
                   <Plus size={14} /> Add Customer
                 </button>
@@ -487,19 +498,19 @@ export default function CustomersPage() {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className={`grid gap-2.5 ${selectedId ? "grid-cols-2" : "grid-cols-2 lg:grid-cols-4"}`}>
               {[
-                { icon: Users, label: "Total Customers", val: totalCustomers, color: "text-sky-500" },
+                { icon: Users, label: "Total Profiles", val: totalCustomers, color: "text-sky-500" },
                 { icon: TrendingUp, label: "Total Revenue", val: `${currencySymbol} ${Math.round(totalRevenue).toLocaleString()}`, color: "text-emerald-500" },
                 { icon: Star, label: "Loyalty Points Issued", val: totalLoyaltyPts.toLocaleString(), color: "text-amber-500" },
                 { icon: BadgeCheck, label: "Active This Month", val: activeThisMonth, color: "text-purple-500" },
               ].map(stat => (
-                <div key={stat.label} className={`border rounded-xl p-4 ${
+                <div key={stat.label} className={`border rounded-xl p-3 sm:p-4 ${
                   isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/40 border-brand-dark-border text-gray-100"
                 }`}>
-                  <stat.icon size={16} className={stat.color} />
-                  <div className={`text-lg font-black font-mono mt-1 ${stat.color}`}>{stat.val}</div>
-                  <div className={`text-[9px] uppercase tracking-wide font-bold ${isLight ? "text-slate-500" : "text-gray-500"}`}>{stat.label}</div>
+                  <stat.icon size={15} className={stat.color} />
+                  <div className={`text-base sm:text-lg font-black font-mono mt-1 truncate ${stat.color}`}>{stat.val}</div>
+                  <div className={`text-[9px] uppercase tracking-wide font-bold truncate ${isLight ? "text-slate-500" : "text-gray-500"}`}>{stat.label}</div>
                 </div>
               ))}
             </div>
@@ -513,7 +524,7 @@ export default function CustomersPage() {
                   placeholder="Search by name, mobile, email or CNIC..."
                   value={search}
                   onChange={e => setSearch(e.target.value)}
-                  className={`w-full pl-9 pr-4 py-2 rounded-lg text-xs font-bold border focus:outline-none ${
+                  className={`w-full pl-9 pr-3 py-2 rounded-lg text-xs font-bold border focus:outline-none ${
                     isLight ? "bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-sky-500 shadow-xs" : "bg-brand-dark-surface border-brand-dark-border text-white focus:border-brand-sky"
                   }`}
                 />
@@ -521,7 +532,7 @@ export default function CustomersPage() {
               <select
                 value={sortBy}
                 onChange={e => setSortBy(e.target.value as any)}
-                className={`border rounded-lg text-[10px] font-bold px-3 py-2 focus:outline-none ${
+                className={`border rounded-lg text-[10px] font-bold px-2.5 py-2 focus:outline-none shrink-0 ${
                   isLight ? "bg-white border-slate-300 text-slate-900 focus:border-sky-500 shadow-xs" : "bg-brand-dark-surface border-brand-dark-border text-gray-300 focus:border-brand-sky"
                 }`}
               >
@@ -540,13 +551,14 @@ export default function CustomersPage() {
                   <p className="text-xs font-bold">No customers found. Add your first customer above.</p>
                 </div>
               ) : filtered.map(c => {
+                const isWalkIn = c.name.toLowerCase().includes("walk-in") || c.id === "C-203" || c.id === "walk-in";
                 const tier = getLoyaltyTier(c.loyaltyPoints);
                 const isActive = selectedId === c.id;
                 return (
                   <div
                     key={c.id}
                     onClick={() => { setSelectedId(c.id); setDrawerTab("overview"); }}
-                    className={`group flex items-center gap-4 p-4 rounded-xl border cursor-pointer transition-all ${
+                    className={`group flex items-center justify-between gap-3 p-3.5 rounded-xl border cursor-pointer transition-all ${
                       isActive
                         ? isLight
                           ? "bg-sky-50 border-sky-400 shadow-xs"
@@ -557,7 +569,7 @@ export default function CustomersPage() {
                     }`}
                   >
                     {/* Avatar */}
-                    <div className={`w-11 h-11 rounded-full flex items-center justify-center font-black text-sm shrink-0 ${
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-sm shrink-0 ${
                       isActive 
                         ? "bg-brand-sky text-black" 
                         : isLight 
@@ -569,40 +581,48 @@ export default function CustomersPage() {
 
                     {/* Info */}
                     <div className="flex-grow min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className={`font-bold text-sm truncate ${isLight ? "text-slate-900" : "text-white"}`}>{c.name}</span>
-                        {c.customerNo && c.customerNo !== "N/A" && (
-                          <span className="text-[8px] bg-brand-sky/15 border border-brand-sky/30 text-brand-sky font-mono font-bold px-1.5 py-0.5 rounded">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className={`font-bold text-xs truncate max-w-[130px] sm:max-w-[160px] ${isLight ? "text-slate-900" : "text-white"}`}>{c.name}</span>
+                        {c.customerNo && c.customerNo !== "N/A" && !isWalkIn && (
+                          <span className="text-[8px] bg-brand-sky/15 border border-brand-sky/30 text-brand-sky font-mono font-bold px-1.5 py-0.5 rounded shrink-0">
                             {c.customerNo}
                           </span>
                         )}
-                        <span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded border ${tier.bg} ${tier.color}`}>
-                          {tier.label}
-                        </span>
+                        {!isWalkIn ? (
+                          <span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded border shrink-0 ${tier.bg} ${tier.color}`}>
+                            {tier.label}
+                          </span>
+                        ) : (
+                          <span className="text-[8px] font-bold uppercase px-1.5 py-0.5 rounded border border-gray-400/20 bg-gray-500/10 text-gray-400 shrink-0">
+                            Walk-in
+                          </span>
+                        )}
                       </div>
-                      <div className={`text-[10px] mt-0.5 flex items-center gap-3 ${isLight ? "text-slate-500" : "text-gray-500"}`}>
-                        <span className="flex items-center gap-1"><Phone size={9} /> {c.mobile}</span>
+                      <div className={`text-[10px] mt-0.5 flex items-center gap-2 ${isLight ? "text-slate-500" : "text-gray-500"}`}>
+                        <span className="flex items-center gap-1 truncate"><Phone size={9} /> {c.mobile}</span>
                         {c.totalVisits > 0 && (
-                          <span className="flex items-center gap-1"><ShoppingBag size={9} /> {c.totalVisits} purchases</span>
+                          <span className="flex items-center gap-1 shrink-0"><ShoppingBag size={9} /> {c.totalVisits} orders</span>
                         )}
                       </div>
                     </div>
 
                     {/* Points + Spent + Credit Balance */}
-                    <div className="text-right shrink-0 space-y-1">
-                      <div className={`flex items-center gap-1 justify-end font-black text-xs font-mono ${isLight ? "text-amber-500" : "text-yellow-400"}`}>
-                        <Star size={10} className={isLight ? "fill-amber-500" : "fill-yellow-400"} /> {c.loyaltyPoints}
-                      </div>
+                    <div className="text-right shrink-0 space-y-0.5">
+                      {!isWalkIn && (
+                        <div className={`flex items-center gap-1 justify-end font-black text-xs font-mono ${isLight ? "text-amber-500" : "text-yellow-400"}`}>
+                          <Star size={10} className={isLight ? "fill-amber-500" : "fill-yellow-400"} /> {c.loyaltyPoints}
+                        </div>
+                      )}
                       <div className={`text-[10px] font-bold font-mono ${isLight ? "text-sky-600" : "text-brand-sky"}`}>
                         {currencySymbol} {Math.round(c.totalSpent).toLocaleString()}
                       </div>
                       {c.creditBalance > 0 && (
-                        <div className="text-[8px] bg-red-500/10 border border-red-500/35 text-red-500 font-black px-1.5 py-0.5 rounded mt-1 font-mono uppercase tracking-wide">
+                        <div className="text-[8px] bg-red-500/10 border border-red-500/35 text-red-500 font-black px-1.5 py-0.5 rounded mt-0.5 font-mono uppercase tracking-wide">
                           Due: {currencySymbol} {c.creditBalance.toLocaleString()}
                         </div>
                       )}
                       {(c.walletBalance || 0) > 0 && (
-                        <div className="text-[8px] bg-emerald-500/10 border border-emerald-500/35 text-emerald-500 font-black px-1.5 py-0.5 rounded mt-1 font-mono uppercase tracking-wide">
+                        <div className="text-[8px] bg-emerald-500/10 border border-emerald-500/35 text-emerald-500 font-black px-1.5 py-0.5 rounded mt-0.5 font-mono uppercase tracking-wide">
                           Wallet: {currencySymbol} {(c.walletBalance || 0).toLocaleString()}
                         </div>
                       )}
@@ -641,6 +661,14 @@ export default function CustomersPage() {
                   <div className="flex items-center gap-2">
                     <h2 className={`font-black ${isLight ? "text-slate-900" : "text-white"} text-lg`}>{selectedCustomer.name}</h2>
                     {(() => {
+                      const isWalkIn = selectedCustomer.name.toLowerCase().includes("walk-in") || selectedCustomer.id === "C-203" || selectedCustomer.id === "walk-in";
+                      if (isWalkIn) {
+                        return (
+                          <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded border border-gray-400/20 bg-gray-500/10 text-gray-400">
+                            Standard Walk-in (No Loyalty)
+                          </span>
+                        );
+                      }
                       const tier = getLoyaltyTier(selectedCustomer.loyaltyPoints);
                       return (
                         <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded border ${tier.bg} ${tier.color}`}>
@@ -705,20 +733,23 @@ export default function CustomersPage() {
             {/* Loyalty Points Bar */}
             <div className={`shrink-0 px-5 py-3 ${isLight ? "bg-slate-100 border-slate-200" : "bg-brand-dark-surface/30 border-brand-dark-border"} border-b`}>
               <div className="flex items-center justify-between gap-6">
-                {[
-                  { label: "Loyalty Points", val: `${selectedCustomer.loyaltyPoints.toLocaleString()} pts`, icon: Star, color: "text-yellow-400" },
-                  { label: "Total Spent", val: `${currencySymbol} ${Math.round(selectedCustomer.totalSpent).toLocaleString()}`, icon: TrendingUp, color: "text-emerald-400" },
-                  { label: "Credit Dues", val: `${currencySymbol} ${selectedCustomer.creditBalance.toLocaleString()}`, icon: CreditCard, color: selectedCustomer.creditBalance > 0 ? "text-red-400" : "text-gray-500" },
-                  { label: "Store Wallet", val: `${currencySymbol} ${(selectedCustomer.walletBalance || 0).toLocaleString()}`, icon: Wallet, color: (selectedCustomer.walletBalance || 0) > 0 ? "text-emerald-400" : "text-gray-500" },
-                ].map(stat => (
-                  <div key={stat.label} className="flex items-center gap-2">
-                    <stat.icon size={14} className={stat.color} />
-                    <div>
-                      <div className={`text-sm font-black font-mono ${stat.color}`}>{stat.val}</div>
-                      <div className={`text-[9px] ${isLight ? "text-slate-500" : "text-gray-600"} uppercase tracking-wide`}>{stat.label}</div>
+                {(() => {
+                  const isWalkIn = selectedCustomer.name.toLowerCase().includes("walk-in") || selectedCustomer.id === "C-203" || selectedCustomer.id === "walk-in";
+                  return [
+                    { label: "Loyalty Points", val: isWalkIn ? "0 pts (N/A)" : `${selectedCustomer.loyaltyPoints.toLocaleString()} pts`, icon: Star, color: isWalkIn ? "text-gray-400" : "text-yellow-400" },
+                    { label: "Total Spent", val: `${currencySymbol} ${Math.round(selectedCustomer.totalSpent).toLocaleString()}`, icon: TrendingUp, color: "text-emerald-400" },
+                    { label: "Credit Dues", val: `${currencySymbol} ${selectedCustomer.creditBalance.toLocaleString()}`, icon: CreditCard, color: selectedCustomer.creditBalance > 0 ? "text-red-400" : "text-gray-500" },
+                    { label: "Store Wallet", val: `${currencySymbol} ${(selectedCustomer.walletBalance || 0).toLocaleString()}`, icon: Wallet, color: (selectedCustomer.walletBalance || 0) > 0 ? "text-emerald-400" : "text-gray-500" },
+                  ].map(stat => (
+                    <div key={stat.label} className="flex items-center gap-2">
+                      <stat.icon size={14} className={stat.color} />
+                      <div>
+                        <div className={`text-sm font-black font-mono ${stat.color}`}>{stat.val}</div>
+                        <div className={`text-[9px] ${isLight ? "text-slate-500" : "text-gray-600"} uppercase tracking-wide`}>{stat.label}</div>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ));
+                })()}
               </div>
             </div>
 
@@ -995,24 +1026,39 @@ export default function CustomersPage() {
               )}
 
               {/* ── LOYALTY TAB ── */}
-              {drawerTab === "loyalty" && (
-                <div className="space-y-5">
-                  {/* Current Points Card */}
-                  <div className="bg-gradient-to-br from-yellow-500/10 to-brand-sky/5 border border-yellow-500/20 rounded-2xl p-6 text-center">
-                    <Star size={32} className="text-yellow-400 fill-yellow-400 mx-auto mb-2" />
-                    <div className="text-4xl font-black text-yellow-400 font-mono">{selectedCustomer.loyaltyPoints.toLocaleString()}</div>
-                    <div className={`text-xs ${isLight ? "text-slate-500" : "text-gray-400"} mt-1`}>Total Loyalty Points</div>
-                    {selectedCustomer.loyaltyPoints >= 1000 && (
-                      <div className="mt-3 bg-purple-500/15 border border-purple-500/30 rounded-lg py-2 px-3 text-[10px] text-purple-400 font-bold">
-                        🎉 Eligible for {currencySymbol} 100 discount! (1000 pts redemption)
+              {drawerTab === "loyalty" && (() => {
+                const isWalkIn = selectedCustomer.name.toLowerCase().includes("walk-in") || selectedCustomer.id === "C-203" || selectedCustomer.id === "walk-in";
+                if (isWalkIn) {
+                  return (
+                    <div className={`${isLight ? "bg-white border-slate-200 text-slate-800 shadow-xs" : "bg-brand-dark-surface/40 border-brand-dark-border text-gray-200"} border rounded-2xl p-8 text-center space-y-3`}>
+                      <div className="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto text-amber-500 font-black text-xl">
+                        ★
                       </div>
-                    )}
-                    {selectedCustomer.loyaltyPoints < 1000 && (
-                      <div className={`mt-3 ${isLight ? "bg-slate-100 text-slate-600" : "bg-brand-dark-border/60 text-gray-500"} rounded-lg py-2 px-3 text-[10px]`}>
-                        {1000 - selectedCustomer.loyaltyPoints} more points needed for {currencySymbol} 100 discount
-                      </div>
-                    )}
-                  </div>
+                      <h3 className={`text-sm font-black ${isLight ? "text-slate-900" : "text-white"}`}>Loyalty Points Excluded for Walk-in Customers</h3>
+                      <p className={`text-xs ${isLight ? "text-slate-600" : "text-gray-400"} max-w-md mx-auto`}>
+                        Standard Walk-in customer profiles do not earn or accumulate loyalty reward points. Loyalty reward points are exclusively issued to registered customer profiles with a valid mobile number.
+                      </p>
+                    </div>
+                  );
+                }
+                return (
+                  <div className="space-y-5">
+                    {/* Current Points Card */}
+                    <div className="bg-gradient-to-br from-yellow-500/10 to-brand-sky/5 border border-yellow-500/20 rounded-2xl p-6 text-center">
+                      <Star size={32} className="text-yellow-400 fill-yellow-400 mx-auto mb-2" />
+                      <div className="text-4xl font-black text-yellow-400 font-mono">{selectedCustomer.loyaltyPoints.toLocaleString()}</div>
+                      <div className={`text-xs ${isLight ? "text-slate-500" : "text-gray-400"} mt-1`}>Total Loyalty Points</div>
+                      {selectedCustomer.loyaltyPoints >= 1000 && (
+                        <div className="mt-3 bg-purple-500/15 border border-purple-500/30 rounded-lg py-2 px-3 text-[10px] text-purple-400 font-bold">
+                          🎉 Eligible for {currencySymbol} 100 discount! (1000 pts redemption)
+                        </div>
+                      )}
+                      {selectedCustomer.loyaltyPoints < 1000 && (
+                        <div className={`mt-3 ${isLight ? "bg-slate-100 text-slate-600" : "bg-brand-dark-border/60 text-gray-500"} rounded-lg py-2 px-3 text-[10px]`}>
+                          {1000 - selectedCustomer.loyaltyPoints} more points needed for {currencySymbol} 100 discount
+                        </div>
+                      )}
+                    </div>
 
                   {/* Earning Rules */}
                   <div className={`${isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/40 border-brand-dark-border"} border rounded-2xl p-5 space-y-3`}>
@@ -1060,8 +1106,8 @@ export default function CustomersPage() {
                       </div>
                     )}
                   </div>
-                </div>
-              )}
+                );
+              })()}
 
               {/* ── CREDIT TAB ── */}
               {drawerTab === "credit" && (
