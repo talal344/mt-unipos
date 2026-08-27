@@ -415,7 +415,7 @@ function LoginContent() {
 
       const role = smsUserMatch?.role || presetMatch?.role || employeeMatch?.role || (hrEmpMatch?.designation?.includes("Director") ? "Owner" : "Manager");
 
-      // ── POS TERMINAL HARDWARE BINDING CHECK (Strictly for POS non-owner staff) ──
+      // ── POS TERMINAL HARDWARE & USER DUAL BINDING CHECK (Strictly for POS non-owner staff) ──
       if (assignedSoftware === "POS" && role !== "Owner" && role !== "SuperAdmin") {
         let tenantSettings: any = null;
         try {
@@ -430,15 +430,40 @@ function LoginContent() {
           } catch {}
 
           const activeTerminals = (tenantSettings.authorizedTerminals || []).filter((t: any) => t.status === "Active");
-          const isAuthorized = activeTerminals.some((t: any) => t.token && t.token === deviceToken);
+          const matchedTerminal = activeTerminals.find((t: any) => t.token && t.token === deviceToken);
 
-          if (!isAuthorized) {
+          if (!matchedTerminal) {
             setErrorMessage(
               `⛔ ACCESS DENIED: Unregistered Store Device!\n\n` +
               `This workspace has Terminal Hardware Lock enabled. Staff and Cashiers can only sign in from authorized Store Terminals.\n\n` +
               `Please ask the Store Owner to authorize this computer in Settings.`
             );
             return;
+          }
+
+          // ── SPECIFIC USER / CASHIER BINDING CHECK ──
+          if (Array.isArray(matchedTerminal.allowedUserIds) && matchedTerminal.allowedUserIds.length > 0) {
+            const userIdentifier = (authenticatedUser.id || authenticatedUser.email || authenticatedUser.username || email.trim().toLowerCase());
+            const userEmail = (authenticatedUser.email || email.trim().toLowerCase());
+            const userName = (authenticatedUser.name || authenticatedUser.fullName || "");
+
+            const isUserAllowed = matchedTerminal.allowedUserIds.some((allowedId: string) => {
+              const cleanAllowed = String(allowedId).toLowerCase().trim();
+              return (
+                cleanAllowed === String(userIdentifier).toLowerCase() ||
+                cleanAllowed === String(userEmail).toLowerCase() ||
+                cleanAllowed === String(userName).toLowerCase()
+              );
+            });
+
+            if (!isUserAllowed) {
+              setErrorMessage(
+                `⛔ ACCESS DENIED: Counter Staff Binding Restriction!\n\n` +
+                `User "${userName || userEmail}" is NOT authorized to sign in on this specific terminal (${matchedTerminal.name}).\n\n` +
+                `Please sign in at your assigned counter terminal or ask the Store Owner to assign your account to this device.`
+              );
+              return;
+            }
           }
         }
       }

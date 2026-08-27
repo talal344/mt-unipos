@@ -599,6 +599,8 @@ export interface AuthorizedTerminal {
   lastUsedAt?: string;
   userAgent?: string;
   status: "Active" | "Revoked";
+  allowedUserIds?: string[]; // Array of Employee IDs, emails or usernames allowed on this terminal (empty/undefined = all staff allowed)
+  allowedUserNames?: string[]; // Cache of employee names for display
 }
 
 export interface BusinessSettings {

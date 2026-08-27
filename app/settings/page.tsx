@@ -6,7 +6,7 @@ import ClientSidebar from "@/components/client-sidebar";
 import {
   Settings, Building, DollarSign, Award, CreditCard, Save, Check,
   Sliders, ShieldAlert, RotateCcw, AlertTriangle, FileText, Image, HelpCircle, HardDrive, Folder,
-  Download, Upload, Database, RefreshCw, Trash2, Laptop, ShieldCheck, Key, Plus, CheckCircle2, XCircle, Smartphone, Shield
+  Download, Upload, Database, RefreshCw, Trash2, Laptop, ShieldCheck, Key, Plus, CheckCircle2, XCircle, Smartphone, Shield, Users, X, Search
 } from "lucide-react";
 import { selectAndInitRootFolder } from "@/lib/local-storage-folder";
 import { supabase } from "@/lib/supabase";
@@ -52,6 +52,10 @@ export default function SettingsPage() {
 
   const [terminalNameInput, setTerminalNameInput] = useState("");
   const [currentDeviceToken, setCurrentDeviceToken] = useState("");
+  const [newDeviceSelectedStaffIds, setNewDeviceSelectedStaffIds] = useState<string[]>([]);
+  const [editingStaffTerminal, setEditingStaffTerminal] = useState<any | null>(null);
+  const [selectedStaffIds, setSelectedStaffIds] = useState<string[]>([]);
+  const [staffSearchQuery, setStaffSearchQuery] = useState("");
 
   React.useEffect(() => {
     if (typeof window !== "undefined" && tid) {
@@ -63,6 +67,39 @@ export default function SettingsPage() {
   const currentRegisteredTerminal = (businessSettings.authorizedTerminals || []).find(
     (t: any) => t.token && t.token === currentDeviceToken && t.status === "Active"
   );
+
+  const handleOpenStaffModal = (term: any) => {
+    setEditingStaffTerminal(term);
+    setSelectedStaffIds(term.allowedUserIds || []);
+    setStaffSearchQuery("");
+  };
+
+  const handleSaveStaffAssignment = () => {
+    if (!editingStaffTerminal) return;
+
+    const selectedNames = employees
+      .filter((e) => selectedStaffIds.includes(e.id) || selectedStaffIds.includes(e.email))
+      .map((e) => `${e.name} (${e.role})`);
+
+    const updated = (businessSettings.authorizedTerminals || []).map((t) => {
+      if (t.id === editingStaffTerminal.id) {
+        return {
+          ...t,
+          allowedUserIds: selectedStaffIds,
+          allowedUserNames: selectedNames,
+        };
+      }
+      return t;
+    });
+
+    updateBusinessSettings({
+      ...businessSettings,
+      authorizedTerminals: updated,
+    });
+
+    setEditingStaffTerminal(null);
+    triggerToast(`✅ Staff assignment updated for "${editingStaffTerminal.name}"!`);
+  };
 
   React.useEffect(() => {
     setForm({
@@ -112,6 +149,10 @@ export default function SettingsPage() {
     localStorage.setItem(`unipos_terminal_token_${tid}`, newToken);
     setCurrentDeviceToken(newToken);
 
+    const selectedNames = employees
+      .filter((e) => newDeviceSelectedStaffIds.includes(e.id) || newDeviceSelectedStaffIds.includes(e.email))
+      .map((e) => `${e.name} (${e.role})`);
+
     const newTerminal = {
       id: "TRM-" + Date.now(),
       name,
@@ -119,7 +160,9 @@ export default function SettingsPage() {
       registeredAt: new Date().toISOString(),
       registeredBy: currentUser?.name || "Store Owner",
       status: "Active" as const,
-      userAgent: typeof navigator !== "undefined" ? navigator.userAgent : ""
+      userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "",
+      allowedUserIds: newDeviceSelectedStaffIds,
+      allowedUserNames: selectedNames
     };
 
     const updated = [...(businessSettings.authorizedTerminals || []), newTerminal];
@@ -128,6 +171,7 @@ export default function SettingsPage() {
       authorizedTerminals: updated
     });
     setTerminalNameInput("");
+    setNewDeviceSelectedStaffIds([]);
     triggerToast(`✅ This device is now registered as "${name}"!`);
   };
 
@@ -1069,25 +1113,60 @@ export default function SettingsPage() {
                   </div>
 
                   {!currentRegisteredTerminal && (
-                    <div className={`pt-3 border-t flex flex-col sm:flex-row items-center gap-3 ${
+                    <div className={`pt-3 border-t space-y-3 ${
                       isLight ? "border-amber-200" : "border-amber-500/20"
                     }`}>
-                      <input
-                        type="text"
-                        placeholder="Terminal Name (e.g. Counter 1 - Front Desk Laptop)"
-                        value={terminalNameInput}
-                        onChange={(e) => setTerminalNameInput(e.target.value)}
-                        className={`flex-grow p-2.5 rounded-lg border text-xs font-semibold ${
-                          isLight ? "bg-white border-slate-300 text-slate-900" : "bg-black border-brand-dark-border text-white"
-                        }`}
-                      />
-                      <button
-                        type="button"
-                        onClick={handleRegisterCurrentDevice}
-                        className="w-full sm:w-auto px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase rounded-lg shadow-lg shadow-emerald-600/20 transition flex items-center justify-center gap-1.5 shrink-0"
-                      >
-                        <Plus size={14} /> Authorize & Register This Device
-                      </button>
+                      <div className="flex flex-col sm:flex-row items-center gap-3">
+                        <input
+                          type="text"
+                          placeholder="Terminal Name (e.g. Counter 1 - Front Desk Laptop)"
+                          value={terminalNameInput}
+                          onChange={(e) => setTerminalNameInput(e.target.value)}
+                          className={`flex-grow p-2.5 rounded-lg border text-xs font-semibold ${
+                            isLight ? "bg-white border-slate-300 text-slate-900" : "bg-black border-brand-dark-border text-white"
+                          }`}
+                        />
+                        <button
+                          type="button"
+                          onClick={handleRegisterCurrentDevice}
+                          className="w-full sm:w-auto px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase rounded-lg shadow-lg shadow-emerald-600/20 transition flex items-center justify-center gap-1.5 shrink-0"
+                        >
+                          <Plus size={14} /> Authorize & Register This Device
+                        </button>
+                      </div>
+
+                      {/* Optional Staff Binding Checkboxes at Registration */}
+                      {employees.filter(e => e.role !== "Owner").length > 0 && (
+                        <div className="p-3 rounded-lg bg-black/20 border border-brand-dark-border/40 space-y-2 text-xs">
+                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
+                            👤 Assign Specific Cashiers / Staff to this Device (Optional — Leave unchecked to allow all staff):
+                          </span>
+                          <div className="flex flex-wrap gap-2">
+                            {employees.filter(e => e.role !== "Owner").map(emp => {
+                              const isSel = newDeviceSelectedStaffIds.includes(emp.id);
+                              return (
+                                <button
+                                  key={emp.id}
+                                  type="button"
+                                  onClick={() => {
+                                    setNewDeviceSelectedStaffIds(prev =>
+                                      isSel ? prev.filter(id => id !== emp.id) : [...prev, emp.id]
+                                    );
+                                  }}
+                                  className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border transition flex items-center gap-1.5 ${
+                                    isSel
+                                      ? "bg-sky-500/20 border-sky-500 text-sky-300 shadow-sm"
+                                      : isLight ? "bg-white border-slate-200 text-slate-700 hover:border-slate-400" : "bg-brand-dark-surface border-brand-dark-border text-gray-400 hover:text-white"
+                                  }`}
+                                >
+                                  {isSel ? <CheckCircle2 size={11} className="text-sky-400" /> : <div className="w-2.5 h-2.5 rounded-full border border-gray-500" />}
+                                  {emp.name} ({emp.role})
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -1116,6 +1195,7 @@ export default function SettingsPage() {
                       {(businessSettings.authorizedTerminals || []).map((term) => {
                         const isCurrent = term.token === currentDeviceToken;
                         const isActive = term.status === "Active";
+                        const boundStaffCount = (term.allowedUserIds || []).length;
 
                         return (
                           <div
@@ -1126,48 +1206,96 @@ export default function SettingsPage() {
                                 : isLight ? "bg-red-50/50 border-red-200 opacity-60" : "bg-red-950/20 border-red-500/20 opacity-60"
                             }`}
                           >
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="flex items-center gap-2.5">
-                                <div className={`p-2 rounded-lg ${
+                            <div className="space-y-2">
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="flex items-center gap-2.5">
+                                  <div className={`p-2 rounded-lg ${
+                                    isActive
+                                      ? isCurrent
+                                        ? "bg-sky-500/20 text-sky-400"
+                                        : "bg-emerald-500/20 text-emerald-400"
+                                      : "bg-red-500/20 text-red-400"
+                                  }`}>
+                                    <Laptop size={16} />
+                                  </div>
+                                  <div>
+                                    <div className="flex items-center gap-2">
+                                      <span className={`text-xs font-bold ${isLight ? "text-slate-900" : "text-white"}`}>
+                                        {term.name}
+                                      </span>
+                                      {isCurrent && (
+                                        <span className="text-[8px] bg-sky-500/20 text-sky-400 font-bold px-1.5 py-0.2 rounded font-mono uppercase">
+                                          This Device
+                                        </span>
+                                      )}
+                                    </div>
+                                    <span className="text-[9px] text-gray-500 font-mono block mt-0.5">
+                                      Registered: {new Date(term.registeredAt).toLocaleDateString()} by {term.registeredBy}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                <span className={`text-[9px] font-bold px-2 py-0.5 rounded uppercase font-mono ${
                                   isActive
-                                    ? isCurrent
-                                      ? "bg-sky-500/20 text-sky-400"
-                                      : "bg-emerald-500/20 text-emerald-400"
+                                    ? "bg-emerald-500/20 text-emerald-400"
                                     : "bg-red-500/20 text-red-400"
                                 }`}>
-                                  <Laptop size={16} />
-                                </div>
-                                <div>
-                                  <div className="flex items-center gap-2">
-                                    <span className={`text-xs font-bold ${isLight ? "text-slate-900" : "text-white"}`}>
-                                      {term.name}
-                                    </span>
-                                    {isCurrent && (
-                                      <span className="text-[8px] bg-sky-500/20 text-sky-400 font-bold px-1.5 py-0.2 rounded font-mono uppercase">
-                                        This Device
-                                      </span>
-                                    )}
-                                  </div>
-                                  <span className="text-[9px] text-gray-500 font-mono block mt-0.5">
-                                    Registered: {new Date(term.registeredAt).toLocaleDateString()} by {term.registeredBy}
-                                  </span>
-                                </div>
+                                  {term.status}
+                                </span>
                               </div>
 
-                              <span className={`text-[9px] font-bold px-2 py-0.5 rounded uppercase font-mono ${
-                                isActive
-                                  ? "bg-emerald-500/20 text-emerald-400"
-                                  : "bg-red-500/20 text-red-400"
+                              {/* Assigned / Bound Staff Members Badges */}
+                              <div className={`p-2.5 rounded-lg border text-xs ${
+                                boundStaffCount > 0
+                                  ? isLight ? "bg-purple-50/60 border-purple-200" : "bg-purple-950/20 border-purple-500/30"
+                                  : isLight ? "bg-slate-50 border-slate-200" : "bg-black/30 border-brand-dark-border/40"
                               }`}>
-                                {term.status}
-                              </span>
+                                <div className="flex items-center justify-between mb-1">
+                                  <span className="text-[8px] font-black uppercase tracking-wider text-gray-400 flex items-center gap-1">
+                                    <Users size={10} /> Counter Staff Binding:
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleOpenStaffModal(term)}
+                                    className="text-[9px] text-sky-400 hover:underline font-bold"
+                                  >
+                                    Edit Staff
+                                  </button>
+                                </div>
+                                {boundStaffCount > 0 ? (
+                                  <div className="flex flex-wrap gap-1 mt-0.5">
+                                    {(term.allowedUserNames && term.allowedUserNames.length > 0
+                                      ? term.allowedUserNames
+                                      : term.allowedUserIds || []
+                                    ).map((name: string, idx: number) => (
+                                      <span
+                                        key={idx}
+                                        className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 font-bold text-[9px]"
+                                      >
+                                        👤 {name}
+                                      </span>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <span className="text-[9px] font-semibold text-emerald-400 flex items-center gap-1">
+                                    🌐 All Registered Cashiers &amp; Staff Permitted
+                                  </span>
+                                )}
+                              </div>
                             </div>
 
                             <div className="flex items-center justify-between pt-2 border-t border-brand-dark-border/30 text-[10px]">
-                              <span className="font-mono text-gray-500 truncate max-w-[150px]">
+                              <span className="font-mono text-gray-500 truncate max-w-[120px]">
                                 Key: {term.token.substring(0, 10)}...
                               </span>
                               <div className="flex items-center gap-1.5">
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenStaffModal(term)}
+                                  className="px-2 py-1 bg-purple-500/20 hover:bg-purple-500 text-purple-300 hover:text-white rounded text-[9px] font-bold uppercase transition flex items-center gap-1"
+                                >
+                                  <Users size={10} /> Staff ({boundStaffCount})
+                                </button>
                                 {isActive ? (
                                   <button
                                     type="button"
@@ -1199,12 +1327,12 @@ export default function SettingsPage() {
                   isLight ? "bg-sky-50 border-sky-200 text-slate-800" : "bg-sky-950/20 border-sky-500/30 text-sky-200"
                 }`}>
                   <div className="font-bold flex items-center gap-1.5 text-sky-500">
-                    <ShieldCheck size={14} /> How Store Terminal Binding Protects You:
+                    <ShieldCheck size={14} /> Dual Hardware &amp; User Security:
                   </div>
                   <ul className="list-disc pl-4 space-y-1 text-[10px] opacity-90">
-                    <li><strong>Cashiers &amp; Staff</strong> can only sign in on computers registered in this list. If they try to log in from home, their phone, or another laptop, they will be blocked with an Access Denied screen.</li>
-                    <li><strong>Store Owner</strong> is completely unrestricted and can sign in from any mobile, home PC, or tablet worldwide to check reports, download ledgers, and manage the business.</li>
-                    <li><strong>HRMS &amp; SMS</strong> portals operate independently and are not affected by POS terminal locking.</li>
+                    <li><strong>Device Lock</strong>: Cashiers &amp; Staff can only sign in on physical computers registered in this list.</li>
+                    <li><strong>User-to-Counter Binding</strong>: You can bind specific cashiers to specific counters (e.g. Ali on Counter 1 only). Other users will be blocked on this terminal.</li>
+                    <li><strong>Store Owner</strong>: Always 100% unrestricted from any mobile, tablet, or PC worldwide.</li>
                   </ul>
                 </div>
               </div>
@@ -1223,6 +1351,140 @@ export default function SettingsPage() {
           </div>
 
         </form>
+
+      {/* MANAGE ALLOWED STAFF MODAL */}
+      {editingStaffTerminal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className={`w-full max-w-lg rounded-2xl border shadow-2xl p-6 space-y-4 animate-fade-in-up ${
+            isLight ? "bg-white border-slate-200 text-slate-900" : "bg-brand-dark-surface border-brand-dark-border text-white"
+          }`}>
+            <div className="flex items-center justify-between border-b pb-3">
+              <div>
+                <h3 className="text-sm font-black flex items-center gap-2">
+                  <ShieldCheck size={18} className="text-sky-500" />
+                  Assign Authorized Staff to &quot;{editingStaffTerminal.name}&quot;
+                </h3>
+                <p className="text-[10px] text-gray-500 mt-0.5">
+                  Select which cashiers/staff can log in on this specific counter terminal.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditingStaffTerminal(null)}
+                className="p-1 rounded-lg hover:bg-gray-500/20 text-gray-400 hover:text-white"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Quick Option: Allow All vs Restrict */}
+            <div className={`flex items-center justify-between p-3 rounded-xl border ${
+              isLight ? "bg-sky-50 border-sky-200" : "bg-brand-sky/10 border-brand-sky/20"
+            }`}>
+              <span className="text-xs font-bold text-sky-400">
+                {selectedStaffIds.length === 0 ? "🌐 All Registered Staff Allowed" : `🔒 Bound to ${selectedStaffIds.length} Selected Staff Member(s)`}
+              </span>
+              {selectedStaffIds.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedStaffIds([])}
+                  className="text-[10px] text-gray-400 hover:text-white font-bold underline"
+                >
+                  Clear (Allow All Staff)
+                </button>
+              )}
+            </div>
+
+            {/* Staff Search Input */}
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search staff by name, email, or role..."
+                value={staffSearchQuery}
+                onChange={(e) => setStaffSearchQuery(e.target.value)}
+                className={`w-full p-2.5 rounded-lg border text-xs font-medium pl-8 ${
+                  isLight ? "bg-slate-50 border-slate-200 text-slate-900" : "bg-black border-brand-dark-border text-white"
+                }`}
+              />
+              <Search size={14} className="absolute left-2.5 top-3 text-gray-500" />
+            </div>
+
+            {/* Staff List Checkboxes */}
+            <div className="max-h-60 overflow-y-auto space-y-2 pr-1">
+              {employees.filter(e => e.role !== "Owner").length === 0 ? (
+                <div className="p-4 text-center text-xs text-gray-500">
+                  No staff members registered in HRMS/Staff yet. Add employees in Staff &amp; HRMS to assign them here.
+                </div>
+              ) : (
+                employees
+                  .filter(e => e.role !== "Owner")
+                  .filter(e =>
+                    !staffSearchQuery ||
+                    e.name.toLowerCase().includes(staffSearchQuery.toLowerCase()) ||
+                    e.role.toLowerCase().includes(staffSearchQuery.toLowerCase()) ||
+                    e.email.toLowerCase().includes(staffSearchQuery.toLowerCase())
+                  )
+                  .map(emp => {
+                    const isChecked = selectedStaffIds.includes(emp.id) || selectedStaffIds.includes(emp.email);
+
+                    return (
+                      <label
+                        key={emp.id}
+                        className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition ${
+                          isChecked
+                            ? isLight ? "bg-sky-50 border-sky-300" : "bg-sky-950/40 border-sky-500/50"
+                            : isLight ? "bg-slate-50 border-slate-200 hover:bg-slate-100" : "bg-black/30 border-brand-dark-border hover:bg-brand-dark-border/40"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedStaffIds(prev => [...prev, emp.id]);
+                              } else {
+                                setSelectedStaffIds(prev => prev.filter(id => id !== emp.id && id !== emp.email));
+                              }
+                            }}
+                            className="w-4 h-4 rounded text-sky-600 focus:ring-sky-500 border-gray-600"
+                          />
+                          <div>
+                            <div className={`text-xs font-bold ${isLight ? "text-slate-900" : "text-white"}`}>{emp.name}</div>
+                            <div className="text-[10px] text-gray-500 font-mono">{emp.email}</div>
+                          </div>
+                        </div>
+                        <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase font-mono ${
+                          emp.role === "Cashier" ? "bg-emerald-500/20 text-emerald-400" : "bg-purple-500/20 text-purple-400"
+                        }`}>
+                          {emp.role}
+                        </span>
+                      </label>
+                    );
+                  })
+              )}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex justify-end gap-2 pt-3 border-t">
+              <button
+                type="button"
+                onClick={() => setEditingStaffTerminal(null)}
+                className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-500/20 hover:bg-gray-500/30 text-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveStaffAssignment}
+                className="px-5 py-2 rounded-lg text-xs font-black bg-brand-sky hover:bg-sky-400 text-black uppercase shadow-lg"
+              >
+                Save Staff Assignment
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       </main>
     </div>
