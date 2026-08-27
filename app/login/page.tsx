@@ -326,7 +326,11 @@ function LoginContent() {
     );
 
     const matchedPosEmp = tenantEmployees.find(
-      (emp: any) => emp.email?.toLowerCase() === normInput || emp.name?.toLowerCase() === normInput || (emp.code && emp.code.toLowerCase() === normInput)
+      (emp: any) =>
+        emp.email?.toLowerCase() === normInput ||
+        emp.username?.toLowerCase() === normInput ||
+        emp.name?.toLowerCase() === normInput ||
+        (emp.code && emp.code.toLowerCase() === normInput)
     );
 
     const isOwnerUser = (targetTenant.email && targetTenant.email.toLowerCase() === normInput) || 
@@ -845,7 +849,7 @@ function LoginContent() {
                   isLight ? "text-slate-600" : "text-gray-400"
                 }`}>User ID / Username or Email</label>
                 <input type="text" required value={email} onChange={e => setEmail(e.target.value)}
-                  placeholder="e.g. parent.tariq or student@domain.com"
+                  placeholder="e.g. cashier1 or staff@yourstore.com"
                   className={`w-full p-3 rounded-xl focus:outline-none transition font-bold border ${
                     isLight
                       ? "bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-sky-500"

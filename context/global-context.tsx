@@ -571,6 +571,7 @@ export interface Employee {
   name: string;
   role: "Owner" | "Manager" | "Cashier" | "Accountant" | "Warehouse Staff" | "HR";
   email: string;
+  username?: string;
   password: string;
   salary: number;
   phone?: string;

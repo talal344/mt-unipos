@@ -7,7 +7,7 @@ import {
   Users, Plus, Search, Edit2, Trash2, Eye, EyeOff,
   Shield, X, Check, AlertCircle, Phone, Mail, Lock,
   BadgeCheck, UserX, UserCheck, Calendar, DollarSign,
-  Key, Briefcase, ChevronRight, Clock, Receipt
+  Key, Briefcase, ChevronRight, Clock, Receipt, User
 } from "lucide-react";
 
 // ─── Role Config ──────────────────────────────────────────────────────────────
@@ -29,7 +29,7 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
 };
 
 const EMPTY_FORM = {
-  name: "", email: "", password: "", phone: "", salary: "",
+  name: "", username: "", email: "", password: "", phone: "", salary: "",
   role: "Cashier" as const, joinDate: new Date().toISOString().split("T")[0], status: "Active" as "Active" | "Inactive"
 };
 
@@ -134,9 +134,14 @@ export default function StaffPage() {
   const openEdit = (emp: typeof employees[0]) => {
     setEditingId(emp.id);
     setForm({
-      name: emp.name, email: emp.email, password: emp.password || "",
-      phone: emp.phone || "", salary: (emp.salary || 0).toString(),
-      role: emp.role as any, joinDate: emp.joinDate || new Date().toISOString().split("T")[0],
+      name: emp.name,
+      username: (emp as any).username || (emp.email ? emp.email.split("@")[0] : ""),
+      email: emp.email,
+      password: emp.password || "",
+      phone: emp.phone || "",
+      salary: (emp.salary || 0).toString(),
+      role: emp.role as any,
+      joinDate: emp.joinDate || new Date().toISOString().split("T")[0],
       status: emp.status
     });
     setShowModal(true);
@@ -144,11 +149,21 @@ export default function StaffPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name || !form.email || !form.password) return;
+    if (!form.name || (!form.email && !form.username) || !form.password) return;
+
+    const cleanUsername = (form.username || form.email.split("@")[0] || "user").trim().toLowerCase().replace(/\s+/g, "");
+    const cleanEmail = (form.email || `${cleanUsername}@pos.local`).trim().toLowerCase();
+
     const payload = {
-      name: form.name, email: form.email, password: form.password,
-      phone: form.phone, salary: parseFloat(form.salary) || 0,
-      role: form.role, joinDate: form.joinDate, status: form.status,
+      name: form.name,
+      username: cleanUsername,
+      email: cleanEmail,
+      password: form.password,
+      phone: form.phone,
+      salary: parseFloat(form.salary) || 0,
+      role: form.role,
+      joinDate: form.joinDate,
+      status: form.status,
       permissions: ROLE_PERMISSIONS[form.role] || []
     };
     if (editingId) {
@@ -365,10 +380,19 @@ export default function StaffPage() {
               {/* Credentials */}
               <div className={`border rounded-2xl p-5 space-y-3 ${isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/40 border-brand-dark-border"}`}>
                 <h3 className={`text-xs font-black uppercase tracking-wider border-b pb-2 ${isLight ? "text-slate-900 border-slate-200" : "text-white border-brand-dark-border/50"}`}>Login Credentials</h3>
+                {selectedEmployee.username && (
+                  <div className="flex items-center gap-3 text-xs">
+                    <User size={13} className={isLight ? "text-slate-400" : "text-gray-500"} />
+                    <div>
+                      <span className={`text-[9px] uppercase block ${isLight ? "text-slate-500" : "text-gray-500"}`}>Login Username</span>
+                      <span className="font-mono font-bold text-brand-sky">{selectedEmployee.username}</span>
+                    </div>
+                  </div>
+                )}
                 <div className="flex items-center gap-3 text-xs">
                   <Mail size={13} className={isLight ? "text-slate-400" : "text-gray-500"} />
                   <div>
-                    <span className={`text-[9px] uppercase block ${isLight ? "text-slate-500" : "text-gray-500"}`}>Email</span>
+                    <span className={`text-[9px] uppercase block ${isLight ? "text-slate-500" : "text-gray-500"}`}>Login Email</span>
                     <span className={`font-mono font-bold ${isLight ? "text-slate-900" : "text-white"}`}>{selectedEmployee.email}</span>
                   </div>
                 </div>
@@ -564,13 +588,36 @@ export default function StaffPage() {
                 </div>
               </div>
 
-              <div>
-                <label className={`block text-[9px] uppercase font-bold mb-1 ${isLight ? "text-slate-600" : "text-gray-400"}`}>Login Email *</label>
-                <div className="relative">
-                  <Mail className={`absolute left-3 top-3 ${isLight ? "text-slate-400" : "text-gray-500"}`} size={13} />
-                  <input required type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })}
-                    placeholder="staff@yourstore.com"
-                    className={`w-full ${isLight ? "bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-sky-500" : "bg-black border-brand-dark-border text-white focus:border-brand-sky"} border pl-9 pr-4 p-2.5 rounded-lg focus:outline-none`} />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className={`block text-[9px] uppercase font-bold mb-1 ${isLight ? "text-slate-600" : "text-gray-400"}`}>Login Username (Fast Login)</label>
+                  <div className="relative">
+                    <User className={`absolute left-3 top-3 ${isLight ? "text-slate-400" : "text-gray-500"}`} size={13} />
+                    <input
+                      type="text"
+                      value={form.username}
+                      onChange={e => setForm({ ...form, username: e.target.value })}
+                      placeholder="e.g. cashier1"
+                      className={`w-full ${isLight ? "bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-sky-500 font-mono" : "bg-black border-brand-dark-border text-white focus:border-brand-sky font-mono"} border pl-9 pr-4 p-2.5 rounded-lg focus:outline-none text-xs`}
+                    />
+                  </div>
+                  <span className="text-[8px] text-gray-500 mt-0.5 block">Staff can log in with username</span>
+                </div>
+
+                <div>
+                  <label className={`block text-[9px] uppercase font-bold mb-1 ${isLight ? "text-slate-600" : "text-gray-400"}`}>Login Email *</label>
+                  <div className="relative">
+                    <Mail className={`absolute left-3 top-3 ${isLight ? "text-slate-400" : "text-gray-500"}`} size={13} />
+                    <input
+                      required
+                      type="email"
+                      value={form.email}
+                      onChange={e => setForm({ ...form, email: e.target.value })}
+                      placeholder="staff@yourstore.com"
+                      className={`w-full ${isLight ? "bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-sky-500" : "bg-black border-brand-dark-border text-white focus:border-brand-sky"} border pl-9 pr-4 p-2.5 rounded-lg focus:outline-none text-xs`}
+                    />
+                  </div>
+                  <span className="text-[8px] text-gray-500 mt-0.5 block">Or log in with email</span>
                 </div>
               </div>
 
