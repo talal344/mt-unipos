@@ -590,6 +590,17 @@ export interface Reservation {
   status: "Confirmed" | "Arrived" | "Cancelled";
 }
 
+export interface AuthorizedTerminal {
+  id: string;
+  name: string;
+  token: string;
+  registeredAt: string;
+  registeredBy: string;
+  lastUsedAt?: string;
+  userAgent?: string;
+  status: "Active" | "Revoked";
+}
+
 export interface BusinessSettings {
   businessName: string;
   ownerName: string;
@@ -609,6 +620,8 @@ export interface BusinessSettings {
   loyaltyPointsPerAmount: number;
   loyaltyRedeemThreshold: number;
   loyaltyRedeemValue: number;
+  enforceTerminalBinding?: boolean;
+  authorizedTerminals?: AuthorizedTerminal[];
 }
 
 export interface TableBillItem {

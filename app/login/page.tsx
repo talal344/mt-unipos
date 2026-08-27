@@ -409,14 +409,43 @@ function LoginContent() {
         return;
       }
 
-      setErrorMessage("");
-      setLoading(true);
-
       const isSMS = smsUserMatch || targetTenant?.assignedSoftware === "SMS" || (targetTenant?.businessType && targetTenant.businessType.includes("SMS"));
       const isHRMS = !isSMS && (targetTenant?.assignedSoftware === "HRMS" || (targetTenant?.businessType && targetTenant.businessType.includes("HRMS")));
       const assignedSoftware: "POS" | "HRMS" | "SMS" = isSMS ? "SMS" : isHRMS ? "HRMS" : "POS";
 
       const role = smsUserMatch?.role || presetMatch?.role || employeeMatch?.role || (hrEmpMatch?.designation?.includes("Director") ? "Owner" : "Manager");
+
+      // ── POS TERMINAL HARDWARE BINDING CHECK (Strictly for POS non-owner staff) ──
+      if (assignedSoftware === "POS" && role !== "Owner" && role !== "SuperAdmin") {
+        let tenantSettings: any = null;
+        try {
+          const raw = localStorage.getItem(`unipos_settings_${targetTenant.id}`);
+          if (raw) tenantSettings = JSON.parse(raw);
+        } catch {}
+
+        if (tenantSettings?.enforceTerminalBinding) {
+          let deviceToken = "";
+          try {
+            deviceToken = localStorage.getItem(`unipos_terminal_token_${targetTenant.id}`) || "";
+          } catch {}
+
+          const activeTerminals = (tenantSettings.authorizedTerminals || []).filter((t: any) => t.status === "Active");
+          const isAuthorized = activeTerminals.some((t: any) => t.token && t.token === deviceToken);
+
+          if (!isAuthorized) {
+            setErrorMessage(
+              `⛔ ACCESS DENIED: Unregistered Store Device!\n\n` +
+              `This workspace has Terminal Hardware Lock enabled. Staff and Cashiers can only sign in from authorized Store Terminals.\n\n` +
+              `Please ask the Store Owner to authorize this computer in Settings.`
+            );
+            return;
+          }
+        }
+      }
+
+      setErrorMessage("");
+      setLoading(true);
+
       const name = smsUserMatch?.fullName || hrEmpMatch?.name || (presetMatch ? (role === "Owner" ? targetTenant?.ownerName || "Owner" : role + " User") : (employeeMatch?.name || "Staff User"));
 
       const user = {

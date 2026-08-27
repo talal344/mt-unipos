@@ -6,7 +6,7 @@ import ClientSidebar from "@/components/client-sidebar";
 import {
   Settings, Building, DollarSign, Award, CreditCard, Save, Check,
   Sliders, ShieldAlert, RotateCcw, AlertTriangle, FileText, Image, HelpCircle, HardDrive, Folder,
-  Download, Upload, Database, RefreshCw, Trash2
+  Download, Upload, Database, RefreshCw, Trash2, Laptop, ShieldCheck, Key, Plus, CheckCircle2, XCircle, Smartphone, Shield
 } from "lucide-react";
 import { selectAndInitRootFolder } from "@/lib/local-storage-folder";
 import { supabase } from "@/lib/supabase";
@@ -25,6 +25,8 @@ export default function SettingsPage() {
     theme
   } = useGlobalContext();
   const isLight = theme === "light";
+
+  const tid = currentUser?.tenantId || "";
 
   const [form, setForm] = useState({
     businessName: businessSettings.businessName || "",
@@ -45,7 +47,22 @@ export default function SettingsPage() {
     loyaltyRedeemThreshold: businessSettings.loyaltyRedeemThreshold !== undefined ? businessSettings.loyaltyRedeemThreshold.toString() : "1000",
     loyaltyRedeemValue: businessSettings.loyaltyRedeemValue !== undefined ? businessSettings.loyaltyRedeemValue.toString() : "100",
     logoUrl: businessSettings.logoUrl || "",
+    enforceTerminalBinding: businessSettings.enforceTerminalBinding || false,
   });
+
+  const [terminalNameInput, setTerminalNameInput] = useState("");
+  const [currentDeviceToken, setCurrentDeviceToken] = useState("");
+
+  React.useEffect(() => {
+    if (typeof window !== "undefined" && tid) {
+      const token = localStorage.getItem(`unipos_terminal_token_${tid}`) || "";
+      setCurrentDeviceToken(token);
+    }
+  }, [tid, businessSettings]);
+
+  const currentRegisteredTerminal = (businessSettings.authorizedTerminals || []).find(
+    (t: any) => t.token && t.token === currentDeviceToken && t.status === "Active"
+  );
 
   React.useEffect(() => {
     setForm({
@@ -67,11 +84,12 @@ export default function SettingsPage() {
       loyaltyRedeemThreshold: businessSettings.loyaltyRedeemThreshold !== undefined ? businessSettings.loyaltyRedeemThreshold.toString() : "1000",
       loyaltyRedeemValue: businessSettings.loyaltyRedeemValue !== undefined ? businessSettings.loyaltyRedeemValue.toString() : "100",
       logoUrl: businessSettings.logoUrl || "",
+      enforceTerminalBinding: businessSettings.enforceTerminalBinding || false,
     });
   }, [businessSettings]);
 
   const [toast, setToast] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"general" | "pos" | "loyalty" | "system">("general");
+  const [activeTab, setActiveTab] = useState<"general" | "pos" | "loyalty" | "system" | "security">("general");
   const [selectedFolderName, setSelectedFolderName] = useState<string>("");
 
   React.useEffect(() => {
@@ -84,6 +102,80 @@ export default function SettingsPage() {
   const triggerToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 3000);
+  };
+
+  const handleRegisterCurrentDevice = () => {
+    if (!tid) return;
+    const name = terminalNameInput.trim() || `Counter Terminal ${((businessSettings.authorizedTerminals || []).length + 1)}`;
+    const newToken = "TRM-" + Math.random().toString(36).substring(2, 9).toUpperCase() + "-" + Date.now().toString(36).toUpperCase();
+
+    localStorage.setItem(`unipos_terminal_token_${tid}`, newToken);
+    setCurrentDeviceToken(newToken);
+
+    const newTerminal = {
+      id: "TRM-" + Date.now(),
+      name,
+      token: newToken,
+      registeredAt: new Date().toISOString(),
+      registeredBy: currentUser?.name || "Store Owner",
+      status: "Active" as const,
+      userAgent: typeof navigator !== "undefined" ? navigator.userAgent : ""
+    };
+
+    const updated = [...(businessSettings.authorizedTerminals || []), newTerminal];
+    updateBusinessSettings({
+      ...businessSettings,
+      authorizedTerminals: updated
+    });
+    setTerminalNameInput("");
+    triggerToast(`✅ This device is now registered as "${name}"!`);
+  };
+
+  const handleRevokeTerminal = (termId: string) => {
+    const target = (businessSettings.authorizedTerminals || []).find(t => t.id === termId);
+    if (!target) return;
+    if (!confirm(`Are you sure you want to revoke authorization for "${target.name}"?\n\nStaff and cashiers will no longer be able to log in from that computer.`)) return;
+
+    const updated = (businessSettings.authorizedTerminals || []).map(t => {
+      if (t.id === termId) return { ...t, status: "Revoked" as const };
+      return t;
+    });
+
+    if (target.token === currentDeviceToken) {
+      localStorage.removeItem(`unipos_terminal_token_${tid}`);
+      setCurrentDeviceToken("");
+    }
+
+    updateBusinessSettings({
+      ...businessSettings,
+      authorizedTerminals: updated
+    });
+    triggerToast(`✅ Terminal "${target.name}" authorization revoked.`);
+  };
+
+  const handleDeleteTerminal = (termId: string) => {
+    const target = (businessSettings.authorizedTerminals || []).find(t => t.id === termId);
+    if (!confirm(`Delete "${target?.name || "Terminal"}" permanently from registered devices?`)) return;
+
+    const updated = (businessSettings.authorizedTerminals || []).filter(t => t.id !== termId);
+    if (target?.token === currentDeviceToken) {
+      localStorage.removeItem(`unipos_terminal_token_${tid}`);
+      setCurrentDeviceToken("");
+    }
+    updateBusinessSettings({
+      ...businessSettings,
+      authorizedTerminals: updated
+    });
+    triggerToast(`✅ Terminal deleted.`);
+  };
+
+  const handleToggleTerminalBinding = (enforce: boolean) => {
+    setForm(prev => ({ ...prev, enforceTerminalBinding: enforce }));
+    updateBusinessSettings({
+      ...businessSettings,
+      enforceTerminalBinding: enforce
+    });
+    triggerToast(enforce ? "🔒 Terminal Hardware Lock ACTIVATED! Staff can only log in from registered computers." : "🔓 Terminal Lock DEACTIVATED. Staff can log in from any device.");
   };
 
   const handleSelectFolder = async () => {
@@ -100,6 +192,7 @@ export default function SettingsPage() {
     e.preventDefault();
 
     const payload = {
+      ...businessSettings,
       businessName: form.businessName,
       ownerName: form.ownerName,
       phone: form.phone,
@@ -118,6 +211,7 @@ export default function SettingsPage() {
       loyaltyRedeemThreshold: parseInt(form.loyaltyRedeemThreshold) || 1000,
       loyaltyRedeemValue: parseInt(form.loyaltyRedeemValue) || 100,
       logoUrl: form.logoUrl,
+      enforceTerminalBinding: form.enforceTerminalBinding,
     };
 
     // Update business settings inside context
@@ -394,6 +488,7 @@ export default function SettingsPage() {
               { id: "general", label: "General Business", icon: Building },
               { id: "pos", label: "POS & Taxation", icon: Sliders },
               { id: "loyalty", label: "Loyalty Programs", icon: Award },
+              { id: "security", label: "Terminal Security", icon: ShieldCheck },
               { id: "system", label: "System Maintenance", icon: HardDrive },
             ].map(t => (
               <button
@@ -859,6 +954,258 @@ export default function SettingsPage() {
                       <Trash2 size={14} /> Wipe Store Database
                     </button>
                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* TERMINAL SECURITY & HARDWARE BINDING TAB */}
+            {activeTab === "security" && (
+              <div className={`border rounded-2xl p-6 space-y-6 animate-fade-in-up ${
+                isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/20 border-brand-dark-border text-gray-100"
+              }`}>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-4">
+                  <div>
+                    <h3 className={`text-xs font-black uppercase tracking-wider flex items-center gap-2 ${
+                      isLight ? "text-slate-900" : "text-white"
+                    }`}>
+                      <ShieldCheck size={16} className="text-sky-500" />
+                      POS Terminal Hardware Binding & Security Lock
+                    </h3>
+                    <p className={`text-[10px] mt-0.5 ${isLight ? "text-slate-500" : "text-gray-400"}`}>
+                      Restrict Cashier and Staff logins to authorized physical counter computers in your store. Store Owner can log in from any mobile or laptop anywhere.
+                    </p>
+                  </div>
+                </div>
+
+                {/* 1. MASTER ENFORCEMENT TOGGLE CARD */}
+                <div className={`border rounded-xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${
+                  form.enforceTerminalBinding
+                    ? isLight ? "bg-emerald-50 border-emerald-300" : "bg-emerald-950/30 border-emerald-500/40"
+                    : isLight ? "bg-slate-50 border-slate-200" : "bg-black/40 border-brand-dark-border"
+                }`}>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className={`text-xs font-black uppercase tracking-wider ${
+                        form.enforceTerminalBinding ? "text-emerald-500" : isLight ? "text-slate-700" : "text-gray-300"
+                      }`}>
+                        {form.enforceTerminalBinding ? "🔒 Terminal Hardware Lock: ACTIVE" : "🔓 Terminal Hardware Lock: DISABLED"}
+                      </span>
+                      <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold uppercase ${
+                        form.enforceTerminalBinding
+                          ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                          : "bg-gray-500/20 text-gray-400"
+                      }`}>
+                        {form.enforceTerminalBinding ? "Enforcing Store Terminals" : "Open Access"}
+                      </span>
+                    </div>
+                    <p className={`text-[11px] ${isLight ? "text-slate-600" : "text-gray-400"}`}>
+                      {form.enforceTerminalBinding
+                        ? "Cashiers and Staff can ONLY log in from the authorized computers listed below. Unregistered devices will be blocked."
+                        : "Staff members can log in from any device. Turn this ON to prevent staff from logging in from home or unauthorized phones."}
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleToggleTerminalBinding(!form.enforceTerminalBinding)}
+                    className={`px-5 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider transition shrink-0 flex items-center gap-2 shadow-lg ${
+                      form.enforceTerminalBinding
+                        ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/30"
+                        : "bg-brand-sky hover:bg-sky-400 text-black shadow-sky-500/20"
+                    }`}
+                  >
+                    {form.enforceTerminalBinding ? (
+                      <>
+                        <Check size={14} /> Enforced (Click to Disable)
+                      </>
+                    ) : (
+                      <>
+                        <Shield size={14} /> Enable Terminal Lock
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {/* 2. THIS DEVICE STATUS CARD */}
+                <div className={`border rounded-xl p-5 space-y-3 ${
+                  currentRegisteredTerminal
+                    ? isLight ? "bg-emerald-50/60 border-emerald-200" : "bg-emerald-950/20 border-emerald-500/30"
+                    : isLight ? "bg-amber-50/60 border-amber-200" : "bg-amber-950/20 border-amber-500/30"
+                }`}>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2.5 rounded-xl ${
+                        currentRegisteredTerminal
+                          ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                          : "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+                      }`}>
+                        <Laptop size={22} />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className={`text-xs font-black uppercase ${
+                            currentRegisteredTerminal ? "text-emerald-500" : "text-amber-500"
+                          }`}>
+                            {currentRegisteredTerminal ? "✅ This Computer is an Authorized Store Terminal" : "⚠️ This Computer is Not Registered Yet"}
+                          </span>
+                        </div>
+                        <p className={`text-[10px] mt-0.5 ${isLight ? "text-slate-600" : "text-gray-400"}`}>
+                          {currentRegisteredTerminal
+                            ? `Registered as "${currentRegisteredTerminal.name}" on ${new Date(currentRegisteredTerminal.registeredAt).toLocaleDateString()}. Staff can sign in on this device.`
+                            : "To allow Cashiers/Staff to sign in from this computer, authorize and register it below."}
+                        </p>
+                      </div>
+                    </div>
+
+                    {currentRegisteredTerminal && (
+                      <button
+                        type="button"
+                        onClick={() => handleRevokeTerminal(currentRegisteredTerminal.id)}
+                        className="px-3 py-1.5 bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white border border-red-500/30 rounded-lg text-[10px] font-bold uppercase transition self-start sm:self-auto"
+                      >
+                        Unregister This Device
+                      </button>
+                    )}
+                  </div>
+
+                  {!currentRegisteredTerminal && (
+                    <div className={`pt-3 border-t flex flex-col sm:flex-row items-center gap-3 ${
+                      isLight ? "border-amber-200" : "border-amber-500/20"
+                    }`}>
+                      <input
+                        type="text"
+                        placeholder="Terminal Name (e.g. Counter 1 - Front Desk Laptop)"
+                        value={terminalNameInput}
+                        onChange={(e) => setTerminalNameInput(e.target.value)}
+                        className={`flex-grow p-2.5 rounded-lg border text-xs font-semibold ${
+                          isLight ? "bg-white border-slate-300 text-slate-900" : "bg-black border-brand-dark-border text-white"
+                        }`}
+                      />
+                      <button
+                        type="button"
+                        onClick={handleRegisterCurrentDevice}
+                        className="w-full sm:w-auto px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase rounded-lg shadow-lg shadow-emerald-600/20 transition flex items-center justify-center gap-1.5 shrink-0"
+                      >
+                        <Plus size={14} /> Authorize & Register This Device
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* 3. REGISTERED STORE TERMINALS LIST */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className={`text-xs font-black uppercase tracking-wider flex items-center gap-1.5 ${
+                      isLight ? "text-slate-900" : "text-white"
+                    }`}>
+                      <Building size={14} className="text-sky-500" />
+                      All Authorized Store Terminals ({(businessSettings.authorizedTerminals || []).length})
+                    </h4>
+                  </div>
+
+                  {(businessSettings.authorizedTerminals || []).length === 0 ? (
+                    <div className={`p-8 text-center rounded-xl border text-xs ${
+                      isLight ? "bg-slate-50 border-slate-200 text-slate-500" : "bg-black/30 border-brand-dark-border text-gray-500"
+                    }`}>
+                      <Laptop size={28} className="mx-auto mb-2 opacity-40" />
+                      <p className="font-bold">No store terminals registered yet.</p>
+                      <p className="text-[10px] mt-0.5">Click &quot;Authorize &amp; Register This Device&quot; above on your counter laptop to register it.</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {(businessSettings.authorizedTerminals || []).map((term) => {
+                        const isCurrent = term.token === currentDeviceToken;
+                        const isActive = term.status === "Active";
+
+                        return (
+                          <div
+                            key={term.id}
+                            className={`border rounded-xl p-4 flex flex-col justify-between gap-3 ${
+                              isActive
+                                ? isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/40 border-brand-dark-border"
+                                : isLight ? "bg-red-50/50 border-red-200 opacity-60" : "bg-red-950/20 border-red-500/20 opacity-60"
+                            }`}
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex items-center gap-2.5">
+                                <div className={`p-2 rounded-lg ${
+                                  isActive
+                                    ? isCurrent
+                                      ? "bg-sky-500/20 text-sky-400"
+                                      : "bg-emerald-500/20 text-emerald-400"
+                                    : "bg-red-500/20 text-red-400"
+                                }`}>
+                                  <Laptop size={16} />
+                                </div>
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <span className={`text-xs font-bold ${isLight ? "text-slate-900" : "text-white"}`}>
+                                      {term.name}
+                                    </span>
+                                    {isCurrent && (
+                                      <span className="text-[8px] bg-sky-500/20 text-sky-400 font-bold px-1.5 py-0.2 rounded font-mono uppercase">
+                                        This Device
+                                      </span>
+                                    )}
+                                  </div>
+                                  <span className="text-[9px] text-gray-500 font-mono block mt-0.5">
+                                    Registered: {new Date(term.registeredAt).toLocaleDateString()} by {term.registeredBy}
+                                  </span>
+                                </div>
+                              </div>
+
+                              <span className={`text-[9px] font-bold px-2 py-0.5 rounded uppercase font-mono ${
+                                isActive
+                                  ? "bg-emerald-500/20 text-emerald-400"
+                                  : "bg-red-500/20 text-red-400"
+                              }`}>
+                                {term.status}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center justify-between pt-2 border-t border-brand-dark-border/30 text-[10px]">
+                              <span className="font-mono text-gray-500 truncate max-w-[150px]">
+                                Key: {term.token.substring(0, 10)}...
+                              </span>
+                              <div className="flex items-center gap-1.5">
+                                {isActive ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRevokeTerminal(term.id)}
+                                    className="px-2.5 py-1 bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white rounded text-[9px] font-bold uppercase transition"
+                                  >
+                                    Revoke
+                                  </button>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteTerminal(term.id)}
+                                    className="px-2.5 py-1 bg-gray-500/20 hover:bg-red-600 text-gray-400 hover:text-white rounded text-[9px] font-bold uppercase transition"
+                                  >
+                                    Delete
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* 4. SECURITY INFO BANNER */}
+                <div className={`p-4 rounded-xl text-xs space-y-1.5 border ${
+                  isLight ? "bg-sky-50 border-sky-200 text-slate-800" : "bg-sky-950/20 border-sky-500/30 text-sky-200"
+                }`}>
+                  <div className="font-bold flex items-center gap-1.5 text-sky-500">
+                    <ShieldCheck size={14} /> How Store Terminal Binding Protects You:
+                  </div>
+                  <ul className="list-disc pl-4 space-y-1 text-[10px] opacity-90">
+                    <li><strong>Cashiers &amp; Staff</strong> can only sign in on computers registered in this list. If they try to log in from home, their phone, or another laptop, they will be blocked with an Access Denied screen.</li>
+                    <li><strong>Store Owner</strong> is completely unrestricted and can sign in from any mobile, home PC, or tablet worldwide to check reports, download ledgers, and manage the business.</li>
+                    <li><strong>HRMS &amp; SMS</strong> portals operate independently and are not affected by POS terminal locking.</li>
+                  </ul>
                 </div>
               </div>
             )}
