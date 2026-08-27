@@ -263,7 +263,7 @@ export default function SoftwareShowcase() {
                 key={prod.id}
                 className={`${
                   isLight
-                    ? "bg-white border-slate-200 hover:border-slate-300 shadow-xl text-slate-900"
+                    ? "bg-white border-slate-300 hover:border-slate-400 shadow-xl shadow-slate-200/60 text-slate-900 ring-1 ring-slate-200"
                     : `bg-gradient-to-b from-[#0e1626] to-[#080d15] ${prod.borderColor} text-white shadow-2xl`
                 } border rounded-3xl p-7 flex flex-col justify-between relative overflow-hidden group transition duration-300 transform hover:-translate-y-1.5`}
               >
@@ -275,19 +275,25 @@ export default function SoftwareShowcase() {
                   {/* Header Badge */}
                   <div className="flex justify-between items-center">
                     <div className={`p-3.5 rounded-2xl ${
-                      isLight ? "bg-slate-100 text-slate-800 border border-slate-200" : `${prod.accentBg} border border-white/10 shadow-lg`
+                      isLight ? "bg-slate-100 text-slate-900 border border-slate-300 shadow-xs" : `${prod.accentBg} border border-white/10 shadow-lg`
                     }`}>
-                      <Icon size={26} />
+                      <Icon size={26} className={isLight ? (prod.id === "pos" ? "text-sky-600" : prod.id === "hrms" ? "text-emerald-600" : "text-purple-600") : ""} />
                     </div>
                     <span className={`text-[10px] font-black uppercase px-3 py-1 rounded-full border ${
-                      isLight ? "bg-slate-100 border-slate-200 text-slate-800" : prod.badgeClass
+                      isLight 
+                        ? (prod.id === "pos" 
+                            ? "bg-sky-50 text-sky-700 border-sky-200" 
+                            : prod.id === "hrms" 
+                            ? "bg-emerald-50 text-emerald-700 border-emerald-200" 
+                            : "bg-purple-50 text-purple-700 border-purple-200")
+                        : prod.badgeClass
                     }`}>
                       {prod.badge}
                     </span>
                   </div>
 
                   {/* Title & Tagline */}
-                  <div className="space-y-1">
+                  <div className="space-y-1.5">
                     <h3 className={`text-xl font-black transition ${
                       isLight ? "text-slate-900 group-hover:text-sky-600" : "text-white group-hover:text-sky-300"
                     }`}>
@@ -302,7 +308,7 @@ export default function SoftwareShowcase() {
 
                   {/* Micro Stats Bar */}
                   <div className={`grid grid-cols-3 gap-2 py-3 border-y rounded-xl px-3 text-center ${
-                    isLight ? "bg-slate-50 border-slate-200" : "border-gray-800/80 bg-black/40"
+                    isLight ? "bg-slate-100/90 border-slate-200" : "border-gray-800/80 bg-black/40"
                   }`}>
                     {prod.stats.map((s, idx) => (
                       <div key={idx} className="space-y-0.5">
@@ -321,7 +327,7 @@ export default function SoftwareShowcase() {
                     </div>
                     {prod.features.map((feat, i) => (
                       <div key={i} className={`flex items-start gap-2 text-xs ${
-                        isLight ? "text-slate-700 font-medium" : "text-gray-300"
+                        isLight ? "text-slate-800 font-medium" : "text-gray-300"
                       }`}>
                         <CheckCircle2 size={14} className="shrink-0 text-emerald-500 mt-0.5" />
                         <span>{feat}</span>
@@ -331,7 +337,7 @@ export default function SoftwareShowcase() {
                 </div>
 
                 {/* Call to Action */}
-                <div className={`pt-6 relative z-10 border-t mt-6 ${isLight ? "border-slate-100" : "border-gray-800/60"}`}>
+                <div className={`pt-6 relative z-10 border-t mt-6 ${isLight ? "border-slate-200" : "border-gray-800/60"}`}>
                   <Link
                     href={prod.requestLink}
                     className="w-full py-3.5 px-4 bg-gradient-to-r from-sky-500 via-emerald-500 to-purple-500 hover:opacity-90 text-white font-black text-xs uppercase rounded-xl flex items-center justify-center gap-2 shadow-md transition duration-200"

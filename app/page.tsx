@@ -189,10 +189,10 @@ export default function HomePage() {
           </div>
 
           {/* Animated Product Demo */}
-          <div className="relative w-full max-w-5xl xl:max-w-6xl mx-auto mt-12 mb-8 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-            <div className="absolute inset-0 bg-gradient-to-r from-brand-sky/20 to-purple-500/20 blur-3xl opacity-50 rounded-[40px]"></div>
+          <div className="relative w-full max-w-5xl xl:max-w-6xl mx-auto mt-12 mb-8">
+            <div className="absolute inset-0 bg-gradient-to-r from-sky-500/15 via-emerald-500/10 to-purple-500/15 blur-3xl opacity-60 rounded-[40px]"></div>
             <div className={`relative border rounded-[24px] shadow-2xl overflow-hidden ${
-              isLight ? "bg-white border-slate-200 ring-1 ring-slate-200/50" : "bg-[#09090b] border-white/10 shadow-brand-sky/10 ring-1 ring-white/5"
+              isLight ? "bg-white border-slate-300 ring-1 ring-slate-200/70 shadow-slate-300/40" : "bg-[#09090b] border-white/10 shadow-brand-sky/10 ring-1 ring-white/5"
             }`}>
               {/* Fake Window Header */}
               <div className={`px-4 py-3 flex items-center gap-2 border-b ${
@@ -204,87 +204,86 @@ export default function HomePage() {
                   <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
                 </div>
                 <div className={`mx-auto flex items-center gap-2 text-[10px] font-mono px-3 py-1 rounded border ${
-                  isLight ? "text-slate-600 bg-white border-slate-300" : "text-gray-400 bg-black/40 border-white/5"
+                  isLight ? "text-slate-700 bg-white border-slate-300 font-bold" : "text-gray-300 bg-black/40 border-white/10"
                 }`}>
                   <Lock size={10} className="text-emerald-500" />
                   pos.mtcore.xyz/pos
                 </div>
               </div>
               {/* Fake POS Interface */}
-              <div className="flex h-[350px]">
+              <div className="flex flex-col sm:flex-row min-h-[350px]">
                 {/* Left: Products */}
-                <div className={`w-2/3 p-4 overflow-hidden relative ${isLight ? "bg-slate-50" : "bg-[#09090b]"}`}>
+                <div className={`w-full sm:w-2/3 p-4 overflow-hidden relative ${isLight ? "bg-slate-50" : "bg-[#09090b]"}`}>
                   <div className="grid grid-cols-3 gap-3">
                     {/* Animated Item 1 */}
                     <div className={`border p-3 rounded-xl flex flex-col items-center justify-center h-28 relative group ${
                       isLight ? "bg-white border-slate-200 shadow-xs" : "bg-[#18181b] border-white/10"
                     }`}>
-                      <div className="w-10 h-10 bg-brand-sky/20 rounded-full mb-2 flex items-center justify-center"><Package size={16} className="text-brand-sky" /></div>
+                      <div className="w-10 h-10 bg-sky-500/15 rounded-full mb-2 flex items-center justify-center"><Package size={16} className="text-sky-600" /></div>
                       <div className={`text-[10px] font-bold ${isLight ? "text-slate-900" : "text-white"}`}>Wireless Mouse</div>
-                      <div className={`text-[10px] ${isLight ? "text-slate-500 font-semibold" : "text-gray-500"}`}>$29.99</div>
+                      <div className={`text-[10px] ${isLight ? "text-slate-600 font-bold" : "text-gray-400"}`}>$29.99</div>
                       {/* Scan Laser Animation */}
-                      <div className="absolute inset-0 border border-brand-sky rounded-xl opacity-0 animate-[scan_3s_ease-in-out_infinite]"></div>
+                      <div className="absolute inset-0 border border-sky-500 rounded-xl opacity-0 animate-[scan_3s_ease-in-out_infinite]"></div>
                       <div className="absolute top-0 left-0 w-full h-[2px] bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)] opacity-0 animate-[laser_3s_ease-in-out_infinite]"></div>
                     </div>
                     {/* Item 2 */}
                     <div className={`border p-3 rounded-xl flex flex-col items-center justify-center h-28 ${
                       isLight ? "bg-white border-slate-200 shadow-xs" : "bg-[#18181b] border-white/10"
                     }`}>
-                      <div className="w-10 h-10 bg-purple-500/20 rounded-full mb-2 flex items-center justify-center"><Laptop size={16} className="text-purple-400" /></div>
+                      <div className="w-10 h-10 bg-purple-500/15 rounded-full mb-2 flex items-center justify-center"><Laptop size={16} className="text-purple-600" /></div>
                       <div className={`text-[10px] font-bold ${isLight ? "text-slate-900" : "text-white"}`}>Mechanical Keyboard</div>
-                      <div className={`text-[10px] ${isLight ? "text-slate-500 font-semibold" : "text-gray-500"}`}>$89.99</div>
+                      <div className={`text-[10px] ${isLight ? "text-slate-600 font-bold" : "text-gray-400"}`}>$89.99</div>
                     </div>
                     {/* Item 3 */}
                     <div className={`border p-3 rounded-xl flex flex-col items-center justify-center h-28 ${
                       isLight ? "bg-white border-slate-200 shadow-xs" : "bg-[#18181b] border-white/10"
                     }`}>
-                      <div className="w-10 h-10 bg-emerald-500/20 rounded-full mb-2 flex items-center justify-center"><HeadphonesIcon size={16} className="text-emerald-400" /></div>
+                      <div className="w-10 h-10 bg-emerald-500/15 rounded-full mb-2 flex items-center justify-center"><HeadphonesIcon size={16} className="text-emerald-600" /></div>
                       <div className={`text-[10px] font-bold ${isLight ? "text-slate-900" : "text-white"}`}>Gaming Headset</div>
-                      <div className={`text-[10px] ${isLight ? "text-slate-500 font-semibold" : "text-gray-500"}`}>$59.99</div>
+                      <div className={`text-[10px] ${isLight ? "text-slate-600 font-bold" : "text-gray-400"}`}>$59.99</div>
                     </div>
                   </div>
                   
                   {/* Floating Add to Cart notification */}
-                  <div className="absolute top-6 left-1/2 -translate-x-1/2 bg-emerald-500 text-white text-[10px] font-bold px-3 py-1.5 rounded-full flex items-center gap-1 opacity-0 animate-[pop-in_3s_ease-in-out_infinite] shadow-md">
+                  <div className="absolute top-6 left-1/2 -translate-x-1/2 bg-emerald-600 text-white text-[10px] font-bold px-3 py-1.5 rounded-full flex items-center gap-1 opacity-0 animate-[pop-in_3s_ease-in-out_infinite] shadow-md">
                     <CheckCircle2 size={12} /> Added to Cart
                   </div>
                 </div>
 
                 {/* Right: Cart Panel */}
-                <div className={`w-1/3 p-4 flex flex-col justify-between ${
-                  isLight ? "bg-white border-l border-slate-200 text-slate-900" : "bg-[#121215] border-l border-white/5 text-white"
+                <div className={`w-full sm:w-1/3 p-4 flex flex-col justify-between ${
+                  isLight ? "bg-white border-t sm:border-t-0 sm:border-l border-slate-200 text-slate-900" : "bg-[#121215] border-t sm:border-t-0 sm:border-l border-white/10 text-white"
                 }`}>
                   <div>
                     <div className="flex justify-between items-center mb-3">
                       <div className={`text-xs font-bold ${isLight ? "text-slate-900" : "text-white"}`}>Current Order #1042</div>
-                      <div className="text-[10px] bg-emerald-500/20 text-emerald-500 font-bold px-1.5 py-0.5 rounded">Walk-in</div>
+                      <div className="text-[10px] bg-emerald-500/15 text-emerald-600 font-bold px-1.5 py-0.5 rounded border border-emerald-500/30">Walk-in</div>
                     </div>
                     {/* Cart Item Row */}
                     <div className={`flex items-center justify-between p-2 rounded-lg border text-xs relative overflow-hidden ${
                       isLight ? "bg-slate-50 border-slate-200" : "bg-[#18181b] border-white/10"
                     }`}>
-                      <div className="absolute inset-0 bg-brand-sky/20 opacity-0 animate-[flash_3s_ease-in-out_infinite]"></div>
+                      <div className="absolute inset-0 bg-sky-500/10 opacity-0 animate-[flash_3s_ease-in-out_infinite]"></div>
                       <div className="relative z-10">
                         <div className={`font-bold text-[10px] ${isLight ? "text-slate-900" : "text-white"}`}>Wireless Mouse</div>
                         <div className={`text-[8px] ${isLight ? "text-slate-500" : "text-gray-500"}`}>Qty: 1</div>
                       </div>
-                      <div className="text-[10px] font-mono text-brand-sky relative z-10">$29.99</div>
+                      <div className={`text-[10px] font-mono font-bold relative z-10 ${isLight ? "text-sky-600" : "text-sky-400"}`}>$29.99</div>
                     </div>
                   </div>
                   <div className={`pt-3 border-t ${isLight ? "border-slate-200" : "border-white/10"}`}>
-                    <div className={`flex justify-between items-center text-xs mb-1 ${isLight ? "text-slate-600" : "text-gray-400"}`}>
+                    <div className={`flex justify-between items-center text-xs mb-1 ${isLight ? "text-slate-600 font-medium" : "text-gray-400"}`}>
                       <span>Subtotal</span><span>$29.99</span>
                     </div>
-                    <div className={`flex justify-between items-center text-xs mb-2 ${isLight ? "text-slate-600" : "text-gray-400"}`}>
+                    <div className={`flex justify-between items-center text-xs mb-2 ${isLight ? "text-slate-600 font-medium" : "text-gray-400"}`}>
                       <span>Tax (10%)</span><span>$3.00</span>
                     </div>
                     <div className={`flex justify-between items-center text-sm font-bold mb-4 ${isLight ? "text-slate-900" : "text-white"}`}>
-                      <span>Total</span><span className="text-brand-sky font-black">$32.99</span>
+                      <span>Total</span><span className="text-sky-500 font-black">$32.99</span>
                     </div>
-                    <button className="w-full bg-brand-sky text-black text-xs font-bold py-2 rounded-lg flex items-center justify-center gap-2 relative overflow-hidden group shadow-sm">
-                      <span className="relative z-10 font-black">Pay Now</span>
+                    <button className="w-full bg-sky-500 hover:bg-sky-400 text-white text-xs font-black py-2.5 rounded-xl flex items-center justify-center gap-2 relative overflow-hidden group shadow-md transition cursor-pointer">
+                      <span className="relative z-10">Pay Now</span>
                       <ArrowRight size={14} className="relative z-10" />
-                      <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform"></div>
                     </button>
                   </div>
                 </div>
