@@ -1438,7 +1438,50 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
                   });
                 }
               } else if (cloudParsed && typeof cloudParsed === 'object') {
-                const incomingStr = JSON.stringify(cloudParsed);
+                let mergedSettings = cloudParsed;
+                if (col === "unipos_settings" && localParsed && typeof localParsed === "object") {
+                  const cloudTerms: any[] = Array.isArray(cloudParsed.authorizedTerminals) ? cloudParsed.authorizedTerminals : [];
+                  const localTerms: any[] = Array.isArray(localParsed.authorizedTerminals) ? localParsed.authorizedTerminals : [];
+
+                  const termMap = new Map<string, any>();
+                  cloudTerms.forEach((t: any) => { if (t?.id || t?.token) termMap.set(t.id || t.token, t); });
+                  localTerms.forEach((t: any) => {
+                    const key = t?.id || t?.token;
+                    if (key) {
+                      const exist = termMap.get(key);
+                      if (!exist) {
+                        termMap.set(key, t);
+                      } else {
+                        termMap.set(key, { ...exist, ...t });
+                      }
+                    }
+                  });
+
+                  const mergedTerms = Array.from(termMap.values());
+                  const enforceLock = cloudParsed.enforceTerminalBinding !== undefined
+                    ? cloudParsed.enforceTerminalBinding
+                    : (localParsed.enforceTerminalBinding !== undefined ? localParsed.enforceTerminalBinding : false);
+
+                  mergedSettings = {
+                    ...localParsed,
+                    ...cloudParsed,
+                    enforceTerminalBinding: enforceLock,
+                    authorizedTerminals: mergedTerms,
+                  };
+
+                  // If local had new terminals not in cloud, push the merged settings back to cloud
+                  if (mergedTerms.length > cloudTerms.length) {
+                    await supabase.from('unipos_collections').upsert({
+                      tenant_id: tid,
+                      collection: col,
+                      item_id: 'all',
+                      data: mergedSettings,
+                      updated_at: new Date().toISOString()
+                    });
+                  }
+                }
+
+                const incomingStr = JSON.stringify(mergedSettings);
                 if (incomingStr !== currentLocalStr) {
                   originalSetItem.call(window.localStorage, localKey, incomingStr);
                   changed = true;
@@ -2195,7 +2238,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         loyaltyRedeemValue: 100,
         logoUrl: "",
       };
-      saveTenantData("unipos_settings", initSettings);
+      localStorage.setItem("unipos_settings_" + currentUser.tenantId, JSON.stringify(initSettings));
       setBusinessSettings(initSettings);
     }
 
@@ -3663,17 +3706,6 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       };
       setBusinessSettings(updatedSettings);
       saveTenantData("unipos_settings", updatedSettings);
-      if (supabase) {
-        supabase
-          .from("unipos_collections")
-          .upsert({
-            tenant_id: currentUser.tenantId,
-            collection_name: "unipos_settings",
-            data: updatedSettings,
-            updated_at: new Date().toISOString(),
-          })
-          .then(() => {});
-      }
     }
   }, [currentUser, businessSettings]);
 
@@ -3697,17 +3729,6 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         };
         setBusinessSettings(updatedSettings);
         saveTenantData("unipos_settings", updatedSettings);
-        if (supabase) {
-          supabase
-            .from("unipos_collections")
-            .upsert({
-              tenant_id: currentUser.tenantId,
-              collection_name: "unipos_settings",
-              data: updatedSettings,
-              updated_at: new Date().toISOString(),
-            })
-            .then(() => {});
-        }
       }
     }
     localStorage.removeItem("unipos_current_user");
@@ -4441,14 +4462,6 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       };
       setBusinessSettings(updatedSettings);
       saveTenantData("unipos_settings", updatedSettings);
-      if (supabase && currentUser?.tenantId) {
-        supabase.from("unipos_collections").upsert({
-          tenant_id: currentUser.tenantId,
-          collection_name: "unipos_settings",
-          data: updatedSettings,
-          updated_at: new Date().toISOString()
-        }).then(() => {});
-      }
     }
   };
 
@@ -4519,14 +4532,6 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       };
       setBusinessSettings(updatedSettings);
       saveTenantData("unipos_settings", updatedSettings);
-      if (supabase && currentUser?.tenantId) {
-        supabase.from("unipos_collections").upsert({
-          tenant_id: currentUser.tenantId,
-          collection_name: "unipos_settings",
-          data: updatedSettings,
-          updated_at: new Date().toISOString()
-        }).then(() => {});
-      }
     }
   };
 
