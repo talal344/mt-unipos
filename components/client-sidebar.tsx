@@ -71,7 +71,7 @@ export default function ClientSidebar() {
         activeLight: "bg-sky-100 border-sky-300 text-sky-950 font-bold",
       },
       links: [
-        { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, roles: ["Owner","Manager","Accountant","Cashier","HR","Warehouse Staff"], verticals: ["Retail","F&B","Pharmacy","Bookstore"] },
+        { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, roles: ["Owner","Manager","Accountant","HR","Warehouse Staff"], verticals: ["Retail","F&B","Pharmacy","Bookstore"] },
         { name: "Point of Sale", href: "/pos", icon: ShoppingCart, roles: ["Owner","Manager","Cashier"], verticals: ["Retail","Pharmacy","Bookstore"] },
         { name: "Restaurant POS", href: "/restaurant", icon: Utensils, roles: ["Owner","Manager","Cashier"], verticals: ["F&B"] },
         { name: "Kitchen Display", href: "/kds", icon: Monitor, roles: ["Owner","Manager"], verticals: ["F&B"] },

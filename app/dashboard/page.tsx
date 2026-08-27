@@ -38,6 +38,7 @@ import {
   Eye
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { 
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer 
@@ -67,6 +68,7 @@ function Sparkline({ values, color = "#38bdf8" }: { values: number[]; color?: st
 }
 
 export default function ClientDashboardPage() {
+  const router = useRouter();
   const { 
     sales, 
     products, 
@@ -97,7 +99,17 @@ export default function ClientDashboardPage() {
   } = useGlobalContext();
   const isLight = theme === "light";
 
-    const [activeReportModal, setActiveReportModal] = React.useState<"revenue" | "gross_profit" | "net_profit" | "stock_value" | "wallet" | "cash_drawers" | null>(null);
+  React.useEffect(() => {
+    if (currentUser?.role === "Cashier") {
+      router.replace("/pos");
+    }
+  }, [currentUser, router]);
+
+  const [activeReportModal, setActiveReportModal] = React.useState<"revenue" | "gross_profit" | "net_profit" | "stock_value" | "wallet" | "cash_drawers" | null>(null);
+
+  if (currentUser?.role === "Cashier") {
+    return null;
+  }
 
   // CSV Export Helper
   const downloadCSVReport = (type: string) => {
