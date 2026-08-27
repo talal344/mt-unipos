@@ -287,13 +287,43 @@ export default function ClientDashboardPage() {
   const [assignFormCashier, setAssignFormCashier] = React.useState("");
   const [assignFormFloat, setAssignFormFloat] = React.useState("5000");
 
+  const effectiveCounters = useMemo(() => {
+    if (businessSettings?.authorizedTerminals && businessSettings.authorizedTerminals.length > 0) {
+      return businessSettings.authorizedTerminals.map((term: any) => {
+        const matchingPos = posCounters.find(
+          (c) => c.id === term.id || c.name.toLowerCase() === term.name.toLowerCase()
+        );
+
+        const isTerminalActive = term.status === "Active" && !!term.currentActiveUser;
+        const assignedName = term.currentActiveUser
+          ? `${term.currentActiveUser.name} (${term.currentActiveUser.role} / Active User)`
+          : (matchingPos?.assignedCashierName && matchingPos.status === "Active")
+          ? matchingPos.assignedCashierName
+          : "Unassigned";
+
+        return {
+          id: term.id,
+          name: term.name,
+          assignedCashierName: assignedName,
+          assignedCashierEmail: term.currentActiveUser?.email || matchingPos?.assignedCashierEmail || "",
+          openingFloat: matchingPos?.openingFloat || term.openingFloat || 0,
+          status: isTerminalActive ? ("Active" as const) : ("Unassigned" as const),
+          startedAt: term.currentActiveUser?.loginTime || matchingPos?.startedAt || term.registeredAt,
+          collectedCashDeduction: matchingPos?.collectedCashDeduction || term.collectedCashDeduction || 0,
+          token: term.token,
+          currentActiveUser: term.currentActiveUser || null
+        };
+      });
+    }
+    return posCounters;
+  }, [businessSettings?.authorizedTerminals, posCounters]);
   
   const totalStoreDrawerCash = useMemo(() => {
     const totalCashExpenses = expenses
       .filter(e => e.paymentMethod === "Cash" || e.paymentMethod === "Drawer Cash" || !e.paymentMethod)
       .reduce((sum, e) => sum + e.amount, 0);
 
-    const rawTotalDrawerCash = posCounters.reduce((acc, counter) => {
+    const rawTotalDrawerCash = effectiveCounters.reduce((acc, counter) => {
       if (counter.status !== "Active") return acc;
       const cleanCashier = (counter.assignedCashierName || "").replace(/\s*\([^)]*\)/, "").trim().toLowerCase();
       const counterSales = sales.filter(s => {
@@ -324,7 +354,7 @@ export default function ClientDashboardPage() {
     }, 0);
 
     return Math.max(0, rawTotalDrawerCash - totalCashExpenses);
-  }, [posCounters, sales, expenses]);
+  }, [effectiveCounters, sales, expenses]);
 
   
   // ── Cashier / Counter Audit Modal State
@@ -1440,6 +1470,7 @@ export default function ClientDashboardPage() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => {
+                  setAssignFormCounter(effectiveCounters[0]?.name || "Main Counter");
                   setAssignFormCashier(staffList[0] || "Ahmad Raza (Owner)");
                   setAssignFormFloat("5000");
                   setShowAssignCounterModal(true);
@@ -1449,20 +1480,20 @@ export default function ClientDashboardPage() {
                 + Assign Counter &amp; Cash Float
               </button>
               <span className="text-[10px] text-emerald-400 font-mono font-bold bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-1.5 rounded-xl">
-                {posCounters.filter(c => c.status === "Active").length} Active Counters
+                {effectiveCounters.filter(c => c.status === "Active").length} Active Counters
               </span>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {posCounters.map((counter) => {
+            {effectiveCounters.map((counter) => {
               const openShiftForCounter = posShifts.find(s => 
                 s.status === "Open" && (
                   (s.counterId && (s.counterId.toLowerCase() === counter.id.toLowerCase() || s.counterId.toLowerCase() === counter.name.toLowerCase())) ||
                   (s.cashierName && counter.assignedCashierName && s.cashierName.toLowerCase().includes(counter.assignedCashierName.toLowerCase().replace(/\s*\([^)]*\)/, "").trim()))
                 )
               );
-              const isActive = counter.status === "Active" && (posShifts.length === 0 || !!openShiftForCounter);
+              const isActive = counter.status === "Active" || !!openShiftForCounter;
               const cleanCashier = (counter.assignedCashierName || "").replace(/\s*\([^)]*\)/, "").trim().toLowerCase();
 
               // Calculate strict counter metrics ONLY for this counter/assigned cashier when Active
@@ -1520,12 +1551,12 @@ export default function ClientDashboardPage() {
               const totalCashExpenses = expenses
                 .filter(e => e.paymentMethod === "Cash" || e.paymentMethod === "Drawer Cash" || !e.paymentMethod)
                 .reduce((sum, e) => sum + e.amount, 0);
-              const activeCountersCount = posCounters.filter(c => c.status === "Active").length || 1;
+              const activeCountersCount = effectiveCounters.filter(c => c.status === "Active").length || 1;
               const counterExpenseShare = totalCashExpenses / activeCountersCount;
               const expectedDrawerCash = isActive ? Math.max(0, ((counter.openingFloat || 0) + netCashSalesInflow) - collectedDeduction - counterExpenseShare) : 0;
 
               return (
-                <div key={counter.id} className={`p-4 rounded-xl border space-y-3 font-sans transition ${
+                <div key={counter.id || counter.name} className={`p-4 rounded-xl border space-y-3 font-sans transition ${
                   isActive
                     ? isLight
                       ? "bg-slate-50 border-emerald-500/60 shadow-xs text-slate-900"
@@ -1544,11 +1575,7 @@ export default function ClientDashboardPage() {
                       </div>
                       <p className={`text-[10px] mt-0.5 font-mono ${isLight ? "text-slate-500" : "text-gray-400"}`}>
                         Assigned Cashier: <strong className={isActive ? isLight ? "text-emerald-700 font-bold" : "text-emerald-300 font-bold" : isLight ? "text-slate-500" : "text-gray-400"}>
-                          {(counter.id === "counter-1" || counter.name.toLowerCase().includes("main counter")) && (counter.assignedCashierName.includes("Owner") || counter.assignedCashierName.includes("Ahmad") || counter.assignedCashierName.includes("Talal"))
-                            ? `${businessSettings?.ownerName || currentUser?.name || "Mian Talal"} (Owner / Active User)`
-                            : (counter.assignedCashierName || "Unassigned")
-                          }
-                          {!isActive && " (Shift Closed / Offline)"}
+                          {isActive ? counter.assignedCashierName : "Unassigned (Shift Closed / Offline)"}
                         </strong>
                       </p>
                     </div>
@@ -1833,10 +1860,9 @@ export default function ClientDashboardPage() {
                     onChange={e => setAssignFormCounter(e.target.value)}
                     className="w-full bg-black border border-brand-dark-border p-3 rounded-xl text-white font-bold focus:border-brand-sky focus:outline-none"
                   >
-                    <option value="Main Counter">Main Counter</option>
-                    <option value="Counter 2 (Secondary)">Counter 2 (Secondary)</option>
-                    <option value="Counter 3 (Express)">Counter 3 (Express)</option>
-                    <option value="Mobile POS Terminal">Mobile POS Terminal</option>
+                    {effectiveCounters.map((c: any) => (
+                      <option key={c.id || c.name} value={c.name}>{c.name}</option>
+                    ))}
                   </select>
                 </div>
 

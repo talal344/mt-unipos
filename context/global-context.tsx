@@ -602,6 +602,14 @@ export interface AuthorizedTerminal {
   status: "Active" | "Revoked";
   allowedUserIds?: string[]; // Array of Employee IDs, emails or usernames allowed on this terminal (empty/undefined = all staff allowed)
   allowedUserNames?: string[]; // Cache of employee names for display
+  currentActiveUser?: {
+    name: string;
+    email: string;
+    role: string;
+    loginTime: string;
+  } | null;
+  openingFloat?: number;
+  collectedCashDeduction?: number;
 }
 
 export interface BusinessSettings {
@@ -3619,7 +3627,89 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem("unipos_tickets", JSON.stringify(updated));
   };
 
+  // Real-time Device Terminal User Session Sync
+  useEffect(() => {
+    if (typeof window === "undefined" || !currentUser?.tenantId || !businessSettings?.authorizedTerminals?.length) return;
+
+    const devToken = localStorage.getItem(`unipos_terminal_token_${currentUser.tenantId}`) || "";
+    if (!devToken) return;
+
+    const targetTerm = businessSettings.authorizedTerminals.find((t) => t.token === devToken);
+    if (!targetTerm || targetTerm.status !== "Active") return;
+
+    const activeUser = targetTerm.currentActiveUser;
+    const isCurrentLoggedIn = activeUser?.email === currentUser.email && activeUser?.name === currentUser.name;
+
+    if (!isCurrentLoggedIn) {
+      const updatedTerminals = businessSettings.authorizedTerminals.map((t) => {
+        if (t.token === devToken) {
+          return {
+            ...t,
+            lastUsedAt: new Date().toISOString(),
+            currentActiveUser: {
+              name: currentUser.name,
+              email: currentUser.email,
+              role: currentUser.role,
+              loginTime: new Date().toISOString(),
+            },
+          };
+        }
+        return t;
+      });
+
+      const updatedSettings = {
+        ...businessSettings,
+        authorizedTerminals: updatedTerminals,
+      };
+      setBusinessSettings(updatedSettings);
+      saveTenantData("unipos_settings", updatedSettings);
+      if (supabase) {
+        supabase
+          .from("unipos_collections")
+          .upsert({
+            tenant_id: currentUser.tenantId,
+            collection_name: "unipos_settings",
+            data: updatedSettings,
+            updated_at: new Date().toISOString(),
+          })
+          .then(() => {});
+      }
+    }
+  }, [currentUser, businessSettings]);
+
   const logout = () => {
+    if (typeof window !== "undefined" && currentUser?.tenantId) {
+      const devToken = localStorage.getItem(`unipos_terminal_token_${currentUser.tenantId}`) || "";
+      if (devToken && businessSettings?.authorizedTerminals?.length) {
+        const updatedTerminals = businessSettings.authorizedTerminals.map((t) => {
+          if (t.token === devToken) {
+            return {
+              ...t,
+              currentActiveUser: null,
+            };
+          }
+          return t;
+        });
+
+        const updatedSettings = {
+          ...businessSettings,
+          authorizedTerminals: updatedTerminals,
+        };
+        setBusinessSettings(updatedSettings);
+        saveTenantData("unipos_settings", updatedSettings);
+        if (supabase) {
+          supabase
+            .from("unipos_collections")
+            .upsert({
+              tenant_id: currentUser.tenantId,
+              collection_name: "unipos_settings",
+              data: updatedSettings,
+              updated_at: new Date().toISOString(),
+            })
+            .then(() => {});
+        }
+      }
+    }
     localStorage.removeItem("unipos_current_user");
     setCurrentUser(null);
   };
@@ -4295,7 +4385,6 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     saveTenantData("unipos_pos", updatedPOs);
   };
 
-  // Complete Retail & Wholesale Sales Engine with Live Inventory Reduction & Double-Entry Accounting Sync
   const assignCounterCashier = (counterId: string, cashierName: string, openingFloat: number) => {
     const updated = posCounters.map(c => {
       if (c.id === counterId || c.name.toLowerCase().includes(counterId.toLowerCase())) {
@@ -4326,6 +4415,41 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     }
     setPosCounters(updated);
     saveTenantData("unipos_counters", updated);
+
+    // Sync to authorizedTerminals if present
+    if (businessSettings?.authorizedTerminals?.length) {
+      const cleanName = cashierName.replace(/\s*\([^)]*\)/, "").trim();
+      const updatedTerms = businessSettings.authorizedTerminals.map(t => {
+        if (t.id === counterId || t.name.toLowerCase().includes(counterId.toLowerCase())) {
+          return {
+            ...t,
+            openingFloat: Number(openingFloat) || 0,
+            collectedCashDeduction: 0,
+            currentActiveUser: {
+              name: cleanName,
+              email: `${cleanName.toLowerCase().replace(/\s+/g, "")}@store.local`,
+              role: cashierName.includes("Owner") ? "Owner" : "Cashier",
+              loginTime: new Date().toISOString()
+            }
+          };
+        }
+        return t;
+      });
+      const updatedSettings = {
+        ...businessSettings,
+        authorizedTerminals: updatedTerms
+      };
+      setBusinessSettings(updatedSettings);
+      saveTenantData("unipos_settings", updatedSettings);
+      if (supabase && currentUser?.tenantId) {
+        supabase.from("unipos_collections").upsert({
+          tenant_id: currentUser.tenantId,
+          collection_name: "unipos_settings",
+          data: updatedSettings,
+          updated_at: new Date().toISOString()
+        }).then(() => {});
+      }
+    }
   };
 
   const collectCounterCash = (counterId: string, collectedAmount: number) => {
@@ -4340,6 +4464,24 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     });
     setPosCounters(updated);
     saveTenantData("unipos_counters", updated);
+
+    if (businessSettings?.authorizedTerminals?.length) {
+      const updatedTerms = businessSettings.authorizedTerminals.map(t => {
+        if (t.id === counterId || t.name.toLowerCase().includes(counterId.toLowerCase())) {
+          return {
+            ...t,
+            collectedCashDeduction: (t.collectedCashDeduction || 0) + Number(collectedAmount),
+          };
+        }
+        return t;
+      });
+      const updatedSettings = {
+        ...businessSettings,
+        authorizedTerminals: updatedTerms
+      };
+      setBusinessSettings(updatedSettings);
+      saveTenantData("unipos_settings", updatedSettings);
+    }
   };
 
   const closeCounterSession = (counterId: string, closingCash: number) => {
@@ -4358,6 +4500,34 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     });
     setPosCounters(updated);
     saveTenantData("unipos_counters", updated);
+
+    // Also update authorizedTerminals if matched
+    if (businessSettings?.authorizedTerminals?.length) {
+      const updatedTerms = businessSettings.authorizedTerminals.map(t => {
+        if (t.id === counterId || t.name.toLowerCase().includes(counterId.toLowerCase())) {
+          return {
+            ...t,
+            currentActiveUser: null,
+            collectedCashDeduction: 0
+          };
+        }
+        return t;
+      });
+      const updatedSettings = {
+        ...businessSettings,
+        authorizedTerminals: updatedTerms
+      };
+      setBusinessSettings(updatedSettings);
+      saveTenantData("unipos_settings", updatedSettings);
+      if (supabase && currentUser?.tenantId) {
+        supabase.from("unipos_collections").upsert({
+          tenant_id: currentUser.tenantId,
+          collection_name: "unipos_settings",
+          data: updatedSettings,
+          updated_at: new Date().toISOString()
+        }).then(() => {});
+      }
+    }
   };
 
   const startPOSShift = (counterId: string, openingFloat: number): POSShift => {
