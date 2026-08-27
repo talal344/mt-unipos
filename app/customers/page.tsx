@@ -460,71 +460,73 @@ export default function CustomersPage() {
         </div>
       )}
 
-      <main className="flex-grow flex overflow-hidden h-screen">
+      <main className="flex-1 flex overflow-hidden h-screen min-w-0">
 
         {/* ═══════════════════════════════════════════════════════════════
             LEFT PANEL — Customer List
         ═══════════════════════════════════════════════════════════════ */}
-        <section className={`flex flex-col border-r ${isLight ? "border-slate-200" : "border-brand-dark-border"} transition-all duration-300 ${selectedId ? "hidden lg:flex w-full lg:w-[380px] xl:w-[420px] shrink-0" : "flex-grow w-full"}`}>
-          <div className="flex-grow overflow-y-auto p-4 sm:p-6 space-y-4">
+        <section className={`flex flex-col border-r ${isLight ? "border-slate-200" : "border-brand-dark-border"} transition-all duration-300 ${selectedId ? "hidden md:flex w-full md:w-[320px] lg:w-[350px] xl:w-[380px] shrink-0" : "flex-grow w-full"}`}>
+          <div className="flex-grow overflow-y-auto p-3.5 sm:p-5 space-y-3.5">
 
             {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="space-y-2.5">
               <div>
-                <h1 className={`text-xl font-black flex items-center gap-2 ${isLight ? "text-slate-900" : "text-white"}`}>
-                  <Users size={20} className="text-sky-500" />
+                <h1 className={`text-base sm:text-lg font-black flex items-center gap-2 ${isLight ? "text-slate-900" : "text-white"}`}>
+                  <Users size={18} className="text-sky-500" />
                   Customer Directory
                 </h1>
                 <p className={`text-[10px] mt-0.5 ${isLight ? "text-slate-500" : "text-gray-500"}`}>
-                  {registeredLoyaltyMembers} registered loyalty members · {totalCustomers} total profiles
+                  {registeredLoyaltyMembers} loyalty members · {totalCustomers} total profiles
                 </p>
               </div>
-              <div className="flex items-center gap-2">
+
+              {/* Action Buttons Grid */}
+              <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
                   onClick={() => setShowCreditReportModal(true)}
-                  className="flex items-center gap-1.5 bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 text-red-600 font-bold text-xs px-3 py-2 rounded-lg transition shrink-0"
+                  className="flex items-center justify-center gap-1.5 bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 text-red-600 font-bold text-xs py-2 px-2 rounded-lg transition"
                 >
-                  <CreditCard size={13} /> Credit Report
+                  <CreditCard size={12} /> Credit Report
                 </button>
                 <button
                   type="button"
                   onClick={openAdd}
-                  className="flex items-center gap-1.5 bg-sky-600 hover:bg-sky-500 text-white font-black text-xs px-3.5 py-2 rounded-lg shadow-lg transition shrink-0"
+                  className="flex items-center justify-center gap-1.5 bg-sky-600 hover:bg-sky-500 text-white font-black text-xs py-2 px-2 rounded-lg shadow transition"
                 >
-                  <Plus size={14} /> Add Customer
+                  <Plus size={13} /> Add Customer
                 </button>
               </div>
             </div>
 
             {/* Stats Cards */}
-            <div className={`grid gap-2.5 ${selectedId ? "grid-cols-2" : "grid-cols-2 lg:grid-cols-4"}`}>
+            <div className={`grid gap-2 ${selectedId ? "grid-cols-2" : "grid-cols-2 lg:grid-cols-4"}`}>
               {[
                 { icon: Users, label: "Total Profiles", val: totalCustomers, color: "text-sky-500" },
                 { icon: TrendingUp, label: "Total Revenue", val: `${currencySymbol} ${Math.round(totalRevenue).toLocaleString()}`, color: "text-emerald-500" },
-                { icon: Star, label: "Loyalty Points Issued", val: totalLoyaltyPts.toLocaleString(), color: "text-amber-500" },
+                { icon: Star, label: "Loyalty Points", val: totalLoyaltyPts.toLocaleString(), color: "text-amber-500" },
                 { icon: BadgeCheck, label: "Active This Month", val: activeThisMonth, color: "text-purple-500" },
               ].map(stat => (
-                <div key={stat.label} className={`border rounded-xl p-3 sm:p-4 ${
+                <div key={stat.label} className={`border rounded-xl p-2.5 sm:p-3 ${
                   isLight ? "bg-white border-slate-200 shadow-xs text-slate-900" : "bg-brand-dark-surface/40 border-brand-dark-border text-gray-100"
                 }`}>
-                  <stat.icon size={15} className={stat.color} />
-                  <div className={`text-base sm:text-lg font-black font-mono mt-1 truncate ${stat.color}`}>{stat.val}</div>
-                  <div className={`text-[9px] uppercase tracking-wide font-bold truncate ${isLight ? "text-slate-500" : "text-gray-500"}`}>{stat.label}</div>
+                  <stat.icon size={14} className={stat.color} />
+                  <div className={`text-sm sm:text-base font-black font-mono mt-0.5 truncate ${stat.color}`}>{stat.val}</div>
+                  <div className={`text-[8.5px] uppercase tracking-wide font-bold truncate ${isLight ? "text-slate-500" : "text-gray-500"}`}>{stat.label}</div>
                 </div>
               ))}
             </div>
 
             {/* Search + Sort */}
-            <div className="flex gap-2">
-              <div className="relative flex-grow">
-                <Search className={`absolute left-3 top-2.5 ${isLight ? "text-slate-400" : "text-gray-500"}`} size={14} />
+            <div className="flex gap-1.5">
+              <div className="relative flex-grow min-w-0">
+                <Search className={`absolute left-2.5 top-2.5 ${isLight ? "text-slate-400" : "text-gray-500"}`} size={13} />
                 <input
                   type="text"
-                  placeholder="Search by name, mobile, email or CNIC..."
+                  placeholder="Search customer..."
                   value={search}
                   onChange={e => setSearch(e.target.value)}
-                  className={`w-full pl-9 pr-3 py-2 rounded-lg text-xs font-bold border focus:outline-none ${
+                  className={`w-full pl-8 pr-2 py-1.5 rounded-lg text-xs font-bold border focus:outline-none ${
                     isLight ? "bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-sky-500 shadow-xs" : "bg-brand-dark-surface border-brand-dark-border text-white focus:border-brand-sky"
                   }`}
                 />
@@ -532,23 +534,23 @@ export default function CustomersPage() {
               <select
                 value={sortBy}
                 onChange={e => setSortBy(e.target.value as any)}
-                className={`border rounded-lg text-[10px] font-bold px-2.5 py-2 focus:outline-none shrink-0 ${
+                className={`border rounded-lg text-[10px] font-bold px-2 py-1.5 focus:outline-none shrink-0 ${
                   isLight ? "bg-white border-slate-300 text-slate-900 focus:border-sky-500 shadow-xs" : "bg-brand-dark-surface border-brand-dark-border text-gray-300 focus:border-brand-sky"
                 }`}
               >
                 <option value="name">Sort: Name</option>
-                <option value="points">Sort: Top Points</option>
-                <option value="spent">Sort: Most Spent</option>
-                <option value="visits">Sort: Most Visits</option>
+                <option value="points">Points</option>
+                <option value="spent">Spent</option>
+                <option value="visits">Visits</option>
               </select>
             </div>
 
             {/* Customer Cards */}
             <div className="space-y-2">
               {filtered.length === 0 ? (
-                <div className={`text-center py-20 ${isLight ? "text-slate-400" : "text-gray-600"}`}>
-                  <Users size={36} className="mx-auto mb-3 opacity-30" />
-                  <p className="text-xs font-bold">No customers found. Add your first customer above.</p>
+                <div className={`text-center py-16 ${isLight ? "text-slate-400" : "text-gray-600"}`}>
+                  <Users size={32} className="mx-auto mb-2 opacity-30" />
+                  <p className="text-xs font-bold">No customers found.</p>
                 </div>
               ) : filtered.map(c => {
                 const isWalkIn = c.name.toLowerCase().includes("walk-in") || c.id === "C-203" || c.id === "walk-in";
@@ -558,7 +560,7 @@ export default function CustomersPage() {
                   <div
                     key={c.id}
                     onClick={() => { setSelectedId(c.id); setDrawerTab("overview"); }}
-                    className={`group flex items-center justify-between gap-3 p-3.5 rounded-xl border cursor-pointer transition-all ${
+                    className={`group flex items-center justify-between gap-2.5 p-3 rounded-xl border cursor-pointer transition-all ${
                       isActive
                         ? isLight
                           ? "bg-sky-50 border-sky-400 shadow-xs"
@@ -569,7 +571,7 @@ export default function CustomersPage() {
                     }`}
                   >
                     {/* Avatar */}
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-sm shrink-0 ${
+                    <div className={`w-9 h-9 rounded-full flex items-center justify-center font-black text-xs shrink-0 ${
                       isActive 
                         ? "bg-brand-sky text-black" 
                         : isLight 
@@ -582,26 +584,26 @@ export default function CustomersPage() {
                     {/* Info */}
                     <div className="flex-grow min-w-0">
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className={`font-bold text-xs truncate max-w-[130px] sm:max-w-[160px] ${isLight ? "text-slate-900" : "text-white"}`}>{c.name}</span>
+                        <span className={`font-bold text-xs truncate max-w-[120px] sm:max-w-[140px] ${isLight ? "text-slate-900" : "text-white"}`}>{c.name}</span>
                         {c.customerNo && c.customerNo !== "N/A" && !isWalkIn && (
-                          <span className="text-[8px] bg-brand-sky/15 border border-brand-sky/30 text-brand-sky font-mono font-bold px-1.5 py-0.5 rounded shrink-0">
+                          <span className="text-[7.5px] bg-brand-sky/15 border border-brand-sky/30 text-brand-sky font-mono font-bold px-1.5 py-0.2 rounded shrink-0">
                             {c.customerNo}
                           </span>
                         )}
                         {!isWalkIn ? (
-                          <span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded border shrink-0 ${tier.bg} ${tier.color}`}>
+                          <span className={`text-[7.5px] font-black uppercase px-1.5 py-0.2 rounded border shrink-0 ${tier.bg} ${tier.color}`}>
                             {tier.label}
                           </span>
                         ) : (
-                          <span className="text-[8px] font-bold uppercase px-1.5 py-0.5 rounded border border-gray-400/20 bg-gray-500/10 text-gray-400 shrink-0">
+                          <span className="text-[7.5px] font-bold uppercase px-1.5 py-0.2 rounded border border-gray-400/20 bg-gray-500/10 text-gray-400 shrink-0">
                             Walk-in
                           </span>
                         )}
                       </div>
-                      <div className={`text-[10px] mt-0.5 flex items-center gap-2 ${isLight ? "text-slate-500" : "text-gray-500"}`}>
-                        <span className="flex items-center gap-1 truncate"><Phone size={9} /> {c.mobile}</span>
+                      <div className={`text-[9.5px] mt-0.5 flex items-center gap-2 ${isLight ? "text-slate-500" : "text-gray-500"}`}>
+                        <span className="flex items-center gap-1 truncate"><Phone size={8.5} /> {c.mobile}</span>
                         {c.totalVisits > 0 && (
-                          <span className="flex items-center gap-1 shrink-0"><ShoppingBag size={9} /> {c.totalVisits} orders</span>
+                          <span className="flex items-center gap-1 shrink-0"><ShoppingBag size={8.5} /> {c.totalVisits} orders</span>
                         )}
                       </div>
                     </div>
@@ -610,25 +612,25 @@ export default function CustomersPage() {
                     <div className="text-right shrink-0 space-y-0.5">
                       {!isWalkIn && (
                         <div className={`flex items-center gap-1 justify-end font-black text-xs font-mono ${isLight ? "text-amber-500" : "text-yellow-400"}`}>
-                          <Star size={10} className={isLight ? "fill-amber-500" : "fill-yellow-400"} /> {c.loyaltyPoints}
+                          <Star size={9.5} className={isLight ? "fill-amber-500" : "fill-yellow-400"} /> {c.loyaltyPoints}
                         </div>
                       )}
-                      <div className={`text-[10px] font-bold font-mono ${isLight ? "text-sky-600" : "text-brand-sky"}`}>
+                      <div className={`text-[9.5px] font-bold font-mono ${isLight ? "text-sky-600" : "text-brand-sky"}`}>
                         {currencySymbol} {Math.round(c.totalSpent).toLocaleString()}
                       </div>
                       {c.creditBalance > 0 && (
-                        <div className="text-[8px] bg-red-500/10 border border-red-500/35 text-red-500 font-black px-1.5 py-0.5 rounded mt-0.5 font-mono uppercase tracking-wide">
+                        <div className="text-[7.5px] bg-red-500/10 border border-red-500/35 text-red-500 font-black px-1.5 py-0.2 rounded mt-0.5 font-mono uppercase tracking-wide">
                           Due: {currencySymbol} {c.creditBalance.toLocaleString()}
                         </div>
                       )}
                       {(c.walletBalance || 0) > 0 && (
-                        <div className="text-[8px] bg-emerald-500/10 border border-emerald-500/35 text-emerald-500 font-black px-1.5 py-0.5 rounded mt-0.5 font-mono uppercase tracking-wide">
+                        <div className="text-[7.5px] bg-emerald-500/10 border border-emerald-500/35 text-emerald-500 font-black px-1.5 py-0.2 rounded mt-0.5 font-mono uppercase tracking-wide">
                           Wallet: {currencySymbol} {(c.walletBalance || 0).toLocaleString()}
                         </div>
                       )}
                     </div>
 
-                    <ChevronRight size={14} className={`${isLight ? "text-slate-400 group-hover:text-sky-600" : "text-gray-600 group-hover:text-brand-sky"} transition shrink-0`} />
+                    <ChevronRight size={13} className={`${isLight ? "text-slate-400 group-hover:text-sky-600" : "text-gray-600 group-hover:text-brand-sky"} transition shrink-0`} />
                   </div>
                 );
               })}
@@ -640,52 +642,52 @@ export default function CustomersPage() {
             RIGHT PANEL — Customer Detail Drawer
         ═══════════════════════════════════════════════════════════════ */}
         {selectedCustomer && (
-          <section className={`flex-grow flex flex-col overflow-hidden ${isLight ? "bg-slate-50" : "bg-black/60"}`}>
+          <section className={`flex-1 flex flex-col overflow-hidden min-w-0 ${isLight ? "bg-slate-50" : "bg-black/60"}`}>
 
             {/* Drawer Header */}
-            <div className={`shrink-0 border-b ${isLight ? "border-slate-200" : "border-brand-dark-border"} p-5 flex items-start justify-between gap-4`}>
-              <div className="flex items-center gap-4">
+            <div className={`shrink-0 border-b ${isLight ? "border-slate-200" : "border-brand-dark-border"} p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3`}>
+              <div className="flex items-center gap-3 min-w-0">
                 <button
                   onClick={() => setSelectedId(null)}
-                  className={`lg:hidden p-2 rounded-lg ${isLight ? "bg-slate-100 text-slate-600 hover:text-slate-900" : "bg-brand-dark-border text-gray-400 hover:text-white"}`}
+                  className={`p-1.5 rounded-lg ${isLight ? "bg-slate-100 text-slate-600 hover:text-slate-900" : "bg-brand-dark-border text-gray-400 hover:text-white"} shrink-0`}
                 >
                   <ArrowLeft size={14} />
                 </button>
 
                 {/* Big Avatar */}
-                <div className="w-14 h-14 rounded-2xl bg-brand-sky text-black font-black text-xl flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-brand-sky text-black font-black text-lg flex items-center justify-center shrink-0">
                   {selectedCustomer.name.charAt(0).toUpperCase()}
                 </div>
 
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className={`font-black ${isLight ? "text-slate-900" : "text-white"} text-lg`}>{selectedCustomer.name}</h2>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <h2 className={`font-black ${isLight ? "text-slate-900" : "text-white"} text-base sm:text-lg truncate`}>{selectedCustomer.name}</h2>
                     {(() => {
                       const isWalkIn = selectedCustomer.name.toLowerCase().includes("walk-in") || selectedCustomer.id === "C-203" || selectedCustomer.id === "walk-in";
                       if (isWalkIn) {
                         return (
-                          <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded border border-gray-400/20 bg-gray-500/10 text-gray-400">
+                          <span className="text-[8px] font-bold uppercase px-2 py-0.5 rounded border border-gray-400/20 bg-gray-500/10 text-gray-400 shrink-0">
                             Standard Walk-in (No Loyalty)
                           </span>
                         );
                       }
                       const tier = getLoyaltyTier(selectedCustomer.loyaltyPoints);
                       return (
-                        <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded border ${tier.bg} ${tier.color}`}>
+                        <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded border shrink-0 ${tier.bg} ${tier.color}`}>
                           {tier.label} Member
                         </span>
                       );
                     })()}
                   </div>
-                  <div className={`flex items-center gap-4 text-[10px] ${isLight ? "text-slate-500" : "text-gray-400"} mt-1`}>
-                    <span className="flex items-center gap-1"><Phone size={10} />{selectedCustomer.mobile}</span>
-                    {selectedCustomer.email && <span className="flex items-center gap-1"><Mail size={10} />{selectedCustomer.email}</span>}
+                  <div className={`flex items-center gap-3 text-[10px] ${isLight ? "text-slate-500" : "text-gray-400"} mt-0.5`}>
+                    <span className="flex items-center gap-1"><Phone size={9.5} />{selectedCustomer.mobile}</span>
+                    {selectedCustomer.email && <span className="hidden sm:flex items-center gap-1"><Mail size={9.5} />{selectedCustomer.email}</span>}
                   </div>
                 </div>
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
                 {selectedCustomer.creditBalance > 0 && (selectedCustomer.walletBalance || 0) > 0 && (
                   <button
                     onClick={() => {
@@ -696,43 +698,43 @@ export default function CustomersPage() {
                         triggerToast(`⚡ Settled dues using Store Wallet! Receipt saved in /Dues_Clear/`);
                       }
                     }}
-                    className="flex items-center gap-1.5 px-3 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-black rounded-lg text-[10px] uppercase transition shadow"
+                    className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-black font-black rounded-lg text-[9.5px] uppercase transition shadow"
                   >
-                    ⚡ Pay Dues via Wallet
+                    ⚡ Wallet Pay
                   </button>
                 )}
                 {selectedCustomer.creditBalance > 0 && (
                   <button
                     onClick={() => setRecoveryCustomer(selectedCustomer)}
-                    className="flex items-center gap-1.5 px-3 py-2 bg-red-500 hover:bg-red-400 text-white font-black rounded-lg text-[10px] uppercase transition"
+                    className="flex items-center gap-1 px-2.5 py-1.5 bg-red-500 hover:bg-red-400 text-white font-black rounded-lg text-[9.5px] uppercase transition"
                   >
-                    <CreditCard size={12} /> Settle Dues
+                    <CreditCard size={11} /> Settle Dues
                   </button>
                 )}
                 <button
                   onClick={() => openEdit(selectedCustomer)}
-                  className={`flex items-center gap-1.5 px-3 py-2 ${isLight ? "bg-slate-100 text-slate-600 hover:bg-brand-sky/10 hover:text-brand-sky" : "bg-brand-dark-border hover:bg-brand-sky/20 text-gray-300 hover:text-brand-sky"} rounded-lg text-[10px] font-bold transition`}
+                  className={`flex items-center gap-1 px-2.5 py-1.5 ${isLight ? "bg-slate-100 text-slate-600 hover:bg-brand-sky/10 hover:text-brand-sky" : "bg-brand-dark-border hover:bg-brand-sky/20 text-gray-300 hover:text-brand-sky"} rounded-lg text-[9.5px] font-bold transition`}
                 >
-                  <Edit2 size={12} /> Edit
+                  <Edit2 size={11} /> Edit
                 </button>
                 <button
                   onClick={() => setConfirmDeleteId(selectedCustomer.id)}
-                  className={`flex items-center gap-1.5 px-3 py-2 ${isLight ? "bg-slate-100 text-slate-600 hover:bg-red-500/10 hover:text-red-500" : "bg-brand-dark-border hover:bg-red-500/20 text-gray-300 hover:text-red-400"} rounded-lg text-[10px] font-bold transition`}
+                  className={`flex items-center gap-1 px-2.5 py-1.5 ${isLight ? "bg-slate-100 text-slate-600 hover:bg-red-500/10 hover:text-red-500" : "bg-brand-dark-border hover:bg-red-500/20 text-gray-300 hover:text-red-400"} rounded-lg text-[9.5px] font-bold transition`}
                 >
-                  <Trash2 size={12} /> Delete
+                  <Trash2 size={11} /> Delete
                 </button>
                 <button
                   onClick={() => setSelectedId(null)}
-                  className={`p-2 ${isLight ? "bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-800" : "bg-brand-dark-border hover:bg-brand-dark-border/60 text-gray-400 hover:text-white"} rounded-lg transition hidden lg:block`}
+                  className={`p-1.5 ${isLight ? "bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-800" : "bg-brand-dark-border hover:bg-brand-dark-border/60 text-gray-400 hover:text-white"} rounded-lg transition hidden lg:block`}
                 >
-                  <X size={14} />
+                  <X size={13} />
                 </button>
               </div>
             </div>
 
             {/* Loyalty Points Bar */}
-            <div className={`shrink-0 px-5 py-3 ${isLight ? "bg-slate-100 border-slate-200" : "bg-brand-dark-surface/30 border-brand-dark-border"} border-b`}>
-              <div className="flex items-center justify-between gap-6">
+            <div className={`shrink-0 px-4 sm:px-5 py-2.5 ${isLight ? "bg-slate-100 border-slate-200" : "bg-brand-dark-surface/30 border-brand-dark-border"} border-b overflow-x-auto`}>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {(() => {
                   const isWalkIn = selectedCustomer.name.toLowerCase().includes("walk-in") || selectedCustomer.id === "C-203" || selectedCustomer.id === "walk-in";
                   return [
@@ -742,10 +744,10 @@ export default function CustomersPage() {
                     { label: "Store Wallet", val: `${currencySymbol} ${(selectedCustomer.walletBalance || 0).toLocaleString()}`, icon: Wallet, color: (selectedCustomer.walletBalance || 0) > 0 ? "text-emerald-400" : "text-gray-500" },
                   ].map(stat => (
                     <div key={stat.label} className="flex items-center gap-2">
-                      <stat.icon size={14} className={stat.color} />
-                      <div>
-                        <div className={`text-sm font-black font-mono ${stat.color}`}>{stat.val}</div>
-                        <div className={`text-[9px] ${isLight ? "text-slate-500" : "text-gray-600"} uppercase tracking-wide`}>{stat.label}</div>
+                      <stat.icon size={13} className={stat.color} />
+                      <div className="min-w-0">
+                        <div className={`text-xs sm:text-sm font-black font-mono truncate ${stat.color}`}>{stat.val}</div>
+                        <div className={`text-[8.5px] ${isLight ? "text-slate-500" : "text-gray-600"} uppercase tracking-wide truncate`}>{stat.label}</div>
                       </div>
                     </div>
                   ));
@@ -754,12 +756,12 @@ export default function CustomersPage() {
             </div>
 
             {/* Tabs */}
-            <div className={`shrink-0 border-b ${isLight ? "border-slate-200" : "border-brand-dark-border"} px-5 flex gap-1 pt-2`}>
+            <div className={`shrink-0 border-b ${isLight ? "border-slate-200" : "border-brand-dark-border"} px-4 sm:px-5 flex gap-1 pt-1.5 overflow-x-auto`}>
               {(["overview", "purchases", "receipts", "loyalty", "credit"] as Tab[]).map(tab => (
                 <button
                   key={tab}
                   onClick={() => setDrawerTab(tab)}
-                  className={`px-4 py-2 text-[10px] font-bold uppercase tracking-wider rounded-t-lg border-b-2 transition ${
+                  className={`px-3 sm:px-4 py-2 text-[10px] font-bold uppercase tracking-wider rounded-t-lg border-b-2 transition shrink-0 ${
                     drawerTab === tab
                       ? "border-brand-sky text-brand-sky bg-brand-sky/5"
                       : `border-transparent ${isLight ? "text-slate-500 hover:text-slate-700" : "text-gray-500 hover:text-gray-300"}`
