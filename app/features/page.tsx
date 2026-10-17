@@ -36,13 +36,13 @@ export default function FeaturesPage() {
       <SiteHeader />
 
       {/* Hero Banner */}
-      <section className={`relative pt-20 pb-16 border-b text-center overflow-hidden transition-colors duration-200 ${
+      <section className={`relative pt-10 sm:pt-14 pb-14 border-b text-center overflow-hidden transition-colors duration-200 ${
         isLight ? "bg-white border-slate-200" : "border-brand-dark-border"
       }`}>
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(14,165,233,0.08),transparent_60%)] pointer-events-none" />
         <div className="max-w-4xl mx-auto px-4 sm:px-6 relative z-10">
-          <h1 className={`text-3xl sm:text-5xl font-black mb-4 ${isLight ? "text-slate-900" : "text-white"}`}>
-            MT Core <span className="sky-gradient-text">Modules &amp; Features</span>
+          <h1 className={`text-3xl sm:text-5xl font-black mb-4 leading-[1.2] ${isLight ? "text-slate-900" : "text-white"}`}>
+            MT Core <span className="inline-block py-1 sky-gradient-text">Modules &amp; Features</span>
           </h1>
           <p className={`text-xs sm:text-sm max-w-xl mx-auto leading-relaxed ${isLight ? "text-slate-600 font-medium" : "text-gray-400"}`}>
             MT Core — The core technology behind your business. Enterprise-level tools out of the box, optimized to eliminate manual calculations and spreadsheets.

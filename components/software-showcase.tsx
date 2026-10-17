@@ -185,10 +185,10 @@ export default function SoftwareShowcase() {
             <Zap size={14} className="text-sky-500" />
             <span>Our 3 Core Systems</span>
           </div>
-          <h2 className={`text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight ${
+          <h2 className={`text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-[1.2] ${
             isLight ? "text-slate-900" : "text-white"
           }`}>
-            Engineered for <span className="bg-gradient-to-r from-sky-400 via-emerald-400 to-purple-400 bg-clip-text text-transparent">Total Operational Mastery</span>
+            Engineered for <span className="inline-block py-1 bg-gradient-to-r from-sky-400 via-emerald-400 to-purple-400 bg-clip-text text-transparent">Total Operational Mastery</span>
           </h2>
           <p className={`text-sm leading-relaxed ${isLight ? "text-slate-600 font-medium" : "text-gray-400"}`}>
             Powering multi-branch retail superstores, corporate workforce payrolls, and high-tier educational campuses with 3 independent, dedicated enterprise architectures.

@@ -126,11 +126,11 @@ export default function HomePage() {
       {/* ══════════════════════════════════════════════════════════════════════
           HERO
       ══════════════════════════════════════════════════════════════════════ */}
-      <section className={`relative pt-24 pb-28 overflow-hidden border-b transition-colors duration-200 ${
+      <section className={`relative pt-12 sm:pt-16 pb-20 overflow-hidden border-b transition-colors duration-200 ${
         isLight ? "bg-white border-slate-200" : "border-brand-dark-border"
       }`}>
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(14,165,233,0.10),transparent_65%)] pointer-events-none" />
-        <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[900px] h-[400px] bg-brand-sky/4 rounded-full blur-[130px] pointer-events-none" />
+        <div className="absolute top-12 left-1/2 -translate-x-1/2 w-[900px] h-[350px] bg-brand-sky/4 rounded-full blur-[130px] pointer-events-none" />
 
         <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 text-center relative z-10">
           <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-6 shadow-sm animate-fade-in-up ${
@@ -142,12 +142,12 @@ export default function HomePage() {
             </span>
           </div>
 
-          <h1 className="text-4xl sm:text-5xl lg:text-7xl font-black tracking-tight leading-tight mb-6">
-            <span className="bg-gradient-to-r from-sky-400 via-emerald-400 to-purple-400 bg-clip-text text-transparent">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.18] mb-6">
+            <span className="inline-block py-1 bg-gradient-to-r from-sky-400 via-emerald-400 to-purple-400 bg-clip-text text-transparent">
               One Unified Engine.
             </span>
             <br />
-            <span className={isLight ? "text-slate-900" : "text-white"}>Three Standalone Super-Systems.</span>
+            <span className={`inline-block mt-1 ${isLight ? "text-slate-900" : "text-white"}`}>Three Standalone Super-Systems.</span>
           </h1>
 
           {/* 3 Flagship Pills */}
@@ -514,12 +514,12 @@ export default function HomePage() {
                 <div className="flex gap-1 text-amber-400 mb-4">
                   {Array(t.stars).fill(0).map((_,i) => <Star key={i} size={13} fill="currentColor" />)}
                 </div>
-                <p className={`text-xs italic mb-5 leading-relaxed ${isLight ? "text-slate-700 font-medium" : "text-gray-300"}`}>"{t.text}"</p>
+                <p className={`text-sm italic mb-5 leading-relaxed ${isLight ? "text-slate-700 font-medium" : "text-gray-300"}`}>"{t.text}"</p>
                 <div className="flex items-center gap-3">
                   <div className={`w-10 h-10 rounded-full ${t.color} text-white font-black flex items-center justify-center text-xs shrink-0 shadow-sm`}>{t.initials}</div>
                   <div>
-                    <h4 className={`font-black text-xs ${isLight ? "text-slate-900" : "text-white"}`}>{t.name}</h4>
-                    <p className={`text-[9px] ${isLight ? "text-slate-500 font-semibold" : "text-gray-500"}`}>{t.role}</p>
+                    <h4 className={`font-black text-sm ${isLight ? "text-slate-900" : "text-white"}`}>{t.name}</h4>
+                    <p className={`text-xs mt-0.5 ${isLight ? "text-slate-500 font-semibold" : "text-gray-500"}`}>{t.role}</p>
                   </div>
                 </div>
               </div>

@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useGlobalContext, Tenant } from "@/context/global-context";
-import { supabase } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import MTCoreLogo from "@/components/mt-logo";
 import {
   Laptop, ArrowRight, CheckCircle2, AlertCircle, Eye, EyeOff, Building2, Lock,
@@ -126,45 +126,47 @@ function LoginContent() {
 
     const cleanTenantId = normalizeTenantId(inputTenantId);
 
-    // ─── Real-Time Supabase Cloud Verification ───
-    try {
-      const { data: globalData } = await supabase.from('unipos_global').select('*');
-      if (globalData) {
-        const blacklistRow = globalData.find((r: any) => r.key === 'unipos_blacklisted_tenants');
-        if (blacklistRow && Array.isArray(blacklistRow.value)) {
-          localStorage.setItem("unipos_blacklisted_tenants", JSON.stringify(blacklistRow.value));
-          if (blacklistRow.value.some((bId: string) => normalizeTenantId(bId) === cleanTenantId)) {
-            if (typeof window !== "undefined") {
-              localStorage.removeItem("unipos_last_activated_tenant");
-              localStorage.removeItem("unipos_current_user");
+    // ─── Real-Time Supabase Cloud Verification (Only if configured) ───
+    if (isSupabaseConfigured) {
+      try {
+        const { data: globalData } = await supabase.from('unipos_global').select('*');
+        if (globalData) {
+          const blacklistRow = globalData.find((r: any) => r.key === 'unipos_blacklisted_tenants');
+          if (blacklistRow && Array.isArray(blacklistRow.value)) {
+            localStorage.setItem("unipos_blacklisted_tenants", JSON.stringify(blacklistRow.value));
+            if (blacklistRow.value.some((bId: string) => normalizeTenantId(bId) === cleanTenantId)) {
+              if (typeof window !== "undefined") {
+                localStorage.removeItem("unipos_last_activated_tenant");
+                localStorage.removeItem("unipos_current_user");
+              }
+              setErrorMessage(`⛔ ACCESS DENIED: Workspace "${cleanTenantId}" has been deleted by Super Admin. Access revoked!`);
+              return;
             }
-            setErrorMessage(`⛔ ACCESS DENIED: Workspace "${cleanTenantId}" has been deleted by Super Admin. Access revoked!`);
-            return;
           }
-        }
 
-        const tenantsRow = globalData.find((r: any) => r.key === 'unipos_tenants');
-        if (tenantsRow && Array.isArray(tenantsRow.value)) {
-          // Merge cloud tenants with existing local tenants so local tenants are preserved
-          const existingLocal: any[] = (() => {
-            try { return JSON.parse(localStorage.getItem("unipos_tenants") || "[]"); } catch { return []; }
-          })();
-          const mergedMap = new Map<string, any>();
-          existingLocal.forEach((t: any) => { if (t?.id) mergedMap.set(normalizeTenantId(t.id), t); });
-          tenants.forEach((t: any) => { if (t?.id) mergedMap.set(normalizeTenantId(t.id), t); });
-          tenantsRow.value.forEach((t: any) => { if (t?.id) mergedMap.set(normalizeTenantId(t.id), t); });
-          const mergedTenants = Array.from(mergedMap.values());
-          localStorage.setItem("unipos_tenants", JSON.stringify(mergedTenants));
-          
-          const matchedTenant = mergedTenants.find((t: any) => normalizeTenantId(t.id) === cleanTenantId);
-          if (matchedTenant && (matchedTenant.status === "Suspended" || matchedTenant.status === "Inactive" || matchedTenant.status === "Pending Payment")) {
-            setErrorMessage(`⛔ ACCESS DENIED: Workspace status is "${matchedTenant.status}". Login blocked.`);
-            return;
+          const tenantsRow = globalData.find((r: any) => r.key === 'unipos_tenants');
+          if (tenantsRow && Array.isArray(tenantsRow.value)) {
+            // Merge cloud tenants with existing local tenants so local tenants are preserved
+            const existingLocal: any[] = (() => {
+              try { return JSON.parse(localStorage.getItem("unipos_tenants") || "[]"); } catch { return []; }
+            })();
+            const mergedMap = new Map<string, any>();
+            existingLocal.forEach((t: any) => { if (t?.id) mergedMap.set(normalizeTenantId(t.id), t); });
+            tenants.forEach((t: any) => { if (t?.id) mergedMap.set(normalizeTenantId(t.id), t); });
+            tenantsRow.value.forEach((t: any) => { if (t?.id) mergedMap.set(normalizeTenantId(t.id), t); });
+            const mergedTenants = Array.from(mergedMap.values());
+            localStorage.setItem("unipos_tenants", JSON.stringify(mergedTenants));
+            
+            const matchedTenant = mergedTenants.find((t: any) => normalizeTenantId(t.id) === cleanTenantId);
+            if (matchedTenant && (matchedTenant.status === "Suspended" || matchedTenant.status === "Inactive" || matchedTenant.status === "Pending Payment")) {
+              setErrorMessage(`⛔ ACCESS DENIED: Workspace status is "${matchedTenant.status}". Login blocked.`);
+              return;
+            }
           }
         }
+      } catch (e) {
+        console.warn("Real-time cloud verification fallback to local storage:", e);
       }
-    } catch (e) {
-      console.warn("Real-time cloud verification fallback to local storage:", e);
     }
 
     let blacklisted: string[] = [];
@@ -599,7 +601,7 @@ function LoginContent() {
   };
 
   return (
-    <div className={`flex flex-col min-h-screen font-sans justify-center items-center relative overflow-y-auto py-12 px-6 lg:px-16 xl:px-24 transition-colors duration-200 ${
+    <div className={`flex flex-col min-h-screen font-sans justify-center items-center relative py-10 px-4 sm:px-6 lg:px-12 transition-colors duration-200 ${
       isLight ? "bg-slate-50 text-slate-900" : "bg-black text-gray-100"
     }`}>
       {/* Background Radial Glow */}
@@ -609,10 +611,10 @@ function LoginContent() {
           : "bg-[radial-gradient(ellipse_at_center,rgba(14,165,233,0.07),transparent_65%)]"
       }`} />
 
-      {/* Floating Animated Tech Stickers & Badges in Background */}
+      {/* Floating Animated Tech Stickers & Badges in Background (Only visible on wide 2xl screens) */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none select-none z-0">
         {/* Top Left Floating Sticker */}
-        <div className={`hidden xl:flex items-center gap-2 px-3.5 py-1.5 rounded-2xl border text-[11px] font-bold shadow-lg animate-float-slow absolute top-20 left-12 ${
+        <div className={`hidden 2xl:flex items-center gap-2 px-3.5 py-1.5 rounded-2xl border text-[11px] font-bold shadow-lg animate-float-slow absolute top-12 left-10 ${
           isLight
             ? "bg-white/80 border-sky-200/80 text-sky-800 shadow-sky-500/5 backdrop-blur-md"
             : "bg-[#0b121e]/80 border-sky-500/30 text-sky-300 shadow-sky-500/10 backdrop-blur-md"
@@ -622,7 +624,7 @@ function LoginContent() {
         </div>
 
         {/* Top Right Floating Sticker */}
-        <div className={`hidden xl:flex items-center gap-2 px-3.5 py-1.5 rounded-2xl border text-[11px] font-bold shadow-lg animate-float-reverse absolute top-28 right-24 ${
+        <div className={`hidden 2xl:flex items-center gap-2 px-3.5 py-1.5 rounded-2xl border text-[11px] font-bold shadow-lg animate-float-reverse absolute top-20 right-28 ${
           isLight
             ? "bg-white/80 border-emerald-200/80 text-emerald-800 shadow-emerald-500/5 backdrop-blur-md"
             : "bg-[#0b121e]/80 border-emerald-500/30 text-emerald-300 shadow-emerald-500/10 backdrop-blur-md"
@@ -631,7 +633,7 @@ function LoginContent() {
         </div>
 
         {/* Bottom Left Floating Sticker */}
-        <div className={`hidden xl:flex items-center gap-2 px-3.5 py-1.5 rounded-2xl border text-[11px] font-bold shadow-lg animate-float-reverse absolute bottom-16 left-16 ${
+        <div className={`hidden 2xl:flex items-center gap-2 px-3.5 py-1.5 rounded-2xl border text-[11px] font-bold shadow-lg animate-float-reverse absolute bottom-12 left-10 ${
           isLight
             ? "bg-white/80 border-purple-200/80 text-purple-800 shadow-purple-500/5 backdrop-blur-md"
             : "bg-[#0b121e]/80 border-purple-500/30 text-purple-300 shadow-purple-500/10 backdrop-blur-md"
@@ -640,7 +642,7 @@ function LoginContent() {
         </div>
 
         {/* Bottom Right Floating Sticker */}
-        <div className={`hidden xl:flex items-center gap-2 px-3.5 py-1.5 rounded-2xl border text-[11px] font-bold shadow-lg animate-float-slow absolute bottom-20 right-20 ${
+        <div className={`hidden 2xl:flex items-center gap-2 px-3.5 py-1.5 rounded-2xl border text-[11px] font-bold shadow-lg animate-float-slow absolute bottom-12 right-12 ${
           isLight
             ? "bg-white/80 border-amber-200/80 text-amber-800 shadow-amber-500/5 backdrop-blur-md"
             : "bg-[#0b121e]/80 border-amber-500/30 text-amber-300 shadow-amber-500/10 backdrop-blur-md"

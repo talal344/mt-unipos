@@ -34,7 +34,7 @@ export default function OfflinePrefetcher() {
   const router = useRouter();
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined" || process.env.NODE_ENV !== "production") return;
 
     const prefetchRoutes = () => {
       // 1. Next.js Router Prefetch: Downloads JS chunks and RSC data into memory cache

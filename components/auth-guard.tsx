@@ -84,7 +84,25 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     }
   }, [hydrated, currentUser, pathname, router]);
 
-  // Optionally show loader until hydrated
+  const isPublicRoute =
+    pathname === "/" ||
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/admin/login") ||
+    pathname.startsWith("/qr-menu") ||
+    pathname.startsWith("/tracking") ||
+    pathname.startsWith("/track-ticket") ||
+    pathname.startsWith("/demo") ||
+    pathname.startsWith("/features") ||
+    pathname.startsWith("/about") ||
+    pathname.startsWith("/blog") ||
+    pathname.startsWith("/contact");
+
+  // Public routes render immediately without delay
+  if (isPublicRoute) {
+    return <>{children}</>;
+  }
+
+  // Dashboard / protected routes wait for user hydration
   if (!hydrated) return null;
 
   return <>{children}</>;

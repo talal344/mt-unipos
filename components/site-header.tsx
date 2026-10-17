@@ -66,6 +66,7 @@ export default function SiteHeader() {
   };
 
   const navLinks = [
+    { name: "Home",         href: "/"              },
     { name: "Features",     href: "/features"      },
     { name: "About Us",     href: "/about"         },
     { name: "SaaS Blog",    href: "/blog"          },
@@ -85,6 +86,7 @@ export default function SiteHeader() {
           <div className="flex-shrink-0 flex items-center cursor-pointer select-none">
             <Link
               href="/"
+              prefetch={true}
               onClick={(e) => {
                 handleLogoTap();
                 if (pathname === "/") e.preventDefault();
@@ -97,16 +99,20 @@ export default function SiteHeader() {
           </div>
 
           {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-8">
+          <nav className="hidden md:flex items-center gap-7 lg:gap-8">
             {navLinks.map(link => {
               const isActive = pathname === link.href;
               return (
-                <Link key={link.name} href={link.href}
-                  className={`text-sm font-semibold tracking-wide transition-colors duration-200 ${
+                <Link
+                  key={link.name}
+                  href={link.href}
+                  prefetch={true}
+                  className={`text-sm font-semibold tracking-wide transition-colors duration-150 ${
                     isLight
                       ? isActive ? "text-sky-600 font-black" : "text-slate-700 hover:text-sky-600"
                       : isActive ? "text-brand-sky font-black" : "text-gray-300 hover:text-brand-sky"
-                  }`}>
+                  }`}
+                >
                   {link.name}
                 </Link>
               );
@@ -140,6 +146,7 @@ export default function SiteHeader() {
             )}
             <Link
               href="/login"
+              prefetch={true}
               className={`group relative inline-flex items-center justify-center gap-1.5 h-9 px-3.5 rounded-xl text-xs font-semibold tracking-normal transition-all duration-200 transform hover:-translate-y-0.5 active:scale-95 border ${
                 isLight
                   ? "bg-slate-100/90 hover:bg-white text-slate-800 hover:text-sky-600 border-slate-200/90 hover:border-sky-400 shadow-xs hover:shadow-sm"
@@ -151,6 +158,7 @@ export default function SiteHeader() {
             </Link>
             <Link
               href="/demo"
+              prefetch={true}
               className="group relative inline-flex items-center justify-center gap-1.5 h-9 px-3.5 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-sky-500 to-indigo-600 hover:opacity-95 shadow-sm shadow-sky-500/20 transition-all duration-200 transform hover:-translate-y-0.5 active:scale-95 cursor-pointer"
             >
               <span>Request Demo</span>
@@ -180,27 +188,39 @@ export default function SiteHeader() {
         <div className={`md:hidden border-t p-4 space-y-4 animate-fade-in-up ${isLight ? "bg-white border-slate-200" : "bg-black border-brand-dark-border"}`}>
           <nav className="flex flex-col gap-3">
             {navLinks.map(link => (
-              <Link key={link.name} href={link.href}
+              <Link
+                key={link.name}
+                href={link.href}
+                prefetch={true}
                 onClick={() => setMobileMenuOpen(false)}
                 className={`text-sm font-semibold py-2 border-b transition ${
                   isLight
                     ? `border-slate-100 ${pathname === link.href ? "text-sky-600 font-bold" : "text-slate-800"}`
                     : `border-brand-dark-border/40 ${pathname === link.href ? "text-brand-sky font-bold" : "text-gray-300"}`
-                }`}>
+                }`}
+              >
                 {link.name}
               </Link>
             ))}
-            <Link href="/login" onClick={() => setMobileMenuOpen(false)}
+            <Link
+              href="/login"
+              prefetch={true}
+              onClick={() => setMobileMenuOpen(false)}
               className={`flex items-center justify-center gap-2 text-center text-xs font-bold py-3 rounded-xl border transition-all active:scale-95 ${
                 isLight
                   ? "text-slate-800 bg-slate-100 border-slate-300 hover:bg-white hover:text-sky-600 hover:border-sky-400 shadow-xs"
                   : "text-gray-200 bg-white/[0.04] hover:bg-sky-500/10 hover:text-sky-300 border-white/10 hover:border-sky-500/40 shadow-xs"
-              }`}>
+              }`}
+            >
               <LogIn size={15} />
               <span>Sign In to Portal</span>
             </Link>
-            <Link href="/demo" onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center justify-center gap-2 text-center text-xs font-black py-3 bg-gradient-to-r from-sky-500 to-indigo-600 hover:opacity-95 text-white rounded-xl shadow-md shadow-sky-500/20 active:scale-95">
+            <Link
+              href="/demo"
+              prefetch={true}
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center justify-center gap-2 text-center text-xs font-black py-3 bg-gradient-to-r from-sky-500 to-indigo-600 hover:opacity-95 text-white rounded-xl shadow-md shadow-sky-500/20 active:scale-95"
+            >
               <span>Request Demo</span>
               <ArrowRight size={15} />
             </Link>

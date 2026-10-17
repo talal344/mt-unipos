@@ -161,23 +161,31 @@ body {
   scrollbar-width: none;  /* Firefox */
 }
 
-/* Permanent Static Layout Fix: Eliminates all page-change shaking/jumping */
-.flex.h-screen,
-.flex.min-h-screen {
+/* Gradient text clipping prevention across all browsers */
+.sky-gradient-text,
+.bg-clip-text {
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+/* Base typography refinements to prevent font collisions */
+h1, h2, h3, h4 {
+  text-wrap: balance;
+}
+
+/* Static Layout Fix: Exclusively applied to POS Dashboard layout with sidebar */
+.flex.h-screen:has(> aside) {
   padding-top: 64px;
   height: 100vh;
   box-sizing: border-box;
 }
 
-body.offline-active .flex.h-screen,
-body.offline-active .flex.min-h-screen {
+body.offline-active .flex.h-screen:has(> aside) {
   padding-top: 88px;
 }
 
-.flex.h-screen > aside,
-.flex.h-screen > main,
-.flex.min-h-screen > aside,
-.flex.min-h-screen > main {
+.flex.h-screen:has(> aside) > aside,
+.flex.h-screen:has(> aside) > main {
   height: 100%;
 }
 

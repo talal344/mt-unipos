@@ -28,7 +28,7 @@ export interface POSShift {
 }
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { queueSyncKey, getQueuedItems, dequeueItem, STORE_SYNC_KEYS, STORE_RECEIPTS } from "@/lib/offline-sync";
 
 
@@ -1227,7 +1227,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
           }
 
           queueSyncKey(key).then(async () => {
-            if (!navigator.onLine) return;
+            if (!navigator.onLine || !isSupabaseConfigured) return;
 
             // SAFETY GUARD: Never overwrite non-empty cloud collections with an empty array []
             if (Array.isArray(parsedData) && parsedData.length === 0) {
@@ -1257,7 +1257,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         } else {
           // Global key (e.g. unipos_tenants)
           queueSyncKey(key).then(async () => {
-            if (!navigator.onLine) return;
+            if (!navigator.onLine || !isSupabaseConfigured) return;
             const { error } = await supabase.from('unipos_global').upsert({
               key: key,
               value: parsedData,
@@ -1273,6 +1273,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
 
     // Pull down & merge data from Supabase Cloud
     const syncFromSupabase = async () => {
+      if (!isSupabaseConfigured) return;
       let changed = false;
       try {
         // 0. Receipt images queue

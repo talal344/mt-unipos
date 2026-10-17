@@ -43,7 +43,7 @@ export default function AboutPage() {
       <SiteHeader />
 
       {/* Hero Banner */}
-      <section className={`relative pt-24 pb-20 border-b text-center overflow-hidden transition-colors duration-200 ${
+      <section className={`relative pt-12 sm:pt-16 pb-16 border-b text-center overflow-hidden transition-colors duration-200 ${
         isLight ? "bg-white border-slate-200" : "border-brand-dark-border"
       }`}>
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(14,165,233,0.10),transparent_65%)] pointer-events-none" />
@@ -57,8 +57,8 @@ export default function AboutPage() {
             </span>
           </div>
 
-          <h1 className={`text-4xl sm:text-6xl font-black tracking-tight mb-4 leading-none ${isLight ? "text-slate-900" : "text-white"}`}>
-            About <span className="sky-gradient-text">MT Core</span>
+          <h1 className={`text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight mb-4 leading-[1.2] ${isLight ? "text-slate-900" : "text-white"}`}>
+            About <span className="inline-block py-1 sky-gradient-text">MT Core</span>
           </h1>
           <p className={`text-xs sm:text-sm max-w-2xl mx-auto leading-relaxed ${isLight ? "text-slate-600 font-medium" : "text-gray-400"}`}>
             MT Core — The core technology behind your business. Engineered to solve retail stock leakages, streamline checkout speeds, automate double-entry accounting, and manage complete HR operations for growing enterprises.
@@ -132,10 +132,10 @@ export default function AboutPage() {
             <h2 className={`text-3xl sm:text-4xl font-black tracking-tight ${isLight ? "text-slate-900" : "text-white"}`}>
               Meet Mian Talal
             </h2>
-            <p className={`text-xs sm:text-sm leading-relaxed ${isLight ? "text-slate-600 font-medium" : "text-gray-400"}`}>
+            <p className={`text-sm leading-relaxed ${isLight ? "text-slate-600 font-medium" : "text-gray-400"}`}>
               Mian Talal founded MT Core with a clear mission: to eliminate disjointed legacy software with cutting-edge technology. Having observed the operational hassles of multi-branch stores, wholesale dealers, pharmacies, and growing businesses, he architected MT Core — The core technology behind your business.
             </p>
-            <blockquote className={`border-l-2 border-sky-500 pl-4 italic text-xs leading-relaxed ${isLight ? "text-slate-700" : "text-gray-300"}`}>
+            <blockquote className={`border-l-2 border-sky-500 pl-4 italic text-sm leading-relaxed my-2 ${isLight ? "text-slate-700 font-medium" : "text-gray-300"}`}>
               "We didn't just build a cash register. We built a real-time double-entry ledger that empowers store owners to understand their exact cash velocity, profit margins, and inventory restock timelines automatically."
             </blockquote>
             

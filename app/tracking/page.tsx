@@ -573,7 +573,7 @@ export default function TrackingPage() {
       <SiteHeader />
 
       {/* Hero / Portal Header */}
-      <section className={`relative py-16 border-b overflow-hidden transition-colors duration-200 ${
+      <section className={`relative pt-10 sm:pt-14 pb-14 border-b overflow-hidden transition-colors duration-200 ${
         isLight ? "bg-white border-slate-200" : "border-brand-dark-border"
       }`}>
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(14,165,233,0.08),transparent_70%)] pointer-events-none" />
@@ -588,8 +588,8 @@ export default function TrackingPage() {
             </span>
           </div>
 
-          <h1 className={`text-3xl sm:text-4xl font-black tracking-tight mb-3 font-sans ${isLight ? "text-slate-900" : "text-white"}`}>
-            Track Receipt, <span className="text-sky-500 font-sans">Customer Account</span> &amp; Tickets
+          <h1 className={`text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight mb-4 leading-[1.25] font-sans ${isLight ? "text-slate-900" : "text-white"}`}>
+            Track Receipt, <span className="inline-block text-sky-500 font-sans">Customer Account</span> &amp; Tickets
           </h1>
           <p className={`text-xs sm:text-sm mb-8 max-w-lg mx-auto leading-relaxed font-sans ${isLight ? "text-slate-600 font-medium" : "text-gray-400"}`}>
             Verify purchase receipts, review your full customer purchase ledger &amp; credit dues, or track support ticket status in real-time.

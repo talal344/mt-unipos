@@ -75,29 +75,30 @@ export default function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html: `
-              if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js').then(function(reg) {
-                    if (navigator.onLine) {
-                      var routes = [
-                        '/dashboard', '/pos', '/sales', '/customers', '/products', 
-                        '/suppliers', '/purchases', '/inventory', '/expenses', 
-                        '/accounting', '/payroll', '/staff', '/crm', '/reports', 
-                        '/ai', '/support', '/settings', '/restaurant', '/kds', 
-                        '/menu-builder', '/floor-editor', '/pharmacy'
-                      ];
-                      setTimeout(function() {
-                        routes.forEach(function(r) {
-                          fetch(r, { cache: 'no-cache' }).catch(function() {});
-                        });
-                      }, 2500);
+              (function() {
+                if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+                  navigator.serviceWorker.getRegistrations().then(function(regs) {
+                    var needReload = false;
+                    for (var r of regs) {
+                      r.unregister();
+                      needReload = true;
                     }
-                  }).catch(function(err) {
-                    console.warn('SW registration failed:', err);
+                    if ('caches' in window) {
+                      caches.keys().then(function(keys) {
+                        for (var k of keys) {
+                          caches.delete(k);
+                          needReload = true;
+                        }
+                      });
+                    }
+                    if (needReload && !sessionStorage.getItem('sw_purged_v2')) {
+                      sessionStorage.setItem('sw_purged_v2', '1');
+                      window.location.reload();
+                    }
                   });
-                });
-              }
-            `,
+                }
+              })();
+            `
           }}
         />
       </body>
