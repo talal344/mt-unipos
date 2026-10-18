@@ -119,11 +119,11 @@ export default function AdminDashboardPage() {
     : "bg-brand-dark-surface border-brand-dark-border text-gray-400 hover:text-white";
 
   return (
-    <div className={`flex min-h-screen font-sans ${isLight ? "bg-slate-100 text-slate-900" : "bg-black text-gray-100"}`}>
+    <div className={`flex flex-col min-h-screen font-sans ${isLight ? "bg-slate-100 text-slate-900" : "bg-black text-gray-100"}`}>
       <AdminSidebar />
 
       {/* Main Content Area */}
-      <main className="flex-grow p-6 sm:p-8 space-y-6 overflow-y-auto max-h-screen">
+      <main className="flex-grow w-full p-4 sm:p-6 lg:p-8 space-y-6">
         
         {/* Header */}
         <div className={`flex justify-between items-center border-b pb-4 ${borderLine}`}>

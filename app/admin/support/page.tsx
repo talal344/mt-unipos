@@ -63,10 +63,10 @@ export default function AdminSupportPage() {
   };
 
   return (
-    <div className={`flex min-h-screen font-sans ${isLight ? "bg-slate-100 text-slate-900" : "bg-black text-gray-100"}`}>
+    <div className={`flex flex-col min-h-screen font-sans ${isLight ? "bg-slate-100 text-slate-900" : "bg-black text-gray-100"}`}>
       <AdminSidebar />
 
-      <main className="flex-grow p-6 sm:p-8 space-y-6 overflow-y-auto max-h-screen grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <main className="flex-grow w-full p-4 sm:p-6 lg:p-8 space-y-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Left Column: Tickets Queue list */}
         <div className={`lg:col-span-1 border p-4 rounded-2xl flex flex-col max-h-[85vh] ${
