@@ -315,7 +315,7 @@ export default function SMSSidebar() {
       <div className="flex flex-col">
         {/* Brand Header */}
         <div className={`p-4 border-b ${isLight ? "border-slate-200" : "border-[#1e293b]"} flex items-center justify-center`}>
-          <Link href="/sms" className="flex items-center justify-center group">
+          <Link href="/sms" prefetch={true} className="flex items-center justify-center group">
             <MTCoreLogo
               variant="emerald"
               size="md"
@@ -459,6 +459,7 @@ export default function SMSSidebar() {
                         <Link
                           key={item.href}
                           href={item.href}
+                          prefetch={true}
                           className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-semibold transition ${
                             isActive
                               ? "bg-gradient-to-r from-sky-600 to-indigo-600 text-white font-bold shadow-md shadow-sky-600/20"
@@ -499,6 +500,7 @@ export default function SMSSidebar() {
       <div className={`p-3 border-t ${isLight ? "border-slate-200 bg-slate-50" : "border-[#1e293b] bg-black/40"} space-y-2`}>
         <Link
           href="/"
+          prefetch={true}
           className={`flex items-center justify-between p-2.5 rounded-xl ${
             isLight ? "bg-white hover:bg-slate-100 text-slate-700 hover:text-slate-950 border border-slate-200" : "bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white border border-white/5"
           } text-xs font-bold transition group`}

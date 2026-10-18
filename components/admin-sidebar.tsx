@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { useGlobalContext } from "@/context/global-context";
@@ -44,23 +44,20 @@ export default function AdminSidebar() {
     return () => document.removeEventListener("mousedown", handler);
   }, [showNotifications]);
 
-  // Notifications calculation
-  // 1. Pending demo requests
-  const pendingDemos = demoRequests.filter(d => d.status === "Pending");
+  // Notifications calculation memoized
+  const pendingDemos = useMemo(() => demoRequests.filter(d => d.status === "Pending"), [demoRequests]);
   
-  // 2. Demo client messages (new chat replies)
-  const demoMessages = demoRequests.filter(d => 
+  const demoMessages = useMemo(() => demoRequests.filter(d => 
     d.messages.length > 0 && d.messages[d.messages.length - 1].sender === "Client"
-  );
+  ), [demoRequests]);
 
-  // 3. Open support tickets or tickets with last reply by Client
-  const openTickets = supportTickets.filter(t => 
+  const openTickets = useMemo(() => supportTickets.filter(t => 
     t.status === "Open" || (t.replies.length > 0 && t.replies[t.replies.length - 1].sender === "Client")
-  );
+  ), [supportTickets]);
 
   const totalNotifications = pendingDemos.length + demoMessages.length + openTickets.length;
 
-  const links = [
+  const links = useMemo(() => [
     { name: "Statistics", href: "/admin/dashboard", icon: BarChart3 },
     { name: "Tenants Directory", href: "/admin/clients", icon: Users },
     { name: "SaaS Reports", href: "/admin/reports", icon: PieChart },
@@ -68,7 +65,16 @@ export default function AdminSidebar() {
     { name: "Email Logs", href: "/admin/emails", icon: Mail },
     { name: "Support Tickets", href: "/admin/support", icon: MessageSquare },
     { name: "Platform Settings", href: "/admin/settings", icon: Settings }
-  ];
+  ], []);
+
+  // Eagerly prefetch all admin routes into Next.js router cache
+  useEffect(() => {
+    links.forEach((l) => {
+      try {
+        router.prefetch(l.href);
+      } catch (e) {}
+    });
+  }, [router, links]);
 
   const handleLogout = () => {
     logout();
@@ -127,6 +133,7 @@ export default function AdminSidebar() {
                   <Link
                     key={d.id}
                     href="/admin/clients"
+                    prefetch={true}
                     onClick={() => setShowNotifications(false)}
                     className={`flex items-center justify-between px-4 py-2 transition group ${
                       isLight ? "hover:bg-slate-50" : "hover:bg-purple-950/10"
@@ -156,6 +163,7 @@ export default function AdminSidebar() {
                     <Link
                       key={d.id}
                       href="/admin/clients"
+                      prefetch={true}
                       onClick={() => setShowNotifications(false)}
                       className={`flex flex-col px-4 py-2 transition group ${
                         isLight ? "hover:bg-slate-50" : "hover:bg-purple-950/10"
@@ -186,6 +194,7 @@ export default function AdminSidebar() {
                     <Link
                       key={t.id}
                       href="/admin/support"
+                      prefetch={true}
                       onClick={() => setShowNotifications(false)}
                       className={`flex items-center justify-between px-4 py-2 transition group ${
                         isLight ? "hover:bg-slate-50" : "hover:bg-purple-950/10"
@@ -225,7 +234,7 @@ export default function AdminSidebar() {
         <div className={`py-3 px-4 border-b shrink-0 flex items-center justify-center relative ${
           isLight ? "bg-purple-50/60 border-slate-200" : "bg-black/60 border-brand-dark-border"
         }`}>
-          <Link href="/admin/dashboard" className="flex items-center justify-center gap-2">
+          <Link href="/admin/dashboard" prefetch={true} className="flex items-center justify-center gap-2">
             <MTCoreLogo variant="purple" size="sm" showText={true} theme={isLight ? "light" : "dark"} />
             <span className={`text-[8px] px-1.5 py-0.5 rounded font-black tracking-widest uppercase shrink-0 ${
               isLight ? "bg-purple-100 text-purple-800 border border-purple-200" : "bg-purple-500/20 text-purple-400"
@@ -279,6 +288,9 @@ export default function AdminSidebar() {
               <Link
                 key={link.name}
                 href={link.href}
+                prefetch={true}
+                onMouseEnter={() => router.prefetch(link.href)}
+                onMouseDown={() => router.prefetch(link.href)}
                 className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-semibold transition ${
                   active
                     ? isLight
@@ -322,6 +334,7 @@ export default function AdminSidebar() {
 
         <Link
           href="/"
+          prefetch={true}
           className={`flex items-center gap-2 px-3 py-2 transition text-xs font-semibold ${
             isLight ? "text-slate-500 hover:text-slate-900" : "text-gray-500 hover:text-white"
           }`}

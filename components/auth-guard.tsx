@@ -47,6 +47,11 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    // SuperAdmin bypass: skip tenant line-of-business checks and cashier restrictions
+    if (currentUser.role === "SuperAdmin") {
+      return;
+    }
+
     // Line of Business Isolation: HRMS vs POS vs SMS
     const currentSoftware = (currentUser as any).assignedSoftware;
     const isHRMSUser = currentSoftware === "HRMS" || (currentUser.businessName && currentUser.businessName.includes("HRMS"));

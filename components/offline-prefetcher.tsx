@@ -27,7 +27,14 @@ const OFFLINE_ROUTES = [
   "/floor-editor",
   "/pharmacy",
   "/hrms",
-  "/sms"
+  "/sms",
+  "/admin/dashboard",
+  "/admin/clients",
+  "/admin/reports",
+  "/admin/invoices",
+  "/admin/emails",
+  "/admin/support",
+  "/admin/settings"
 ];
 
 export default function OfflinePrefetcher() {

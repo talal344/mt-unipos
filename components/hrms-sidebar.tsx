@@ -205,7 +205,7 @@ export default function HRMSSidebar() {
 
       {/* Brand Header */}
       <div className={`p-3 border-b border-gray-800/80 bg-black/50 flex items-center ${collapsed ? "justify-center" : "justify-center relative"}`}>
-        <Link href="/hrms" className="flex items-center justify-center gap-2 overflow-hidden">
+        <Link href="/hrms" prefetch={true} className="flex items-center justify-center gap-2 overflow-hidden">
           <MTCoreLogo
             variant="emerald"
             size="sm"
@@ -236,6 +236,7 @@ export default function HRMSSidebar() {
                 <Link
                   key={item.href}
                   href={item.href}
+                  prefetch={true}
                   className={`flex items-center gap-3 px-3 py-2 rounded-xl font-bold text-xs transition ${
                     isActive
                       ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-900/30"
@@ -263,6 +264,7 @@ export default function HRMSSidebar() {
                 <Link
                   key={item.href}
                   href={item.href}
+                  prefetch={true}
                   className={`flex items-center gap-3 px-3 py-2 rounded-xl font-bold text-xs transition ${
                     isActive
                       ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-900/30"
@@ -292,6 +294,7 @@ export default function HRMSSidebar() {
                   <Link
                     key={item.href}
                     href={item.href}
+                    prefetch={true}
                     className={`flex items-center gap-3 px-3 py-2 rounded-xl font-bold text-xs transition ${
                       isActive
                         ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-900/30"
@@ -351,6 +354,7 @@ export default function HRMSSidebar() {
                       <Link
                         key={item.href}
                         href={item.href}
+                        prefetch={true}
                         className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition ${
                           isActive
                             ? "bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30 shadow-sm"
@@ -411,6 +415,7 @@ export default function HRMSSidebar() {
                       <Link
                         key={item.href}
                         href={item.href}
+                        prefetch={true}
                         className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition ${
                           isActive
                             ? "bg-sky-500/20 text-sky-300 font-bold border border-sky-500/30 shadow-sm"
@@ -471,6 +476,7 @@ export default function HRMSSidebar() {
                       <Link
                         key={item.href}
                         href={item.href}
+                        prefetch={true}
                         className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition ${
                           isActive
                             ? "bg-purple-500/20 text-purple-300 font-bold border border-purple-500/30 shadow-sm"
@@ -500,6 +506,7 @@ export default function HRMSSidebar() {
                   <Link
                     key={item.href}
                     href={item.href}
+                    prefetch={true}
                     className={`flex items-center gap-3 px-3 py-2 rounded-xl font-bold text-xs transition ${
                       isActive
                         ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-900/30"

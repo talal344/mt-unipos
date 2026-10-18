@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useGlobalContext } from "@/context/global-context";
@@ -22,6 +22,14 @@ export default function SuperAdminLoginPage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading]   = useState(false);
 
+  // Eagerly prefetch the admin dashboard and directory on login page load
+  useEffect(() => {
+    try {
+      router.prefetch("/admin/dashboard");
+      router.prefetch("/admin/clients");
+    } catch (e) {}
+  }, [router]);
+
   const handleApplyPreset = () => {
     setEmail("talal344");
     setPassword("talal344");
@@ -34,11 +42,9 @@ export default function SuperAdminLoginPage() {
       setErrorMessage("");
       setLoading(true);
       const adminUser = { name: "Mian Talal (SaaS Admin)", role: "SuperAdmin", email: "talal344" };
-      setTimeout(() => {
-        localStorage.setItem("unipos_current_user", JSON.stringify(adminUser));
-        setCurrentUser(adminUser);
-        router.push("/admin/dashboard");
-      }, 500);
+      localStorage.setItem("unipos_current_user", JSON.stringify(adminUser));
+      setCurrentUser(adminUser);
+      router.push("/admin/dashboard");
     } else {
       setErrorMessage("Invalid Super Admin credentials. Use the preset button below.");
     }
@@ -99,6 +105,7 @@ export default function SuperAdminLoginPage() {
       <div className="absolute top-6 right-6 z-20 flex items-center gap-3">
         <Link
           href="/"
+          prefetch={true}
           className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition border ${
             isLight
               ? "bg-white border-slate-200 text-slate-700 hover:text-purple-600 hover:border-purple-300 shadow-xs"
@@ -112,6 +119,7 @@ export default function SuperAdminLoginPage() {
 
         <Link
           href="/login"
+          prefetch={true}
           className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition border ${
             isLight
               ? "bg-sky-50 border-sky-200 text-sky-700 hover:bg-sky-100 shadow-xs"
