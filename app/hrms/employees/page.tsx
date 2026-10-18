@@ -5,7 +5,6 @@ import Link from "next/link";
 import HRMSSidebar from "@/components/hrms-sidebar";
 import HRMSTopHeader from "@/components/hrms-top-header";
 import { useGlobalContext, calculateDesignationRankAndGrade, isEligibleForDepartmentHead } from "@/context/global-context";
-import * as XLSX from "xlsx";
 import {
   Users,
   UserPlus,
@@ -306,7 +305,7 @@ export default function HREmployeesPage() {
   };
 
   // ─── BULK IMPORT: Download Template ──────────────────────────────────────
-  const handleDownloadTemplate = () => {
+  const handleDownloadTemplate = async () => {
     const templateHeaders = [
       ["Employee Code", "Full Name", "Work Email", "Personal Email", "Phone", "CNIC",
        "Department", "Designation", "Joining Date (YYYY-MM-DD)", "Employment Type",
@@ -321,6 +320,7 @@ export default function HREmployeesPage() {
        "80000", "HBL", "09876543210", "", "Active"]
     ];
 
+    const XLSX = await import("xlsx");
     const wsData = [...templateHeaders, ...sampleRows];
     const ws = XLSX.utils.aoa_to_sheet(wsData);
 
@@ -346,7 +346,8 @@ export default function HREmployeesPage() {
     setBulkDone(false);
 
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
+      const XLSX = await import("xlsx");
       const data = new Uint8Array(event.target?.result as ArrayBuffer);
       const wb = XLSX.read(data, { type: "array" });
       const ws = wb.Sheets[wb.SheetNames[0]];

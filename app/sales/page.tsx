@@ -10,7 +10,6 @@ import {
   CreditCard, Landmark, Wallet, Smartphone, ChevronDown,
   BarChart3, ArrowUpRight
 } from "lucide-react";
-import * as XLSX from "xlsx";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Period = "today" | "week" | "month" | "custom";
@@ -354,7 +353,8 @@ export default function SalesPage() {
   }, [filtered]);
 
   // ── Export Excel ───────────────────────────────────────────────────────────
-  const handleExport = () => {
+  const handleExport = async () => {
+    const XLSX = await import("xlsx");
     const rows = filtered.map(s => ({
       "Receipt #":   s.receiptNumber,
       "Date":        fmtDateTime(s.date),

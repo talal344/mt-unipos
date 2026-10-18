@@ -8,7 +8,6 @@ import {
   Package, Upload, Download, FileSpreadsheet, CheckCircle2,
   AlertTriangle, ChevronRight, Loader2, Eye, BarChart3, Printer, Layers
 } from "lucide-react";
-import * as XLSX from "xlsx";
 
 // ─── Auto Code Generators ────────────────────────────────────────────────────
 
@@ -253,7 +252,7 @@ export default function ProductsPage() {
   // ─────────────────────────────────────────────────────────────────────────
   //  EXCEL DEMO TEMPLATE DOWNLOAD
   // ─────────────────────────────────────────────────────────────────────────
-  const handleDownloadTemplate = () => {
+  const handleDownloadTemplate = async () => {
     // Demo rows so owner understands the format
     const demoData = [
       {
@@ -297,6 +296,7 @@ export default function ProductsPage() {
       },
     ];
 
+    const XLSX = await import("xlsx");
     const ws = XLSX.utils.json_to_sheet(demoData, { header: DEMO_TEMPLATE_COLS });
 
     // Style header row width
@@ -316,8 +316,9 @@ export default function ProductsPage() {
   // ─────────────────────────────────────────────────────────────────────────
   const parseExcelFile = useCallback((file: File) => {
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
+        const XLSX = await import("xlsx");
         const data = new Uint8Array(e.target?.result as ArrayBuffer);
         const wb = XLSX.read(data, { type: "array" });
         const ws = wb.Sheets[wb.SheetNames[0]];

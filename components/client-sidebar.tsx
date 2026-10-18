@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { useGlobalContext } from "@/context/global-context";
@@ -200,12 +200,25 @@ export default function ClientSidebar() {
     }
   ];
 
-  const visibleGroups = menuGroups
-    .map(group => ({
-      ...group,
-      links: group.links.filter(l => l.roles.includes(userRole) && l.verticals.includes(vertical))
-    }))
-    .filter(group => group.links.length > 0);
+  const visibleGroups = useMemo(() => {
+    return menuGroups
+      .map(group => ({
+        ...group,
+        links: group.links.filter(l => l.roles.includes(userRole) && l.verticals.includes(vertical))
+      }))
+      .filter(group => group.links.length > 0);
+  }, [userRole, vertical]);
+
+  // Eagerly prefetch all client portal routes into Next.js in-memory cache
+  useEffect(() => {
+    visibleGroups.forEach(group => {
+      group.links.forEach(l => {
+        try {
+          router.prefetch(l.href);
+        } catch (e) {}
+      });
+    });
+  }, [router, visibleGroups]);
 
   const handleLogout = () => { logout(); router.push("/login"); };
 
@@ -291,6 +304,11 @@ export default function ClientSidebar() {
                       key={link.name + link.href}
                       href={link.href}
                       prefetch={true}
+                      onMouseEnter={() => {
+                        try {
+                          router.prefetch(link.href);
+                        } catch (e) {}
+                      }}
                       className={`flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold border transition-colors ${
                         active
                           ? isLight

@@ -8,12 +8,15 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const { currentUser } = useGlobalContext()!;
   const pathname = usePathname();
   const router = useRouter();
-  const [hydrated, setHydrated] = useState(false);
+  const [hydrated, setHydrated] = useState(() => {
+    if (typeof window !== "undefined") {
+      return Boolean(localStorage.getItem("unipos_current_user"));
+    }
+    return false;
+  });
 
   useEffect(() => {
-    // Wait for context hydration from localStorage
-    const timer = setTimeout(() => setHydrated(true), 50);
-    return () => clearTimeout(timer);
+    setHydrated(true);
   }, []);
 
   useEffect(() => {

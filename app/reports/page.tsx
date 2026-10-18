@@ -9,7 +9,6 @@ import {
   Users, ArrowUpRight, AlertTriangle, CheckCircle2, UserCheck, ShieldAlert,
   Image, Printer, FileSpreadsheet, X, Landmark, Smartphone, Wallet, FileText, Zap
 } from "lucide-react";
-import * as XLSX from "xlsx";
 
 // ── Date helpers ──────────────────────────────────────────────────────────────
 function isoDate(d: Date) {
@@ -513,11 +512,6 @@ export default function ReportsPage() {
     }
   };
 
-  const saveWorkbook = async (wb: XLSX.WorkBook, fileName: string) => {
-    const base64Str = XLSX.write(wb, { bookType: "xlsx", type: "base64" });
-    await saveReportToLocalDisk("report-excel", fileName, base64Str);
-  };
-
   const handleImageExport = async () => {
     if (!reportContainerRef.current) return;
     try {
@@ -623,6 +617,11 @@ export default function ReportsPage() {
   //  EXPORTS HANDLERS
   // ─────────────────────────────────────────────────────────────────────────
   const handleExcelExport = async () => {
+    const XLSX = await import("xlsx");
+    const saveWorkbook = async (wb: any, fileName: string) => {
+      const base64Str = XLSX.write(wb, { bookType: "xlsx", type: "base64" });
+      await saveReportToLocalDisk("report-excel", fileName, base64Str);
+    };
     const wb = XLSX.utils.book_new();
 
     if (activeTab === "pl") {
