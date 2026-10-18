@@ -589,10 +589,10 @@ export default function ApiDocsPage() {
   ] as const;
 
   return (
-    <div className="flex min-h-screen bg-black text-gray-100 font-sans">
+    <div className="flex h-screen overflow-hidden bg-black text-gray-100 font-sans">
       <ClientSidebar />
 
-      <div className="flex-grow flex flex-col max-h-screen overflow-hidden">
+      <div className="flex-grow flex flex-col h-screen overflow-hidden">
 
         {/* Top nav bar */}
         <div className="border-b border-brand-dark-border bg-brand-dark-surface/60 px-5 py-0 flex items-center gap-1 shrink-0 overflow-x-auto">

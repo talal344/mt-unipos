@@ -203,7 +203,7 @@ export default function MenuBuilderPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-brand-dark-surface text-gray-100 font-sans selection:bg-brand-sky/30">
+    <div className="flex h-screen overflow-hidden bg-brand-dark-surface text-gray-100 font-sans selection:bg-brand-sky/30">
       <ClientSidebar />
 
       {toast && (
@@ -212,7 +212,7 @@ export default function MenuBuilderPage() {
         </div>
       )}
 
-      <main className="flex-grow p-6 sm:p-8 space-y-8 overflow-y-auto max-h-screen">
+      <main className="flex-grow p-6 sm:p-8 space-y-8 overflow-y-auto h-screen">
         
         {/* Header */}
         <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center border-b border-white/5 pb-6">

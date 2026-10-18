@@ -28,10 +28,10 @@ export default function PharmacyPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-black text-gray-100 font-sans">
+    <div className="flex h-screen overflow-hidden bg-black text-gray-100 font-sans">
       <ClientSidebar />
 
-      <main className="flex-grow p-6 sm:p-8 space-y-6 overflow-y-auto max-h-screen grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <main className="flex-grow p-6 sm:p-8 space-y-6 overflow-y-auto h-screen grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Left Columns: Expiry batch compliances */}
         <div className="lg:col-span-2 space-y-6">

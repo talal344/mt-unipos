@@ -174,18 +174,32 @@ h1, h2, h3, h4 {
 }
 
 /* Static Layout Fix: Exclusively applied to POS Dashboard layout with sidebar */
-.flex.h-screen:has(> aside) {
+.flex.h-screen:has(> aside),
+.flex.min-h-screen:has(> aside),
+div:has(> aside.client-sidebar) {
   padding-top: 64px;
-  height: 100vh;
   box-sizing: border-box;
 }
 
-body.offline-active .flex.h-screen:has(> aside) {
+.flex.h-screen:has(> aside),
+.flex.min-h-screen:has(> aside),
+div:has(> aside.client-sidebar) {
+  height: 100vh;
+  overflow: hidden;
+}
+
+body.offline-active .flex.h-screen:has(> aside),
+body.offline-active .flex.min-h-screen:has(> aside),
+body.offline-active div:has(> aside.client-sidebar) {
   padding-top: 88px;
 }
 
 .flex.h-screen:has(> aside) > aside,
-.flex.h-screen:has(> aside) > main {
+.flex.h-screen:has(> aside) > main,
+.flex.min-h-screen:has(> aside) > aside,
+.flex.min-h-screen:has(> aside) > main,
+div:has(> aside.client-sidebar) > aside,
+div:has(> aside.client-sidebar) > main {
   height: 100%;
 }
 

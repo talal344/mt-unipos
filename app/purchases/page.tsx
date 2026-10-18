@@ -133,7 +133,7 @@ export default function PurchasesPage() {
   const poGrandTotal = poLines.reduce((a, l) => a + l.subtotal, 0);
 
   return (
-    <div className={`flex min-h-screen font-sans ${isLight ? "bg-slate-100 text-slate-900" : "bg-black text-gray-100"}`}>
+    <div className={`flex h-screen overflow-hidden font-sans ${isLight ? "bg-slate-100 text-slate-900" : "bg-black text-gray-100"}`}>
       <ClientSidebar />
 
       {/* Toast */}
@@ -143,7 +143,7 @@ export default function PurchasesPage() {
         </div>
       )}
 
-      <main className="flex-grow p-5 space-y-5 overflow-y-auto max-h-screen">
+      <main className="flex-grow p-6 sm:p-8 space-y-6 overflow-y-auto h-screen">
 
         {/* Header */}
         <div className={`flex items-center justify-between border-b pb-4 ${isLight ? "border-slate-200" : "border-brand-dark-border/60"}`}>

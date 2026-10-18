@@ -293,9 +293,9 @@ export default function RestaurantPage() {
     const grandTotal = subtotal + tax;
 
     return (
-      <div className="flex min-h-screen bg-black text-gray-100 font-sans">
+      <div className="flex h-screen overflow-hidden bg-black text-gray-100 font-sans">
         <ClientSidebar />
-        <main className="flex-grow flex flex-col max-h-screen overflow-hidden">
+        <main className="flex-grow flex flex-col h-screen overflow-hidden">
           {/* Header */}
           <div className="bg-brand-dark-surface border-b border-brand-dark-border px-6 py-4 flex justify-between items-center shrink-0">
             <div className="flex items-center gap-4">
@@ -704,9 +704,9 @@ export default function RestaurantPage() {
 
   // ─── FLOOR MAP VIEW ───
   return (
-    <div className="flex min-h-screen bg-black text-gray-100 font-sans">
+    <div className="flex h-screen overflow-hidden bg-black text-gray-100 font-sans">
       <ClientSidebar />
-      <main className="flex-grow p-6 sm:p-8 space-y-6 overflow-y-auto max-h-screen grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <main className="flex-grow p-6 sm:p-8 space-y-6 overflow-y-auto h-screen grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Left Columns: Floor Tables layout & split calculator */}
         <div className="lg:col-span-2 space-y-6">

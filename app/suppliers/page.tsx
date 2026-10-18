@@ -142,7 +142,7 @@ export default function SuppliersPage() {
   };
 
   return (
-    <div className={`flex min-h-screen font-sans ${isLight ? "bg-slate-100 text-slate-900" : "bg-black text-gray-100"}`}>
+    <div className={`flex h-screen overflow-hidden font-sans ${isLight ? "bg-slate-100 text-slate-900" : "bg-black text-gray-100"}`}>
       <ClientSidebar />
 
       {/* Toast Alert */}
@@ -152,7 +152,7 @@ export default function SuppliersPage() {
         </div>
       )}
 
-      <main className="flex-grow flex overflow-hidden max-h-screen">
+      <main className="flex-grow flex overflow-hidden h-screen">
         
         {/* LEFT COLUMN: Suppliers list */}
         <section className={`flex flex-col border-r border-brand-dark-border transition-all duration-300 ${selectedId ? "w-0 lg:w-[420px] overflow-hidden" : "flex-grow"}`}>

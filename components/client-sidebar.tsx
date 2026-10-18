@@ -553,7 +553,7 @@ export default function ClientSidebar() {
       </aside>
 
       <aside className={`
-        hidden md:flex flex-col relative top-0 h-full w-72 border-r shrink-0 font-sans print:hidden z-10 ${
+        hidden md:flex flex-col relative top-0 h-full w-72 border-r shrink-0 font-sans print:hidden z-10 client-sidebar ${
         isLight ? "bg-white border-slate-200 text-slate-900 shadow-xs" : "bg-brand-dark-surface border-brand-dark-border text-gray-100"
       }`}>
         <nav className="flex-1 px-3 py-4 overflow-y-auto no-scrollbar">
