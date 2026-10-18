@@ -34,3 +34,11 @@ CREATE POLICY "Allow all operations for anon global" ON unipos_global
   TO anon
   USING (true)
   WITH CHECK (true);
+
+-- Enable Supabase Realtime for sub-second cross-device push notifications
+ALTER PUBLICATION supabase_realtime ADD TABLE unipos_collections;
+ALTER PUBLICATION supabase_realtime ADD TABLE unipos_global;
+
+-- Full replica identity ensures old/new values are always published
+ALTER TABLE unipos_collections REPLICA IDENTITY FULL;
+ALTER TABLE unipos_global REPLICA IDENTITY FULL;

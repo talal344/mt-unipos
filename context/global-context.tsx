@@ -1158,49 +1158,19 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    const mergeCollectionsData = (localArr: any[], cloudArr: any[]) => {
-      if (!Array.isArray(localArr)) localArr = [];
-      if (!Array.isArray(cloudArr)) cloudArr = [];
-
-      if (localArr.length === 0) return cloudArr;
-      if (cloudArr.length === 0) return localArr;
-
-      const map = new Map<string, any>();
-
-      // 1. Local items first
-      localArr.forEach(item => {
-        if (!item) return;
-        const key = item.id || item.receiptNumber || item.code || item.sku || item.customerNo || item.ticketNumber || (typeof item === 'object' ? JSON.stringify(item) : String(item));
-        map.set(String(key), item);
-      });
-
-      // 2. Cloud items override / append (Cloud is master for multi-device cross-sync)
-      cloudArr.forEach(cloudItem => {
-        if (!cloudItem) return;
-        const key = cloudItem.id || cloudItem.receiptNumber || cloudItem.code || cloudItem.sku || cloudItem.customerNo || cloudItem.ticketNumber || (typeof cloudItem === 'object' ? JSON.stringify(cloudItem) : String(cloudItem));
-        const keyStr = String(key);
-        if (!map.has(keyStr)) {
-          map.set(keyStr, cloudItem);
-        } else {
-          const localItem = map.get(keyStr);
-          // Overlay cloud item attributes onto local item so updates on other devices are immediately reflected
-          map.set(keyStr, { ...localItem, ...cloudItem });
-        }
-      });
-
-      return Array.from(map.values());
-    };
-
+    let isRemoteSync = false;
     const originalSetItem = window.localStorage.setItem;
 
     window.localStorage.setItem = function(key: string, value: string) {
       originalSetItem.apply(this, arguments as any);
 
+      // Prevent loopback echo when local storage is being populated by remote Realtime sync
+      if (isRemoteSync) return;
       if (!key.startsWith("unipos_")) return;
       if (key === "unipos_current_user") return;
 
       try {
-        const globalKeys = ["unipos_tenants", "unipos_demos", "unipos_invoices", "unipos_tickets", "unipos_blacklisted_tenants"];
+        const globalKeys = ["unipos_tenants", "unipos_demos", "unipos_invoices", "unipos_tickets", "unipos_blacklisted_tenants", "unipos_saas_invoices", "unipos_support_tickets"];
         const isGlobalKey = globalKeys.includes(key);
 
         let parsedData: any;
@@ -1229,21 +1199,6 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
           queueSyncKey(key).then(async () => {
             if (!navigator.onLine || !isSupabaseConfigured) return;
 
-            // SAFETY GUARD: Never overwrite non-empty cloud collections with an empty array []
-            if (Array.isArray(parsedData) && parsedData.length === 0) {
-              const { data: existing } = await supabase
-                .from('unipos_collections')
-                .select('data')
-                .eq('tenant_id', possibleTenantId)
-                .eq('collection', collection)
-                .maybeSingle();
-
-              if (existing && Array.isArray(existing.data) && existing.data.length > 0) {
-                console.warn(`[SAFETY GUARD] Blocked empty array overwrite for ${collection} on tenant ${possibleTenantId}`);
-                return;
-              }
-            }
-
             const { error } = await supabase.from('unipos_collections').upsert({
               tenant_id: possibleTenantId,
               collection: collection,
@@ -1255,7 +1210,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
             if (!error) dequeueItem(STORE_SYNC_KEYS, key);
           });
         } else {
-          // Global key (e.g. unipos_tenants)
+          // Global key (e.g. unipos_tenants, unipos_demos)
           queueSyncKey(key).then(async () => {
             if (!navigator.onLine || !isSupabaseConfigured) return;
             const { error } = await supabase.from('unipos_global').upsert({
@@ -1271,12 +1226,12 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    // Pull down & merge data from Supabase Cloud
+    // Pull down data from Supabase Cloud on initial mount or network reconnect
     const syncFromSupabase = async () => {
       if (!isSupabaseConfigured) return;
       let changed = false;
       try {
-        // 0. Receipt images queue
+        // 0. Process queued receipt images
         const pendingReceipts = await getQueuedItems(STORE_RECEIPTS);
         for (const receipt of pendingReceipts) {
           const { error } = await supabase.storage.from('receipts').upload(receipt.filePath, receipt.blob, {
@@ -1286,14 +1241,14 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
           if (!error) await dequeueItem(STORE_RECEIPTS, receipt.id);
         }
 
-        // 1. Process local offline queue directly & sequentially
+        // 1. Flush local offline queue to Supabase before pulling
         const pendingSyncs = await getQueuedItems(STORE_SYNC_KEYS);
         for (const item of pendingSyncs) {
           const val = window.localStorage.getItem(item.key);
           if (val) {
             try {
               const parsed = JSON.parse(val);
-              const isGlobal = ["unipos_tenants", "unipos_demos", "unipos_invoices", "unipos_tickets", "unipos_blacklisted_tenants"].includes(item.key);
+              const isGlobal = ["unipos_tenants", "unipos_demos", "unipos_invoices", "unipos_tickets", "unipos_blacklisted_tenants", "unipos_saas_invoices", "unipos_support_tickets"].includes(item.key);
               if (isGlobal) {
                 const { error } = await supabase.from('unipos_global').upsert({
                   key: item.key,
@@ -1322,7 +1277,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
           }
         }
 
-        // 2. Global Data (Tenants, Demos, etc.)
+        // 2. Global Data (Tenants, Demos, Settings)
         const { data: globalData } = await supabase.from('unipos_global').select('*');
         if (globalData) {
           let blacklisted: string[] = [];
@@ -1330,44 +1285,26 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
             blacklisted = JSON.parse(window.localStorage.getItem("unipos_blacklisted_tenants") || "[]");
           } catch {}
 
-          const tenantsRow = globalData.find(row => row.key === 'unipos_tenants');
-          if (tenantsRow && Array.isArray(tenantsRow.value)) {
-            const cleanCloud = tenantsRow.value.filter((t: any) => !blacklisted.includes(t.id));
-            const localTenants = window.localStorage.getItem('unipos_tenants');
-            let localParsed: any[] = [];
-            try { localParsed = localTenants ? JSON.parse(localTenants) : []; } catch {}
-
-            const mergedTenants = mergeCollectionsData(localParsed, cleanCloud);
-            const mergedStr = JSON.stringify(mergedTenants);
-            if (mergedStr !== localTenants) {
-              originalSetItem.call(window.localStorage, 'unipos_tenants', mergedStr);
-              changed = true;
-            }
-          }
-
           globalData.forEach(row => {
-            if (row.key === 'unipos_tenants') return;
-            const current = window.localStorage.getItem(row.key);
-            const incoming = JSON.stringify(row.value);
-
-            if (current) {
-              try {
-                const localParsed = JSON.parse(current);
-                const incomingParsed = row.value;
-                if (Array.isArray(localParsed) && Array.isArray(incomingParsed)) {
-                  if (incomingParsed.length < localParsed.length) return;
-                }
-              } catch(e) {}
+            let rowVal = row.value;
+            if (row.key === 'unipos_tenants' && Array.isArray(rowVal)) {
+              rowVal = rowVal.filter((t: any) => !blacklisted.includes(t.id));
             }
-
+            const incoming = JSON.stringify(rowVal);
+            const current = window.localStorage.getItem(row.key);
             if (current !== incoming) {
-              originalSetItem.call(window.localStorage, row.key, incoming);
+              isRemoteSync = true;
+              try {
+                originalSetItem.call(window.localStorage, row.key, incoming);
+              } finally {
+                isRemoteSync = false;
+              }
               changed = true;
             }
           });
         }
 
-        // 3. Bidirectional Tenant Collections Sync (Ensure offline items on this device reach Cloud & Laptop)
+        // 3. Active Tenant Collections Sync
         const savedUser = window.localStorage.getItem("unipos_current_user");
         if (savedUser) {
           const user = JSON.parse(savedUser);
@@ -1378,116 +1315,25 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
               .select('*')
               .eq('tenant_id', tid);
 
-            const ALL_TENANT_COLLECTIONS = [
-              "unipos_sales",
-              "unipos_products",
-              "unipos_customers",
-              "unipos_expenses",
-              "unipos_suppliers",
-              "unipos_pos",
-              "unipos_accounts",
-              "unipos_counters",
-              "unipos_settings",
-              "unipos_employees",
-              "unipos_hr_employees",
-              "unipos_tables",
-              "unipos_kds"
-            ];
+            if (tenantData && Array.isArray(tenantData)) {
+              const pendingKeysSet = new Set(pendingSyncs.map((p: any) => p.key));
 
-            const cloudMap = new Map<string, any>();
-            (tenantData || []).forEach((row: any) => {
-              cloudMap.set(row.collection, row.data);
-            });
-
-            for (const col of ALL_TENANT_COLLECTIONS) {
-              const localKey = `${col}_${tid}`;
-              const currentLocalStr = window.localStorage.getItem(localKey);
-              let localParsed: any = null;
-              if (currentLocalStr) {
-                try { localParsed = JSON.parse(currentLocalStr); } catch {}
-              }
-
-              const cloudParsed = cloudMap.get(col);
-
-              if (localParsed !== null && cloudParsed === undefined) {
-                // Local has offline-created data (e.g. offline sale), but Cloud doesn't have it yet!
-                if (!Array.isArray(localParsed) || localParsed.length > 0) {
-                  await supabase.from('unipos_collections').upsert({
-                    tenant_id: tid,
-                    collection: col,
-                    item_id: 'all',
-                    data: localParsed,
-                    updated_at: new Date().toISOString()
-                  });
-                }
-              } else if (Array.isArray(cloudParsed)) {
-                const merged = mergeCollectionsData(localParsed || [], cloudParsed);
-                const mergedStr = JSON.stringify(merged);
-                if (mergedStr !== currentLocalStr) {
-                  originalSetItem.call(window.localStorage, localKey, mergedStr);
-                  changed = true;
-                }
-
-                // If local has more/newer items than Cloud (e.g. offline sales made on mobile), push merged data to Cloud!
-                if (merged.length > cloudParsed.length) {
-                  await supabase.from('unipos_collections').upsert({
-                    tenant_id: tid,
-                    collection: col,
-                    item_id: 'all',
-                    data: merged,
-                    updated_at: new Date().toISOString()
-                  });
-                }
-              } else if (cloudParsed && typeof cloudParsed === 'object') {
-                let mergedSettings = cloudParsed;
-                if (col === "unipos_settings" && localParsed && typeof localParsed === "object") {
-                  const cloudTerms: any[] = Array.isArray(cloudParsed.authorizedTerminals) ? cloudParsed.authorizedTerminals : [];
-                  const localTerms: any[] = Array.isArray(localParsed.authorizedTerminals) ? localParsed.authorizedTerminals : [];
-
-                  const termMap = new Map<string, any>();
-                  cloudTerms.forEach((t: any) => { if (t?.id || t?.token) termMap.set(t.id || t.token, t); });
-                  localTerms.forEach((t: any) => {
-                    const key = t?.id || t?.token;
-                    if (key) {
-                      const exist = termMap.get(key);
-                      if (!exist) {
-                        termMap.set(key, t);
-                      } else {
-                        termMap.set(key, { ...exist, ...t });
-                      }
+              tenantData.forEach((row: any) => {
+                const localKey = `${row.collection}_${tid}`;
+                if (!pendingKeysSet.has(localKey)) {
+                  const incomingStr = JSON.stringify(row.data);
+                  const currentLocalStr = window.localStorage.getItem(localKey);
+                  if (incomingStr !== currentLocalStr) {
+                    isRemoteSync = true;
+                    try {
+                      originalSetItem.call(window.localStorage, localKey, incomingStr);
+                    } finally {
+                      isRemoteSync = false;
                     }
-                  });
-
-                  const mergedTerms = Array.from(termMap.values());
-                  const enforceLock = cloudParsed.enforceTerminalBinding !== undefined
-                    ? cloudParsed.enforceTerminalBinding
-                    : (localParsed.enforceTerminalBinding !== undefined ? localParsed.enforceTerminalBinding : false);
-
-                  mergedSettings = {
-                    ...localParsed,
-                    ...cloudParsed,
-                    enforceTerminalBinding: enforceLock,
-                    authorizedTerminals: mergedTerms,
-                  };
-
-                  // If local had new terminals not in cloud, push the merged settings back to cloud
-                  if (mergedTerms.length > cloudTerms.length) {
-                    await supabase.from('unipos_collections').upsert({
-                      tenant_id: tid,
-                      collection: col,
-                      item_id: 'all',
-                      data: mergedSettings,
-                      updated_at: new Date().toISOString()
-                    });
+                    changed = true;
                   }
                 }
-
-                const incomingStr = JSON.stringify(mergedSettings);
-                if (incomingStr !== currentLocalStr) {
-                  originalSetItem.call(window.localStorage, localKey, incomingStr);
-                  changed = true;
-                }
-              }
+              });
             }
           }
         }
@@ -1500,37 +1346,91 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
+    // Initial mount sync
     syncFromSupabase();
 
-    // Supabase Realtime Channel (Instant Push Notifications without Egress Polling)
+    // Supabase Realtime Channel: Nano-second Push Updates (ZERO Egress Polling)
     const channel = supabase
       .channel("schema-db-changes")
-      .on("postgres_changes", { event: "*", schema: "public", table: "unipos_global" }, () => syncFromSupabase())
-      .on("postgres_changes", { event: "*", schema: "public", table: "unipos_collections" }, () => syncFromSupabase())
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "unipos_global" },
+        (payload: any) => {
+          if (payload.new && payload.new.key) {
+            const row = payload.new;
+            let val = row.value;
+            if (row.key === "unipos_tenants" && Array.isArray(val)) {
+              let blacklisted: string[] = [];
+              try {
+                blacklisted = JSON.parse(window.localStorage.getItem("unipos_blacklisted_tenants") || "[]");
+              } catch {}
+              val = val.filter((t: any) => !blacklisted.includes(t.id));
+            }
+            const incomingStr = JSON.stringify(val);
+            const currentStr = window.localStorage.getItem(row.key);
+            if (incomingStr !== currentStr) {
+              isRemoteSync = true;
+              try {
+                originalSetItem.call(window.localStorage, row.key, incomingStr);
+              } finally {
+                isRemoteSync = false;
+              }
+              window.dispatchEvent(new CustomEvent('unipos_sync_updated', {
+                detail: { type: 'global', key: row.key, data: val }
+              }));
+            }
+          }
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "unipos_collections" },
+        (payload: any) => {
+          if (payload.new && payload.new.collection && payload.new.tenant_id) {
+            const row = payload.new;
+            const savedUser = window.localStorage.getItem("unipos_current_user");
+            let activeTid = "";
+            if (savedUser) {
+              try { activeTid = JSON.parse(savedUser)?.tenantId || ""; } catch {}
+            }
+            // Real-time synchronization only for active tenant
+            if (activeTid && activeTid === row.tenant_id) {
+              const localKey = `${row.collection}_${row.tenant_id}`;
+              const incomingStr = JSON.stringify(row.data);
+              const currentStr = window.localStorage.getItem(localKey);
+              if (incomingStr !== currentStr) {
+                isRemoteSync = true;
+                try {
+                  originalSetItem.call(window.localStorage, localKey, incomingStr);
+                } finally {
+                  isRemoteSync = false;
+                }
+                // Instant update dispatched to React state across PC, Laptop, and Mobile!
+                window.dispatchEvent(new CustomEvent('unipos_sync_updated', {
+                  detail: { type: 'collection', collection: row.collection, tenantId: row.tenant_id, data: row.data }
+                }));
+              }
+            }
+          }
+        }
+      )
       .subscribe();
 
-    // High-Frequency 3-second live sync poll for instant cross-device updates
-    const pollInterval = setInterval(() => {
-      if (typeof navigator !== "undefined" && navigator.onLine) {
+    // Background gentle heartbeat fallback (10 minutes, only when tab is visible)
+    const fallbackInterval = setInterval(() => {
+      if (typeof navigator !== "undefined" && navigator.onLine && typeof document !== "undefined" && document.visibilityState === "visible") {
         syncFromSupabase();
       }
-    }, 3000);
+    }, 10 * 60 * 1000);
 
-    const handleFocus = () => syncFromSupabase();
-    window.addEventListener('online', syncFromSupabase);
-    window.addEventListener('focus', handleFocus);
-    window.addEventListener('visibilitychange', handleFocus);
-    window.addEventListener('pageshow', handleFocus);
-    window.addEventListener('touchstart', handleFocus);
+    // Sync immediately when device reconnects to network
+    const handleOnline = () => syncFromSupabase();
+    window.addEventListener('online', handleOnline);
 
     return () => {
       window.localStorage.setItem = originalSetItem;
-      window.removeEventListener('online', syncFromSupabase);
-      window.removeEventListener('focus', handleFocus);
-      window.removeEventListener('visibilitychange', handleFocus);
-      window.removeEventListener('pageshow', handleFocus);
-      window.removeEventListener('touchstart', handleFocus);
-      clearInterval(pollInterval);
+      window.removeEventListener('online', handleOnline);
+      clearInterval(fallbackInterval);
       supabase.removeChannel(channel);
     };
   }, []);
@@ -1825,31 +1725,92 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
           if (u?.tenantId) {
             const tid = u.tenantId;
             const p = localStorage.getItem("unipos_products_" + tid);
-            if (p) try { setProducts(JSON.parse(p)); } catch {}
+            if (p !== null) try { setProducts(JSON.parse(p)); } catch {}
 
             const c = localStorage.getItem("unipos_customers_" + tid);
-            if (c) try { setCustomers(JSON.parse(c)); } catch {}
+            if (c !== null) try { setCustomers(JSON.parse(c)); } catch {}
 
             const sup = localStorage.getItem("unipos_suppliers_" + tid);
-            if (sup) try { setSuppliers(JSON.parse(sup)); } catch {}
+            if (sup !== null) try { setSuppliers(JSON.parse(sup)); } catch {}
 
             const po = localStorage.getItem("unipos_pos_" + tid);
-            if (po) try { setPurchaseOrders(JSON.parse(po)); } catch {}
+            if (po !== null) try { setPurchaseOrders(JSON.parse(po)); } catch {}
 
             const s = localStorage.getItem("unipos_sales_" + tid);
-            if (s) try { setSales(JSON.parse(s)); } catch {}
+            if (s !== null) try { setSales(JSON.parse(s)); } catch {}
 
             const exp = localStorage.getItem("unipos_expenses_" + tid);
-            if (exp) try { setExpenses(JSON.parse(exp)); } catch {}
+            if (exp !== null) try { setExpenses(JSON.parse(exp)); } catch {}
 
             const emp = localStorage.getItem("unipos_employees_" + tid);
-            if (emp) try { setEmployees(JSON.parse(emp)); } catch {}
+            if (emp !== null) try { setEmployees(JSON.parse(emp)); } catch {}
 
             const acc = localStorage.getItem("unipos_accounts_" + tid);
-            if (acc) try { setAccounts(JSON.parse(acc)); } catch {}
+            if (acc !== null) try { setAccounts(JSON.parse(acc)); } catch {}
 
             const set = localStorage.getItem("unipos_settings_" + tid);
-            if (set) try { setBusinessSettings(JSON.parse(set)); } catch {}
+            if (set !== null) try { setBusinessSettings(JSON.parse(set)); } catch {}
+
+            const tbl = localStorage.getItem("unipos_tables_" + tid);
+            if (tbl !== null) try { setTables(JSON.parse(tbl)); } catch {}
+
+            const kit = localStorage.getItem("unipos_kitchen_" + tid);
+            if (kit !== null) try { setKitchenTickets(JSON.parse(kit)); } catch {}
+
+            const cnt = localStorage.getItem("unipos_counters_" + tid);
+            if (cnt !== null) try { setPosCounters(JSON.parse(cnt)); } catch {}
+
+            const shf = localStorage.getItem("unipos_shifts_" + tid);
+            if (shf !== null) try { setPosShifts(JSON.parse(shf)); } catch {}
+
+            const btc = localStorage.getItem("unipos_batches_" + tid);
+            if (btc !== null) try { setBatches(JSON.parse(btc)); } catch {}
+
+            const att = localStorage.getItem("unipos_attendance_" + tid);
+            if (att !== null) try { setAttendanceRecords(JSON.parse(att)); } catch {}
+
+            const pay = localStorage.getItem("unipos_payroll_" + tid);
+            if (pay !== null) try { setPayrollRecords(JSON.parse(pay)); } catch {}
+
+            const trn = localStorage.getItem("unipos_transfers_" + tid);
+            if (trn !== null) try { setStockTransfers(JSON.parse(trn)); } catch {}
+
+            const tkt = localStorage.getItem("unipos_hrms_tickets_" + tid);
+            if (tkt !== null) try { setHrmsTickets(JSON.parse(tkt)); } catch {}
+
+            // HRMS Dedicated System collections
+            const hrEmp = localStorage.getItem("unipos_hr_employees_" + tid);
+            if (hrEmp !== null) try { setHrEmployees(JSON.parse(hrEmp)); } catch {}
+
+            const hrAtt = localStorage.getItem("unipos_hr_attendance_" + tid);
+            if (hrAtt !== null) try { setHrAttendance(JSON.parse(hrAtt)); } catch {}
+
+            const hrLev = localStorage.getItem("unipos_hr_leaves_" + tid);
+            if (hrLev !== null) try { setHrLeaves(JSON.parse(hrLev)); } catch {}
+
+            const hrPay = localStorage.getItem("unipos_hr_payrolls_" + tid);
+            if (hrPay !== null) try { setHrPayrolls(JSON.parse(hrPay)); } catch {}
+
+            const hrJob = localStorage.getItem("unipos_hr_jobs_" + tid);
+            if (hrJob !== null) try { setHrJobs(JSON.parse(hrJob)); } catch {}
+
+            const hrApp = localStorage.getItem("unipos_hr_appraisals_" + tid);
+            if (hrApp !== null) try { setHrAppraisals(JSON.parse(hrApp)); } catch {}
+
+            const hrDep = localStorage.getItem("unipos_hr_departments_" + tid);
+            if (hrDep !== null) try { setHrDepartments(JSON.parse(hrDep)); } catch {}
+
+            const hrDes = localStorage.getItem("unipos_hr_designations_" + tid);
+            if (hrDes !== null) try { setHrDesignations(JSON.parse(hrDes)); } catch {}
+
+            const hrShf = localStorage.getItem("unipos_hr_shifts_" + tid);
+            if (hrShf !== null) try { setHrShifts(JSON.parse(hrShf)); } catch {}
+
+            const hrCan = localStorage.getItem("unipos_hr_candidates_" + tid);
+            if (hrCan !== null) try { setHrCandidates(JSON.parse(hrCan)); } catch {}
+
+            const hrLoa = localStorage.getItem("unipos_hr_loans_" + tid);
+            if (hrLoa !== null) try { setHrLoans(JSON.parse(hrLoa)); } catch {}
           }
         }
       } catch(e) {}
