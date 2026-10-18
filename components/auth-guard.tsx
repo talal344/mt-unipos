@@ -5,15 +5,10 @@ import { usePathname, useRouter } from "next/navigation";
 import { useGlobalContext } from "@/context/global-context";
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
-  const { currentUser } = useGlobalContext()!;
+  const { currentUser } = useGlobalContext() || {};
   const pathname = usePathname();
   const router = useRouter();
-  const [hydrated, setHydrated] = useState(() => {
-    if (typeof window !== "undefined") {
-      return Boolean(localStorage.getItem("unipos_current_user"));
-    }
-    return false;
-  });
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     setHydrated(true);

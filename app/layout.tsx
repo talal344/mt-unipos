@@ -5,6 +5,7 @@ import { GlobalProvider } from "@/context/global-context";
 import AuthGuard from "@/components/auth-guard";
 import AutoUpdaterBanner from "@/components/auto-updater-banner";
 import OfflinePrefetcher from "@/components/offline-prefetcher";
+import ClientInit from "@/components/client-init";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -37,70 +38,16 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/apple-icon.png" />
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#0ea5e9" />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                function applyFavicon() {
-                  try {
-                    var isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-                    var target = isDark ? '/logo light.png' : '/Logo Dark.png';
-                    var link = document.querySelector("link[rel~='icon']");
-                    if (!link) {
-                      link = document.createElement('link');
-                      link.rel = 'icon';
-                      link.type = 'image/png';
-                      document.head.appendChild(link);
-                    }
-                    link.href = target;
-                  } catch (e) {}
-                }
-                applyFavicon();
-                if (window.matchMedia) {
-                  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyFavicon);
-                }
-              })();
-            `
-          }}
-        />
       </head>
       <body suppressHydrationWarning className="bg-black text-gray-100 min-h-full flex flex-col font-sans">
         <GlobalProvider>
+          <ClientInit />
           <AutoUpdaterBanner />
           <OfflinePrefetcher />
           <AuthGuard>
             {children}
           </AuthGuard>
         </GlobalProvider>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-                  navigator.serviceWorker.getRegistrations().then(function(regs) {
-                    var needReload = false;
-                    for (var r of regs) {
-                      r.unregister();
-                      needReload = true;
-                    }
-                    if ('caches' in window) {
-                      caches.keys().then(function(keys) {
-                        for (var k of keys) {
-                          caches.delete(k);
-                          needReload = true;
-                        }
-                      });
-                    }
-                    if (needReload && !sessionStorage.getItem('sw_purged_v2')) {
-                      sessionStorage.setItem('sw_purged_v2', '1');
-                      window.location.reload();
-                    }
-                  });
-                }
-              })();
-            `
-          }}
-        />
       </body>
     </html>
   );

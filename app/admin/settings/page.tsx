@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import AdminSidebar from "@/components/admin-sidebar";
 import { useGlobalContext } from "@/context/global-context";
 import { 
@@ -25,24 +25,23 @@ export default function AdminSettingsPage() {
   const [showApiKeys, setShowApiKeys] = useState(false);
 
   // External API Keys states
-  const [resendApiKey, setResendApiKey] = useState(() => {
+  const [resendApiKey, setResendApiKey] = useState(process.env.NEXT_PUBLIC_RESEND_API_KEY || "re_resend_api_key_configured");
+  const [sendgridApiKey, setSendgridApiKey] = useState("SG.MT_UniPOS_SMTP_Key_Secure_2026_LiveGate");
+  const [twilioToken, setTwilioToken] = useState("AC_MT_TWILIO_LOYALTY_VOUCHERS_SMS_SHARD");
+  const [stripeSecret, setStripeSecret] = useState("whsec_Stripe_Recurring_Billing_Callbacks_MT");
+
+  useEffect(() => {
     if (typeof window !== "undefined") {
-      return localStorage.getItem("unipos_resend_api_key") || process.env.NEXT_PUBLIC_RESEND_API_KEY || "re_resend_api_key_configured";
+      const r = localStorage.getItem("unipos_resend_api_key");
+      if (r) setResendApiKey(r);
+      const s = localStorage.getItem("unipos_sendgrid_api_key");
+      if (s) setSendgridApiKey(s);
+      const t = localStorage.getItem("unipos_twilio_token");
+      if (t) setTwilioToken(t);
+      const st = localStorage.getItem("unipos_stripe_secret");
+      if (st) setStripeSecret(st);
     }
-    return process.env.NEXT_PUBLIC_RESEND_API_KEY || "re_resend_api_key_configured";
-  });
-  const [sendgridApiKey, setSendgridApiKey] = useState(() => {
-    if (typeof window !== "undefined") return localStorage.getItem("unipos_sendgrid_api_key") || "SG.MT_UniPOS_SMTP_Key_Secure_2026_LiveGate";
-    return "SG.MT_UniPOS_SMTP_Key_Secure_2026_LiveGate";
-  });
-  const [twilioToken, setTwilioToken] = useState(() => {
-    if (typeof window !== "undefined") return localStorage.getItem("unipos_twilio_token") || "AC_MT_TWILIO_LOYALTY_VOUCHERS_SMS_SHARD";
-    return "AC_MT_TWILIO_LOYALTY_VOUCHERS_SMS_SHARD";
-  });
-  const [stripeSecret, setStripeSecret] = useState(() => {
-    if (typeof window !== "undefined") return localStorage.getItem("unipos_stripe_secret") || "whsec_Stripe_Recurring_Billing_Callbacks_MT";
-    return "whsec_Stripe_Recurring_Billing_Callbacks_MT";
-  });
+  }, []);
 
   // Form settings states
   const [platformTitle, setPlatformTitle] = useState("MT Core");
