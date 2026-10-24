@@ -129,7 +129,10 @@ function LoginContent() {
     // ─── Real-Time Supabase Cloud Verification (Only if configured) ───
     if (isSupabaseConfigured) {
       try {
-        const { data: globalData } = await supabase.from('unipos_global').select('*');
+        const { data: globalData } = await supabase
+          .from('unipos_global')
+          .select('key, value')
+          .in('key', ['unipos_blacklisted_tenants', 'unipos_tenants']);
         if (globalData) {
           const blacklistRow = globalData.find((r: any) => r.key === 'unipos_blacklisted_tenants');
           if (blacklistRow && Array.isArray(blacklistRow.value)) {

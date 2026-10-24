@@ -1163,18 +1163,55 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
 
     let isRemoteSync = false;
     const originalSetItem = window.localStorage.setItem;
+    const debounceTimers = new Map<string, NodeJS.Timeout>();
+
+    const GLOBAL_KEYS = new Set([
+      "unipos_tenants",
+      "unipos_demos",
+      "unipos_invoices",
+      "unipos_tickets",
+      "unipos_blacklisted_tenants",
+      "unipos_saas_invoices",
+      "unipos_support_tickets",
+      "unipos_email_logs"
+    ]);
+
+    const LOCAL_ONLY_KEYS = new Set([
+      "unipos_current_user",
+      "unipos_last_activated_tenant",
+      "unipos_theme",
+      "mt_site_theme",
+      "mt_sms_theme",
+      "unipos_sidebar_collapsed",
+      "unipos_active_tab"
+    ]);
 
     window.localStorage.setItem = function(key: string, value: string) {
+      if (typeof key !== "string") return;
+
+      const previousValue = window.localStorage.getItem(key);
       originalSetItem.apply(this, arguments as any);
 
       // Prevent loopback echo when local storage is being populated by remote Realtime sync
       if (isRemoteSync) return;
       if (!key.startsWith("unipos_")) return;
-      if (key === "unipos_current_user") return;
+      if (LOCAL_ONLY_KEYS.has(key)) {
+        if (key === "unipos_current_user") {
+          const newTid = getActiveTenantId();
+          if (newTid !== activeTid) {
+            activeTid = newTid;
+            attachRealtimeChannel(newTid);
+            syncFromSupabase();
+          }
+        }
+        return;
+      }
+
+      // Zero unnecessary network traffic if value has not actually changed
+      if (previousValue === value) return;
 
       try {
-        const globalKeys = ["unipos_tenants", "unipos_demos", "unipos_invoices", "unipos_tickets", "unipos_blacklisted_tenants", "unipos_saas_invoices", "unipos_support_tickets"];
-        const isGlobalKey = globalKeys.includes(key);
+        const isGlobalKey = GLOBAL_KEYS.has(key);
 
         let parsedData: any;
         try {
@@ -1189,6 +1226,8 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
           const possibleTenantId = key.substring(lastUnderscore + 1);
           const collection = key.substring(0, lastUnderscore);
 
+          if (!collection.startsWith("unipos_")) return;
+
           // Check if tenant has offline-only connectivity plan
           const localTenantsRaw = localStorage.getItem("unipos_tenants");
           if (localTenantsRaw) {
@@ -1199,7 +1238,14 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
             } catch {}
           }
 
-          queueSyncKey(key).then(async () => {
+          queueSyncKey(key);
+
+          // Coalesce rapid sequential writes (e.g. barcode scans / fast typing) into 1 network write
+          const existingTimer = debounceTimers.get(key);
+          if (existingTimer) clearTimeout(existingTimer);
+
+          const timer = setTimeout(async () => {
+            debounceTimers.delete(key);
             if (!navigator.onLine || !isSupabaseConfigured) return;
 
             const { error } = await supabase.from('unipos_collections').upsert({
@@ -1211,18 +1257,30 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
             });
 
             if (!error) dequeueItem(STORE_SYNC_KEYS, key);
-          });
+          }, 600);
+
+          debounceTimers.set(key, timer);
         } else {
           // Global key (e.g. unipos_tenants, unipos_demos)
-          queueSyncKey(key).then(async () => {
+          queueSyncKey(key);
+
+          const existingTimer = debounceTimers.get(key);
+          if (existingTimer) clearTimeout(existingTimer);
+
+          const timer = setTimeout(async () => {
+            debounceTimers.delete(key);
             if (!navigator.onLine || !isSupabaseConfigured) return;
+
             const { error } = await supabase.from('unipos_global').upsert({
               key: key,
               value: parsedData,
               updated_at: new Date().toISOString()
             });
+
             if (!error) dequeueItem(STORE_SYNC_KEYS, key);
-          });
+          }, 600);
+
+          debounceTimers.set(key, timer);
         }
       } catch (e) {
         queueSyncKey(key);
@@ -1251,7 +1309,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
           if (val) {
             try {
               const parsed = JSON.parse(val);
-              const isGlobal = ["unipos_tenants", "unipos_demos", "unipos_invoices", "unipos_tickets", "unipos_blacklisted_tenants", "unipos_saas_invoices", "unipos_support_tickets"].includes(item.key);
+              const isGlobal = GLOBAL_KEYS.has(item.key);
               if (isGlobal) {
                 const { error } = await supabase.from('unipos_global').upsert({
                   key: item.key,
@@ -1281,7 +1339,18 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         }
 
         // 2. Global Data (Tenants, Demos, Settings)
-        const { data: globalData } = await supabase.from('unipos_global').select('*');
+        // Store Cashiers/Staff terminals only fetch tenants & blacklist to know their status/plan.
+        // Super Admin (no tenantId) pulls full platform billing/demo records.
+        const activeUserRaw = window.localStorage.getItem("unipos_current_user");
+        let activeUserTid = "";
+        if (activeUserRaw) {
+          try { activeUserTid = JSON.parse(activeUserRaw)?.tenantId || ""; } catch {}
+        }
+
+        const globalQuery = supabase.from('unipos_global').select('key, value');
+        const { data: globalData } = activeUserTid
+          ? await globalQuery.in('key', ['unipos_tenants', 'unipos_blacklisted_tenants'])
+          : await globalQuery;
         if (globalData) {
           let blacklisted: string[] = [];
           try {
@@ -1352,10 +1421,28 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     // Initial mount sync
     syncFromSupabase();
 
-    // Supabase Realtime Channel: Nano-second Push Updates (ZERO Egress Polling)
-    const channel = supabase
-      .channel("schema-db-changes")
-      .on(
+    // Supabase Realtime Channel: Filtered by Active Tenant for True Zero-Waste Egress
+    const getActiveTenantId = () => {
+      try {
+        const savedUser = window.localStorage.getItem("unipos_current_user");
+        if (savedUser) return JSON.parse(savedUser)?.tenantId || "";
+      } catch {}
+      return "";
+    };
+
+    let currentChannel: any = null;
+
+    const attachRealtimeChannel = (tid: string) => {
+      if (currentChannel) {
+        supabase.removeChannel(currentChannel);
+        currentChannel = null;
+      }
+
+      const chanName = tid ? `sync-tenant-${tid}` : "sync-global-admin";
+      let chan = supabase.channel(chanName);
+
+      // 1. App-level global changes (tenants list, saas invoices, platform tickets)
+      chan = chan.on(
         "postgres_changes",
         { event: "*", schema: "public", table: "unipos_global" },
         (payload: any) => {
@@ -1384,40 +1471,50 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
             }
           }
         }
-      )
-      .on(
+      );
+
+      // 2. Tenant Collections: STRICT SERVER-SIDE FILTER
+      // With filter `tenant_id=eq.${tid}`, Supabase NEVER broadcasts other tenants' payloads!
+      const collectionsConfig: any = {
+        event: "*",
+        schema: "public",
+        table: "unipos_collections"
+      };
+      if (tid) {
+        collectionsConfig.filter = `tenant_id=eq.${tid}`;
+      }
+
+      chan = chan.on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "unipos_collections" },
+        collectionsConfig,
         (payload: any) => {
           if (payload.new && payload.new.collection && payload.new.tenant_id) {
             const row = payload.new;
-            const savedUser = window.localStorage.getItem("unipos_current_user");
-            let activeTid = "";
-            if (savedUser) {
-              try { activeTid = JSON.parse(savedUser)?.tenantId || ""; } catch {}
-            }
-            // Real-time synchronization only for active tenant
-            if (activeTid && activeTid === row.tenant_id) {
-              const localKey = `${row.collection}_${row.tenant_id}`;
-              const incomingStr = JSON.stringify(row.data);
-              const currentStr = window.localStorage.getItem(localKey);
-              if (incomingStr !== currentStr) {
-                isRemoteSync = true;
-                try {
-                  originalSetItem.call(window.localStorage, localKey, incomingStr);
-                } finally {
-                  isRemoteSync = false;
-                }
-                // Instant update dispatched to React state across PC, Laptop, and Mobile!
-                window.dispatchEvent(new CustomEvent('unipos_sync_updated', {
-                  detail: { type: 'collection', collection: row.collection, tenantId: row.tenant_id, data: row.data }
-                }));
+            const localKey = `${row.collection}_${row.tenant_id}`;
+            const incomingStr = JSON.stringify(row.data);
+            const currentStr = window.localStorage.getItem(localKey);
+            if (incomingStr !== currentStr) {
+              isRemoteSync = true;
+              try {
+                originalSetItem.call(window.localStorage, localKey, incomingStr);
+              } finally {
+                isRemoteSync = false;
               }
+              // Instant update dispatched to React state across PC, Laptop, and Mobile!
+              window.dispatchEvent(new CustomEvent('unipos_sync_updated', {
+                detail: { type: 'collection', collection: row.collection, tenantId: row.tenant_id, data: row.data }
+              }));
             }
           }
         }
-      )
-      .subscribe();
+      );
+
+      chan.subscribe();
+      currentChannel = chan;
+    };
+
+    let activeTid = getActiveTenantId();
+    attachRealtimeChannel(activeTid);
 
     // Background gentle heartbeat fallback (10 minutes, only when tab is visible)
     const fallbackInterval = setInterval(() => {
@@ -1431,10 +1528,14 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     window.addEventListener('online', handleOnline);
 
     return () => {
+      debounceTimers.forEach((timer) => clearTimeout(timer));
+      debounceTimers.clear();
       window.localStorage.setItem = originalSetItem;
       window.removeEventListener('online', handleOnline);
       clearInterval(fallbackInterval);
-      supabase.removeChannel(channel);
+      if (currentChannel) {
+        supabase.removeChannel(currentChannel);
+      }
     };
   }, []);
 
@@ -2005,9 +2106,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
 
     currentTenants = Array.from(finalTenantsMap.values());
     localStorage.setItem("unipos_tenants", JSON.stringify(currentTenants));
-    try {
-      supabase.from('unipos_global').upsert({ key: 'unipos_tenants', value: currentTenants }).then(() => {});
-    } catch {}
+
 
     // Auto-Sync: Mark Demo Requests as "Converted" if a matching tenant is already Active
     if (savedDemos) {
@@ -3045,12 +3144,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     setSaasInvoices(nextInvoicesList);
     localStorage.setItem("unipos_invoices", JSON.stringify(nextInvoicesList));
 
-    // Supabase Cloud Sync
-    try {
-      supabase.from('unipos_global').upsert({ key: 'unipos_demos', value: updatedDemos }).then(() => {});
-      supabase.from('unipos_global').upsert({ key: 'unipos_tenants', value: nextTenantsList }).then(() => {});
-      supabase.from('unipos_global').upsert({ key: 'unipos_invoices', value: nextInvoicesList }).then(() => {});
-    } catch {}
+
 
     // 4. Automated Resend API Email Dispatch to Client
     if (req.email) {
@@ -3259,11 +3353,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     setSaasInvoices(updatedInvs);
     localStorage.setItem("unipos_invoices", JSON.stringify(updatedInvs));
 
-    // Immediate Supabase Cloud Persistence
-    try {
-      supabase.from('unipos_global').upsert({ key: 'unipos_tenants', value: updated }).then(() => {});
-      supabase.from('unipos_global').upsert({ key: 'unipos_invoices', value: updatedInvs }).then(() => {});
-    } catch {}
+
 
     return finalId;
   };
@@ -3348,9 +3438,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     setTenants(updated);
     localStorage.setItem("unipos_tenants", JSON.stringify(updated));
 
-    try {
-      supabase.from('unipos_global').upsert({ key: 'unipos_tenants', value: updated }).then(() => {});
-    } catch {}
+
   };
 
   // ─── ALL localStorage keys that store per-tenant data ───────────────────────
@@ -3465,9 +3553,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     });
     setTenants(updated);
     localStorage.setItem("unipos_tenants", JSON.stringify(updated));
-    try {
-      supabase.from('unipos_global').upsert({ key: 'unipos_tenants', value: updated }).then(() => {});
-    } catch {}
+
   };
 
   const updateTenantCredential = (tenantId: string, credId: string, updatedCred: Partial<Omit<TenantPreset, "id">>) => {
@@ -3505,9 +3591,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     });
     setTenants(updated);
     localStorage.setItem("unipos_tenants", JSON.stringify(updated));
-    try {
-      supabase.from('unipos_global').upsert({ key: 'unipos_tenants', value: updated }).then(() => {});
-    } catch {}
+
   };
 
   const deleteTenantCredential = (tenantId: string, credId: string) => {

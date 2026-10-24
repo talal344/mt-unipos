@@ -11,6 +11,9 @@ CREATE TABLE IF NOT EXISTS unipos_collections (
   PRIMARY KEY (tenant_id, collection, item_id)
 );
 
+CREATE INDEX IF NOT EXISTS idx_unipos_collections_tenant ON unipos_collections (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_unipos_collections_lookup ON unipos_collections (tenant_id, collection);
+
 -- Enable RLS
 ALTER TABLE unipos_collections ENABLE ROW LEVEL SECURITY;
 

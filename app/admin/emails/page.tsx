@@ -434,7 +434,7 @@ export default function AdminEmailsPage() {
       <main className="flex-grow w-full p-4 sm:p-6 lg:p-8 space-y-6">
         {/* Toast Alert */}
         {toastMsg && (
-          <div className="fixed top-4 right-4 bg-purple-600/90 text-white font-bold text-xs py-3 px-5 rounded-xl shadow-2xl border border-purple-500/20 backdrop-blur flex items-center gap-2 z-50 animate-bounce">
+          <div className="fixed top-4 right-4 bg-purple-600/90 text-white font-bold text-xs py-3 px-5 rounded-xl shadow-2xl border border-purple-500/20 backdrop-blur flex items-center gap-2 z-[99999] animate-bounce">
             <Sparkles size={16} />
             <span>{toastMsg}</span>
           </div>

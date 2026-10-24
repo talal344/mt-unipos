@@ -1496,13 +1496,7 @@ export default function AdminClientsPage() {
       <AdminSidebar />
 
       <main className="flex-grow w-full p-4 sm:p-6 lg:p-8 space-y-6">
-        {/* Toast */}
-        {toastMessage && (
-          <div className="fixed top-4 right-4 bg-purple-600/90 text-white font-bold text-xs py-3 px-5 rounded-xl shadow-2xl border border-purple-500/20 backdrop-blur flex items-center gap-2 z-50 animate-bounce">
-            <CheckCircle size={16} />
-            <span>{toastMessage}</span>
-          </div>
-        )}
+
 
         {/* Page Header */}
         <div className={`flex justify-between items-center border-b pb-4 ${isLight ? "border-slate-200" : "border-brand-dark-border/60"}`}>
@@ -2826,6 +2820,35 @@ export default function AdminClientsPage() {
           handleResetPassword={handleResetPassword}
         />
       )}
+
+      {/* Floating Toast Notification - Topmost z-index to always render above modals & backdrops */}
+      {toastMessage && (() => {
+        const isError =
+          toastMessage.includes("ERROR") ||
+          toastMessage.includes("❌") ||
+          toastMessage.includes("⛔") ||
+          toastMessage.toLowerCase().includes("failed") ||
+          toastMessage.toLowerCase().includes("invalid");
+
+        return (
+          <div
+            role="status"
+            aria-live="polite"
+            className={`fixed top-5 right-5 z-[99999] text-white font-bold text-xs sm:text-sm py-3 px-5 rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.6)] border backdrop-blur-md flex items-center gap-2.5 animate-bounce pointer-events-auto transition-all ${
+              isError
+                ? "bg-rose-600/95 border-rose-400/50 text-white shadow-rose-950/60"
+                : "bg-purple-600/95 border-purple-400/50 text-white shadow-purple-950/60"
+            }`}
+          >
+            {isError ? (
+              <AlertTriangle size={18} className="text-white shrink-0" />
+            ) : (
+              <CheckCircle size={18} className="text-white shrink-0" />
+            )}
+            <span className="tracking-wide">{toastMessage}</span>
+          </div>
+        );
+      })()}
     </div>
   );
 }
