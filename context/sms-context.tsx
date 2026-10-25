@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from "react";
 import { supabase } from "@/lib/supabase";
 
 // ─── TYPES & INTERFACES ───────────────────────────────────────────────────────
@@ -784,11 +784,26 @@ export function SMSProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // Helper to persist
+  const smsDebounceTimers = useRef<Map<string, NodeJS.Timeout>>(new Map());
+
+  // Helper to persist with debounce to prevent excessive Supabase egress & writes
   const persist = (key: string, data: any) => {
     try {
       localStorage.setItem(key, JSON.stringify(data));
-      supabase.from("unipos_global").upsert({ key, value: data }).then(() => {});
+      const existing = smsDebounceTimers.current.get(key);
+      if (existing) clearTimeout(existing);
+
+      const timer = setTimeout(() => {
+        smsDebounceTimers.current.delete(key);
+        if (typeof navigator !== "undefined" && !navigator.onLine) return;
+        supabase.from("unipos_global").upsert({
+          key,
+          value: data,
+          updated_at: new Date().toISOString()
+        }).then(() => {});
+      }, 800);
+
+      smsDebounceTimers.current.set(key, timer);
     } catch {}
   };
 

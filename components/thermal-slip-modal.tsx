@@ -1,13 +1,14 @@
 "use client";
 
 import React, { useRef, useState, useEffect } from "react";
-import { Printer, Download, X, ArrowLeft, Loader2, HardDrive } from "lucide-react";
+import { Printer, Download, X, ArrowLeft, Loader2, HardDrive, MessageSquare, Send } from "lucide-react";
 import { BusinessSettings, useGlobalContext } from "@/context/global-context";
 import { supabase } from "@/lib/supabase";
 import { queueOfflineReceipt } from "@/lib/offline-sync";
 
 import Barcode from "react-barcode";
 import { autoSaveReceiptToDisk } from "@/lib/receipt-saver";
+import { formatWhatsAppSaleReceipt, openWhatsApp } from "@/lib/whatsapp-receipt";
 
 interface SaleItem {
   productName: string;
@@ -282,6 +283,21 @@ export default function ThermalSlipModal({
   const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saving" | "success" | "error">("idle");
   const [autoSavedPath, setAutoSavedPath] = useState<string>("");
   const hasAutoSaved = useRef(false);
+
+  const [whatsappPhone, setWhatsappPhone] = useState<string>(() => {
+    const candidate = (sale.customerNo || "").trim();
+    return /^[+0-9\s-]+$/.test(candidate) && candidate.replace(/\D/g, "").length >= 7 ? candidate : "";
+  });
+
+  const handleWhatsApp = () => {
+    const text = formatWhatsAppSaleReceipt(
+      sale,
+      businessSettings,
+      branch,
+      currencySymbol || "PKR"
+    );
+    openWhatsApp(whatsappPhone, text);
+  };
 
   const slipHTML = buildSlipHTML(sale, currencySymbol || "PKR", branch, businessSettings);
 
@@ -670,6 +686,32 @@ export default function ThermalSlipModal({
               Developed By: MT Softwares
             </div>
           </div>
+        </div>
+
+        {/* WhatsApp Digital Receipt Bar */}
+        <div className={`px-3 py-2.5 border-t shrink-0 flex items-center gap-2 ${isLight ? "bg-emerald-50/70 border-slate-200" : "bg-[#0b1610] border-emerald-950/60"}`}>
+          <div className="relative flex-1 min-w-0">
+            <MessageSquare size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-emerald-500" />
+            <input
+              type="tel"
+              value={whatsappPhone}
+              onChange={(e) => setWhatsappPhone(e.target.value)}
+              placeholder="Customer WhatsApp # (e.g. 03001234567)"
+              className={`w-full pl-8 pr-2.5 py-1.5 text-xs rounded-xl border outline-none font-medium transition-colors ${
+                isLight
+                  ? "bg-white border-emerald-200 text-slate-800 placeholder:text-slate-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                  : "bg-[#141414] border-emerald-900/50 text-emerald-100 placeholder:text-gray-500 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+              }`}
+            />
+          </div>
+          <button
+            onClick={handleWhatsApp}
+            className="flex items-center justify-center gap-1.5 py-1.5 px-3 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white font-black text-[11px] uppercase tracking-wider rounded-xl transition-all shadow-md shadow-emerald-900/20 active:scale-95 shrink-0"
+            title="Send digital receipt via WhatsApp"
+          >
+            <Send size={12} className="shrink-0" />
+            <span className="whitespace-nowrap">WhatsApp</span>
+          </button>
         </div>
 
         {/* Action Buttons */}

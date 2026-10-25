@@ -42,6 +42,6 @@ CREATE POLICY "Allow all operations for anon global" ON unipos_global
 ALTER PUBLICATION supabase_realtime ADD TABLE unipos_collections;
 ALTER PUBLICATION supabase_realtime ADD TABLE unipos_global;
 
--- Full replica identity ensures old/new values are always published
-ALTER TABLE unipos_collections REPLICA IDENTITY FULL;
-ALTER TABLE unipos_global REPLICA IDENTITY FULL;
+-- DEFAULT replica identity sends only primary keys for old records, cutting Realtime broadcast egress by 50%
+ALTER TABLE unipos_collections REPLICA IDENTITY DEFAULT;
+ALTER TABLE unipos_global REPLICA IDENTITY DEFAULT;

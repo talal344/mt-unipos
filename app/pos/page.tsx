@@ -10,11 +10,13 @@ import {
   Landmark, Wallet, PlusCircle, Star, Check, X, Scale, Hash,
   Banknote, Calculator, ChevronDown, RotateCcw, AlertTriangle, Package,
   Clock, Timer, LogOut, Download, WifiOff, Bell, Camera, PauseCircle, Play, Smartphone,
-  Sun, Moon
+  Sun, Moon, FileText, MessageSquare, Send
 } from "lucide-react";
 import { BrowserMultiFormatReader } from '@zxing/browser';
 import { autoSaveReceiptToDisk } from "@/lib/receipt-saver";
 import { selectAndInitRootFolder, getStoredDirectoryHandle } from "@/lib/local-storage-folder";
+import { generateZReportPDF, generateThermalZReportHTML, ZReportData } from "@/lib/z-report-pdf";
+import { formatWhatsAppZReport, openWhatsApp } from "@/lib/whatsapp-receipt";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface HeldCart {
@@ -71,7 +73,8 @@ export default function PosPage() {
     currencySymbol, currentBranch, currentUser, businessSettings, recordDueRecovery,
     localReceiptsDirHandle, setLocalReceiptsDirHandle, isOffline, previewFIFO, updateCustomerBalance,
     updateCustomerWalletBalance, settleDuesWithWallet,
-    posCounters, assignCounterCashier, closeCounterSession, posShifts, startPOSShift, closePOSShift
+    posCounters, assignCounterCashier, closeCounterSession, posShifts, startPOSShift, closePOSShift,
+    zReports, saveZReport
   } = useGlobalContext();
 
   const isLight = theme === "light";
@@ -297,7 +300,166 @@ export default function PosPage() {
     triggerToast(`✅ Shift started at ${selectedCounter} with Opening Float ${currencySymbol} ${floatNum}!`);
   };
 
+  // ── Shift sales computed
+  const shiftSales = sales.filter(s => new Date(s.date) >= new Date(shiftStartTime));
+  const shiftCashSales = shiftSales.reduce((a, s) => {
+    if (s.splitPayments) return a + (s.splitPayments["Cash"] || 0);
+    return a + (s.paymentMethod === 'Cash' ? s.total : 0);
+  }, 0);
+  const shiftCardSales = shiftSales.reduce((a, s) => {
+    if (s.splitPayments) return a + (s.splitPayments["Card"] || 0);
+    return a + (s.paymentMethod === 'Card' ? s.total : 0);
+  }, 0);
+  const shiftBankSales = shiftSales.reduce((a, s) => {
+    if (s.splitPayments) return a + (s.splitPayments["Bank Transfer"] || s.splitPayments["Bank"] || 0);
+    return a + (s.paymentMethod === 'Bank Transfer' || s.paymentMethod === 'Bank' ? s.total : 0);
+  }, 0);
+  const shiftWalletSales = shiftSales.reduce((a, s) => {
+    if (s.splitPayments) return a + (s.splitPayments["Mobile Wallet"] || s.splitPayments["EasyPaisa"] || s.splitPayments["JazzCash"] || 0);
+    return a + (s.paymentMethod === 'Mobile Wallet' || s.paymentMethod === 'EasyPaisa' || s.paymentMethod === 'JazzCash' ? s.total : 0);
+  }, 0);
+  const shiftOtherSales = shiftSales.reduce((a, s) => {
+    if (s.splitPayments) {
+      const otherAmt = Object.entries(s.splitPayments)
+        .filter(([method]) => !["Cash", "Card", "Bank Transfer", "Bank", "Mobile Wallet", "EasyPaisa", "JazzCash"].includes(method))
+        .reduce((sum, [, val]) => sum + val, 0);
+      return a + otherAmt;
+    }
+    return a + (!['Cash', 'Card', 'Bank Transfer', 'Bank', 'Mobile Wallet', 'EasyPaisa', 'JazzCash'].includes(s.paymentMethod) ? s.total : 0);
+  }, 0);
+  const shiftItemCount = shiftSales.reduce((a, s) => a + (s.items?.length || 0), 0);
+  const shiftGrossSales = shiftSales.reduce((a, s) => a + (s.subtotal || s.total || 0), 0);
+  const shiftDiscounts = shiftSales.reduce((a, s) => a + (s.discount || 0), 0);
+  const shiftTax = shiftSales.reduce((a, s) => a + (s.tax || 0), 0);
+  const shiftRefunds = shiftSales.filter(s => s.status === 'Returned' || s.status === 'Refunded').reduce((a, s) => a + (s.total || 0), 0);
+  const shiftTotalRevenue = shiftGrossSales - shiftDiscounts + shiftTax - shiftRefunds;
+
+  const openingFloatNum = parseFloat(openingCash || '0') || 0;
+  const shiftCashExpenses = expenses
+    .filter(e => new Date(e.date) >= new Date(shiftStartTime) && (e.paymentMethod === "Cash" || e.paymentMethod === "Drawer Cash" || !e.paymentMethod))
+    .reduce((a, e) => a + e.amount, 0);
+  const expectedClosingCash = Math.max(0, openingFloatNum + shiftCashSales - shiftCashExpenses);
+  const countedCashNum = parseFloat(closingCashCount || '0') || 0;
+  const cashDiscrepancy = countedCashNum - expectedClosingCash;
+  const closingCash = expectedClosingCash;
+
+  // ── Executive Z-Report Compiler
+  const compileCurrentZReportData = (): ZReportData => {
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const reportId = `Z-${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+
+    // Category breakdown
+    const catMap: Record<string, { itemsCount: number; totalAmount: number }> = {};
+    let totalCatAmt = 0;
+    shiftSales.forEach(s => {
+      (s.items || []).forEach((item: any) => {
+        const cat = item.category || "General";
+        if (!catMap[cat]) catMap[cat] = { itemsCount: 0, totalAmount: 0 };
+        catMap[cat].itemsCount += (item.qty || 1);
+        const lineTotal = (item.price || 0) * (item.qty || 1);
+        catMap[cat].totalAmount += lineTotal;
+        totalCatAmt += lineTotal;
+      });
+    });
+    const categoryBreakdown = Object.entries(catMap).map(([category, d]) => ({
+      category,
+      itemsCount: d.itemsCount,
+      totalAmount: d.totalAmount,
+      percentage: totalCatAmt > 0 ? (d.totalAmount / totalCatAmt) * 100 : 0
+    }));
+
+    const sortedSales = [...shiftSales].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    const firstReceiptNumber = sortedSales[0]?.receiptNumber || sortedSales[0]?.id || "N/A";
+    const lastReceiptNumber = sortedSales[sortedSales.length - 1]?.receiptNumber || sortedSales[sortedSales.length - 1]?.id || "N/A";
+    const avgTxVal = shiftSales.length > 0 ? (shiftTotalRevenue / shiftSales.length) : 0;
+    const returnsCount = shiftSales.filter(s => s.status === "Returned" || s.status === "Refunded").length;
+
+    const activeCounterObj = posCounters.find(c => c.status === "Active" && isUserAssignedToCounter(c, currentUser));
+
+    return {
+      id: reportId,
+      reportNumber: (zReports?.length || 0) + 1,
+      businessName: businessSettings?.businessName || currentUser?.businessName || "MT STORE",
+      businessAddress: businessSettings?.address ? `${businessSettings.address}${businessSettings.city ? ', ' + businessSettings.city : ''}` : undefined,
+      businessPhone: businessSettings?.phone || undefined,
+      businessEmail: businessSettings?.email || undefined,
+      taxNumber: businessSettings?.taxNumber || undefined,
+      branch: currentBranch || "Main Branch",
+      counterName: activeCounterObj?.name || selectedCounter || "Counter 1",
+      cashierName: currentUser?.name || "Cashier",
+      cashierEmail: currentUser?.email,
+      shiftStartTime: shiftStartTime || now.toISOString(),
+      shiftEndTime: now.toISOString(),
+      generatedAt: now.toISOString(),
+      currencySymbol: currencySymbol || "PKR",
+
+      grossSales: shiftGrossSales,
+      discounts: shiftDiscounts,
+      netSales: shiftGrossSales - shiftDiscounts,
+      tax: shiftTax,
+      refunds: shiftRefunds,
+      totalRevenue: shiftTotalRevenue,
+
+      cashSales: shiftCashSales,
+      cardSales: shiftCardSales,
+      bankSales: shiftBankSales,
+      walletSales: shiftWalletSales,
+      creditSales: shiftOtherSales,
+
+      openingFloat: openingFloatNum,
+      cashReceived: shiftCashSales,
+      cashExpenses: shiftCashExpenses,
+      expectedCash: expectedClosingCash,
+      actualCash: countedCashNum,
+      discrepancy: cashDiscrepancy,
+
+      totalTransactions: shiftSales.length,
+      itemsSold: shiftItemCount,
+      firstReceiptNumber,
+      lastReceiptNumber,
+      averageTransactionValue: avgTxVal,
+      returnsCount,
+      categoryBreakdown,
+      notes: closeShiftNotes.trim() || undefined
+    };
+  };
+
+  const handleDownloadZReportPDF = () => {
+    const report = compileCurrentZReportData();
+    generateZReportPDF(report);
+    triggerToast(`📄 Executive Z-Report PDF (${report.id}) downloaded!`);
+  };
+
+  const handlePrintThermalZReport = () => {
+    const report = compileCurrentZReportData();
+    const html = generateThermalZReportHTML(report);
+    const printWindow = window.open("", "_blank", "width=420,height=750");
+    if (printWindow) {
+      printWindow.document.write(html);
+      printWindow.document.close();
+      printWindow.focus();
+      setTimeout(() => {
+        printWindow.print();
+        printWindow.close();
+      }, 350);
+    } else {
+      triggerToast("⚠️ Popup blocked! Please allow popups for 80mm receipt printing.");
+    }
+  };
+
+  const handleWhatsAppZReport = () => {
+    const report = compileCurrentZReportData();
+    const text = formatWhatsAppZReport(report, businessSettings);
+    const ownerPhone = businessSettings?.phone || "";
+    openWhatsApp(ownerPhone, text);
+    triggerToast(`📲 WhatsApp Shift Summary prepared for owner!`);
+  };
+
   const handleCloseShift = () => {
+    const report = compileCurrentZReportData();
+    saveZReport(report);
+
     const activeShiftObj = posShifts.find(s => s.status === "Open" && (s.cashierEmail === currentUser?.email || s.cashierName === currentUser?.name));
     const closingVal = parseFloat(closingCashCount) || 0;
     if (activeShiftObj) {
@@ -311,34 +473,8 @@ export default function PosPage() {
     localStorage.removeItem('unipos_shift_opening_cash');
     setShiftOpen(false);
     setShowCloseShiftModal(false);
-    triggerToast('🔒 Shift closed & Z-Report generated. Counter set to Offline.');
+    triggerToast(`🔒 Shift closed & Z-Report ${report.id} archived!`);
   };
-
-  // ── Shift sales computed
-  const shiftSales = sales.filter(s => new Date(s.date) >= new Date(shiftStartTime));
-  const shiftCashSales = shiftSales.reduce((a, s) => {
-    if (s.splitPayments) {
-      return a + (s.splitPayments["Cash"] || 0);
-    }
-    return a + (s.paymentMethod === 'Cash' ? s.total : 0);
-  }, 0);
-  const shiftCardSales = shiftSales.reduce((a, s) => {
-    if (s.splitPayments) {
-      return a + (s.splitPayments["Card"] || 0);
-    }
-    return a + (s.paymentMethod === 'Card' ? s.total : 0);
-  }, 0);
-  const shiftOtherSales = shiftSales.reduce((a, s) => {
-    if (s.splitPayments) {
-      const otherAmt = Object.entries(s.splitPayments)
-        .filter(([method]) => method !== "Cash" && method !== "Card")
-        .reduce((sum, [, val]) => sum + val, 0);
-      return a + otherAmt;
-    }
-    return a + (s.paymentMethod !== 'Cash' && s.paymentMethod !== 'Card' ? s.total : 0);
-  }, 0);
-  const shiftItemCount = shiftSales.reduce((a, s) => a + (s.items?.length || 0), 0);
-  const closingCash = (parseFloat(openingCash) || 0) + shiftCashSales;
 
   // ── Return/Refund handlers ───────────────────────────────────────────────
   const handleSearchReturn = () => {
@@ -1203,6 +1339,18 @@ export default function PosPage() {
                     <span>⚠️ SET SAVE FOLDER</span>
                   </>
                 )}
+              </button>
+
+              <button
+                onClick={() => {
+                  setClosingCashCount(expectedClosingCash.toFixed(2));
+                  setShowCloseShiftModal(true);
+                }}
+                className="flex items-center gap-1.5 text-[9px] font-black uppercase px-2.5 py-1 rounded-lg bg-red-600/90 hover:bg-red-600 text-white shadow-xs transition shrink-0 ml-auto cursor-pointer"
+                title="End Shift and generate official Z-Report"
+              >
+                <LogOut size={11} />
+                <span>End Shift (Z-Report)</span>
               </button>
             </div>
           </div>
@@ -2620,119 +2768,288 @@ export default function PosPage() {
           CLOSE SHIFT MODAL — Z-Report Summary
       ══════════════════════════════════════════════════════════════════════ */}
       {showCloseShiftModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 print:hidden">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 print:hidden overflow-y-auto">
           <div className={`${
-            isLight ? "bg-white border-slate-200 shadow-2xl text-slate-900" : "bg-brand-dark-surface border-red-500/25 text-white"
-          } border rounded-2xl w-full max-w-md shadow-2xl overflow-hidden`}>
+            isLight ? "bg-white border-slate-200 shadow-2xl text-slate-900" : "bg-brand-dark-surface border-red-500/30 text-white"
+          } border rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden my-auto`}>
 
             {/* Header */}
-            <div className={`flex items-center justify-between border-b px-5 pt-5 pb-4 ${isLight ? "border-slate-200" : "border-brand-dark-border"}`}>
+            <div className={`flex items-center justify-between border-b px-6 py-4 ${isLight ? "border-slate-200 bg-slate-50/70" : "border-brand-dark-border bg-black/30"}`}>
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-red-500/15 border border-red-500/30 flex items-center justify-center">
-                  <LogOut size={15} className="text-red-500" />
+                <div className="w-10 h-10 rounded-xl bg-red-500/15 border border-red-500/30 flex items-center justify-center text-red-500 shadow-xs">
+                  <LogOut size={18} />
                 </div>
                 <div>
-                  <h3 className={`font-black text-sm ${isLight ? "text-slate-900" : "text-white"}`}>Close Shift — Z-Report</h3>
-                  <p className={`text-[9px] ${isLight ? "text-slate-500" : "text-gray-500"}`}>End-of-shift summary for {currentUser?.name || 'Cashier'}</p>
+                  <div className="flex items-center gap-2">
+                    <h3 className={`font-black text-base ${isLight ? "text-slate-900" : "text-white"}`}>
+                      Close Shift & Z-Report Audit
+                    </h3>
+                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-sky-500/15 text-sky-600 border border-sky-500/30">
+                      {posCounters.find(c => c.status === "Active" && isUserAssignedToCounter(c, currentUser))?.name || selectedCounter}
+                    </span>
+                  </div>
+                  <p className={`text-[10px] ${isLight ? "text-slate-500" : "text-gray-400"}`}>
+                    End-of-shift reconciliation & fiscal audit for <strong className="text-brand-sky">{currentUser?.name || 'Cashier'}</strong>
+                  </p>
                 </div>
               </div>
-              <button onClick={() => setShowCloseShiftModal(false)} className={isLight ? "text-slate-400 hover:text-slate-900" : "text-gray-400 hover:text-white"}>
-                <X size={16} />
+              <button 
+                onClick={() => setShowCloseShiftModal(false)} 
+                className={`p-1.5 rounded-lg transition ${isLight ? "text-slate-400 hover:text-slate-900 hover:bg-slate-100" : "text-gray-400 hover:text-white hover:bg-brand-dark-border"}`}
+              >
+                <X size={18} />
               </button>
             </div>
 
-            <div className="p-5 space-y-4 text-xs">
-              {/* Shift Duration */}
-              <div className={`border rounded-xl p-3.5 font-mono text-[10px] space-y-1.5 ${
-                isLight ? "bg-slate-50 border-slate-200 text-slate-800" : "bg-black/60 border-brand-dark-border text-white"
+            <div className="p-6 space-y-4 max-h-[78vh] overflow-y-auto text-xs">
+              {/* Shift Duration & Branch Meta */}
+              <div className={`grid grid-cols-2 sm:grid-cols-4 gap-2.5 p-3 rounded-xl border text-[11px] font-mono ${
+                isLight ? "bg-slate-50 border-slate-200" : "bg-black/50 border-brand-dark-border"
               }`}>
-                <div className="flex justify-between">
-                  <span className={`${isLight ? "text-slate-500" : "text-gray-500"} flex items-center gap-1`}><Clock size={10} /> Shift Started:</span>
-                  <span className={`font-bold ${isLight ? "text-slate-900" : "text-white"}`}>{new Date(shiftStartTime).toLocaleString()}</span>
+                <div>
+                  <span className={`text-[9px] uppercase tracking-wider block ${isLight ? "text-slate-400" : "text-gray-500"}`}>Shift Started</span>
+                  <span className="font-bold flex items-center gap-1 mt-0.5">
+                    <Clock size={11} className="text-brand-sky" />
+                    {new Date(shiftStartTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
                 </div>
-                <div className="flex justify-between">
-                  <span className={`${isLight ? "text-slate-500" : "text-gray-500"} flex items-center gap-1`}><Timer size={10} /> Shift Ended:</span>
-                  <span className={`font-bold ${isLight ? "text-slate-900" : "text-white"}`}>{new Date().toLocaleString()}</span>
+                <div>
+                  <span className={`text-[9px] uppercase tracking-wider block ${isLight ? "text-slate-400" : "text-gray-500"}`}>Shift Ended</span>
+                  <span className="font-bold flex items-center gap-1 mt-0.5">
+                    <Timer size={11} className="text-emerald-500" />
+                    {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
                 </div>
-                <div className="flex justify-between">
-                  <span className={isLight ? "text-slate-500" : "text-gray-500"}>Cashier:</span>
-                  <span className="text-sky-600 font-bold">{currentUser?.name || 'Cashier'}</span>
+                <div>
+                  <span className={`text-[9px] uppercase tracking-wider block ${isLight ? "text-slate-400" : "text-gray-500"}`}>Transactions</span>
+                  <span className="font-black text-brand-sky mt-0.5 block">{shiftSales.length} txns ({shiftItemCount} items)</span>
+                </div>
+                <div>
+                  <span className={`text-[9px] uppercase tracking-wider block ${isLight ? "text-slate-400" : "text-gray-500"}`}>Branch</span>
+                  <span className="font-bold truncate mt-0.5 block">{currentBranch || "Main Branch"}</span>
                 </div>
               </div>
 
-              {/* Sales Breakdown */}
-              <div>
-                <p className={`text-[9px] uppercase font-bold mb-2 ${isLight ? "text-slate-600" : "text-gray-400"}`}>Sales Breakdown</p>
-                <div className={`border rounded-xl p-3.5 font-mono text-[10px] space-y-2 ${
-                  isLight ? "bg-slate-50 border-slate-200 text-slate-800" : "bg-black/60 border-brand-dark-border text-white"
+              {/* 2-Column Split: Sales Breakdown vs Drawer Reconciliation */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                
+                {/* Sales Breakdown Box */}
+                <div className={`p-4 rounded-xl border space-y-2.5 ${
+                  isLight ? "bg-slate-50 border-slate-200" : "bg-black/40 border-brand-dark-border"
                 }`}>
-                  <div className="flex justify-between">
-                    <span className={isLight ? "text-slate-500" : "text-gray-500"}>Total Transactions:</span>
-                    <span className={`font-black ${isLight ? "text-slate-900" : "text-white"}`}>{shiftSales.length}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className={isLight ? "text-slate-500" : "text-gray-500"}>Items Sold:</span>
-                    <span className={`font-black ${isLight ? "text-slate-900" : "text-white"}`}>{shiftItemCount}</span>
-                  </div>
-                  <div className={`border-t pt-2 space-y-1.5 ${isLight ? "border-slate-200" : "border-brand-dark-border/40"}`}>
+                  <p className={`text-[10px] uppercase font-black tracking-wider flex items-center justify-between ${isLight ? "text-slate-600" : "text-gray-300"}`}>
+                    <span>Financial Summary</span>
+                    <span className="text-emerald-500 font-mono">Net Sales</span>
+                  </p>
+
+                  <div className="space-y-1.5 font-mono text-[11px]">
                     <div className="flex justify-between">
-                      <span className={`${isLight ? "text-slate-500" : "text-gray-500"} flex items-center gap-1`}><DollarSign size={9} /> Cash Sales:</span>
-                      <span className="text-emerald-600 font-black">{currencySymbol} {shiftCashSales.toFixed(2)}</span>
+                      <span className={isLight ? "text-slate-500" : "text-gray-400"}>Gross Sales:</span>
+                      <span className="font-bold">{currencySymbol} {shiftGrossSales.toFixed(2)}</span>
+                    </div>
+                    {shiftDiscounts > 0 && (
+                      <div className="flex justify-between text-amber-500">
+                        <span>Discounts Given:</span>
+                        <span>-{currencySymbol} {shiftDiscounts.toFixed(2)}</span>
+                      </div>
+                    )}
+                    {shiftTax > 0 && (
+                      <div className="flex justify-between text-sky-500">
+                        <span>Tax / GST:</span>
+                        <span>+{currencySymbol} {shiftTax.toFixed(2)}</span>
+                      </div>
+                    )}
+                    {shiftRefunds > 0 && (
+                      <div className="flex justify-between text-red-500">
+                        <span>Refunds / Returns:</span>
+                        <span>-{currencySymbol} {shiftRefunds.toFixed(2)}</span>
+                      </div>
+                    )}
+                    <div className={`border-t pt-2 flex justify-between font-black text-xs ${isLight ? "border-slate-200" : "border-brand-dark-border"}`}>
+                      <span>Total Shift Revenue:</span>
+                      <span className="text-emerald-600">{currencySymbol} {shiftTotalRevenue.toFixed(2)}</span>
+                    </div>
+                  </div>
+
+                  <div className={`pt-2 border-t space-y-1.5 text-[10px] font-mono ${isLight ? "border-slate-200" : "border-brand-dark-border/40"}`}>
+                    <div className="flex justify-between">
+                      <span className={`${isLight ? "text-slate-500" : "text-gray-400"} flex items-center gap-1`}>
+                        <Banknote size={10} className="text-emerald-500" /> Cash Tendered:
+                      </span>
+                      <span className="font-black text-emerald-600">{currencySymbol} {shiftCashSales.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className={`${isLight ? "text-slate-500" : "text-gray-500"} flex items-center gap-1`}><CreditCard size={9} /> Card Sales:</span>
-                      <span className="text-blue-500 font-black">{currencySymbol} {shiftCardSales.toFixed(2)}</span>
+                      <span className={`${isLight ? "text-slate-500" : "text-gray-400"} flex items-center gap-1`}>
+                        <CreditCard size={10} className="text-blue-500" /> Card Payments:
+                      </span>
+                      <span className="font-black text-blue-500">{currencySymbol} {shiftCardSales.toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className={`${isLight ? "text-slate-500" : "text-gray-500"} flex items-center gap-1`}><Wallet size={9} /> Other:</span>
-                      <span className="text-purple-500 font-black">{currencySymbol} {shiftOtherSales.toFixed(2)}</span>
-                    </div>
-                  </div>
-                  <div className={`border-t pt-2 flex justify-between text-sm ${isLight ? "border-slate-200" : "border-brand-dark-border/40"}`}>
-                    <span className={`font-bold ${isLight ? "text-slate-700" : "text-gray-300"}`}>Total Revenue:</span>
-                    <span className="text-sky-600 font-black">
-                      {currencySymbol} {(shiftCashSales + shiftCardSales + shiftOtherSales).toFixed(2)}
-                    </span>
+                    {(shiftBankSales > 0 || shiftWalletSales > 0 || shiftOtherSales > 0) && (
+                      <div className="flex justify-between">
+                        <span className={`${isLight ? "text-slate-500" : "text-gray-400"} flex items-center gap-1`}>
+                          <Wallet size={10} className="text-purple-500" /> Bank / Wallets:
+                        </span>
+                        <span className="font-black text-purple-500">{currencySymbol} {(shiftBankSales + shiftWalletSales + shiftOtherSales).toFixed(2)}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
-              </div>
 
-              {/* Cash Drawer */}
-              <div>
-                <p className={`text-[9px] uppercase font-bold mb-2 ${isLight ? "text-slate-600" : "text-gray-400"}`}>Cash Drawer</p>
-                <div className={`border rounded-xl p-3.5 font-mono text-[10px] space-y-1.5 ${
-                  isLight ? "bg-slate-50 border-slate-200 text-slate-800" : "bg-black/60 border-brand-dark-border text-white"
+                {/* Cash Drawer Reconciliation Box */}
+                <div className={`p-4 rounded-xl border space-y-3 ${
+                  isLight ? "bg-slate-50 border-slate-200" : "bg-black/40 border-brand-dark-border"
                 }`}>
-                  <div className="flex justify-between">
-                    <span className={isLight ? "text-slate-500" : "text-gray-500"}>Opening Balance:</span>
-                    <span className={`font-black ${isLight ? "text-slate-900" : "text-white"}`}>{currencySymbol} {parseFloat(openingCash || '0').toFixed(2)}</span>
+                  <p className={`text-[10px] uppercase font-black tracking-wider flex items-center justify-between ${isLight ? "text-slate-600" : "text-gray-300"}`}>
+                    <span>Drawer Reconciliation</span>
+                    <span className="text-brand-sky font-mono">Audit</span>
+                  </p>
+
+                  <div className="space-y-1.5 font-mono text-[11px]">
+                    <div className="flex justify-between">
+                      <span className={isLight ? "text-slate-500" : "text-gray-400"}>Opening Float:</span>
+                      <span className="font-bold">{currencySymbol} {openingFloatNum.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-emerald-600">
+                      <span>(+) Cash Inflow:</span>
+                      <span className="font-bold">+{currencySymbol} {shiftCashSales.toFixed(2)}</span>
+                    </div>
+                    {shiftCashExpenses > 0 && (
+                      <div className="flex justify-between text-red-500">
+                        <span>(-) Cash Expenses:</span>
+                        <span className="font-bold">-{currencySymbol} {shiftCashExpenses.toFixed(2)}</span>
+                      </div>
+                    )}
+                    <div className={`border-t pt-1.5 flex justify-between font-black text-xs ${isLight ? "border-slate-200 text-slate-900" : "border-brand-dark-border text-white"}`}>
+                      <span>Expected Drawer Cash:</span>
+                      <span className="text-sky-600">{currencySymbol} {expectedClosingCash.toFixed(2)}</span>
+                    </div>
                   </div>
-                  <div className="flex justify-between">
-                    <span className={isLight ? "text-slate-500" : "text-gray-500"}>+ Cash Sales:</span>
-                    <span className="text-emerald-600 font-black">+ {currencySymbol} {shiftCashSales.toFixed(2)}</span>
+
+                  {/* Physical Counted Cash Input */}
+                  <div className="space-y-1.5 pt-1">
+                    <div className="flex items-center justify-between">
+                      <label className={`text-[10px] font-bold uppercase ${isLight ? "text-slate-700" : "text-gray-300"}`}>
+                        Counted Physical Cash:
+                      </label>
+                      <button 
+                        type="button"
+                        onClick={() => setClosingCashCount(expectedClosingCash.toFixed(2))}
+                        className="text-[9px] font-mono text-sky-500 hover:underline cursor-pointer"
+                      >
+                        Match Expected
+                      </button>
+                    </div>
+                    <div className="relative">
+                      <span className="absolute left-3 top-2.5 font-mono text-xs text-gray-500 font-bold">
+                        {currencySymbol}
+                      </span>
+                      <input
+                        type="number"
+                        step="any"
+                        value={closingCashCount}
+                        onChange={e => setClosingCashCount(e.target.value)}
+                        className={`w-full pl-12 pr-3 py-2 rounded-lg font-mono text-sm font-black border focus:outline-none transition ${
+                          isLight 
+                            ? "bg-white border-slate-300 text-slate-900 focus:border-sky-500" 
+                            : "bg-black/60 border-brand-dark-border text-white focus:border-brand-sky"
+                        }`}
+                        placeholder="0.00"
+                      />
+                    </div>
                   </div>
-                  <div className={`border-t pt-1.5 flex justify-between ${isLight ? "border-slate-200" : "border-brand-dark-border/40"}`}>
-                    <span className={`font-bold ${isLight ? "text-slate-700" : "text-gray-300"}`}>Expected Closing Cash:</span>
-                    <span className="text-sky-600 font-black">{currencySymbol} {closingCash.toFixed(2)}</span>
+
+                  {/* Discrepancy Status Callout */}
+                  <div>
+                    {Math.abs(cashDiscrepancy) < 0.01 ? (
+                      <div className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 text-xs font-bold flex items-center justify-between">
+                        <span className="flex items-center gap-1.5"><CheckCircle2 size={13} /> Drawer Perfectly Balanced</span>
+                        <span className="font-mono">0.00</span>
+                      </div>
+                    ) : cashDiscrepancy > 0.01 ? (
+                      <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-600 text-xs font-bold flex items-center justify-between">
+                        <span className="flex items-center gap-1.5"><AlertTriangle size={13} /> Drawer Surplus (Over)</span>
+                        <span className="font-mono">+{currencySymbol} {cashDiscrepancy.toFixed(2)}</span>
+                      </div>
+                    ) : (
+                      <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-600 text-xs font-bold flex items-center justify-between">
+                        <span className="flex items-center gap-1.5"><AlertTriangle size={13} /> Drawer Shortage (Deficit)</span>
+                        <span className="font-mono">-{currencySymbol} {Math.abs(cashDiscrepancy).toFixed(2)}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
 
-              {/* Actions */}
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  onClick={() => window.print()}
-                  className={`py-2.5 font-black text-[10px] uppercase rounded-xl flex items-center justify-center gap-1.5 transition ${
-                    isLight ? "bg-slate-100 border border-slate-300 text-slate-700 hover:bg-slate-200 shadow-xs" : "bg-brand-dark-border hover:bg-brand-dark-border/70 text-white"
+              {/* Handover & Closing Notes */}
+              <div>
+                <label className={`text-[10px] font-bold uppercase block mb-1.5 ${isLight ? "text-slate-600" : "text-gray-400"}`}>
+                  Closing & Handover Notes (Optional)
+                </label>
+                <textarea
+                  rows={2}
+                  value={closeShiftNotes}
+                  onChange={e => setCloseShiftNotes(e.target.value)}
+                  placeholder="e.g. Reason for cash discrepancy, petty vouchers, manager sign-off..."
+                  className={`w-full p-2.5 rounded-lg text-xs border focus:outline-none transition ${
+                    isLight 
+                      ? "bg-slate-50 border-slate-300 text-slate-900 focus:border-sky-500" 
+                      : "bg-black/60 border-brand-dark-border text-white focus:border-brand-sky"
                   }`}
-                >
-                  <Printer size={12} /> Print Z-Report
-                </button>
+                />
+              </div>
+
+              {/* Action Buttons Bar */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2 border-t border-brand-dark-border/40">
                 <button
-                  onClick={handleCloseShift}
-                  className="py-2.5 bg-red-500 hover:bg-red-400 text-white font-black text-[10px] uppercase rounded-xl flex items-center justify-center gap-1.5 transition shadow-xs"
+                  type="button"
+                  onClick={handleDownloadZReportPDF}
+                  className={`py-2.5 px-2 font-black text-[11px] uppercase rounded-xl flex items-center justify-center gap-1.5 transition border cursor-pointer ${
+                    isLight 
+                      ? "bg-sky-50 border-sky-300 text-sky-700 hover:bg-sky-100 shadow-xs" 
+                      : "bg-sky-500/10 border-sky-500/30 text-sky-400 hover:bg-sky-500/20"
+                  }`}
+                  title="Generate vector-sharp executive A4 PDF"
                 >
-                  <LogOut size={12} /> Close Shift
+                  <FileText size={14} className="text-sky-500 shrink-0" />
+                  <span className="truncate">A4 PDF</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handlePrintThermalZReport}
+                  className={`py-2.5 px-2 font-black text-[11px] uppercase rounded-xl flex items-center justify-center gap-1.5 transition border cursor-pointer ${
+                    isLight 
+                      ? "bg-slate-100 border-slate-300 text-slate-700 hover:bg-slate-200 shadow-xs" 
+                      : "bg-brand-dark-border hover:bg-brand-dark-border/70 text-white"
+                  }`}
+                  title="Print 80mm thermal receipt slip"
+                >
+                  <Printer size={14} className="shrink-0" />
+                  <span className="truncate">80mm Slip</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleWhatsAppZReport}
+                  className={`py-2.5 px-2 font-black text-[11px] uppercase rounded-xl flex items-center justify-center gap-1.5 transition border cursor-pointer ${
+                    isLight 
+                      ? "bg-emerald-50 border-emerald-300 text-emerald-800 hover:bg-emerald-100 shadow-xs" 
+                      : "bg-emerald-500/15 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/25"
+                  }`}
+                  title="Send executive shift audit directly to Store Owner on WhatsApp"
+                >
+                  <Send size={14} className="text-emerald-500 shrink-0" />
+                  <span className="truncate">WhatsApp Owner</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleCloseShift}
+                  className="py-2.5 px-2 bg-red-600 hover:bg-red-500 text-white font-black text-[11px] uppercase rounded-xl flex items-center justify-center gap-1.5 transition shadow-md shadow-red-600/30 cursor-pointer"
+                  title="Finalize closing, archive Z-report and set counter offline"
+                >
+                  <LogOut size={14} className="shrink-0" />
+                  <span className="truncate">Close Shift</span>
                 </button>
               </div>
             </div>

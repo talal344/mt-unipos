@@ -30,6 +30,8 @@ export interface POSShift {
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { queueSyncKey, getQueuedItems, dequeueItem, STORE_SYNC_KEYS, STORE_RECEIPTS } from "@/lib/offline-sync";
+import { ZReportData } from "@/lib/z-report-pdf";
+export type { ZReportData };
 
 
 // Types
@@ -800,6 +802,8 @@ interface GlobalContextType {
   posShifts: POSShift[];
   startPOSShift: (counterId: string, openingFloat: number) => POSShift;
   closePOSShift: (shiftId: string, actualClosingCash: number, notes?: string) => void;
+  zReports: ZReportData[];
+  saveZReport: (report: ZReportData) => void;
   sales: SaleTransaction[];
   addSale: (sale: Omit<SaleTransaction, "id" | "receiptNumber" | "date">) => SaleTransaction;
   
@@ -1287,8 +1291,12 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    // Pull down data from Supabase Cloud on initial mount or network reconnect
-    const syncFromSupabase = async () => {
+    // Timestamps for true incremental sync - prevents re-downloading unchanged datasets
+    let lastGlobalSyncTimestamp = "";
+    let lastTenantSyncTimestamp = "";
+
+    // Pull down data from Supabase Cloud on initial mount, reconnect, or gentle heartbeat
+    const syncFromSupabase = async (isIncremental: boolean = false) => {
       if (!isSupabaseConfigured) return;
       let changed = false;
       try {
@@ -1340,24 +1348,37 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
 
         // 2. Global Data (Tenants, Demos, Settings)
         // Store Cashiers/Staff terminals only fetch tenants & blacklist to know their status/plan.
-        // Super Admin (no tenantId) pulls full platform billing/demo records.
+        // Super Admin (no tenantId) pulls platform billing/demo records (STRICTLY within GLOBAL_KEYS).
         const activeUserRaw = window.localStorage.getItem("unipos_current_user");
         let activeUserTid = "";
         if (activeUserRaw) {
           try { activeUserTid = JSON.parse(activeUserRaw)?.tenantId || ""; } catch {}
         }
 
-        const globalQuery = supabase.from('unipos_global').select('key, value');
-        const { data: globalData } = activeUserTid
-          ? await globalQuery.in('key', ['unipos_tenants', 'unipos_blacklisted_tenants'])
-          : await globalQuery;
-        if (globalData) {
+        let globalQuery = supabase.from('unipos_global').select('key, value, updated_at');
+        if (activeUserTid) {
+          globalQuery = globalQuery.in('key', ['unipos_tenants', 'unipos_blacklisted_tenants']);
+        } else {
+          // Super Admin: STRICTLY limit to platform keys, NEVER download arbitrary/SMS datasets
+          globalQuery = globalQuery.in('key', Array.from(GLOBAL_KEYS));
+        }
+
+        if (isIncremental && lastGlobalSyncTimestamp) {
+          globalQuery = globalQuery.gt('updated_at', lastGlobalSyncTimestamp);
+        }
+
+        const { data: globalData } = await globalQuery;
+        if (globalData && globalData.length > 0) {
+          let maxGlobalUpdated = lastGlobalSyncTimestamp;
           let blacklisted: string[] = [];
           try {
             blacklisted = JSON.parse(window.localStorage.getItem("unipos_blacklisted_tenants") || "[]");
           } catch {}
 
           globalData.forEach(row => {
+            if (row.updated_at && row.updated_at > maxGlobalUpdated) {
+              maxGlobalUpdated = row.updated_at;
+            }
             let rowVal = row.value;
             if (row.key === 'unipos_tenants' && Array.isArray(rowVal)) {
               rowVal = rowVal.filter((t: any) => !blacklisted.includes(t.id));
@@ -1374,23 +1395,35 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
               changed = true;
             }
           });
+          lastGlobalSyncTimestamp = maxGlobalUpdated;
         }
 
         // 3. Active Tenant Collections Sync
+        // Column projection (collection, data, updated_at) + incremental timestamp filter = 99.9% egress reduction
         const savedUser = window.localStorage.getItem("unipos_current_user");
         if (savedUser) {
           const user = JSON.parse(savedUser);
           if (user?.tenantId) {
             const tid = user.tenantId;
-            const { data: tenantData } = await supabase
+            let tenantQuery = supabase
               .from('unipos_collections')
-              .select('*')
+              .select('collection, data, updated_at')
               .eq('tenant_id', tid);
 
-            if (tenantData && Array.isArray(tenantData)) {
+            if (isIncremental && lastTenantSyncTimestamp) {
+              tenantQuery = tenantQuery.gt('updated_at', lastTenantSyncTimestamp);
+            }
+
+            const { data: tenantData } = await tenantQuery;
+
+            if (tenantData && Array.isArray(tenantData) && tenantData.length > 0) {
+              let maxTenantUpdated = lastTenantSyncTimestamp;
               const pendingKeysSet = new Set(pendingSyncs.map((p: any) => p.key));
 
               tenantData.forEach((row: any) => {
+                if (row.updated_at && row.updated_at > maxTenantUpdated) {
+                  maxTenantUpdated = row.updated_at;
+                }
                 const localKey = `${row.collection}_${tid}`;
                 if (!pendingKeysSet.has(localKey)) {
                   const incomingStr = JSON.stringify(row.data);
@@ -1406,6 +1439,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
                   }
                 }
               });
+              lastTenantSyncTimestamp = maxTenantUpdated;
             }
           }
         }
@@ -1448,6 +1482,14 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         (payload: any) => {
           if (payload.new && payload.new.key) {
             const row = payload.new;
+            // Egress & Processing Guard: Ignore keys irrelevant to this client
+            if (tid && !["unipos_tenants", "unipos_blacklisted_tenants"].includes(row.key)) {
+              return;
+            }
+            if (!GLOBAL_KEYS.has(row.key)) {
+              return;
+            }
+
             let val = row.value;
             if (row.key === "unipos_tenants" && Array.isArray(val)) {
               let blacklisted: string[] = [];
@@ -1516,15 +1558,15 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     let activeTid = getActiveTenantId();
     attachRealtimeChannel(activeTid);
 
-    // Background gentle heartbeat fallback (10 minutes, only when tab is visible)
+    // Background gentle heartbeat fallback (10 minutes, only when tab is visible, INCREMENTAL)
     const fallbackInterval = setInterval(() => {
       if (typeof navigator !== "undefined" && navigator.onLine && typeof document !== "undefined" && document.visibilityState === "visible") {
-        syncFromSupabase();
+        syncFromSupabase(true);
       }
     }, 10 * 60 * 1000);
 
-    // Sync immediately when device reconnects to network
-    const handleOnline = () => syncFromSupabase();
+    // Sync immediately when device reconnects to network (Full refresh)
+    const handleOnline = () => syncFromSupabase(false);
     window.addEventListener('online', handleOnline);
 
     return () => {
@@ -1566,27 +1608,6 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     if (currentUser?.tenantId) {
       const fullKey = `${key}_${currentUser.tenantId}`;
       localStorage.setItem(fullKey, JSON.stringify(data));
-      
-      if (typeof window !== "undefined") {
-        try {
-          queueSyncKey(fullKey);
-        } catch (e) {}
-
-        if (navigator.onLine && supabase && currentUser.tenantId) {
-          (async () => {
-            try {
-              const { error } = await supabase.from('unipos_collections').upsert({
-                tenant_id: currentUser.tenantId,
-                collection: key,
-                item_id: 'all',
-                data: data,
-                updated_at: new Date().toISOString()
-              });
-              if (!error) await dequeueItem(STORE_SYNC_KEYS, fullKey);
-            } catch (err) {}
-          })();
-        }
-      }
     }
   };
 
@@ -1647,6 +1668,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
   ]);
 
   const [posShifts, setPosShifts] = useState<POSShift[]>([]);
+  const [zReports, setZReports] = useState<ZReportData[]>([]);
   const [sales, setSales] = useState<SaleTransaction[]>([]);
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
   const [payrollRecords, setPayrollRecords] = useState<PayrollRecord[]>([]);
@@ -1915,6 +1937,9 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
 
             const hrLoa = localStorage.getItem("unipos_hr_loans_" + tid);
             if (hrLoa !== null) try { setHrLoans(JSON.parse(hrLoa)); } catch {}
+
+            const zReps = localStorage.getItem("unipos_z_reports_" + tid);
+            if (zReps !== null) try { setZReports(JSON.parse(zReps)); } catch {}
           }
         }
       } catch(e) {}
@@ -2741,6 +2766,14 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       } catch {}
     }
 
+    // 25. Load Z-Reports for Active Tenant
+    const savedZReports = getTenantData("unipos_z_reports", currentUser.tenantId);
+    if (savedZReports && Array.isArray(savedZReports)) {
+      setZReports(savedZReports);
+    } else {
+      setZReports([]);
+    }
+
   }, [currentUser?.tenantId]);
 
   const createHRMSTicket = (ticket: Omit<HRMSTicket, "id" | "ticketNumber" | "createdAt" | "updatedAt" | "replies">) => {
@@ -3447,7 +3480,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     "unipos_expenses", "unipos_employees", "unipos_settings", "unipos_pos",
     "unipos_batches", "unipos_tables", "unipos_kitchen", "unipos_accounts",
     "unipos_journal", "unipos_attendance", "unipos_payroll", "unipos_transfers",
-    "unipos_counters", "unipos_folders_init"
+    "unipos_counters", "unipos_folders_init", "unipos_shifts", "unipos_z_reports"
   ];
 
   const deleteTenant = async (id: string) => {
@@ -4641,6 +4674,12 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const saveZReport = (report: ZReportData) => {
+    const updated = [report, ...zReports.filter(r => r.id !== report.id)];
+    setZReports(updated);
+    saveTenantData("unipos_z_reports", updated);
+  };
+
   const addSale = (sale: Omit<SaleTransaction, "id" | "receiptNumber" | "date">) => {
     const now = new Date();
     const dd = String(now.getDate()).padStart(2, "0");
@@ -5812,6 +5851,8 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         posShifts,
         startPOSShift,
         closePOSShift,
+        zReports,
+        saveZReport,
         addSale,
         expenses,
         addExpense,

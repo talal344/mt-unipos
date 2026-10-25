@@ -18,8 +18,29 @@ const normalizeTenantId = (id: string) => (id || "").replace(/[\u2010-\u2015\u22
 function LoginContent() {
   const router       = useRouter();
   const searchParams = useSearchParams();
-  const { tenants, setTenants, setCurrentUser, theme, toggleTheme } = useGlobalContext();
+  const { currentUser, tenants, setTenants, setCurrentUser, theme, toggleTheme } = useGlobalContext();
   const isLight = theme === "light";
+
+  // Redirect if user already has an active session
+  useEffect(() => {
+    if (currentUser) {
+      const assignedSoftware = (currentUser as any).assignedSoftware;
+      const isSMS = assignedSoftware === "SMS" || (currentUser.businessName && currentUser.businessName.includes("SMS"));
+      const isHRMS = assignedSoftware === "HRMS" || (currentUser.businessName && currentUser.businessName.includes("HRMS"));
+
+      if (currentUser.role === "SuperAdmin") {
+        router.replace("/admin/dashboard");
+      } else if (isSMS) {
+        router.replace("/sms");
+      } else if (isHRMS) {
+        router.replace("/hrms");
+      } else if (currentUser.role === "Cashier") {
+        router.replace("/pos");
+      } else {
+        router.replace("/dashboard");
+      }
+    }
+  }, [currentUser, router]);
 
   const [inputTenantId, setInputTenantId] = useState("");
   const [email,    setEmail]    = useState("");

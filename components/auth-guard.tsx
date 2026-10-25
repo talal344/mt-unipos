@@ -17,9 +17,16 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!hydrated) return;
 
-    // Public un-protected routes across all subdomains
+    const host = typeof window !== "undefined" ? window.location.hostname.toLowerCase() : "";
+    const isSubdomainPos = host.startsWith("pos.");
+    const isSubdomainAdmin = host.startsWith("admin.");
+
+    // On pos or admin subdomains, root "/" is NOT a public marketing route
+    const isRootPublic = pathname === "/" && !isSubdomainPos && !isSubdomainAdmin;
+
+    // Public un-protected routes across subdomains
     const isPublicRoute =
-      pathname === "/" ||
+      isRootPublic ||
       pathname.startsWith("/login") ||
       pathname.startsWith("/admin/login") ||
       pathname.startsWith("/qr-menu") ||
@@ -37,7 +44,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 
     // If no user is logged in, redirect to login page
     if (!currentUser) {
-      if (pathname.startsWith("/admin")) {
+      if (pathname.startsWith("/admin") || isSubdomainAdmin) {
         router.replace("/admin/login");
       } else {
         router.replace("/login");
@@ -87,8 +94,13 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     }
   }, [hydrated, currentUser, pathname, router]);
 
+  const host = typeof window !== "undefined" ? window.location.hostname.toLowerCase() : "";
+  const isSubdomainPos = host.startsWith("pos.");
+  const isSubdomainAdmin = host.startsWith("admin.");
+  const isRootPublic = pathname === "/" && !isSubdomainPos && !isSubdomainAdmin;
+
   const isPublicRoute =
-    pathname === "/" ||
+    isRootPublic ||
     pathname.startsWith("/login") ||
     pathname.startsWith("/admin/login") ||
     pathname.startsWith("/qr-menu") ||

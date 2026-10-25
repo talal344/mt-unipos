@@ -11,10 +11,11 @@ export function proxy(request: NextRequest) {
 
   // 1. ADMIN SUBDOMAIN (e.g. admin.mtcore.xyz or admin.localhost)
   if (host.startsWith("admin.")) {
-    // If accessing root on admin subdomain, redirect to admin dashboard
+    // If accessing root on admin subdomain, redirect to admin login
     if (pathname === "/") {
-      url.pathname = "/admin/dashboard";
-      return NextResponse.rewrite(url);
+      const loginUrl = request.nextUrl.clone();
+      loginUrl.pathname = "/admin/login";
+      return NextResponse.redirect(loginUrl);
     }
     // If path does not start with /admin, prefix with /admin
     if (!pathname.startsWith("/admin")) {
@@ -26,10 +27,11 @@ export function proxy(request: NextRequest) {
 
   // 2. POS SUBDOMAIN (e.g. pos.mtcore.xyz or pos.localhost)
   if (host.startsWith("pos.")) {
-    // If accessing root on pos subdomain, route directly to POS page
+    // If accessing root on pos subdomain, redirect directly to login page
     if (pathname === "/") {
-      url.pathname = "/pos";
-      return NextResponse.rewrite(url);
+      const loginUrl = request.nextUrl.clone();
+      loginUrl.pathname = "/login";
+      return NextResponse.redirect(loginUrl);
     }
     // Prevent admin routes on pos subdomain
     if (pathname.startsWith("/admin")) {

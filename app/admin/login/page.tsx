@@ -13,8 +13,15 @@ import {
 
 export default function SuperAdminLoginPage() {
   const router = useRouter();
-  const { setCurrentUser, theme, toggleTheme } = useGlobalContext();
+  const { currentUser, setCurrentUser, theme, toggleTheme } = useGlobalContext();
   const isLight = theme === "light";
+
+  // If already logged in as SuperAdmin, redirect to dashboard
+  useEffect(() => {
+    if (currentUser?.role === "SuperAdmin") {
+      router.replace("/admin/dashboard");
+    }
+  }, [currentUser, router]);
 
   const [email,    setEmail]    = useState("");
   const [password, setPassword] = useState("");

@@ -7,8 +7,11 @@ import {
   FileDown, Calendar, TrendingUp, TrendingDown, BarChart3,
   ShoppingCart, DollarSign, CreditCard, Download, Package,
   Users, ArrowUpRight, AlertTriangle, CheckCircle2, UserCheck, ShieldAlert,
-  Image, Printer, FileSpreadsheet, X, Landmark, Smartphone, Wallet, FileText, Zap
+  Image, Printer, FileSpreadsheet, X, Landmark, Smartphone, Wallet, FileText, Zap,
+  Eye, Search, RefreshCw, Banknote, Send
 } from "lucide-react";
+import { generateZReportPDF, generateThermalZReportHTML, ZReportData } from "@/lib/z-report-pdf";
+import { formatWhatsAppZReport, openWhatsApp } from "@/lib/whatsapp-receipt";
 
 // ── Date helpers ──────────────────────────────────────────────────────────────
 function isoDate(d: Date) {
@@ -82,7 +85,9 @@ export default function ReportsPage() {
     suppliers, 
     currencySymbol, 
     currentBranch,
-    theme
+    theme,
+    zReports,
+    businessSettings
   } = useGlobalContext();
   const isLight = theme === "light";
 
@@ -91,8 +96,13 @@ export default function ReportsPage() {
   const [customToDate, setCustomToDate] = useState<string>("");
 
   const [activeTab, setActiveTab] = useState<
-    "overview" | "pl" | "sales" | "inventory" | "expenses" | "employees" | "customers" | "suppliers" | "payroll"
+    "overview" | "pl" | "sales" | "inventory" | "expenses" | "employees" | "customers" | "suppliers" | "payroll" | "zreports"
   >("overview");
+
+  // Z-Report State
+  const [selectedZReport, setSelectedZReport] = useState<ZReportData | null>(null);
+  const [zSearchQuery, setZSearchQuery] = useState<string>("");
+  const [zDateFilter, setZDateFilter] = useState<string>("");
 
   // Sales View & Filter States
   const [salesFilterType, setSalesFilterType] = useState<"all" | "customer" | "staff">("all");
@@ -109,6 +119,25 @@ export default function ReportsPage() {
   const PERIOD_LABELS: Record<string, string> = {
     today: "Today", week: "Last 7 Days", month: "This Month", quarter: "Last Quarter", custom: "Custom Date Range"
   };
+
+  // ── Z-Reports Filtered ──────────────────────────────────────────────────────────
+  const filteredZReports = useMemo(() => {
+    return (zReports || []).filter(r => {
+      if (zDateFilter) {
+        const rDate = r.generatedAt ? r.generatedAt.split("T")[0] : "";
+        if (rDate !== zDateFilter) return false;
+      }
+      if (zSearchQuery.trim()) {
+        const q = zSearchQuery.trim().toLowerCase();
+        const idMatch = (r.id || "").toLowerCase().includes(q);
+        const cashierMatch = (r.cashierName || "").toLowerCase().includes(q);
+        const counterMatch = (r.counterName || "").toLowerCase().includes(q);
+        const branchMatch = (r.branch || "").toLowerCase().includes(q);
+        if (!idMatch && !cashierMatch && !counterMatch && !branchMatch) return false;
+      }
+      return true;
+    }).sort((a, b) => new Date(b.generatedAt).getTime() - new Date(a.generatedAt).getTime());
+  }, [zReports, zSearchQuery, zDateFilter]);
 
   // ── Filter sales & expenses by period and filters ──────────────────────────────
   const { from, to } = useMemo(() => {
@@ -624,6 +653,37 @@ export default function ReportsPage() {
     };
     const wb = XLSX.utils.book_new();
 
+    if (activeTab === "zreports") {
+      const zData = filteredZReports.map(r => ({
+        "Report ID": r.id,
+        "Generated At": new Date(r.generatedAt).toLocaleString(),
+        "Shift Started": new Date(r.shiftStartTime).toLocaleString(),
+        "Shift Ended": new Date(r.shiftEndTime).toLocaleString(),
+        "Branch": r.branch,
+        "Counter": r.counterName,
+        "Cashier": r.cashierName,
+        "Gross Sales": r.grossSales,
+        "Discounts": r.discounts,
+        "Net Sales": r.netSales,
+        "GST / Tax": r.tax,
+        "Total Revenue": r.totalRevenue,
+        "Cash Sales": r.cashSales,
+        "Card Sales": r.cardSales,
+        "Bank/Wallet Sales": (r.bankSales || 0) + (r.walletSales || 0),
+        "Opening Float": r.openingFloat,
+        "Cash Expenses": r.cashExpenses,
+        "Expected Drawer Cash": r.expectedCash,
+        "Actual Counted Cash": r.actualCash,
+        "Variance / Discrepancy": r.discrepancy,
+        "Status": Math.abs(r.discrepancy) < 0.01 ? "Balanced" : r.discrepancy > 0 ? "Surplus (Over)" : "Shortage (Deficit)",
+        "Notes": r.notes || ""
+      }));
+      const ws = XLSX.utils.json_to_sheet(zData);
+      XLSX.utils.book_append_sheet(wb, ws, "Z-Reports Shift Closings");
+      await saveWorkbook(wb, `Reports_Excel_ZReports_Closings_${isoDate(new Date())}.xlsx`);
+      return;
+    }
+
     if (activeTab === "pl") {
       const plData = [
         { "Financial Metric": "Branch Name", "Amount / Details": currentBranch },
@@ -955,14 +1015,14 @@ export default function ReportsPage() {
         <div className={`flex gap-1 border-b overflow-x-auto whitespace-nowrap scrollbar-none pb-0.5 ${
           isLight ? "border-slate-200" : "border-brand-dark-border/40"
         }`}>
-          {(["overview", "pl", "sales", "inventory", "expenses", "employees", "customers", "suppliers", "payroll"] as const).map(tab => (
+          {(["overview", "pl", "sales", "inventory", "expenses", "employees", "customers", "suppliers", "payroll", "zreports"] as const).map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)}
               className={`px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider transition border-b-2 -mb-px shrink-0 ${
                 activeTab === tab
                   ? isLight ? "border-sky-600 text-sky-600 font-black" : "border-brand-sky text-brand-sky"
                   : isLight ? "border-transparent text-slate-500 hover:text-slate-800" : "border-transparent text-gray-500 hover:text-gray-300"
               }`}>
-              {tab === "overview" ? "Overview" : tab === "pl" ? "📈 P/L Statement" : tab === "sales" ? "Sales" : tab === "inventory" ? "Inventory" : tab === "expenses" ? "Expenses" : tab === "employees" ? "Employees" : tab === "customers" ? "Customers" : tab === "suppliers" ? "Suppliers" : "Payroll"}
+              {tab === "overview" ? "Overview" : tab === "pl" ? "📈 P/L Statement" : tab === "sales" ? "Sales" : tab === "inventory" ? "Inventory" : tab === "expenses" ? "Expenses" : tab === "employees" ? "Employees" : tab === "customers" ? "Customers" : tab === "suppliers" ? "Suppliers" : tab === "payroll" ? "Payroll" : "🧾 Z-Reports / Closings"}
             </button>
           ))}
         </div>
@@ -2093,7 +2153,484 @@ export default function ReportsPage() {
             </div>
           )}
 
+          {/* ══════════════════════════════════════════════════════════════════
+              Z-REPORTS & SHIFT CLOSINGS TAB
+          ══════════════════════════════════════════════════════════════════ */}
+          {activeTab === "zreports" && (
+            <div className="space-y-6">
+              
+              {/* Top KPI Summary Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+                <div className={`p-4 rounded-xl border page-break-avoid ${
+                  isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/40 border-brand-dark-border"
+                }`}>
+                  <div className="flex items-center justify-between text-[10px] uppercase font-bold text-gray-500">
+                    <span>Total Shift Closings</span>
+                    <FileText size={14} className="text-brand-sky" />
+                  </div>
+                  <div className="text-xl font-black font-mono mt-1 text-brand-sky">
+                    {filteredZReports.length}
+                  </div>
+                  <div className="text-[9px] text-gray-400 mt-1">
+                    Archived official Z-Reports
+                  </div>
+                </div>
+
+                <div className={`p-4 rounded-xl border page-break-avoid ${
+                  isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/40 border-brand-dark-border"
+                }`}>
+                  <div className="flex items-center justify-between text-[10px] uppercase font-bold text-gray-500">
+                    <span>Shift Revenue Audited</span>
+                    <DollarSign size={14} className="text-emerald-500" />
+                  </div>
+                  <div className="text-xl font-black font-mono mt-1 text-emerald-500">
+                    {currencySymbol} {filteredZReports.reduce((a, r) => a + (r.totalRevenue || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </div>
+                  <div className="text-[9px] text-gray-400 mt-1">
+                    Net shift transactions
+                  </div>
+                </div>
+
+                <div className={`p-4 rounded-xl border page-break-avoid ${
+                  isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/40 border-brand-dark-border"
+                }`}>
+                  <div className="flex items-center justify-between text-[10px] uppercase font-bold text-gray-500">
+                    <span>Physical Cash Counted</span>
+                    <Banknote size={14} className="text-blue-500" />
+                  </div>
+                  <div className="text-xl font-black font-mono mt-1 text-blue-500">
+                    {currencySymbol} {filteredZReports.reduce((a, r) => a + (r.actualCash || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </div>
+                  <div className="text-[9px] text-gray-400 mt-1">
+                    Drawer till reconciliation
+                  </div>
+                </div>
+
+                <div className={`p-4 rounded-xl border page-break-avoid ${
+                  isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/40 border-brand-dark-border"
+                }`}>
+                  <div className="flex items-center justify-between text-[10px] uppercase font-bold text-gray-500">
+                    <span>Net Cash Discrepancy</span>
+                    <AlertTriangle size={14} className="text-amber-500" />
+                  </div>
+                  {(() => {
+                    const netDiff = filteredZReports.reduce((a, r) => a + (r.discrepancy || 0), 0);
+                    return (
+                      <>
+                        <div className={`text-xl font-black font-mono mt-1 ${
+                          Math.abs(netDiff) < 0.01 ? "text-emerald-500" : netDiff > 0 ? "text-amber-500" : "text-red-500"
+                        }`}>
+                          {netDiff > 0 ? "+" : ""}{currencySymbol} {netDiff.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </div>
+                        <div className="text-[9px] text-gray-400 mt-1">
+                          {Math.abs(netDiff) < 0.01 ? "100% Balanced across shifts" : netDiff > 0 ? "Cumulative Drawer Surplus" : "Cumulative Drawer Shortage"}
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+              </div>
+
+              {/* Filter Bar */}
+              <div className={`p-4 rounded-2xl border flex flex-wrap items-center justify-between gap-3 ${
+                isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/50 border-brand-dark-border"
+              }`}>
+                <div className="flex flex-wrap items-center gap-2.5 flex-1 min-w-[280px]">
+                  <div className="relative flex-1 min-w-[200px]">
+                    <Search size={14} className={`absolute left-3 top-3 ${isLight ? "text-slate-400" : "text-gray-500"}`} />
+                    <input
+                      type="text"
+                      value={zSearchQuery}
+                      onChange={e => setZSearchQuery(e.target.value)}
+                      placeholder="Search by Report ID, Cashier, Counter, Branch..."
+                      className={`w-full pl-9 pr-3 py-2 text-xs rounded-xl border focus:outline-none transition ${
+                        isLight 
+                          ? "bg-slate-50 border-slate-200 text-slate-900 focus:border-sky-500" 
+                          : "bg-black/50 border-brand-dark-border text-white focus:border-brand-sky"
+                      }`}
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-[10px] font-bold uppercase ${isLight ? "text-slate-500" : "text-gray-400"}`}>Date:</span>
+                    <input
+                      type="date"
+                      value={zDateFilter}
+                      onChange={e => setZDateFilter(e.target.value)}
+                      className={`p-2 text-xs rounded-xl border focus:outline-none font-mono ${
+                        isLight 
+                          ? "bg-slate-50 border-slate-200 text-slate-900" 
+                          : "bg-black/50 border-brand-dark-border text-white"
+                      }`}
+                    />
+                  </div>
+                  {(zSearchQuery || zDateFilter) && (
+                    <button
+                      onClick={() => { setZSearchQuery(""); setZDateFilter(""); }}
+                      className="px-3 py-2 text-xs font-bold text-sky-500 hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      <RefreshCw size={11} /> Reset
+                    </button>
+                  )}
+                </div>
+
+                <div className="text-xs font-mono font-bold text-gray-500">
+                  Showing {filteredZReports.length} of {zReports?.length || 0} closings
+                </div>
+              </div>
+
+              {/* Historical Z-Reports Table */}
+              <div className={`border rounded-2xl overflow-hidden page-break-avoid ${
+                isLight ? "bg-white border-slate-200 shadow-xs" : "bg-brand-dark-surface/40 border-brand-dark-border"
+              }`}>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead className={`sticky top-0 ${isLight ? "bg-slate-100" : "bg-[#0d0d0d]"}`}>
+                      <tr className={`border-b font-mono text-[10px] uppercase tracking-wider ${
+                        isLight ? "border-slate-200 text-slate-700" : "border-brand-dark-border text-gray-400"
+                      }`}>
+                        <th className="p-3.5">Report ID & Date</th>
+                        <th className="p-3.5">Counter / Cashier</th>
+                        <th className="p-3.5 text-right">Gross Sales</th>
+                        <th className="p-3.5 text-right">Total Revenue</th>
+                        <th className="p-3.5 text-right">Expected Cash</th>
+                        <th className="p-3.5 text-right">Actual Counted</th>
+                        <th className="p-3.5 text-center">Audit Status</th>
+                        <th className="p-3.5 text-center">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className={`divide-y ${isLight ? "divide-slate-200" : "divide-brand-dark-border/30"} font-mono text-[11px]`}>
+                      {filteredZReports.length === 0 ? (
+                        <tr>
+                          <td colSpan={8} className="p-8 text-center text-gray-500">
+                            <FileText size={32} className="mx-auto mb-2 opacity-30 text-sky-400" />
+                            <p className="font-sans font-bold">No Z-Reports found matching your filters.</p>
+                            <p className="text-[10px] font-sans mt-0.5">When cashiers close shifts in POS, official Z-Reports will be permanently archived here.</p>
+                          </td>
+                        </tr>
+                      ) : (
+                        filteredZReports.map(report => {
+                          const isBalanced = Math.abs(report.discrepancy) < 0.01;
+                          const isOver = report.discrepancy > 0.01;
+                          return (
+                            <tr key={report.id} className={`transition ${
+                              isLight ? "hover:bg-slate-50 text-slate-900" : "hover:bg-brand-dark-surface/60 text-gray-100"
+                            }`}>
+                              <td className="p-3.5">
+                                <span className="font-bold text-sky-600 block">{report.id}</span>
+                                <span className="text-[10px] text-gray-500 block">
+                                  {new Date(report.generatedAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
+                                </span>
+                              </td>
+                              <td className="p-3.5">
+                                <span className="font-bold block">{report.counterName}</span>
+                                <span className="text-[10px] text-gray-500 block">{report.cashierName} · {report.branch}</span>
+                              </td>
+                              <td className="p-3.5 text-right font-bold">
+                                {currencySymbol} {report.grossSales.toFixed(2)}
+                              </td>
+                              <td className="p-3.5 text-right font-black text-emerald-600">
+                                {currencySymbol} {report.totalRevenue.toFixed(2)}
+                              </td>
+                              <td className="p-3.5 text-right font-bold text-gray-500">
+                                {currencySymbol} {report.expectedCash.toFixed(2)}
+                              </td>
+                              <td className="p-3.5 text-right font-black">
+                                {currencySymbol} {report.actualCash.toFixed(2)}
+                              </td>
+                              <td className="p-3.5 text-center">
+                                {isBalanced ? (
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-600 border border-emerald-500/30">
+                                    <CheckCircle2 size={10} /> Balanced
+                                  </span>
+                                ) : isOver ? (
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-600 border border-amber-500/30">
+                                    <AlertTriangle size={10} /> +{currencySymbol}{report.discrepancy.toFixed(2)} Over
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-500/15 text-red-600 border border-red-500/30">
+                                    <AlertTriangle size={10} /> -{currencySymbol}{Math.abs(report.discrepancy).toFixed(2)} Short
+                                  </span>
+                                )}
+                              </td>
+                              <td className="p-3.5 text-center">
+                                <div className="flex items-center justify-center gap-1.5">
+                                  <button
+                                    onClick={() => setSelectedZReport(report)}
+                                    title="View detailed audit breakdown"
+                                    className={`p-1.5 rounded-lg border transition cursor-pointer ${
+                                      isLight ? "bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200" : "bg-black/40 hover:bg-black/70 text-gray-300 border-brand-dark-border"
+                                    }`}
+                                  >
+                                    <Eye size={13} />
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      generateZReportPDF(report);
+                                      triggerToast(`📄 Downloaded A4 PDF for ${report.id}`);
+                                    }}
+                                    title="Download high-resolution vector A4 PDF"
+                                    className={`p-1.5 rounded-lg border transition cursor-pointer ${
+                                      isLight ? "bg-sky-50 hover:bg-sky-100 text-sky-700 border-sky-200" : "bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border-sky-500/30"
+                                    }`}
+                                  >
+                                    <FileText size={13} />
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      const html = generateThermalZReportHTML(report);
+                                      const printWin = window.open("", "_blank", "width=420,height=750");
+                                      if (printWin) {
+                                        printWin.document.write(html);
+                                        printWin.document.close();
+                                        printWin.focus();
+                                        setTimeout(() => { printWin.print(); printWin.close(); }, 350);
+                                      } else {
+                                        triggerToast("⚠️ Popup blocked! Please allow popups for 80mm slip.");
+                                      }
+                                    }}
+                                    title="Print 80mm POS thermal receipt slip"
+                                    className={`p-1.5 rounded-lg border transition cursor-pointer ${
+                                      isLight ? "bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200" : "bg-black/40 hover:bg-black/70 text-gray-300 border-brand-dark-border"
+                                    }`}
+                                  >
+                                    <Printer size={13} />
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      const text = formatWhatsAppZReport(report, businessSettings);
+                                      openWhatsApp(businessSettings?.phone || "", text);
+                                      triggerToast(`📲 Sent Z-Report ${report.id} to owner on WhatsApp`);
+                                    }}
+                                    title="Send Executive Z-Report to Owner on WhatsApp"
+                                    className={`p-1.5 rounded-lg border transition cursor-pointer ${
+                                      isLight ? "bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200" : "bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+                                    }`}
+                                  >
+                                    <Send size={13} />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+            </div>
+          )}
+
         </div>
+
+      {/* ── HISTORICAL Z-REPORT AUDIT DETAILS MODAL ── */}
+      {selectedZReport && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 print:hidden overflow-y-auto">
+          <div className={`${
+            isLight ? "bg-white border-slate-200 shadow-2xl text-slate-900" : "bg-brand-dark-surface border-brand-dark-border text-white"
+          } border rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden my-auto`}>
+
+            {/* Header */}
+            <div className={`flex items-center justify-between border-b px-6 py-4 ${
+              isLight ? "border-slate-200 bg-slate-50/80" : "border-brand-dark-border bg-black/30"
+            }`}>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-sky-500/15 border border-sky-500/30 flex items-center justify-center text-sky-500 shadow-xs">
+                  <FileText size={18} />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-black text-base">Executive Z-Report Audit</h3>
+                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-sky-500/15 text-sky-600 border border-sky-500/30">
+                      {selectedZReport.id}
+                    </span>
+                  </div>
+                  <p className={`text-[10px] ${isLight ? "text-slate-500" : "text-gray-400"}`}>
+                    {selectedZReport.businessName} · {selectedZReport.branch} · Counter: {selectedZReport.counterName}
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setSelectedZReport(null)}
+                className={`p-1.5 rounded-lg transition ${isLight ? "text-slate-400 hover:text-slate-900 hover:bg-slate-100" : "text-gray-400 hover:text-white hover:bg-brand-dark-border"}`}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4 max-h-[75vh] overflow-y-auto text-xs">
+              {/* Meta Chips */}
+              <div className={`grid grid-cols-2 sm:grid-cols-4 gap-2.5 p-3 rounded-xl border text-[11px] font-mono ${
+                isLight ? "bg-slate-50 border-slate-200" : "bg-black/50 border-brand-dark-border"
+              }`}>
+                <div>
+                  <span className={`text-[9px] uppercase tracking-wider block ${isLight ? "text-slate-400" : "text-gray-500"}`}>Cashier</span>
+                  <span className="font-bold block mt-0.5">{selectedZReport.cashierName}</span>
+                </div>
+                <div>
+                  <span className={`text-[9px] uppercase tracking-wider block ${isLight ? "text-slate-400" : "text-gray-500"}`}>Shift Window</span>
+                  <span className="font-bold block mt-0.5">
+                    {new Date(selectedZReport.shiftStartTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(selectedZReport.shiftEndTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+                <div>
+                  <span className={`text-[9px] uppercase tracking-wider block ${isLight ? "text-slate-400" : "text-gray-500"}`}>Transactions</span>
+                  <span className="font-bold text-sky-600 block mt-0.5">{selectedZReport.totalTransactions} ({selectedZReport.itemsSold} items)</span>
+                </div>
+                <div>
+                  <span className={`text-[9px] uppercase tracking-wider block ${isLight ? "text-slate-400" : "text-gray-500"}`}>Avg Sale Value</span>
+                  <span className="font-bold block mt-0.5">{currencySymbol} {selectedZReport.averageTransactionValue.toFixed(2)}</span>
+                </div>
+              </div>
+
+              {/* Financial & Drawer Reconciliation Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Financial Summary */}
+                <div className={`p-4 rounded-xl border space-y-2 font-mono ${
+                  isLight ? "bg-slate-50 border-slate-200" : "bg-black/40 border-brand-dark-border"
+                }`}>
+                  <p className="text-[10px] font-black uppercase text-gray-400 tracking-wider">Sales Breakdown</p>
+                  <div className="flex justify-between"><span>Gross Sales:</span><span className="font-bold">{currencySymbol} {selectedZReport.grossSales.toFixed(2)}</span></div>
+                  <div className="flex justify-between text-amber-500"><span>Discounts:</span><span>-{currencySymbol} {selectedZReport.discounts.toFixed(2)}</span></div>
+                  <div className="flex justify-between text-sky-500"><span>Taxes / GST:</span><span>+{currencySymbol} {selectedZReport.tax.toFixed(2)}</span></div>
+                  <div className="flex justify-between text-red-500"><span>Refunds:</span><span>-{currencySymbol} {selectedZReport.refunds.toFixed(2)}</span></div>
+                  <div className="border-t pt-2 flex justify-between font-black text-xs text-emerald-600">
+                    <span>Net Shift Revenue:</span>
+                    <span>{currencySymbol} {selectedZReport.totalRevenue.toFixed(2)}</span>
+                  </div>
+                  <div className="border-t pt-2 space-y-1 text-[10px] text-gray-500">
+                    <div className="flex justify-between"><span>Cash Tendered:</span><span className="font-bold text-emerald-500">{currencySymbol} {selectedZReport.cashSales.toFixed(2)}</span></div>
+                    <div className="flex justify-between"><span>Card Tendered:</span><span className="font-bold text-blue-500">{currencySymbol} {selectedZReport.cardSales.toFixed(2)}</span></div>
+                    <div className="flex justify-between"><span>Bank / Wallet:</span><span className="font-bold text-purple-500">{currencySymbol} {((selectedZReport.bankSales || 0) + (selectedZReport.walletSales || 0)).toFixed(2)}</span></div>
+                  </div>
+                </div>
+
+                {/* Drawer Audit */}
+                <div className={`p-4 rounded-xl border space-y-2 font-mono ${
+                  isLight ? "bg-slate-50 border-slate-200" : "bg-black/40 border-brand-dark-border"
+                }`}>
+                  <p className="text-[10px] font-black uppercase text-gray-400 tracking-wider">Drawer Till Audit</p>
+                  <div className="flex justify-between"><span>Opening Float:</span><span className="font-bold">{currencySymbol} {selectedZReport.openingFloat.toFixed(2)}</span></div>
+                  <div className="flex justify-between text-emerald-600"><span>(+) Cash Inflow:</span><span className="font-bold">+{currencySymbol} {selectedZReport.cashSales.toFixed(2)}</span></div>
+                  <div className="flex justify-between text-red-500"><span>(-) Cash Paid Outs:</span><span className="font-bold">-{currencySymbol} {selectedZReport.cashExpenses.toFixed(2)}</span></div>
+                  <div className="border-t pt-2 flex justify-between font-bold text-xs">
+                    <span>Expected Drawer Cash:</span>
+                    <span className="text-sky-600 font-black">{currencySymbol} {selectedZReport.expectedCash.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between font-black text-xs">
+                    <span>Actual Counted Cash:</span>
+                    <span>{currencySymbol} {selectedZReport.actualCash.toFixed(2)}</span>
+                  </div>
+                  <div className="pt-2">
+                    {Math.abs(selectedZReport.discrepancy) < 0.01 ? (
+                      <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 text-xs font-bold flex justify-between items-center">
+                        <span>✅ Balanced (No Discrepancy)</span>
+                        <span>0.00</span>
+                      </div>
+                    ) : selectedZReport.discrepancy > 0.01 ? (
+                      <div className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-600 text-xs font-bold flex justify-between items-center">
+                        <span>⚠️ Drawer Surplus (Over)</span>
+                        <span>+{currencySymbol} {selectedZReport.discrepancy.toFixed(2)}</span>
+                      </div>
+                    ) : (
+                      <div className="p-2 rounded-lg bg-red-500/10 border border-red-500/30 text-red-600 text-xs font-bold flex justify-between items-center">
+                        <span>🚨 Drawer Shortage (Deficit)</span>
+                        <span>-{currencySymbol} {Math.abs(selectedZReport.discrepancy).toFixed(2)}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Category Breakdown if present */}
+              {selectedZReport.categoryBreakdown && selectedZReport.categoryBreakdown.length > 0 && (
+                <div className={`p-4 rounded-xl border ${
+                  isLight ? "bg-slate-50 border-slate-200" : "bg-black/40 border-brand-dark-border"
+                }`}>
+                  <p className="text-[10px] font-black uppercase text-gray-400 tracking-wider mb-2 font-mono">Sales by Category</p>
+                  <div className="space-y-1.5 font-mono text-[11px]">
+                    {selectedZReport.categoryBreakdown.map(cat => (
+                      <div key={cat.category} className="flex justify-between items-center">
+                        <span>{cat.category} ({cat.itemsCount} pcs)</span>
+                        <div className="flex items-center gap-3">
+                          <span className="text-gray-400 text-[10px]">{cat.percentage.toFixed(1)}%</span>
+                          <span className="font-bold">{currencySymbol} {cat.totalAmount.toFixed(2)}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Notes if present */}
+              {selectedZReport.notes && (
+                <div className={`p-3.5 rounded-xl border text-xs ${
+                  isLight ? "bg-amber-50/60 border-amber-200 text-amber-900" : "bg-amber-500/10 border-amber-500/30 text-amber-200"
+                }`}>
+                  <span className="font-bold block text-[10px] uppercase tracking-wider mb-0.5">Cashier / Manager Notes:</span>
+                  <p className="italic">{selectedZReport.notes}</p>
+                </div>
+              )}
+
+              {/* Modal Footer Actions */}
+              <div className="flex flex-wrap items-center justify-end gap-2.5 pt-3 border-t border-brand-dark-border/40">
+                <button
+                  type="button"
+                  onClick={() => setSelectedZReport(null)}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
+                    isLight ? "bg-slate-100 text-slate-700 hover:bg-slate-200" : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                  }`}
+                >
+                  Close
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const html = generateThermalZReportHTML(selectedZReport);
+                    const printWin = window.open("", "_blank", "width=420,height=750");
+                    if (printWin) {
+                      printWin.document.write(html);
+                      printWin.document.close();
+                      printWin.focus();
+                      setTimeout(() => { printWin.print(); printWin.close(); }, 350);
+                    } else {
+                      triggerToast("⚠️ Popup blocked! Please allow popups for 80mm slip.");
+                    }
+                  }}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border cursor-pointer ${
+                    isLight ? "bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-300" : "bg-brand-dark-border text-white hover:bg-brand-dark-border/70"
+                  }`}
+                >
+                  <Printer size={13} /> Print 80mm Slip
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    generateZReportPDF(selectedZReport);
+                    triggerToast(`📄 Downloaded A4 PDF for ${selectedZReport.id}`);
+                  }}
+                  className="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-sky-600 hover:bg-sky-500 text-white shadow-md shadow-sky-600/30 cursor-pointer"
+                >
+                  <FileText size={13} /> Download Vector A4 PDF
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const text = formatWhatsAppZReport(selectedZReport, businessSettings);
+                    openWhatsApp(businessSettings?.phone || "", text);
+                    triggerToast(`📲 Sent Z-Report ${selectedZReport.id} to owner on WhatsApp`);
+                  }}
+                  className="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-600/30 cursor-pointer"
+                >
+                  <Send size={13} /> WhatsApp Owner
+                </button>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── PDF A4 REPORT PREVIEW MODAL ── */}
       {showPdfModal && (
