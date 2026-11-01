@@ -1880,14 +1880,33 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
       blacklistedTenants = JSON.parse(localStorage.getItem("unipos_blacklisted_tenants") || "[]");
     } catch {}
 
+    // ONE-TIME PURGE OF LEGACY GHOST TENANTS ACROSS ALL DEVICES (Mobile & Desktop)
+    const PURGE_KEY = "unipos_purged_ghost_tenants_v1";
+    const GHOST_IDS = ["AM-001", "MS-002", "MS-9691", "MS-140", "TEN-140", "HRMS-2026"];
+    if (typeof window !== "undefined" && !localStorage.getItem(PURGE_KEY)) {
+      try {
+        GHOST_IDS.forEach(id => {
+          if (!blacklistedTenants.includes(id)) blacklistedTenants.push(id);
+          localStorage.removeItem(`unipos_settings_${id}`);
+          localStorage.removeItem(`unipos_products_${id}`);
+          localStorage.removeItem(`unipos_sales_${id}`);
+          localStorage.removeItem(`unipos_customers_${id}`);
+        });
+        localStorage.setItem("unipos_blacklisted_tenants", JSON.stringify(blacklistedTenants));
+        localStorage.setItem(PURGE_KEY, "true");
+      } catch {}
+    }
+
     const savedTenants = localStorage.getItem("unipos_tenants");
     let currentTenants: Tenant[] = [];
     if (savedTenants) {
-      currentTenants = JSON.parse(savedTenants);
+      try {
+        currentTenants = JSON.parse(savedTenants);
+      } catch {}
     }
 
-    // Filter out blacklisted / deleted tenants strictly
-    currentTenants = currentTenants.filter(t => !blacklistedTenants.includes(t.id));
+    // Filter out blacklisted / deleted / ghost tenants strictly
+    currentTenants = currentTenants.filter(t => !blacklistedTenants.includes(t.id) && !GHOST_IDS.includes(t.id));
 
     // ── PERMANENT SEED INJECTION (ONLY NON-DELETED) ──────────────────────────
     let seedChanged = false;
