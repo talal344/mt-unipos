@@ -1252,6 +1252,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
             debounceTimers.delete(key);
             if (!navigator.onLine || !isSupabaseConfigured) return;
 
+            // If empty array, explicitly wipe or update on Supabase so cloud matches deleted local state
             const { error } = await supabase.from('unipos_collections').upsert({
               tenant_id: possibleTenantId,
               collection: collection,
@@ -1261,7 +1262,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
             });
 
             if (!error) dequeueItem(STORE_SYNC_KEYS, key);
-          }, 600);
+          }, 300);
 
           debounceTimers.set(key, timer);
         } else {
@@ -2339,7 +2340,7 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
 
     // 5. Load Products (with SKU and Barcodes)
     const savedProducts = getTenantData("unipos_products", currentUser.tenantId);
-    if (savedProducts && savedProducts.length > 0) {
+    if (savedProducts && Array.isArray(savedProducts)) {
       const parsed: Product[] = savedProducts;
       const seenIds = new Set<string>();
       const sanitized = parsed.map(p => {
@@ -2362,22 +2363,8 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         return { ...p, id, salePrice };
       });
       setProducts(sanitized);
-      saveTenantData("unipos_products", sanitized);
-    } else if (isPrimaryDemo) {
-      // Demo seed data ONLY for the primary demo account (AFS-101)
-      const initProducts: Product[] = [
-        { id: "P-1001", sku: "GROC-MILK-001", barcode: "888123456789", name: "Nestle Milkpak 1L", category: "Grocery", brand: "Nestle", costPrice: 240, salePrice: 280, wholesalePrice: 255, taxRate: 0, stock: 120, minStock: 25, unit: "Pcs", image: "" },
-        { id: "P-1002", sku: "PHAR-PAN-002", barcode: "501112233445", name: "Panadol 500mg Tablet (10x10)", category: "Pharmacy", brand: "GSK", costPrice: 320, salePrice: 400, wholesalePrice: 350, taxRate: 0, stock: 85, minStock: 15, unit: "Box", expiryDate: "2027-12-15", batchNumber: "PAN-B992", image: "" },
-        { id: "P-1003", sku: "REST-BURG-003", barcode: "400123", name: "Crispy Zinger Burger", category: "Food & Beverage", brand: "In-House", costPrice: 290, salePrice: 490, wholesalePrice: 450, taxRate: 0, stock: 999, minStock: 0, unit: "Portion", image: "" },
-        { id: "P-1004", sku: "ELEC-CHARG-004", barcode: "690123456789", name: "Anker USB-C Charger 20W", category: "Electronics", brand: "Anker", costPrice: 1800, salePrice: 2600, wholesalePrice: 2200, taxRate: 0, stock: 14, minStock: 5, unit: "Pcs", image: "" },
-        { id: "P-1005", sku: "CLOT-SHIRT-005", barcode: "740112233", name: "Classic Polo Shirt - Navy Blue", category: "Clothing", brand: "Outfitters", costPrice: 1200, salePrice: 2200, wholesalePrice: 1800, taxRate: 0, stock: 45, minStock: 10, unit: "Pcs", variant: "Medium", image: "" },
-        { id: "P-1006", sku: "PHAR-AUG-006", barcode: "502324221122", name: "Augmentin Syrup 156.25mg", category: "Pharmacy", brand: "GSK", costPrice: 180, salePrice: 220, wholesalePrice: 200, taxRate: 0, stock: 4, minStock: 10, unit: "Bottle", expiryDate: "2026-08-30", batchNumber: "AUG-B344" },
-        { id: "P-1007", sku: "GROC-SUG-007", barcode: "888999000111", name: "Suger", category: "Grocery", brand: "Local", costPrice: 150, salePrice: 180, wholesalePrice: 165, taxRate: 0, stock: 50, minStock: 10, unit: "Pcs", image: "" }
-      ];
-      saveTenantData("unipos_products", initProducts);
-      setProducts(initProducts);
     } else {
-      // New tenant: fresh empty products list
+      // Clean slate: empty products list, no auto-re-seeding ghost data!
       setProducts([]);
     }
 
@@ -2468,50 +2455,8 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
 
     // 8. Load Sales History
     const savedSales = getTenantData("unipos_sales", currentUser.tenantId);
-    if (savedSales && savedSales.length > 0) setSales(savedSales);
-    else if (isPrimaryDemo) {
-      const initSales: SaleTransaction[] = [
-        {
-          id: "S-5001",
-          receiptNumber: "MT-TXN-10001",
-          date: "2026-06-01T09:30:00+05:00",
-          branch: "Main Branch",
-          cashierName: "Hassan Cashier",
-          customerName: "Talal Ahmad",
-          items: [
-            { productId: "P-1001", productName: "Nestle Milkpak 1L", price: 280, qty: 5, subtotal: 1400 },
-            { productId: "P-1005", productName: "Classic Polo Shirt - Navy Blue", price: 2200, qty: 1, subtotal: 2200 }
-          ],
-          subtotal: 3600,
-          discount: 100,
-          tax: 595,
-          total: 4095,
-          paymentMethod: "Card",
-          status: "Completed"
-        },
-        {
-          id: "S-5002",
-          receiptNumber: "MT-TXN-10002",
-          date: "2026-06-01T10:15:00+05:00",
-          branch: "Main Branch",
-          cashierName: "Hassan Cashier",
-          customerName: "Walk-in Customer",
-          items: [
-            { productId: "P-1002", productName: "Panadol 500mg Tablet (10x10)", price: 400, qty: 2, subtotal: 800 }
-          ],
-          subtotal: 800,
-          discount: 0,
-          tax: 0,
-          total: 800,
-          paymentMethod: "Cash",
-          status: "Completed"
-        }
-      ];
-      saveTenantData("unipos_sales", initSales);
-      setSales(initSales);
-    } else {
-      setSales([]);
-    }
+    if (savedSales && Array.isArray(savedSales)) setSales(savedSales);
+    else setSales([]);
 
     // Auto sync customer wallet balances from return sales & wallet payment history
     try {
@@ -4014,12 +3959,30 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     const updated = products.filter(p => p.id !== id);
     setProducts(updated);
     saveTenantData("unipos_products", updated);
+    if (currentUser?.tenantId && isSupabaseConfigured) {
+      supabase.from('unipos_collections').upsert({
+        tenant_id: currentUser.tenantId,
+        collection: 'unipos_products',
+        item_id: 'all',
+        data: updated,
+        updated_at: new Date().toISOString()
+      }).then();
+    }
   };
 
   const deleteProductsBulk = (ids: string[]) => {
     const updated = products.filter(p => !ids.includes(p.id));
     setProducts(updated);
     saveTenantData("unipos_products", updated);
+    if (currentUser?.tenantId && isSupabaseConfigured) {
+      supabase.from('unipos_collections').upsert({
+        tenant_id: currentUser.tenantId,
+        collection: 'unipos_products',
+        item_id: 'all',
+        data: updated,
+        updated_at: new Date().toISOString()
+      }).then();
+    }
   };
 
   // Client Tenant CRM Actions
@@ -4055,6 +4018,15 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     const updated = customers.filter(c => c.id !== id);
     setCustomers(updated);
     saveTenantData("unipos_customers", updated);
+    if (currentUser?.tenantId && isSupabaseConfigured) {
+      supabase.from('unipos_collections').upsert({
+        tenant_id: currentUser.tenantId,
+        collection: 'unipos_customers',
+        item_id: 'all',
+        data: updated,
+        updated_at: new Date().toISOString()
+      }).then();
+    }
   };
 
   const updateCustomerBalance = (id: string, dueAmountChange: number) => {
@@ -4267,6 +4239,15 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
     const updated = suppliers.filter(s => s.id !== id);
     setSuppliers(updated);
     saveTenantData("unipos_suppliers", updated);
+    if (currentUser?.tenantId && isSupabaseConfigured) {
+      supabase.from('unipos_collections').upsert({
+        tenant_id: currentUser.tenantId,
+        collection: 'unipos_suppliers',
+        item_id: 'all',
+        data: updated,
+        updated_at: new Date().toISOString()
+      }).then();
+    }
   };
 
   // Staff / Employee CRUD
